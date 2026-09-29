@@ -1,0 +1,104 @@
+{
+  "trojan_source_bidi.py": [
+    {
+      "rule_id": "APS-ALL-UNI-001",
+      "line": 1
+    }
+  ],
+  "cyrillic_homoglyph_exec.py": [
+    {
+      "rule_id": "APS-ALL-UNI-004",
+      "line": 1
+    },
+    {
+      "rule_id": "APS-ALL-UNI-006",
+      "line": 1
+    },
+    {
+      "rule_id": "APS-PY-INJ-001",
+      "line": 1
+    }
+  ],
+  "zero_width_space_ident.py": [
+    {
+      "rule_id": "APS-ALL-UNI-002",
+      "line": 1
+    }
+  ],
+  "bidi_comment_spoof.py": [
+    {
+      "rule_id": "APS-ALL-UNI-001",
+      "line": 1
+    }
+  ],
+  "mixed_script_func.py": [
+    {
+      "rule_id": "APS-ALL-UNI-004",
+      "line": 1
+    },
+    {
+      "rule_id": "APS-ALL-UNI-005",
+      "line": 1
+    }
+  ],
+  "confusable_eval_homoglyph.py": [
+    {
+      "rule_id": "APS-ALL-UNI-004",
+      "line": 1
+    },
+    {
+      "rule_id": "APS-ALL-UNI-005",
+      "line": 1
+    },
+    {
+      "rule_id": "APS-ALL-UNI-006",
+      "line": 1
+    },
+    {
+      "rule_id": "APS-PY-INJ-001",
+      "line": 1
+    }
+  ],
+  "invisible_tag_chars.py": [
+    {
+      "rule_id": "APS-ALL-UNI-003",
+      "line": 1
+    }
+  ],
+  "soft_hyphen_split.py": [
+    {
+      "rule_id": "APS-ALL-UNI-002",
+      "line": 1
+    }
+  ],
+  "bidi_string_literal.py": [
+    {
+      "rule_id": "APS-ALL-UNI-001",
+      "line": 1
+    }
+  ],
+  "confusable_import_homoglyph.py": [
+    {
+      "rule_id": "APS-ALL-UNI-004",
+      "line": 1
+    },
+    {
+      "rule_id": "APS-ALL-UNI-005",
+      "line": 1
+    },
+    {
+      "rule_id": "APS-ALL-UNI-006",
+      "line": 1
+    },
+    {
+      "rule_id": "APS-PY-INJ-005",
+      "line": 1
+    }
+  ],
+  "zero_width_joiner_ident.py": [
+    {
+      "rule_id": "APS-ALL-UNI-002",
+      "line": 1
+    }
+  ]
+}

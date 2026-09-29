@@ -32,6 +32,7 @@ class TaintStepKind(StrEnum):
     SOURCE = "source"
     PROPAGATE = "propagate"
     SINK = "sink"
+    SANITIZER = "sanitizer"
     SANITIZER_MISSING = "sanitizer_missing"
 
 

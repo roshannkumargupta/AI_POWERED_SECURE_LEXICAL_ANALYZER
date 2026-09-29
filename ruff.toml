@@ -5,6 +5,7 @@ exclude = [
     "legacy",
     "build",
     "dist",
+    "tests/fixtures",
 ]
 
 [lint]

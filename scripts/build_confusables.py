@@ -61,8 +61,8 @@ def build_confusables_json() -> int:
                 src_char = chr(int(src_hex, 16))
                 target_str = "".join(chr(int(h, 16)) for h in target_hexs)
 
-                # Keep only mappings where target resolves strictly to ASCII
-                if all(ord(c) < 128 for c in target_str) and src_char != target_str:
+                # Keep only mappings where non-ASCII source char resolves strictly to ASCII
+                if ord(src_char) >= 128 and all(ord(c) < 128 for c in target_str) and src_char != target_str:
                     mapping[src_char] = target_str
             except (ValueError, OverflowError):
                 continue

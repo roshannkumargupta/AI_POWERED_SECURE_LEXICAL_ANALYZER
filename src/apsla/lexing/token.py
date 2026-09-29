@@ -19,6 +19,7 @@ class Token:
     col: int  # 1-based start column in UTF-16 code units
     end_line: int  # 1-based end line
     end_col: int  # 1-based end column in UTF-16 code units (exclusive)
+    parts: tuple[Range, ...] = ()  # Ranges of embedded expressions (for f-strings)
 
     def to_range(self) -> Range:
         """Convert token coordinates into a Pydantic Range model."""

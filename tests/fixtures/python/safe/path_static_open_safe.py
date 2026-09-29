@@ -1,0 +1,1 @@
+open("config.json", "r")

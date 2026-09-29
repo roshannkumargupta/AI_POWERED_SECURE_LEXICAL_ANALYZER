@@ -1,0 +1,10 @@
+[
+  {
+    "rule_id": "APS-PY-OBF-001",
+    "line": 1
+  },
+  {
+    "rule_id": "APS-PY-INJ-001",
+    "line": 1
+  }
+]

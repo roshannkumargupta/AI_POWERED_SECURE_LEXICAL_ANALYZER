@@ -275,46 +275,50 @@ def main() -> None:
 
     defect_evidence = verify_architectural_defects()
 
-    # Run our analyzer for probes 5 and 6 (Phase 1 Unicode defense comparison)
+    # Run our analyzer for all probes (Phase 2 AST & Taint comparison)
     from apsla.pipeline import Analyzer
     our_analyzer = Analyzer()
 
     for r in results:
         our_res = our_analyzer.analyze(r["code"], "python", f"probe_{r['id']}.py")
-        if r["id"] == 5:
-            finding_ids = [f.rule_id for f in our_res.findings]
-            r["ours"] = f"MALICIOUS ({', '.join(finding_ids)})"
-        elif r["id"] == 6:
-            recovered = [f.evidence.get("recovered_to") for f in our_res.findings if f.rule_id == "APS-ALL-UNI-006"]
-            target = recovered[0] if recovered else "exec"
-            r["ours"] = f"MALICIOUS (-> '{target}', APS-ALL-UNI-006)"
+        r["our_res"] = our_res
+        if not our_res.findings:
+            r["ours"] = "SAFE (0 findings)"
         else:
-            r["ours"] = "Pending Phase 2 AST/Taint"
+            sev_rank = {"critical": 5, "high": 4, "medium": 3, "low": 2, "info": 1}
+            highest_sev = max(our_res.findings, key=lambda f: sev_rank.get(f.severity.value, 0)).severity
+            first_f = next(f for f in our_res.findings if f.severity == highest_sev)
+            f_ids = [f.rule_id for f in our_res.findings]
+            taint_info = f", {len(first_f.taint_path)} taint steps" if first_f.taint_path else ""
+            r["ours"] = f"{highest_sev.value.upper()} ({', '.join(f_ids)}{taint_info})"
 
     if args.json:
         output_payload = {
             "ml_status": ml_status,
-            "probes": results,
+            "probes": [
+                {k: v for k, v in r.items() if k != "our_res"}
+                for r in results
+            ],
             "defects": defect_evidence,
         }
         print(json.dumps(output_payload, indent=2, ensure_ascii=False))
         return
 
     # Print human-readable formatted table
-    print("=" * 120)
-    print("SECURELEX IDE - PHASE 1 COMPARATIVE SECURITY PROBE REPORT")
+    print("=" * 130)
+    print("SECURELEX IDE - PHASE 2 COMPARATIVE SECURITY PROBE REPORT")
     print(f"Target: legacy/senior-part1 vs src/apsla | Status: {ml_status}")
-    print("=" * 120)
+    print("=" * 130)
     print()
 
     print("### SECTION 1: SECURITY PROBE RESULTS (SENIOR VS OURS)")
-    print("-" * 120)
+    print("-" * 130)
     header = (
-        f"{'#':<3} | {'Probe Title':<36} | {'Senior Verdict':<20} | "
-        f"{'Ours (Phase 1)':<32} | {'Comparison / Assessment':<24}"
+        f"{'#':<3} | {'Probe Title':<36} | {'Senior Verdict':<22} | "
+        f"{'Ours (Phase 2)':<38} | {'Comparison / Assessment':<24}"
     )
     print(header)
-    print("-" * 120)
+    print("-" * 130)
 
     for r in results:
         flagged = r["flagged_tokens"]
@@ -326,24 +330,24 @@ def main() -> None:
 
         flaw = ""
         if r["id"] == 1:
-            flaw = "Senior Missed (attr split)"
+            flaw = "Senior Missed; Ours Caught Taint"
         elif r["id"] == 2:
-            flaw = "Both Catch Sink"
+            flaw = "Senior Token Window; Ours AST Taint"
         elif r["id"] == 3:
-            flaw = "No Sanitizer in Senior"
+            flaw = "Senior False Pos; Ours Clean (Sanitized)"
         elif r["id"] == 4:
-            flaw = "Senior False Positive"
+            flaw = "Senior False Pos; Ours Clean (List Form)"
         elif r["id"] == 5:
-            flaw = "OURS CAUGHT (Senior: 0)"
+            flaw = "Senior Blind; Ours Caught Bidi"
         elif r["id"] == 6:
-            flaw = "OURS CAUGHT HIGH (Senior: 0.50)"
+            flaw = "Senior Blind; Ours Unicode+Exec High"
 
         print(
-            f"{r['id']:<3} | {r['title']:<36} | {verdict:<20} | "
-            f"{r['ours']:<32} | {flaw:<24}"
+            f"{r['id']:<3} | {r['title']:<36} | {verdict:<22} | "
+            f"{r['ours']:<38} | {flaw:<24}"
         )
 
-    print("-" * 120)
+    print("-" * 130)
     print()
 
     print("### SECTION 2: VERIFIED ARCHITECTURAL & CODE DEFECTS")

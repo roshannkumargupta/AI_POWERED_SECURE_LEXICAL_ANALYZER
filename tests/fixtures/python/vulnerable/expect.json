@@ -1,0 +1,192 @@
+{
+  "cmd_injection_flask.py": [
+    {
+      "rule_id": "APS-PY-INJ-002",
+      "line": 2
+    }
+  ],
+  "cmd_injection_input_seq.py": [
+    {
+      "rule_id": "APS-PY-INJ-002",
+      "line": 3
+    }
+  ],
+  "cmd_injection_os_popen.py": [
+    {
+      "rule_id": "APS-PY-INJ-002",
+      "line": 2
+    }
+  ],
+  "cmd_injection_fstring.py": [
+    {
+      "rule_id": "APS-PY-INJ-002",
+      "line": 2
+    }
+  ],
+  "eval_dynamic_input.py": [
+    {
+      "rule_id": "APS-PY-INJ-001",
+      "line": 2
+    }
+  ],
+  "exec_dynamic_script.py": [
+    {
+      "rule_id": "APS-PY-INJ-001",
+      "line": 2
+    }
+  ],
+  "subprocess_shell_true.py": [
+    {
+      "rule_id": "APS-PY-INJ-003",
+      "line": 2
+    }
+  ],
+  "subprocess_popen_shell.py": [
+    {
+      "rule_id": "APS-PY-INJ-003",
+      "line": 2
+    }
+  ],
+  "sql_injection_concat.py": [
+    {
+      "rule_id": "APS-PY-INJ-004",
+      "line": 2
+    }
+  ],
+  "sql_injection_fstring.py": [
+    {
+      "rule_id": "APS-PY-INJ-004",
+      "line": 2
+    }
+  ],
+  "sql_injection_percent.py": [
+    {
+      "rule_id": "APS-PY-INJ-004",
+      "line": 2
+    }
+  ],
+  "pickle_loads_untrusted.py": [
+    {
+      "rule_id": "APS-PY-DES-001",
+      "line": 2
+    }
+  ],
+  "marshal_loads_untrusted.py": [
+    {
+      "rule_id": "APS-PY-DES-001",
+      "line": 2
+    }
+  ],
+  "shelve_open_untrusted.py": [
+    {
+      "rule_id": "APS-PY-DES-001",
+      "line": 2
+    }
+  ],
+  "yaml_load_unsafe.py": [
+    {
+      "rule_id": "APS-PY-DES-002",
+      "line": 2
+    }
+  ],
+  "yaml_unsafe_load_call.py": [
+    {
+      "rule_id": "APS-PY-DES-002",
+      "line": 2
+    }
+  ],
+  "crypto_md5_hash.py": [
+    {
+      "rule_id": "APS-PY-CRY-001",
+      "line": 2
+    }
+  ],
+  "crypto_sha1_hash.py": [
+    {
+      "rule_id": "APS-PY-CRY-001",
+      "line": 2
+    }
+  ],
+  "weak_random_token.py": [
+    {
+      "rule_id": "APS-PY-CRY-002",
+      "line": 1
+    }
+  ],
+  "weak_random_secret.py": [
+    {
+      "rule_id": "APS-PY-CRY-002",
+      "line": 1
+    }
+  ],
+  "hardcoded_api_key.py": [
+    {
+      "rule_id": "APS-PY-SEC-001",
+      "line": 1
+    }
+  ],
+  "hardcoded_password.py": [
+    {
+      "rule_id": "APS-PY-SEC-001",
+      "line": 1
+    }
+  ],
+  "requests_verify_false.py": [
+    {
+      "rule_id": "APS-PY-NET-001",
+      "line": 1
+    }
+  ],
+  "requests_post_verify_false.py": [
+    {
+      "rule_id": "APS-PY-NET-001",
+      "line": 1
+    }
+  ],
+  "path_traversal_open.py": [
+    {
+      "rule_id": "APS-PY-IO-001",
+      "line": 2
+    }
+  ],
+  "path_traversal_send_file.py": [
+    {
+      "rule_id": "APS-PY-IO-001",
+      "line": 2
+    }
+  ],
+  "dynamic_import_call.py": [
+    {
+      "rule_id": "APS-PY-INJ-005",
+      "line": 2
+    }
+  ],
+  "dynamic_importlib_module.py": [
+    {
+      "rule_id": "APS-PY-INJ-005",
+      "line": 2
+    }
+  ],
+  "obfuscated_exec_b64.py": [
+    {
+      "rule_id": "APS-PY-OBF-001",
+      "line": 1
+    },
+    {
+      "rule_id": "APS-PY-INJ-001",
+      "line": 1
+    }
+  ],
+  "template_injection_render.py": [
+    {
+      "rule_id": "APS-PY-XSS-001",
+      "line": 2
+    }
+  ],
+  "xss_raw_markup.py": [
+    {
+      "rule_id": "APS-PY-XSS-001",
+      "line": 2
+    }
+  ]
+}

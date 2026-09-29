@@ -1,0 +1,2 @@
+expr = input()
+eval(expr)
