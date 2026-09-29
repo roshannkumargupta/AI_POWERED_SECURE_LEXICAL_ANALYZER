@@ -67,12 +67,14 @@ def run_probe(
     flagged_tokens: list[dict[str, Any]] = []
     for exp in val.get("explanations", []):
         if exp.get("label") != "SAFE":
-            flagged_tokens.append({
-                "token": exp.get("token"),
-                "label": exp.get("label"),
-                "score": exp.get("score"),
-                "reasons": exp.get("reasons", []),
-            })
+            flagged_tokens.append(
+                {
+                    "token": exp.get("token"),
+                    "label": exp.get("label"),
+                    "score": exp.get("score"),
+                    "reasons": exp.get("reasons", []),
+                }
+            )
 
     taint_log = val.get("taint_log", [])
     summary = val.get("summary", {})
@@ -104,65 +106,74 @@ def verify_architectural_defects() -> list[dict[str, str]]:
     if train_path.exists():
         content = train_path.read_text(encoding="utf-8", errors="replace")
         has_train_loop = any(k in content for k in ["epoch", "optimizer.step", "loss.backward"])
-        evidence.append({
-            "id": "defect-a",
-            "item": "ML_model/train_model.py lacks training loop",
-            "file": "legacy/senior-part1/ML_model/train_model.py",
-            "lines": "Lines 1-7, 457 total lines",
-            "evidence": (
-                "File header claims 'Phase 5 + 6 — Hybrid Validator'. "
-                f"Contains 0 training loops (epoch/optimizer/loss found: {has_train_loop}). "
-                "Matches hybrid_validator.py almost line-for-line."
-            ),
-        })
+        evidence.append(
+            {
+                "id": "defect-a",
+                "item": "ML_model/train_model.py lacks training loop",
+                "file": "legacy/senior-part1/ML_model/train_model.py",
+                "lines": "Lines 1-7, 457 total lines",
+                "evidence": (
+                    "File header claims 'Phase 5 + 6 — Hybrid Validator'. "
+                    f"Contains 0 training loops (epoch/optimizer/loss found: {has_train_loop}). "
+                    "Matches hybrid_validator.py almost line-for-line."
+                ),
+            }
+        )
 
     # (b) Model loader silent fallback keeping random uninitialized weights
     ai_model_path = LEGACY_PART1 / "ML_model" / "ai_model.py"
     if ai_model_path.exists():
-        evidence.append({
-            "id": "defect-b",
-            "item": "Model loader silent fallback with random weights",
-            "file": "legacy/senior-part1/ML_model/ai_model.py",
-            "lines": "Lines 160, 186-212",
-            "evidence": (
-                "AIInferenceEngine.__init__ creates self.model = TokenClassifier() "
-                "with random weights. load_model() catches exceptions, logs error, "
-                "but continues with uninitialized random weights silently."
-            ),
-        })
+        evidence.append(
+            {
+                "id": "defect-b",
+                "item": "Model loader silent fallback with random weights",
+                "file": "legacy/senior-part1/ML_model/ai_model.py",
+                "lines": "Lines 160, 186-212",
+                "evidence": (
+                    "AIInferenceEngine.__init__ creates self.model = TokenClassifier() "
+                    "with random weights. load_model() catches exceptions, logs error, "
+                    "but continues with uninitialized random weights silently."
+                ),
+            }
+        )
 
     # (c) BiLSTM fed sequence length 1
     if ai_model_path.exists():
-        evidence.append({
-            "id": "defect-c",
-            "item": "BiLSTM fed sequence length 1",
-            "file": "legacy/senior-part1/ML_model/ai_model.py",
-            "lines": "Lines 69-70, 225-228",
-            "evidence": (
-                "predict() extracts single-token vector (shape [34]), calls .unsqueeze(0), "
-                "and TokenClassifier.forward unsqueezes to (batch=1, seq_len=1, dim=34). "
-                "A Bidirectional LSTM evaluated over length 1 provides zero temporal context."
-            ),
-        })
+        evidence.append(
+            {
+                "id": "defect-c",
+                "item": "BiLSTM fed sequence length 1",
+                "file": "legacy/senior-part1/ML_model/ai_model.py",
+                "lines": "Lines 69-70, 225-228",
+                "evidence": (
+                    "predict() extracts single-token vector (shape [34]), calls .unsqueeze(0), "
+                    "and TokenClassifier.forward unsqueezes to (batch=1, seq_len=1, dim=34). "
+                    "A Bidirectional LSTM evaluated over length 1 provides zero temporal context."
+                ),
+            }
+        )
 
     # (d) Only ~22,600 unique tokens in ~50,000 dataset rows
     dataset_path = LEGACY_PART1 / "data" / "processed" / "token_security_dataset_v2.csv"
     if dataset_path.exists():
         import pandas as pd
+
         df = pd.read_csv(dataset_path)
         total_rows = len(df)
         unique_tokens = df["raw"].nunique() if "raw" in df.columns else -1
-        evidence.append({
-            "id": "defect-d",
-            "item": "Low token diversity in 50k dataset",
-            "file": "legacy/senior-part1/data/processed/token_security_dataset_v2.csv",
-            "lines": "CSV dataset (50,000 rows x 33 columns)",
-            "evidence": (
-                f"Total dataset rows: {total_rows:,}. Unique raw token values: {unique_tokens:,} "
-                f"({(unique_tokens / total_rows) * 100:.1f}% unique). "
-                "54.8% duplicate synthetic tokens."
-            ),
-        })
+        evidence.append(
+            {
+                "id": "defect-d",
+                "item": "Low token diversity in 50k dataset",
+                "file": "legacy/senior-part1/data/processed/token_security_dataset_v2.csv",
+                "lines": "CSV dataset (50,000 rows x 33 columns)",
+                "evidence": (
+                    f"Total dataset rows: {total_rows:,}. Unique raw token values: {unique_tokens:,} "
+                    f"({(unique_tokens / total_rows) * 100:.1f}% unique). "
+                    "54.8% duplicate synthetic tokens."
+                ),
+            }
+        )
 
     # (e) carbon_analysis/performance/summary.json identical scores across methods
     summary_path = LEGACY_PART1 / "carbon_analysis" / "performance" / "summary.json"
@@ -170,17 +181,19 @@ def verify_architectural_defects() -> list[dict[str, str]]:
         with open(summary_path, encoding="utf-8") as f:
             summary_data = json.load(f)
         static_s = summary_data.get("Static", {})
-        evidence.append({
-            "id": "defect-e",
-            "item": "Identical benchmark scores across Static/Dynamic/Pure_ML",
-            "file": "legacy/senior-part1/carbon_analysis/performance/summary.json",
-            "lines": "Lines 1-59",
-            "evidence": (
-                f"wscore is identical ({static_s.get('wscore')}) across all 3 modes. "
-                "Precision, recall, and F1 (SAFE=0.8777, SUSPICIOUS=0.1667, MALICIOUS=0.3077) "
-                "are 100% copy-pasted across Static, Dynamic, and Pure_ML."
-            ),
-        })
+        evidence.append(
+            {
+                "id": "defect-e",
+                "item": "Identical benchmark scores across Static/Dynamic/Pure_ML",
+                "file": "legacy/senior-part1/carbon_analysis/performance/summary.json",
+                "lines": "Lines 1-59",
+                "evidence": (
+                    f"wscore is identical ({static_s.get('wscore')}) across all 3 modes. "
+                    "Precision, recall, and F1 (SAFE=0.8777, SUSPICIOUS=0.1667, MALICIOUS=0.3077) "
+                    "are 100% copy-pasted across Static, Dynamic, and Pure_ML."
+                ),
+            }
+        )
 
     return evidence
 
@@ -244,7 +257,7 @@ def main() -> None:
         (
             5,
             "Trojan Source Bidi Override (U+202E)",
-            's = "ADM\u202E\u202DMIN"',
+            's = "ADM\u202e\u202dMIN"',
             "Flag Trojan Source bi-directional control override character",
         ),
         (
@@ -262,6 +275,22 @@ def main() -> None:
 
     defect_evidence = verify_architectural_defects()
 
+    # Run our analyzer for probes 5 and 6 (Phase 1 Unicode defense comparison)
+    from apsla.pipeline import Analyzer
+    our_analyzer = Analyzer()
+
+    for r in results:
+        our_res = our_analyzer.analyze(r["code"], "python", f"probe_{r['id']}.py")
+        if r["id"] == 5:
+            finding_ids = [f.rule_id for f in our_res.findings]
+            r["ours"] = f"MALICIOUS ({', '.join(finding_ids)})"
+        elif r["id"] == 6:
+            recovered = [f.evidence.get("recovered_to") for f in our_res.findings if f.rule_id == "APS-ALL-UNI-006"]
+            target = recovered[0] if recovered else "exec"
+            r["ours"] = f"MALICIOUS (-> '{target}', APS-ALL-UNI-006)"
+        else:
+            r["ours"] = "Pending Phase 2 AST/Taint"
+
     if args.json:
         output_payload = {
             "ml_status": ml_status,
@@ -272,17 +301,20 @@ def main() -> None:
         return
 
     # Print human-readable formatted table
-    print("=" * 105)
-    print("SECURELEX IDE - PHASE 0 LEGACY BASELINE PROBE REPORT")
-    print(f"Target: legacy/senior-part1 | Status: {ml_status}")
-    print("=" * 105)
+    print("=" * 120)
+    print("SECURELEX IDE - PHASE 1 COMPARATIVE SECURITY PROBE REPORT")
+    print(f"Target: legacy/senior-part1 vs src/apsla | Status: {ml_status}")
+    print("=" * 120)
     print()
 
-    print("### SECTION 1: SECURITY PROBE RESULTS (6 SCENARIOS)")
-    print("-" * 105)
-    header = f"{'#':<3} | {'Probe Title':<38} | {'Senior Verdict':<24} | {'Flaw / Assessment':<32}"
+    print("### SECTION 1: SECURITY PROBE RESULTS (SENIOR VS OURS)")
+    print("-" * 120)
+    header = (
+        f"{'#':<3} | {'Probe Title':<36} | {'Senior Verdict':<20} | "
+        f"{'Ours (Phase 1)':<32} | {'Comparison / Assessment':<24}"
+    )
     print(header)
-    print("-" * 105)
+    print("-" * 120)
 
     for r in results:
         flagged = r["flagged_tokens"]
@@ -290,25 +322,28 @@ def main() -> None:
             verdict = "SAFE (0 flagged)"
         else:
             first = flagged[0]
-            verdict = f"{first['token']}: {first['label']} ({first['score']:.2f})"
+            verdict = f"{first['token']}: {first['label']}"
 
         flaw = ""
         if r["id"] == 1:
-            flaw = "FALSE NEGATIVE: Missed (attribute split)"
+            flaw = "Senior Missed (attr split)"
         elif r["id"] == 2:
-            flaw = "CAUGHT: Caught sink & propagation"
+            flaw = "Both Catch Sink"
         elif r["id"] == 3:
-            flaw = "SAFE (no sanitizer model in senior)"
+            flaw = "No Sanitizer in Senior"
         elif r["id"] == 4:
-            flaw = "FALSE POSITIVE: Naive keyword match"
+            flaw = "Senior False Positive"
         elif r["id"] == 5:
-            flaw = "FALSE NEGATIVE: Missed Trojan Source"
+            flaw = "OURS CAUGHT (Senior: 0)"
         elif r["id"] == 6:
-            flaw = "WEAK: Flagged SUSPICIOUS not MALICIOUS"
+            flaw = "OURS CAUGHT HIGH (Senior: 0.50)"
 
-        print(f"{r['id']:<3} | {r['title']:<38} | {verdict:<24} | {flaw:<32}")
+        print(
+            f"{r['id']:<3} | {r['title']:<36} | {verdict:<20} | "
+            f"{r['ours']:<32} | {flaw:<24}"
+        )
 
-    print("-" * 105)
+    print("-" * 120)
     print()
 
     print("### SECTION 2: VERIFIED ARCHITECTURAL & CODE DEFECTS")

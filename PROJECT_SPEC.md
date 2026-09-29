@@ -71,25 +71,29 @@ class Severity(str, Enum):
     LOW = "low"
     INFO = "info"
 
+
 class Label(str, Enum):
-    MALICIOUS = "MALICIOUS"   # critical, high
-    SUSPICIOUS = "SUSPICIOUS" # medium, low, info
+    MALICIOUS = "MALICIOUS"  # critical, high
+    SUSPICIOUS = "SUSPICIOUS"  # medium, low, info
+
 
 class Finding(BaseModel):
     id: str
-    rule_id: str                      # Format: APS-<LANG>-<CAT>-<NNN>
+    rule_id: str  # Format: APS-<LANG>-<CAT>-<NNN>
     title: str
     cwe: str
     severity: Severity
     label: Label
-    confidence: float                 # 0.0 .. 1.0
+    confidence: float  # 0.0 .. 1.0
     range: Range
-    message: str                      # Single-line summary
-    explanation: str                  # 2 to 4 plain English sentences
-    evidence: EvidenceDict            # tokens, rule_score, taint_confirmed, ml_score, ml_mode, unicode
-    taint_path: list[TaintPathStep]   # step (source|propagate|sink|sanitizer_missing), range, text, note
+    message: str  # Single-line summary
+    explanation: str  # 2 to 4 plain English sentences
+    evidence: EvidenceDict  # tokens, rule_score, taint_confirmed, ml_score, ml_mode, unicode
+    taint_path: list[
+        TaintPathStep
+    ]  # step (source|propagate|sink|sanitizer_missing), range, text, note
     fixes: list[Fix]
-    sources: list[str]                # subset of ["rule", "taint", "ml", "unicode"]
+    sources: list[str]  # subset of ["rule", "taint", "ml", "unicode"]
     suppressed: bool = False
 ```
 
@@ -99,6 +103,7 @@ class Edit(BaseModel):
     range: Range
     new_text: str
 
+
 class VerificationResult(BaseModel):
     syntax_ok: bool
     finding_gone: bool
@@ -106,13 +111,14 @@ class VerificationResult(BaseModel):
     verified: bool
     notes: str
 
+
 class Fix(BaseModel):
     id: str
     finding_id: str
     title: str
     description: str
-    confidence: str                   # safe | review | manual
-    kind: str                         # rule | template | llm
+    confidence: str  # safe | review | manual
+    kind: str  # rule | template | llm
     edits: list[Edit]
     verification: VerificationResult
 ```
@@ -125,17 +131,19 @@ class AnalysisSummary(BaseModel):
     medium: int
     low: int
     info: int
-    score: int                        # Security Health Score 0 .. 100
+    score: int  # Security Health Score 0 .. 100
     tokens_total: int
     tokens_malicious: int
     tokens_suspicious: int
 
+
 class EngineMetadata(BaseModel):
-    ml_mode: str                      # "on" | "off"
+    ml_mode: str  # "on" | "off"
     ml_model_id: str
-    taint: str                        # "ast" | "lite"
+    taint: str  # "ast" | "lite"
     version: str
     elapsed_ms: float
+
 
 class AnalysisResult(BaseModel):
     language: str
@@ -182,10 +190,10 @@ Adding a programming language requires implementing the `LanguagePlugin` abstrac
 
 ```python
 class LanguagePlugin(ABC):
-    id: str                           # e.g., "python", "java", "javascript", "cpp"
-    display_name: str                 # e.g., "Python 3", "Java"
-    extensions: list[str]             # e.g., [".py", ".pyw"]
-    monaco_id: str                    # Monaco editor language identifier
+    id: str  # e.g., "python", "java", "javascript", "cpp"
+    display_name: str  # e.g., "Python 3", "Java"
+    extensions: list[str]  # e.g., [".py", ".pyw"]
+    monaco_id: str  # Monaco editor language identifier
     keywords: frozenset[str]
 
     @abstractmethod
