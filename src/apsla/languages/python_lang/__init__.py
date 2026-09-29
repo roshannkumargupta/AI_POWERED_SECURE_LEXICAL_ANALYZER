@@ -141,7 +141,16 @@ class PythonPlugin(LanguagePlugin):
 
     def fix_generators(self) -> dict[str, FixGenerator]:
         """Return rule-id mapped fix generator implementations."""
-        return {}
+        from apsla.fixes.registry import FIX_REGISTRY
+        from apsla.languages.python_lang.fixes import register_python_fix_generators
+
+        register_python_fix_generators()
+        res: dict[str, FixGenerator] = {}
+        for rule in ALL_PYTHON_RULES:
+            gens = FIX_REGISTRY.get(rule.id)
+            if gens:
+                res[rule.id] = gens[0]
+        return res
 
     def syntax_check(self, source: str) -> tuple[bool, str | None]:
         """Check whether source is valid Python syntax."""

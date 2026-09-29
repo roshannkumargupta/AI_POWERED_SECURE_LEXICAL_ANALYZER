@@ -223,6 +223,26 @@ class Analyzer:
                         )
                     )
 
+        # Stage 7.5: Fix Generation & Verification
+        if opts.get("fixes", True):
+            from apsla.fixes.engine import generate_fixes
+            from apsla.languages.python_lang.fixes import register_python_fix_generators
+
+            register_python_fix_generators()
+            all_existing_keys = {(f.rule_id, f.range.start_line) for f in findings}
+            findings_with_fixes: list[Finding] = []
+            for f in findings:
+                fixes = generate_fixes(
+                    source=source,
+                    finding=f,
+                    tokens=raw_tokens,
+                    language=language,
+                    verify=True,
+                    existing_finding_keys=all_existing_keys,
+                )
+                findings_with_fixes.append(f.model_copy(update={"fixes": fixes}))
+            findings = findings_with_fixes
+
         # Stage 8: Token Stream Construction
         tokens: list[TokenInfo] = []
         if raw_tokens:

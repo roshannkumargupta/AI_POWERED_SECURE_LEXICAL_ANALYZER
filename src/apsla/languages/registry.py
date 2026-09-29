@@ -30,7 +30,12 @@ def get(plugin_id: str) -> LanguagePlugin | None:
     Returns:
         LanguagePlugin | None: The matching plugin or None if not registered.
     """
-    return _REGISTRY.get(plugin_id.lower())
+    key = plugin_id.lower()
+    if key not in _REGISTRY and key == "python":
+        from apsla.languages.python_lang import PythonPlugin
+
+        register(PythonPlugin())
+    return _REGISTRY.get(key)
 
 
 def detect(filename: str, text: str = "") -> LanguagePlugin | None:
@@ -43,6 +48,8 @@ def detect(filename: str, text: str = "") -> LanguagePlugin | None:
     Returns:
         LanguagePlugin | None: Detected plugin, or None if unrecognized.
     """
+    # Ensure standard built-in plugins are loaded
+    get("python")
     ext = Path(filename).suffix.lower()
     if ext:
         for plugin in _REGISTRY.values():
@@ -67,3 +74,8 @@ def list_plugins() -> list[LanguagePlugin]:
 def clear_registry() -> None:
     """Clear all registered language plugins (primarily for test isolation)."""
     _REGISTRY.clear()
+
+
+# Aliases for convenience
+get_plugin = get
+detect_plugin = detect

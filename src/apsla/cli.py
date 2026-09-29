@@ -154,6 +154,90 @@ def analyze(
         raise typer.Exit(code=1)
 
 
+@app.command(name="fix")
+def fix_command(
+    file: Path = typer.Argument(..., help="Path to source file to remediate."),
+    apply: bool = typer.Option(
+        False,
+        "--apply",
+        help="Apply safe and verified fixes to disk, creating a .bak backup.",
+    ),
+    all_safe: bool = typer.Option(
+        False,
+        "--all-safe",
+        help="Only apply strictly safe fixes (exclude review fixes).",
+    ),
+    language: str | None = typer.Option(
+        None,
+        "--language",
+        "-l",
+        help="Explicit language identifier (auto-detected if omitted).",
+    ),
+) -> None:
+    """Propose or apply automated, verified security fixes to a source file."""
+    _configure_windows_encoding()
+    console = Console()
+
+    if not file.exists():
+        console.print(f"[bold red]Error:[/bold red] File not found: {file}")
+        raise typer.Exit(code=2)
+
+    try:
+        source = file.read_text(encoding="utf-8")
+    except Exception as exc:
+        console.print(f"[bold red]Error reading file:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    from apsla.languages.registry import detect
+
+    plugin = detect(str(file), source) if not language else None
+    target_lang = language or (plugin.id if plugin else "python")
+
+    from rich.syntax import Syntax
+
+    from apsla.fixes.engine import fix_all
+
+    allow_review = not all_safe
+
+    new_source, applied_ids, skipped_ids, diff, score_before, score_after = fix_all(
+        source,
+        language=target_lang,
+        filename=file.name,
+        allow_review=allow_review,
+    )
+
+    console.print()
+    console.print(
+        Panel(
+            f"[bold cyan]APSLA Fix Proposer: {file.name}[/bold cyan]\n"
+            f"Health Score: [bold yellow]{score_before}/100[/bold yellow] -> "
+            f"[bold green]{score_after}/100[/bold green]\n"
+            f"Applied Fixes: {len(applied_ids)} | Skipped / Manual: {len(skipped_ids)}",
+            title="Remediation Summary",
+        )
+    )
+    console.print()
+
+    if diff:
+        syntax = Syntax(diff, "diff", theme="monokai", line_numbers=False)
+        console.print(syntax)
+        console.print()
+    else:
+        console.print("[dim]No verified fixes available or file already clean.[/dim]\n")
+
+    if apply and diff:
+        backup_path = file.with_name(f"{file.name}.bak")
+        try:
+            backup_path.write_text(source, encoding="utf-8")
+            file.write_text(new_source, encoding="utf-8")
+            console.print(f"[bold green]Applied {len(applied_ids)} fix(es). Backup saved to {backup_path.name}[/bold green]\n")
+        except Exception as exc:
+            console.print(f"[bold red]Failed to write fixed file:[/bold red] {exc}\n")
+            raise typer.Exit(code=1)
+    elif not apply and diff:
+        console.print("[italic dim]Run with --apply to write changes to disk (creates .bak backup).[/italic dim]\n")
+
+
 def main() -> None:
     """Entry point for the apsla CLI application."""
     app()

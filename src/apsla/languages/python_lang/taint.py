@@ -8,11 +8,7 @@ from dataclasses import dataclass, field
 from apsla.models import Range, TaintPathStep, TaintStepKind
 from apsla.rules.base import RuleContext
 
-COMMAND_SINKS = frozenset({
-    "os.system", "os.popen",
-    "subprocess.run", "subprocess.Popen", "subprocess.call",
-    "subprocess.check_call", "subprocess.check_output",
-})
+COMMAND_SINKS = frozenset({"os.system", "os.popen"})
 CODE_SINKS = frozenset({"eval", "exec", "__import__", "importlib.import_module"})
 SQL_SINKS = frozenset({"execute", "executemany"})
 PATH_SINKS = frozenset({"open", "send_file", "flask.send_file"})
@@ -563,15 +559,25 @@ class PythonTaintAnalyzer:
         arg_val = self._evaluate_expression(call_node.args[0], env, record_sinks=False)
 
         # (a) Command Injection Sinks
-        if (
-            call_name in COMMAND_SINKS
-            or (call_name.startswith("subprocess.") and any(
-                kw.arg == "shell" and isinstance(kw.value, ast.Constant) and kw.value.value is True
-                for kw in call_node.keywords
-            ))
-        ):
+        has_shell_true = any(
+            kw.arg == "shell" and isinstance(kw.value, ast.Constant) and kw.value.value is True
+            for kw in call_node.keywords
+        )
+        is_cmd_sink = False
+        rule_id = "APS-PY-INJ-002"
+        if call_name in COMMAND_SINKS:
+            is_cmd_sink = True
+            rule_id = "APS-PY-INJ-002"
+        elif call_name.startswith("subprocess."):
+            if has_shell_true:
+                is_cmd_sink = True
+                rule_id = "APS-PY-INJ-003"
+            elif not isinstance(call_node.args[0], (ast.List, ast.Tuple)):
+                is_cmd_sink = True
+                rule_id = "APS-PY-INJ-003"
+
+        if is_cmd_sink:
             rng = self.context.node_to_range(call_node)
-            rule_id = "APS-PY-INJ-002" if "os." in call_name else "APS-PY-INJ-003"
             if arg_val.sanitized:
                 self.flows.append(
                     TaintFlow(
