@@ -1,0 +1,5 @@
+validVar = 123;
+normal = "hello";
+bad = "abc\x01";
+wrongID = 9abc;
+veryRandom = asd9f8as9df8as9df8as9df;

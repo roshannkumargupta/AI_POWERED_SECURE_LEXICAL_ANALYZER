@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Powered Secure Lexical Analyzer</title>
+
+    <!-- CodeMirror Base -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <!-- CodeMirror Themes -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-ocean.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/neo.min.css">
+
+    <style>
+        :root {
+            /* Dark Mode (Default) */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --accent: #3b82f6;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #22c55e;
+            --card-bg: #1e293b;
+            --border: #334155;
+            --editor-bg: #0b1121;
+            --gutter-text: #4b5563;
+        }
+
+        body.light-mode {
+            --bg-primary: #f1f5f9;
+            --bg-secondary: #ffffff;
+            --accent: #2563eb;
+            --text-main: #0f172a;
+            --text-dim: #475569;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --success: #16a34a;
+            --card-bg: #ffffff;
+            --border: #cbd5e1;
+            --editor-bg: #ffffff;
+            --code-text: #1e293b;
+            --gutter-text: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Editor Section */
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            background: var(--editor-bg);
+            transition: background 0.3s;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        #editor-anchor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        /* CodeMirror Customization */
+        .CodeMirror {
+            flex: 1;
+            height: auto !important;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .CodeMirror,
+        .CodeMirror pre.CodeMirror-line,
+        .CodeMirror-linenumber,
+        .CodeMirror-code,
+        .CodeMirror-line>span {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+            font-size: 14px !important;
+            line-height: 1.6 !important;
+            font-weight: 400 !important;
+        }
+
+        .CodeMirror-cursor {
+            border-left: 1px solid var(--text-main) !important;
+            width: 0 !important;
+        }
+
+        .controls {
+            padding-top: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        /* Results Panel */
+        .results-panel {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .panel-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+        }
+
+        /* Components */
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.5rem 1rem;
+            font-size: 12px;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            margin-top: 8px;
+            border-radius: 4px;
+        }
+
+        .btn-heal {
+            background: var(--success);
+            color: white;
+            border: none;
+            margin-left: 5px;
+        }
+
+        .vuln-card {
+            margin: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--danger);
+            animation: slideIn 0.3s ease-out;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .vuln-card.potential {
+            border-left-color: var(--warning);
+        }
+
+        .type-badge {
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        .line-badge {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .confidence-meter {
+            height: 4px;
+            background: var(--border);
+            margin: 10px 0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: var(--accent);
+        }
+
+        .snippet-box {
+            background: var(--bg-secondary);
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            border: 1px solid var(--border);
+            white-space: pre-wrap;
+        }
+
+        .remediation-box {
+            font-size: 13px;
+            background: rgba(59, 130, 246, 0.05);
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 2px solid var(--accent);
+        }
+
+        .example-box {
+            display: none;
+            background: var(--editor-bg);
+            color: var(--success);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            margin-top: 10px;
+            white-space: pre;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .status-summary {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            margin: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-val {
+            display: block;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #loader {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <span style="font-weight: 800; font-size: 1.2rem; color: var(--accent);">SECURE</span>
+                <span style="font-weight: 400; font-size: 1.2rem; color: var(--text-dim);">LEXICAL ANALYZER</span>
+            </div>
+            <div class="actions">
+                <button id="theme-toggle" class="btn btn-outline" style="margin-right: 1rem;">Toggle Light Mode</button>
+                <span id="scan-status" style="font-size: 12px; color: var(--text-dim);">System Ready</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="editor-container">
+                <div id="editor-anchor"></div>
+                <div class="controls">
+                    <button id="scan-btn" class="btn">Analyze Code</button>
+                    <div id="loader" style="font-size: 13px; color: var(--accent);">Processing with Hybrid AI...</div>
+                </div>
+            </div>
+
+            <div class="results-panel" id="results-panel">
+                <div class="panel-header">
+                    <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Security Findings</h3>
+                </div>
+                <div id="welcome-message" style="padding: 2rem; text-align: center; color: var(--text-dim);">
+                    <p>Enter code and click "Analyze" to begin the AI-powered security audit.</p>
+                </div>
+                <div id="summary-container"></div>
+                <div id="cards-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CodeMirror Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+
+    <script>
+        const scanBtn = document.getElementById('scan-btn');
+        const themeToggle = document.getElementById('theme-toggle');
+        const cardsContainer = document.getElementById('cards-container');
+        const summaryContainer = document.getElementById('summary-container');
+        const welcomeMsg = document.getElementById('welcome-message');
+        const loader = document.getElementById('loader');
+        const scanStatus = document.getElementById('scan-status');
+
+        // Initialize CodeMirror
+        const editor = CodeMirror(document.getElementById('editor-anchor'), {
+            value: `public class DatabaseTest {\n    public void getUser(String userId) {\n        // Vulnerable SQL Injection\n        String sql = "SELECT * FROM users WHERE id = '" + userId + "'";\n        db.execute(sql);\n    }\n}`,
+            mode: "text/x-java",
+            theme: "material-ocean",
+            lineNumbers: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            lineWrapping: true
+        });
+
+        // Current results storage for healing
+        let currentFindings = [];
+
+        // Theme Toggle Logic
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            editor.setOption('theme', isLight ? 'neo' : 'material-ocean');
+            themeToggle.innerText = isLight ? 'Toggle Dark Mode' : 'Toggle Light Mode';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            setTimeout(() => editor.refresh(), 10);
+        });
+
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+            editor.setOption('theme', 'neo');
+            themeToggle.innerText = 'Toggle Dark Mode';
+        }
+
+        scanBtn.addEventListener('click', async () => {
+            const code = editor.getValue();
+            if (!code.trim()) return;
+
+            welcomeMsg.style.display = 'none';
+            loader.style.display = 'block';
+            scanBtn.disabled = true;
+            scanStatus.innerText = 'Scanning...';
+            cardsContainer.innerHTML = '';
+            summaryContainer.innerHTML = '';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+
+                const data = await response.json();
+                currentFindings = data.results;
+                renderResults(data);
+            } catch (err) {
+                console.error(err);
+                alert('Analysis failed.');
+            } finally {
+                loader.style.display = 'none';
+                scanBtn.disabled = false;
+                scanStatus.innerText = 'Analysis Complete';
+            }
+        });
+
+        function toggleExample(id) {
+            const el = document.getElementById(id);
+            const btn = document.getElementById('btn-' + id);
+            if (el.style.display === 'block') {
+                el.style.display = 'none';
+                btn.innerText = 'View Secure Example';
+            } else {
+                el.style.display = 'block';
+                btn.innerText = 'Hide Example';
+            }
+        }
+
+        function applyFix(index) {
+            const finding = currentFindings[index];
+            if (!finding || !finding.suggested_fix) return;
+
+            // Line numbers are 1-based, CodeMirror lines are 0-based
+            const line = finding.line - 1;
+            
+            // Using replaceRange ensures CodeMirror handles the multi-line insertion correctly
+            editor.replaceRange(
+                finding.suggested_fix, 
+                { line: line, ch: 0 }, 
+                { line: line, ch: editor.getLine(line).length }
+            );
+            
+            alert('Assisted Patch Applied to Line ' + finding.line);
+            
+            // Re-scan automatically
+            scanBtn.click();
+        }
+        function renderResults(data) {
+            if (data.results.length === 0) {
+                welcomeMsg.style.display = 'block';
+                welcomeMsg.innerHTML = '<p style="color: var(--success)">No vulnerabilities detected.</p>';
+                return;
+            }
+
+            summaryContainer.innerHTML = `
+                <div class="status-summary">
+                    <div class="stat"><span class="stat-val">${data.summary.total}</span><span class="stat-label">Total</span></div>
+                    <div class="stat"><span class="stat-val" style="color: var(--danger)">${data.summary.vulnerable}</span><span class="stat-label">Critical</span></div>
+                    <div class="stat"><span class="stat-val" style="color: var(--warning)">${data.summary.potential}</span><span class="stat-label">Potential</span></div>
+                </div>
+            `;
+
+            data.results.forEach((res, index) => {
+                const isPotential = res.status === 'Potentially Vulnerable';
+                const card = document.createElement('div');
+                card.className = `vuln-card ${isPotential ? 'potential' : ''}`;
+
+                const exampleId = `ex-${index}`;
+                const exampleCode = res.remediation.example ? res.remediation.example.join('\n') : '// No example available';
+
+                let fixButtonHtml = '';
+                if (res.suggested_fix) {
+                    fixButtonHtml = `<button class="btn btn-sm btn-heal" onclick="applyFix(${index})">Apply AI Auto-Fix</button>`;
+                }
+
+                card.innerHTML = `
+                    <div class="vuln-header">
+                        <span class="type-badge">${res.type}</span>
+                        <span class="line-badge">Line ${res.line}</span>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 600; margin: 5px 0;">${res.status}</div>
+                    <div class="confidence-meter">
+                        <div class="confidence-fill" style="width: ${res.confidence * 100}%"></div>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-dim)">AI Confidence: ${(res.confidence * 100).toFixed(1)}%</div>
+                    <div class="snippet-box">${res.snippet}</div>
+                    <div class="remediation-box">
+                        <div style="font-weight: 700; color: var(--accent); margin-bottom: 5px;">Fix Suggestion:</div>
+                        ${res.remediation.title || 'No title'}
+                        <div style="margin-top: 5px; font-size: 12px; opacity: 0.8;">${res.remediation.fix || 'No fix suggested'}</div>
+                        
+                        <div style="margin-top: 10px;">
+                            <button id="btn-${exampleId}" class="btn btn-sm" onclick="toggleExample('${exampleId}')">View Secure Example</button>
+                            ${fixButtonHtml}
+                        </div>
+                        <div id="${exampleId}" class="example-box">${exampleCode}</div>
+                    </div>
+                `;
+                cardsContainer.appendChild(card);
+            });
+        }
+    </script>
+</body>
+
+</html>

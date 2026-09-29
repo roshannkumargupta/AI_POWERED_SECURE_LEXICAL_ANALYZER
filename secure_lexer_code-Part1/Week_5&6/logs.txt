@@ -1,0 +1,6 @@
+ERROR at 0: IDENTIFIER: validVar (Entropy=2.75, Valid=False)
+ERROR at 16: IDENTIFIER: normal (Entropy=2.585, Valid=False)
+ERROR at 40: STRING: "abc\x01" (Entropy=2.948, Valid=False)
+ERROR at 51: IDENTIFIER: wrongID (Entropy=2.807, Valid=False)
+ERROR at 67: IDENTIFIER: veryRandom (Entropy=3.322, Valid=False)
+ERROR at 80: IDENTIFIER: asd9f8as9df8as9df8as9df (Entropy=2.578, Valid=False)
