@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic>=2.0
+typer
+rich
+regex
+numpy
+pandas
+scikit-learn
+joblib
+torch
+httpx

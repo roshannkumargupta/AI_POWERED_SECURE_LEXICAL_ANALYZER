@@ -1,0 +1,40 @@
+# Python environment
+.venv/
+env/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Node / Web dependencies
+node_modules/
+dist/
+.npm/
+
+# Environment variables
+.env
+.env.local
+
+# Project data and model outputs
+data/feedback/
+data/processed/*.csv
+!data/processed/.gitkeep
+logs/
+results/
+*.pth
+*.pt
+*.onnx
+*.joblib
+*.bin
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

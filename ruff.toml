@@ -1,0 +1,15 @@
+line-length = 100
+target-version = "py312"
+exclude = [
+    ".venv",
+    "legacy",
+    "build",
+    "dist",
+]
+
+[lint]
+select = ["E", "F", "I", "W", "UP"]
+ignore = []
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]
