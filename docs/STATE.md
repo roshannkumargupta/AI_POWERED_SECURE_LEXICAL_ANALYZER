@@ -1,9 +1,9 @@
 # Project State & Progress Tracking
 
-**Current Phase:** Phase 5 Complete — Headless HTTP REST API, Deterministic LRU Caching & Web Bridge  
-**Phase Tag:** `phase-5`  
+**Current Phase:** Phase 6 Complete — IDE Web Application (Vite, React 18, Monaco Editor, SecureLex Night Theme, Offline Bundle)  
+**Phase Tag:** `phase-6`  
 **Date:** September 30, 2026  
-**Status:** Complete / Verified (202 tests passing, 100% clean ruff linter & formatter, dev server and curl verified)  
+**Status:** Complete / Verified (202 Python pytest tests passing, 14 Vitest unit tests passing, 100% clean ruff linter & formatter, production build validated)  
 
 ---
 
@@ -28,6 +28,10 @@
 - `docs/explained/phase3.md`: Educational documentation for Phase 3 (shadow verification sandbox, AST-safe import injection, back-to-front edits, 5 viva Q&As).
 - `docs/explained/phase4.md`: Educational documentation for Phase 4 (45-dim feature space, leak-free group splitting, calibration, occlusion explainability, 5 viva Q&As).
 - `docs/explained/phase5.md`: Educational documentation for Phase 5 (REST, JSON, pure function LRU caching, error shielding, 5 viva Q&As).
+- `docs/explained/phase6.md`: Educational documentation for Phase 6 (Monaco Editor integration, UTF-16 coordinates, debouncing, AbortController, 5 viva Q&As).
+- `reports/phase_5_evidence.md`: Evidence report for Phase 5 REST API and caching.
+- `reports/phase_6_evidence.md`: Evidence report for Phase 6 IDE web app and bundle telemetry.
+- `docs/screenshots/`: Visual UI evidence (`empty_state.png`, `taint_path.png`, `trojan_source.png`, `fix_all_remediation.png`, `summary_tab.png`).
 
 ### Phase 1 Implemented Shared Core Components (`src/apsla/`)
 1. **Pydantic v2 Unified Schema (`src/apsla/models.py`):**
@@ -144,36 +148,75 @@
 8. **Comprehensive Integration Test Suite (`tests/unit/test_server_api.py`):**
    - 18 automated tests verifying happy paths, 413 oversized rejection, 400 bad language, 504 timeout, 500 error shielding, CORS headers, fix application, fix-all multi-pass, feedback suppression, and static root fallback.
 
+### Phase 6 Implemented Components
+1. **Frontend Architecture & Project Setup (`web/`):**
+   - Vite, React 18, TypeScript strict mode with zero external CDN dependencies.
+   - SPA compilation to `web/dist/` served directly by the FastAPI backend at `/`.
+2. **"SecureLex Night" Design System (`web/src/theme/`):**
+   - Pure CSS variables token file (`tokens.css`): `#0B0F17` base, `#111826` panel, `#223049` borders.
+   - Custom Monaco Editor dark theme (`monacoTheme.ts`) mapping AST tokens to harmonious syntax highlights.
+   - Non-color-redundant severity badges pairing explicit icons (Octagon, Shield, Triangle, Circle) with text labels.
+   - Bundled typography via `@fontsource/inter` and `@fontsource/jetbrains-mono`.
+3. **Monaco Editor Deep Integration (`web/src/monaco/`):**
+   - `markers.ts`: Real-time diagnostic underlines mapping findings to `monaco.editor.IMarkerData` via UTF-16 coordinates.
+   - `decorations.ts`: Glyph margin icons and inline highlights for Taint Source (blue), Propagation (amber), Sink (red), and Trojan Source Unicode danger markers.
+   - `hover.ts`: Rich hover tooltips providing CWE, severity, plain-English explanations, and confidence metrics.
+   - `codeActions.ts`: Quick Fix lightbulb actions (`Ctrl+.`) presenting verified remediations directly in the editor.
+4. **Multi-Panel Resizable Workspace (`web/src/components/`):**
+   - Dockable layout powered by `react-resizable-panels`:
+     - `Sidebar.tsx`: Interactive sample file picker with category badges and custom file switching.
+     - `EditorPane.tsx`: Monaco Editor mounting with coordinate tracking (`Ln X, Col Y`).
+     - `FindingPanel.tsx`: Detailed vulnerability inspection, CWE reference links, and false-positive reporting.
+     - `ProblemsPanel.tsx`: Tabbed bottom drawer hosting Problems list, Taint Flow step tracer, ML Token Insights, and Summary.
+     - `TopBar.tsx`: Language selector, Health Score display, Fix-All button, and ML status pill.
+     - `StatusBar.tsx`: Editor coordinates, language, encoding, and live analysis elapsed milliseconds.
+5. **Interactive Remediation & Explainability:**
+   - `DiffView.tsx`: In-memory unified diff preview before applying single or batch patches.
+   - `ScoreRing.tsx`: Animated SVG progress ring visualizing Security Health Score ($0 \dots 100$).
+   - `TaintPath.tsx`: Step-by-step visual trace navigation with synchronous editor scrolling.
+   - `MlInsights.tsx`: Token feature-group occlusion drop inspector for explainable ML.
+6. **Live State Management & Concurrency Safety (`web/src/state/`):**
+   - Reducer-based global state (`store.ts`) with typed action dispatchers.
+   - Trailing-edge 350ms debouncer preventing excessive HTTP traffic during typing.
+   - `AbortController` cancellation guaranteeing out-of-order responses never overwrite the active document state.
+7. **Production Build & Offline Telemetry (`scripts/build_all.py`):**
+   - Validates `npm ci`, runs `npm run build`, and verifies all 177 bundle assets (12.04 MB) including fonts and Monaco web workers.
+8. **Frontend Unit Test Suite (`web/src/test/`):**
+   - 14 Vitest unit tests verifying offsets, markers, debouncing, edit application, and severity mapping.
+
 ---
 
 ## 2. How to Run Acceptance Checks
 
-All acceptance checks run within the local `.venv`:
+All acceptance checks run within the local environment:
 
 ```bash
-# 1. Run linter and formatter checks (must report 100% clean)
+# 1. Run Python linter and formatter checks (must report 100% clean)
 .\.venv\Scripts\ruff.exe check .
 .\.venv\Scripts\ruff.exe format --check .
 
-# 2. Run full test suite in quiet mode (202 passed in ~45s)
+# 2. Run full Python test suite in quiet mode (202 passed)
 .\.venv\Scripts\pytest.exe -q
 
-# 3. Start development server in one terminal
+# 3. Run frontend unit test suite (14 passed)
+npm.cmd test --prefix web
+
+# 4. Build production frontend bundle and inspect asset sizes
+.\.venv\Scripts\python.exe scripts/build_all.py
+
+# 5. Start development server in one terminal
 .\.venv\Scripts\python.exe scripts/dev.py
 
-# 4. Probe API health check from another terminal (returns status: ok, version: 0.1.0)
+# 6. Probe API health check from another terminal (returns status: ok, version: 0.1.0)
 curl.exe -s http://127.0.0.1:8000/api/health
 
-# 5. Analyze Flask fixture via POST /api/analyze (returns finding, 4-step taint path, and verified fix)
-# (Verified directly through scratch test script and pytest suite)
-
-# 6. Run CLI serve command
+# 7. Run CLI serve command
 .\.venv\Scripts\apsla.exe serve --port 8000
 ```
 
 ---
 
-## 3. Public Function Signatures (Phase 5)
+## 3. Public Function Signatures
 
 ### `src/apsla/server/schemas.py`
 - `class HealthResponse(BaseModel)`: `status: str`, `version: str`, `ml_mode: str`, `ml_model_id: str`

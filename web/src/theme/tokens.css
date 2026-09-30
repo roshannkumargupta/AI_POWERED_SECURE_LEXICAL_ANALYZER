@@ -1,0 +1,194 @@
+:root {
+  /* Surface and Background Colors */
+  --bg: #0B0F17;
+  --panel: #111826;
+  --panel-2: #161E2E;
+  --panel-3: #1C273C;
+  --border: #223049;
+  --border-subtle: #1A2538;
+
+  /* Text and Accents */
+  --text: #E6EDF7;
+  --text-secondary: #C0CDE0;
+  --muted: #8FA1BB;
+  --muted-dark: #5B6D88;
+  --accent: #4F8CFF;
+  --accent-hover: #6BA0FF;
+  --accent-active: #3D7AEE;
+  --accent-subtle: rgba(79, 140, 255, 0.12);
+  --success: #3DDC97;
+  --success-subtle: rgba(61, 220, 151, 0.12);
+
+  /* Severity Hierarchy */
+  --critical: #FF4D6D;
+  --critical-subtle: rgba(255, 77, 109, 0.15);
+  --high: #FF8A3D;
+  --high-subtle: rgba(255, 138, 61, 0.15);
+  --medium: #F5C542;
+  --medium-subtle: rgba(245, 197, 66, 0.15);
+  --low: #5CC8FF;
+  --low-subtle: rgba(92, 200, 255, 0.15);
+  --info: #8FA1BB;
+  --info-subtle: rgba(143, 161, 187, 0.15);
+
+  /* Typography */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-code: 'JetBrains Mono', monospace;
+  --code-font-size: 14px;
+  --code-line-height: 22px;
+
+  /* Layout, Radii, Shadows */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Motion */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 200ms ease-in-out;
+}
+
+/* Base reset and styling */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-sm);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-dark);
+}
+
+/* Buttons and Interactive Elements */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: all var(--transition-fast);
+}
+
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Monaco decoration custom CSS classes */
+.taint-source-inline {
+  background-color: rgba(92, 200, 255, 0.25) !important;
+  border-bottom: 2px solid var(--low) !important;
+}
+
+.taint-propagate-inline {
+  background-color: rgba(245, 197, 66, 0.22) !important;
+  border-bottom: 2px solid var(--medium) !important;
+}
+
+.taint-sink-inline {
+  background-color: rgba(255, 77, 109, 0.28) !important;
+  border-bottom: 2px solid var(--critical) !important;
+}
+
+.taint-source-glyph {
+  background: #5CC8FF;
+  border-radius: 50%;
+  width: 12px !important;
+  height: 12px !important;
+  margin-left: 3px;
+  margin-top: 4px;
+}
+
+.taint-propagate-glyph {
+  background: #F5C542;
+  border-radius: 50%;
+  width: 12px !important;
+  height: 12px !important;
+  margin-left: 3px;
+  margin-top: 4px;
+}
+
+.taint-sink-glyph {
+  background: #FF4D6D;
+  border-radius: 50%;
+  width: 12px !important;
+  height: 12px !important;
+  margin-left: 3px;
+  margin-top: 4px;
+}
+
+.unicode-danger-inline {
+  background-color: rgba(255, 77, 109, 0.4) !important;
+  border: 1px dashed var(--critical) !important;
+  border-radius: 2px;
+}
+
+.unicode-danger-glyph {
+  background: #FF4D6D;
+  border-radius: 2px;
+  width: 12px !important;
+  height: 12px !important;
+  margin-left: 3px;
+  margin-top: 4px;
+}
+
+/* React Resizable Panels styling */
+[data-panel-group] {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+[data-panel-resize-handle] {
+  background-color: var(--border);
+  transition: background-color var(--transition-fast);
+  position: relative;
+  z-index: 10;
+}
+
+[data-panel-resize-handle]:hover,
+[data-panel-resize-handle][data-resize-handle-active] {
+  background-color: var(--accent);
+}
+
+[data-panel-resize-handle][data-panel-group-direction="horizontal"] {
+  width: 2px !important;
+  cursor: col-resize;
+}
+
+[data-panel-resize-handle][data-panel-group-direction="vertical"] {
+  height: 2px !important;
+  cursor: row-resize;
+}

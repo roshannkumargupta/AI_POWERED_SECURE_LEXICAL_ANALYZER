@@ -395,11 +395,14 @@ def test_ml_insights_endpoint(client: TestClient):
 
 
 def test_static_root_fallback(client: TestClient):
-    """Verify GET / returns fallback message when web/dist does not exist."""
+    """Verify GET / serves frontend SPA if web/dist exists or returns fallback JSON."""
     resp = client.get("/")
     assert resp.status_code == 200
-    data = resp.json()
-    assert "Frontend build not found" in data["message"]
+    if "text/html" in resp.headers.get("content-type", ""):
+        assert '<div id="root">' in resp.text
+    else:
+        data = resp.json()
+        assert "Frontend build not found" in data["message"]
 
 
 def test_cors_headers(client: TestClient):
