@@ -255,6 +255,41 @@ def fix_command(
         )
 
 
+@app.command(name="serve")
+def serve_command(
+    host: Annotated[
+        str,
+        typer.Option(
+            "--host",
+            "-h",
+            help="Bind socket to this host (default: 127.0.0.1).",
+        ),
+    ] = "127.0.0.1",
+    port: Annotated[
+        int,
+        typer.Option(
+            "--port",
+            "-p",
+            help="Bind socket to this port (default: 8000).",
+        ),
+    ] = 8000,
+    reload: Annotated[
+        bool,
+        typer.Option(
+            "--reload",
+            help="Enable auto-reload on code change.",
+        ),
+    ] = False,
+) -> None:
+    """Start the APSLA FastAPI backend server."""
+    _configure_windows_encoding()
+    import uvicorn
+
+    console = Console()
+    console.print(f"[bold cyan]Starting APSLA server on http://{host}:{port}...[/bold cyan]")
+    uvicorn.run("apsla.server.app:app", host=host, port=port, reload=reload)
+
+
 def main() -> None:
     """Entry point for the apsla CLI application."""
     app()

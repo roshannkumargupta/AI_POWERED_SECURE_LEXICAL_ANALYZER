@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import ast
-import uuid
+import hashlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
@@ -74,7 +74,9 @@ class Rule(ABC):
         """Construct a standardized Finding instance for this rule."""
         sev = severity_override if severity_override is not None else self.severity
         label = Label.MALICIOUS if sev in (Severity.CRITICAL, Severity.HIGH) else Label.SUSPICIOUS
-        finding_id = f"{self.id}-{rng.start_line}-{rng.start_col}-{uuid.uuid4().hex[:6]}"
+        loc_str = f"{self.id}:{rng.start_line}:{rng.start_col}:{rng.end_line}:{rng.end_col}"
+        h = hashlib.sha256(loc_str.encode("utf-8")).hexdigest()[:6]
+        finding_id = f"{self.id}-{rng.start_line}-{rng.start_col}-{h}"
 
         return Finding(
             id=finding_id,

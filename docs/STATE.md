@@ -1,9 +1,9 @@
 # Project State & Progress Tracking
 
-**Current Phase:** Phase 4 Complete — Token-Level Machine Learning, 45-Dim Features, Calibration & External Evaluation  
-**Phase Tag:** `phase-4`  
+**Current Phase:** Phase 5 Complete — Headless HTTP REST API, Deterministic LRU Caching & Web Bridge  
+**Phase Tag:** `phase-5`  
 **Date:** September 30, 2026  
-**Status:** Complete / Verified (184 tests passing, 100% clean ruff linter & formatter, genuine held-out and external benchmarks)  
+**Status:** Complete / Verified (202 tests passing, 100% clean ruff linter & formatter, dev server and curl verified)  
 
 ---
 
@@ -18,20 +18,16 @@
 - `data/sources/`: Official Unicode confusable table (`confusables.txt`).
 - `data/PROVENANCE.md`: Cryptographic provenance tracking with exact file paths, sizes in bytes, and SHA-256 hashes.
 - `data/external/python/`: 42 realistic, hand-written unseen external test snippets with ground truth security labels.
+- `data/feedback/`: Append-only user false positive feedback storage (`false_positives.jsonl`).
 - `docs/plan/`: Preserved Word documents (`Professor_Report_16_Week_Improvement_Plan (1).docx`, `Self_Study_Guide_16_Weeks.docx`).
 - `PROJECT_SPEC.md`: Definitive project specification covering sections A through P.
-- `scripts/legacy_probe.py`: Measurement script probing senior baseline and comparing all 6 probes with our Phase 2 analyzer.
-- `reports/phase_0_evidence.md`: Baseline probe and verification evidence for Phase 0.
-- `reports/phase_1_evidence.md`: Full verification evidence, coverage reports, and comparative benchmark for Phase 1.
-- `reports/phase_2_evidence.md`: Full verification evidence, coverage reports, and comparative benchmark for Phase 2.
-- `reports/phase_3_evidence.md`: Full verification evidence, fix matrix, and CLI demonstration for Phase 3.
-- `reports/phase_4_evidence.md`: Full verification evidence, held-out test evaluation, external benchmark on 42 hand-written files, and senior baseline comparison.
-- `reports/metrics_phase4.json`: Complete quantitative evaluation metrics and per-file predictions.
+- `docs/api.md`: Comprehensive HTTP REST API reference with genuine request/response examples.
 - `docs/explained/phase0.md`: Educational documentation for Phase 0.
 - `docs/explained/phase1.md`: Educational documentation for Phase 1 (lexer, tokens, homoglyphs, bidi overrides, 5 viva Q&As).
 - `docs/explained/phase2.md`: Educational documentation for Phase 2 (lexer state machines, AST taint vs token windows, sources/sinks/sanitizers, 5 viva Q&As).
 - `docs/explained/phase3.md`: Educational documentation for Phase 3 (shadow verification sandbox, AST-safe import injection, back-to-front edits, 5 viva Q&As).
 - `docs/explained/phase4.md`: Educational documentation for Phase 4 (45-dim feature space, leak-free group splitting, calibration, occlusion explainability, 5 viva Q&As).
+- `docs/explained/phase5.md`: Educational documentation for Phase 5 (REST, JSON, pure function LRU caching, error shielding, 5 viva Q&As).
 
 ### Phase 1 Implemented Shared Core Components (`src/apsla/`)
 1. **Pydantic v2 Unified Schema (`src/apsla/models.py`):**
@@ -75,25 +71,21 @@
 3. **Fix Registry & Generation Framework (`src/apsla/fixes/registry.py` & `src/apsla/fixes/engine.py`):**
    - `FixContext`: Bundles source, finding, token stream, AST, offset map, and language.
    - `FixGenerator`: Abstract base for rule remediation generators.
-   - `FIX_REGISTRY`: Per-rule registry mapping rule IDs to fix generators.
+   - `FIX_REGISTRY`: Per-rule registry mapping rule IDs to fix generators with deduplicated registration.
    - `generate_fixes(...)`: Generates fixes and attaches stable IDs (`fix-{finding.id}-{idx}`).
 4. **Shadow Verification Sandbox (`src/apsla/fixes/verifier.py`):**
    - Sandboxes each proposed fix on an in-memory document copy.
    - Validates parser syntax (`plugin.syntax_check`).
-   - Runs shadow re-analysis (`Analyzer.analyze(..., options={"fixes": False})`).
+   - Runs shadow re-analysis (`Analyzer.analyze(..., options={"fixes": False, "ml": False})`).
    - Validates `finding_gone` near the original logical line ($\pm 5$ lines).
    - Detects regression (`new_findings` with severity $\ge$ medium not in unpatched code).
    - Time-limited to **2.0 seconds** per fix. Automatic downgrade to `"manual"` and edit purging on verification failure.
 5. **Python Fix Generators (`src/apsla/languages/python_lang/fixes.py`):**
    - 16 registered generators for Unicode rules and all Python security rules (`APS-ALL-UNI-001..006`, `APS-PY-INJ-001..004`, `APS-PY-DES-001..002`, `APS-PY-CRY-001..002`, `APS-PY-SEC-001`, `APS-PY-NET-001`, `APS-PY-IO-001`, `APS-PY-XSS-001`).
-   - Attribution: Adapted from AI-Powered-Secure-Lexical-Analyzer (MIT) where indicated.
 6. **Multi-Pass Batch Remediation (`engine.fix_all`):**
    - Applies safe + verified fixes iteratively up to 3 passes until convergence.
    - Returns new source, applied IDs, skipped IDs with reasons, diff, and health score before/after.
    - Verified idempotency: `fix_all(fix_all(x)) == fix_all(x)`.
-7. **Pipeline & CLI Remediation Commands (`src/apsla/pipeline.py` & `src/apsla/cli.py`):**
-   - Pipeline Stage 7.5 attaches verified fixes automatically when `options={"fixes": True}`.
-   - CLI command: `apsla fix FILE [--apply] [--all-safe]` displaying security health increase panel, remediation summary, unified diff, and backup creation (`FILE.bak`) on `--apply`.
 
 ### Phase 4 Implemented Components
 1. **Language-Agnostic 45-Dimensional Feature Extractor (`src/apsla/ml/features.py`):**
@@ -102,16 +94,12 @@
 2. **Context Window Engine (`src/apsla/ml/windows.py`):**
    - Sliding 9-token asymmetric window generator centered at target token with left/right padding.
    - Extracts both $(N, 9, 45)$ 3D sequence arrays and $(N, 405)$ flattened arrays.
-   - Computes normalized window hashes for leakage and near-duplicate elimination.
 3. **Multi-Architecture Model Implementations (`src/apsla/ml/models.py`):**
    - `WindowedBiLSTM`: PyTorch neural sequence model with input projection, layer normalization, 8-dim language embedding, bidirectional LSTM, and center-state MLP classifier.
    - `UnifiedModelWrapper`: Standardized interface spanning `LogisticRegression`, `RandomForestClassifier`, `HistGradientBoostingClassifier`, and `WindowedBiLSTM`.
-   - File size safety verification (< 50 MB constraint).
 4. **Synthetic Dataset Generation & Group-Aware Training Pipeline (`src/apsla/ml/synth/` & `src/apsla/ml/train.py`):**
    - Synthetic grammar engine generating diverse Python snippets across 8 template families with ground truth token security labels.
    - Group-aware 70/15/15 partitioning by `(language, template_family, snippet_id)` with zero template leakage.
-   - Automatic cross-split near-duplicate window de-duplication.
-   - Candidate model tournament and winning artifact serialization (`ml/artifacts/`).
 5. **Probability Calibration & Threshold Tuning (`src/apsla/ml/calibrate.py`):**
    - L-BFGS-B temperature scaling optimization ($T$) on held-out validation cross-entropy.
    - Validation-only grid sweep for optimal malicious decision threshold ($\tau_{\text{malicious}}$).
@@ -121,18 +109,40 @@
    - `MLInferenceEngine`: Zero silent fallbacks (schema hash mismatch or missing weights automatically disables ML to `"off"`).
    - In-memory artifact caching (`_MODEL_CACHE`) eliminating redundant disk loads during rapid analysis calls.
 8. **Hybrid Detection Fusion & Ranking Engine (`src/apsla/fusion.py`):**
-   - Mathematical implementation of PROJECT_SPEC Section H:
-     - Blended confidence: $0.7 \times \text{rule\_conf} + 0.3 \times ml\_p$.
-     - Taint confirmation bonus: $+0.15$ confidence, $+1$ severity tier.
-     - Noisy rule suppression: demotes severity by 1 when $ml\_p < 0.15$.
-     - Pure ML anomaly findings: `APS-ALL-ML-001` (capped at 10 per file).
-     - False positive suppression integration via `data/feedback/false_positives.jsonl`.
-9. **Evaluation Benchmark Suite (`src/apsla/ml/evaluate.py` & `data/external/python/`):**
-   - Evaluates held-out test split (touched once) and 42 unseen hand-written external Python test files.
-   - Produces quantitative evidence reports (`reports/phase_4_evidence.md`, `reports/metrics_phase4.json`).
-10. **CLI and Pipeline Integration (`src/apsla/pipeline.py` & `src/apsla/cli.py`):**
-    - Seamless ML inference and fusion stages in `Analyzer.analyze`.
-    - CLI `--ml / --no-ml` toggle and engine metadata telemetry in analysis summaries.
+   - Blended confidence ($0.7 \times \text{rule\_conf} + 0.3 \times ml\_p$), taint confirmation bonus, noisy rule suppression, and false positive feedback suppression integration.
+
+### Phase 5 Implemented Components
+1. **Pydantic v2 Server Request/Response Schemas (`src/apsla/server/schemas.py`):**
+   - `HealthResponse`: reports service status, version, ML mode, and active model ID.
+   - `LanguageInfo`: id, display_name, file extensions, and Monaco language ID.
+   - `AnalyzeOptions` & `AnalyzeRequest`: controls fixes, ML, token emission, and suppression inclusion.
+   - `FixRequest` & `FixResponse`: single fix application returning new source, unified diff, verification status, and re-analysis.
+   - `FixAllRequest` & `FixAllResponse`: multi-pass batch remediation returning applied IDs, skipped reasons, diff, and before/after health score.
+   - `FeedbackRequest` & `FeedbackResponse`: false positive feedback recording.
+   - `SampleItem`: bundled sample code snippets for IDE initial state.
+   - `MLInsightsRequest` & `MLInsightsResponse`: token explainability occlusion metrics.
+2. **Interactive Code Samples (`src/apsla/server/samples.py`):**
+   - 4 pre-bundled Python samples: `vulnerable_ping.py` (command injection), `trojan_auth.py` (CVE-2021-42574 Trojan Source bidi override), `homoglyph_exec.py` (Cyrillic homoglyph variable shadowing), and `safe_ping.py` (remediated subprocess.run with argument array).
+3. **Thread-Safe Pure LRU Cache (`src/apsla/server/cache.py`):**
+   - Thread-safe `AnalysisLRUCache` with capacity of 128 items keyed by deterministic SHA-256 digest: `hash(source::language::filename::options)`.
+   - O(1) amortized access and automatic cache clearing on feedback submission.
+4. **Append-Only False-Positive Feedback Store (`src/apsla/feedback/store.py`):**
+   - Thread-safe append-only JSONL storage at `data/feedback/false_positives.jsonl`.
+   - Integrated into `fusion.py` suppression loader: suppresses matches by `finding.id`, `finding_fingerprint`, or `(rule_id, line)`.
+5. **Deterministic Finding and Fix Identifiers (`src/apsla/rules/base.py` & `src/apsla/rules/generic.py`):**
+   - Replaced random UUID generation with deterministic SHA-256 hashes of coordinates and rule ID, ensuring pure reproducible results across identical inputs.
+6. **FastAPI Application & REST Routing (`src/apsla/server/app.py`):**
+   - Clean `/api` prefixed routes.
+   - CORS middleware restricted to `http://localhost:5173` and `http://127.0.0.1:5173`.
+   - 512 KB payload size validation returning `HTTP 413 Content Too Large`.
+   - 10.0-second async execution timeout returning `HTTP 504 Gateway Timeout`.
+   - Global unhandled exception handler logging full tracebacks with an 8-character `error_id` and masking stack traces from HTTP clients.
+   - SPA static file serving at `/` with fallback when `web/dist` exists, or informative status JSON in dev mode.
+7. **Development Tooling & CLI Integration (`scripts/dev.py` & `src/apsla/cli.py`):**
+   - `scripts/dev.py`: Starts Uvicorn on `127.0.0.1:8000` with auto-reload and formatted endpoint banners.
+   - `apsla serve [--host 127.0.0.1] [--port 8000] [--reload]`: Starts the API server directly from the CLI.
+8. **Comprehensive Integration Test Suite (`tests/unit/test_server_api.py`):**
+   - 18 automated tests verifying happy paths, 413 oversized rejection, 400 bad language, 504 timeout, 500 error shielding, CORS headers, fix application, fix-all multi-pass, feedback suppression, and static root fallback.
 
 ---
 
@@ -145,56 +155,66 @@ All acceptance checks run within the local `.venv`:
 .\.venv\Scripts\ruff.exe check .
 .\.venv\Scripts\ruff.exe format --check .
 
-# 2. Run full test suite in quiet mode (184 passed in ~55s)
+# 2. Run full test suite in quiet mode (202 passed in ~45s)
 .\.venv\Scripts\pytest.exe -q
 
-# 3. Run ML evaluation suite on held-out test split and 42 external benchmarks
-.\.venv\Scripts\python.exe -m apsla.ml.evaluate
+# 3. Start development server in one terminal
+.\.venv\Scripts\python.exe scripts/dev.py
 
-# 4. Run CLI analyze demonstrating active ML model prediction and telemetry
-.\.venv\Scripts\apsla.exe analyze tests/fixtures/python/vulnerable/cmd_injection_flask.py
+# 4. Probe API health check from another terminal (returns status: ok, version: 0.1.0)
+curl.exe -s http://127.0.0.1:8000/api/health
 
-# 5. Run CLI analyze with ML disabled
-.\.venv\Scripts\apsla.exe analyze tests/fixtures/python/vulnerable/cmd_injection_flask.py --no-ml
+# 5. Analyze Flask fixture via POST /api/analyze (returns finding, 4-step taint path, and verified fix)
+# (Verified directly through scratch test script and pytest suite)
+
+# 6. Run CLI serve command
+.\.venv\Scripts\apsla.exe serve --port 8000
 ```
 
 ---
 
-## 3. Public Function Signatures (Phase 4)
+## 3. Public Function Signatures (Phase 5)
 
-### `src/apsla/ml/features.py`
-- `FEATURE_NAMES: tuple[str, ...]` (len = 45)
-- `FEATURE_COUNT: int = 45`
-- `FEATURE_SCHEMA_HASH: str`
-- `extract_token_features(token: Token, token_index: int, tokens: list[Token], raw_source: str, recovered_source: str, ast_tree: ast.AST | None, language: str = "python") -> np.ndarray`
-- `extract_file_features(tokens: list[Token], language: str = "python") -> tuple[np.ndarray, int]`
+### `src/apsla/server/schemas.py`
+- `class HealthResponse(BaseModel)`: `status: str`, `version: str`, `ml_mode: str`, `ml_model_id: str`
+- `class LanguageInfo(BaseModel)`: `id: str`, `display_name: str`, `extensions: list[str]`, `monaco_id: str`
+- `class AnalyzeOptions(BaseModel)`: `fixes: bool = True`, `ml: bool = True`, `include_tokens: bool = True`, `include_suppressed: bool = False`
+- `class AnalyzeRequest(BaseModel)`: `source: str`, `language: str | None = None`, `filename: str | None = None`, `options: AnalyzeOptions = ...`
+- `class FixRequest(BaseModel)`: `source: str`, `language: str = "python"`, `finding_id: str`, `fix_id: str`, `filename: str = "<editor>"`
+- `class FixResponse(BaseModel)`: `new_source: str`, `diff: str`, `verification: VerificationResult`, `new_result: AnalysisResult | None = None`
+- `class FixAllRequest(BaseModel)`: `source: str`, `language: str = "python"`, `filename: str = "<editor>"`, `allow_review: bool = False`
+- `class FixAllResponse(BaseModel)`: `new_source: str`, `applied: list[str]`, `skipped: list[SkippedFixItem]`, `diff: str`, `score_before: int`, `score_after: int`
+- `class FeedbackRequest(BaseModel)`: `finding_fingerprint: str`, `rule_id: str`, `language: str`, `verdict: str = "false_positive"`, `snippet: str = ""`
+- `class FeedbackResponse(BaseModel)`: `saved: bool = True`
+- `class SampleItem(BaseModel)`: `id: str`, `title: str`, `category: str`, `language: str`, `filename: str`, `code: str`, `description: str`
+- `class MLInsightsRequest(BaseModel)`: `source: str`, `language: str = "python"`, `token_index: int`
+- `class MLInsightsResponse(BaseModel)`: `ml_mode: str`, `token_index: int`, `token_text: str | None`, `predicted_label: str | None`, `probabilities: dict[str, float]`, `feature_group_drops: dict[str, float]`, `error: str | None`
 
-### `src/apsla/ml/windows.py`
-- `build_token_windows(tokens: list[Token], features: np.ndarray, labels: list[int] | None = None, window_size: int = 9) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str]]`
+### `src/apsla/server/cache.py`
+- `class AnalysisLRUCache`: `__init__(capacity: int = 128)`, `compute_key(source, language, filename, options) -> str`, `get(key: str) -> AnalysisResult | None`, `put(key: str, value: AnalysisResult)`, `clear()`, `size() -> int`
+- `ANALYSIS_CACHE: AnalysisLRUCache`
 
-### `src/apsla/ml/models.py`
-- `class WindowedBiLSTM(nn.Module)`
-- `class UnifiedModelWrapper`: `__init__(model_type: str, seed: int = 42)`, `fit(...)`, `predict_proba(...)`, `predict(...)`, `save(target_dir: Path) -> Path`, `load(model_file: Path)`
+### `src/apsla/feedback/store.py`
+- `save_feedback(record: dict[str, Any], filepath: Path | None = None) -> bool`
+- `load_all_feedback(filepath: Path | None = None) -> list[dict[str, Any]]`
+- `clear_feedback(filepath: Path | None = None) -> None`
 
-### `src/apsla/ml/calibrate.py`
-- `apply_temperature_scaling(probs: np.ndarray, temperature: float = 1.0) -> np.ndarray`
-- `fit_temperature(probs: np.ndarray, y_true: np.ndarray) -> float`
+### `src/apsla/server/samples.py`
+- `get_samples(language: str | None = None) -> list[SampleItem]`
 
-### `src/apsla/ml/explain.py`
-- `FEATURE_GROUPS: dict[str, list[int]]`
-- `explain_token_prediction(model_wrapper: UnifiedModelWrapper, window_3d: np.ndarray, window_flat: np.ndarray, target_class: int = 2, lang_id: int = 0, temperature: float = 1.0) -> dict[str, float]`
-
-### `src/apsla/ml/infer.py`
-- `class MLInferenceEngine`: `__init__(model_id: str | None = None)`, `is_available() -> bool`, `get_mode() -> str`, `get_model_id() -> str`, `predict_token_probabilities(tokens: list[Token], language: str = "python") -> np.ndarray`
-
-### `src/apsla/fusion.py`
-- `fuse_findings(rule_findings: list[Finding], tokens: list[Token], ml_probabilities: np.ndarray | None, ml_mode: str = "off", ml_threshold_malicious: float = 0.5, filename: str = "<editor>") -> list[Finding]`
-
-### `src/apsla/ml/evaluate.py`
-- `evaluate_test_split(engine: MLInferenceEngine) -> dict[str, Any]`
-- `evaluate_external_benchmark(engine: MLInferenceEngine) -> dict[str, Any]`
-- `generate_phase4_report(test_metrics: dict[str, Any], ext_metrics: dict[str, Any], engine: MLInferenceEngine)`
+### `src/apsla/server/app.py`
+- `app: FastAPI`
+- `GET  /api/health -> HealthResponse`
+- `GET  /api/languages -> list[LanguageInfo]`
+- `GET  /api/samples -> list[SampleItem]`
+- `POST /api/analyze -> AnalysisResult`
+- `POST /api/fix -> FixResponse`
+- `POST /api/fix-all -> FixAllResponse`
+- `POST /api/feedback -> FeedbackResponse`
+- `POST /api/ml/insights -> MLInsightsResponse`
+- `GET  / -> JSONResponse | FileResponse`
 
 ### `src/apsla/cli.py`
 - `analyze(file: Path, format: str = "text", language: str = "python", ml: bool = True)`
 - `fix(file: Path, apply: bool = False, all_safe: bool = False, language: str | None = None)`
+- `serve(host: str = "127.0.0.1", port: int = 8000, reload: bool = False)`

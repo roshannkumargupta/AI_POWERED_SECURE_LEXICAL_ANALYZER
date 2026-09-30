@@ -40,7 +40,10 @@ class FixRegistry:
 
     def register(self, rule_id: str, generator: FixGenerator) -> None:
         """Register a fix generator for a specific rule ID."""
-        self._generators.setdefault(rule_id, []).append(generator)
+        gens = self._generators.setdefault(rule_id, [])
+        gen_type = type(generator)
+        if not any(isinstance(g, gen_type) for g in gens):
+            gens.append(generator)
 
     def get(self, rule_id: str) -> list[FixGenerator]:
         """Retrieve all fix generators registered for a rule ID."""

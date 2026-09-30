@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import uuid
+import hashlib
 
 from apsla.cwe import get_cwe_for_category
 from apsla.lexing.common import OffsetMap
@@ -12,8 +12,17 @@ from apsla.unicode_defense.scanner import scan_unicode
 
 
 def _generate_finding_id(rule_id: str, rng: Range) -> str:
-    """Generate a deterministic or unique finding ID."""
-    return f"{rule_id}-{rng.start_line}-{rng.start_col}-{uuid.uuid4().hex[:8]}"
+    """Generate a deterministic finding ID based on rule ID and coordinates."""
+    loc_str = f"{rule_id}:{rng.start_line}:{rng.start_col}:{rng.end_line}:{rng.end_col}"
+    h = hashlib.sha256(loc_str.encode("utf-8")).hexdigest()[:8]
+    return f"{rule_id}-{rng.start_line}-{rng.start_col}-{h}"
+
+
+def _generate_fix_id(rule_id: str, rng: Range, suffix: str = "") -> str:
+    """Generate a deterministic fix ID based on rule ID and coordinates."""
+    loc_str = f"{rule_id}:{rng.start_line}:{rng.start_col}:{suffix}"
+    h = hashlib.sha256(loc_str.encode("utf-8")).hexdigest()[:8]
+    return f"FIX-{h}"
 
 
 def evaluate_unicode_rules(
@@ -68,7 +77,7 @@ def evaluate_unicode_rules(
             )
             # Fix: Remove the bidi character
             fix = Fix(
-                id=f"FIX-{uuid.uuid4().hex[:8]}",
+                id=_generate_fix_id(rule_id, hit.range),
                 finding_id="",
                 title="Remove Bidi Override Character",
                 description=f"Strip invisible {hit.codepoint} control character.",
@@ -93,7 +102,7 @@ def evaluate_unicode_rules(
                 "Strip the zero-width character to restore visual integrity."
             )
             fix = Fix(
-                id=f"FIX-{uuid.uuid4().hex[:8]}",
+                id=_generate_fix_id(rule_id, hit.range),
                 finding_id="",
                 title="Remove Zero-Width Character",
                 description=f"Delete hidden {hit.codepoint} character.",
@@ -118,7 +127,7 @@ def evaluate_unicode_rules(
                 "Remove all tag characters from the code."
             )
             fix = Fix(
-                id=f"FIX-{uuid.uuid4().hex[:8]}",
+                id=_generate_fix_id(rule_id, hit.range),
                 finding_id="",
                 title="Remove Unicode Tag Character",
                 description="Remove invisible tag character.",
@@ -148,7 +157,7 @@ def evaluate_unicode_rules(
                 f"Replace '{hit.char}' with canonical '{recovered_word}' or an unambiguous name."
             )
             fix = Fix(
-                id=f"FIX-{uuid.uuid4().hex[:8]}",
+                id=_generate_fix_id(rule_id, hit.range),
                 finding_id="",
                 title=f"Replace with Canonical '{recovered_word}'",
                 description=f"Replace obfuscated '{hit.char}' with standard '{recovered_word}'.",
@@ -175,7 +184,7 @@ def evaluate_unicode_rules(
             recovered_word = hit.recovered_to
             if recovered_word:
                 fix = Fix(
-                    id=f"FIX-{uuid.uuid4().hex[:8]}",
+                    id=_generate_fix_id(rule_id, hit.range),
                     finding_id="",
                     title=f"Normalize Identifier to '{recovered_word}'",
                     description=f"Normalize mixed-script '{hit.char}' to '{recovered_word}'.",
@@ -204,7 +213,7 @@ def evaluate_unicode_rules(
                 "Consider replacing with standard ASCII."
             )
             fix = Fix(
-                id=f"FIX-{uuid.uuid4().hex[:8]}",
+                id=_generate_fix_id(rule_id, hit.range),
                 finding_id="",
                 title=f"Replace with ASCII '{recovered_char}'",
                 description=f"Map look-alike character '{hit.char}' to '{recovered_char}'.",
