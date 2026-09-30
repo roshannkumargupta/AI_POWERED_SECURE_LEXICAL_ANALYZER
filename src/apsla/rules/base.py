@@ -73,11 +73,7 @@ class Rule(ABC):
     ) -> Finding:
         """Construct a standardized Finding instance for this rule."""
         sev = severity_override if severity_override is not None else self.severity
-        label = (
-            Label.MALICIOUS
-            if sev in (Severity.CRITICAL, Severity.HIGH)
-            else Label.SUSPICIOUS
-        )
+        label = Label.MALICIOUS if sev in (Severity.CRITICAL, Severity.HIGH) else Label.SUSPICIOUS
         finding_id = f"{self.id}-{rng.start_line}-{rng.start_col}-{uuid.uuid4().hex[:6]}"
 
         return Finding(

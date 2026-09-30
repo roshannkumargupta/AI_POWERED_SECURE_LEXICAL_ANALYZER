@@ -1,0 +1,46 @@
+{
+  "model_id": "random_forest_20260929_221524",
+  "model_type": "random_forest",
+  "feature_schema_hash": "313113ff1b1c3eaaef410590101e19a00c1721aa822f0c90e1034f7d06cc5b90",
+  "feature_dim": 45,
+  "thresholds": {
+    "tau_malicious": 0.5
+  },
+  "temperature": 1.0,
+  "validation_metrics": {
+    "macro_f1": 0.6555,
+    "macro_precision": 0.6189,
+    "macro_recall": 0.7706
+  },
+  "all_candidate_metrics": {
+    "logistic_regression": {
+      "macro_f1": 0.6036,
+      "macro_precision": 0.592,
+      "macro_recall": 0.7312
+    },
+    "random_forest": {
+      "macro_f1": 0.6555,
+      "macro_precision": 0.6189,
+      "macro_recall": 0.7706
+    },
+    "hist_gradient_boosting": {
+      "macro_f1": 0.6412,
+      "macro_precision": 0.6034,
+      "macro_recall": 0.7555
+    },
+    "windowed_bilstm": {
+      "macro_f1": 0.6444,
+      "macro_precision": 0.6096,
+      "macro_recall": 0.7656
+    }
+  },
+  "dataset_hash": "8c516e248ce330280b1a202f3b5088a1d0fb3939c749b96713cb4f86dc29464e",
+  "seed": 42,
+  "library_versions": {
+    "torch": "2.14.0+cpu",
+    "sklearn": "1.9.1",
+    "numpy": "2.5.3"
+  },
+  "created_at": "2026-09-29T22:15:24.366417+00:00",
+  "model_file_size_bytes": 1638321
+}

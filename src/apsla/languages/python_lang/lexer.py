@@ -10,28 +10,105 @@ from apsla.lexing.common import OffsetMap
 from apsla.lexing.token import Token
 from apsla.models import Range
 
-PYTHON_KEYWORDS: Final[frozenset[str]] = frozenset({
-    "False", "None", "True", "and", "as", "assert", "async", "await",
-    "break", "class", "continue", "def", "del", "elif", "else", "except",
-    "finally", "for", "from", "global", "if", "import", "in", "is",
-    "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try",
-    "while", "with", "yield",
-})
+PYTHON_KEYWORDS: Final[frozenset[str]] = frozenset(
+    {
+        "False",
+        "None",
+        "True",
+        "and",
+        "as",
+        "assert",
+        "async",
+        "await",
+        "break",
+        "class",
+        "continue",
+        "def",
+        "del",
+        "elif",
+        "else",
+        "except",
+        "finally",
+        "for",
+        "from",
+        "global",
+        "if",
+        "import",
+        "in",
+        "is",
+        "lambda",
+        "nonlocal",
+        "not",
+        "or",
+        "pass",
+        "raise",
+        "return",
+        "try",
+        "while",
+        "with",
+        "yield",
+    }
+)
 
 # Operators ordered by descending length so multi-character operators match first
 OPERATORS_3: Final[tuple[str, ...]] = ("**=", "//=", "<<=", ">>=", "...")
 OPERATORS_2: Final[tuple[str, ...]] = (
-    ":=", "->", "**", "//", "<<", ">>", "<=", ">=", "==", "!=",
-    "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "@=",
+    ":=",
+    "->",
+    "**",
+    "//",
+    "<<",
+    ">>",
+    "<=",
+    ">=",
+    "==",
+    "!=",
+    "+=",
+    "-=",
+    "*=",
+    "/=",
+    "%=",
+    "&=",
+    "|=",
+    "^=",
+    "@=",
 )
-OPERATORS_1: Final[frozenset[str]] = frozenset({
-    "+", "-", "*", "/", "%", "@", "&", "|", "^", "~",
-    "<", ">", "=", "(", ")", "[", "]", "{", "}", ",", ":", ".", ";",
-})
+OPERATORS_1: Final[frozenset[str]] = frozenset(
+    {
+        "+",
+        "-",
+        "*",
+        "/",
+        "%",
+        "@",
+        "&",
+        "|",
+        "^",
+        "~",
+        "<",
+        ">",
+        "=",
+        "(",
+        ")",
+        "[",
+        "]",
+        "{",
+        "}",
+        ",",
+        ":",
+        ".",
+        ";",
+    }
+)
 
-STRING_PREFIXES_2: Final[frozenset[str]] = frozenset({
-    "rf", "fr", "rb", "br",
-})
+STRING_PREFIXES_2: Final[frozenset[str]] = frozenset(
+    {
+        "rf",
+        "fr",
+        "rb",
+        "br",
+    }
+)
 STRING_PREFIXES_1: Final[frozenset[str]] = frozenset({"r", "u", "b", "f"})
 
 
@@ -468,6 +545,6 @@ class PythonLexer(LexerBase):
         while not self.is_eof and is_python_ident_continue(self.peek()):
             self.advance()
 
-        text = self.source[start_p:self.cursor]
+        text = self.source[start_p : self.cursor]
         kind = "KEYWORD" if text in PYTHON_KEYWORDS else "IDENTIFIER"
         return self.make_token(kind, start_p, self.cursor, text=text)

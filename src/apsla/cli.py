@@ -73,6 +73,13 @@ def analyze(
             help="Target language identifier (default: python).",
         ),
     ] = "python",
+    ml: Annotated[
+        bool,
+        typer.Option(
+            "--ml/--no-ml",
+            help="Enable or disable token machine learning model fusion (default: True).",
+        ),
+    ] = True,
 ) -> None:
     """Analyze a source file for security vulnerabilities and taint propagation."""
     _configure_windows_encoding()
@@ -80,7 +87,12 @@ def analyze(
 
     source = file.read_text(encoding="utf-8", errors="replace")
     analyzer = Analyzer()
-    result = analyzer.analyze(source=source, language=language, filename=str(file))
+    result = analyzer.analyze(
+        source=source,
+        language=language,
+        filename=str(file),
+        options={"ml": ml},
+    )
 
     if format.lower() == "json":
         console.print_json(result.model_dump_json(indent=2))
@@ -138,10 +150,11 @@ def analyze(
             )
 
         console.print()
+        ml_status = f"{result.engine.ml_mode.upper()} ({result.engine.ml_model_id})"
         console.print(
             f"[bold]Summary:[/bold] Critical: {result.summary.critical} | "
             f"High: {result.summary.high} | Medium: {result.summary.medium} | "
-            f"Low: {result.summary.low} | Total Tokens: {result.summary.tokens_total}"
+            f"Low: {result.summary.low} | ML: {ml_status} | Total Tokens: {result.summary.tokens_total}"
         )
         console.print()
 
@@ -230,12 +243,16 @@ def fix_command(
         try:
             backup_path.write_text(source, encoding="utf-8")
             file.write_text(new_source, encoding="utf-8")
-            console.print(f"[bold green]Applied {len(applied_ids)} fix(es). Backup saved to {backup_path.name}[/bold green]\n")
+            console.print(
+                f"[bold green]Applied {len(applied_ids)} fix(es). Backup saved to {backup_path.name}[/bold green]\n"
+            )
         except Exception as exc:
             console.print(f"[bold red]Failed to write fixed file:[/bold red] {exc}\n")
             raise typer.Exit(code=1)
     elif not apply and diff:
-        console.print("[italic dim]Run with --apply to write changes to disk (creates .bak backup).[/italic dim]\n")
+        console.print(
+            "[italic dim]Run with --apply to write changes to disk (creates .bak backup).[/italic dim]\n"
+        )
 
 
 def main() -> None:

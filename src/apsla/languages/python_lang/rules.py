@@ -156,7 +156,11 @@ class SubprocessShellRule(Rule):
                 if name.startswith("subprocess.") and node.args:
                     has_shell_true = False
                     for kw in node.keywords:
-                        if kw.arg == "shell" and isinstance(kw.value, ast.Constant) and kw.value.value is True:
+                        if (
+                            kw.arg == "shell"
+                            and isinstance(kw.value, ast.Constant)
+                            and kw.value.value is True
+                        ):
                             has_shell_true = True
                             break
 
@@ -182,7 +186,9 @@ class SqlInjectionRule(Rule):
     cwe = "CWE-89"
     severity = Severity.HIGH
     category = "SQL_INJECTION"
-    description = "SQL queries built by string concatenation or formatting are vulnerable to SQL injection."
+    description = (
+        "SQL queries built by string concatenation or formatting are vulnerable to SQL injection."
+    )
     explanation = "Always use parameterized queries with query parameters (e.g., execute(sql, params)) rather than embedding variables directly into SQL strings."
 
     def match(self, context: RuleContext) -> list[Finding]:
@@ -226,7 +232,9 @@ class PickleDeserializationRule(Rule):
     cwe = "CWE-502"
     severity = Severity.HIGH
     category = "DESERIALIZATION"
-    description = "Deserializing untrusted pickle, marshal, or shelve data allows remote code execution."
+    description = (
+        "Deserializing untrusted pickle, marshal, or shelve data allows remote code execution."
+    )
     explanation = "pickle and marshal are not secure against malicious data. Use safer serialization formats such as JSON or Protocol Buffers."
 
     def match(self, context: RuleContext) -> list[Finding]:
@@ -238,9 +246,12 @@ class PickleDeserializationRule(Rule):
             if isinstance(node, ast.Call):
                 name = _get_call_name(node)
                 if name in (
-                    "pickle.loads", "pickle.load",
-                    "_pickle.loads", "_pickle.load",
-                    "marshal.loads", "marshal.load",
+                    "pickle.loads",
+                    "pickle.load",
+                    "_pickle.loads",
+                    "_pickle.load",
+                    "marshal.loads",
+                    "marshal.load",
                     "shelve.open",
                 ):
                     rng = context.node_to_range(node)
@@ -313,7 +324,9 @@ class WeakCryptoHashRule(Rule):
     cwe = "CWE-327"
     severity = Severity.MEDIUM
     category = "WEAK_CRYPTO"
-    description = "MD5 and SHA-1 have known collision weaknesses and should not be used for security."
+    description = (
+        "MD5 and SHA-1 have known collision weaknesses and should not be used for security."
+    )
     explanation = "Replace MD5 and SHA-1 with modern collision-resistant cryptographic hashes such as SHA-256 or SHA-512."
 
     def match(self, context: RuleContext) -> list[Finding]:
@@ -329,13 +342,20 @@ class WeakCryptoHashRule(Rule):
                     is_weak = True
                 elif name == "hashlib.new" and node.args:
                     first_arg = node.args[0]
-                    if isinstance(first_arg, ast.Constant) and str(first_arg.value).lower() in ("md5", "sha1"):
+                    if isinstance(first_arg, ast.Constant) and str(first_arg.value).lower() in (
+                        "md5",
+                        "sha1",
+                    ):
                         is_weak = True
 
                 if is_weak:
                     # Check usedforsecurity=False exception
                     for kw in node.keywords:
-                        if kw.arg == "usedforsecurity" and isinstance(kw.value, ast.Constant) and kw.value.value is False:
+                        if (
+                            kw.arg == "usedforsecurity"
+                            and isinstance(kw.value, ast.Constant)
+                            and kw.value.value is False
+                        ):
                             is_weak = False
 
                 if is_weak:
@@ -358,7 +378,9 @@ class WeakRandomRule(Rule):
     cwe = "CWE-338"
     severity = Severity.MEDIUM
     category = "WEAK_CRYPTO"
-    description = "standard random module is predictable and unsuitable for security tokens or keys."
+    description = (
+        "standard random module is predictable and unsuitable for security tokens or keys."
+    )
     explanation = "Use the 'secrets' module (e.g. secrets.token_hex(), secrets.token_urlsafe()) for cryptographic keys and session tokens."
 
     def match(self, context: RuleContext) -> list[Finding]:
@@ -366,7 +388,9 @@ class WeakRandomRule(Rule):
         if context.ast_tree is None:
             return findings
 
-        sensitive_names = regex.compile(r"(?i)(token|secret|password|passwd|key|auth|session|nonce|salt)")
+        sensitive_names = regex.compile(
+            r"(?i)(token|secret|password|passwd|key|auth|session|nonce|salt)"
+        )
 
         for node in ast.walk(context.ast_tree):
             if isinstance(node, ast.Assign):
@@ -406,8 +430,12 @@ class HardcodedSecretRule(Rule):
         if context.ast_tree is None:
             return findings
 
-        secret_var_re = regex.compile(r"(?i)(password|passwd|api_key|secret_key|auth_token|private_key|access_key)")
-        placeholder_re = regex.compile(r"(?i)^(none|null|todo|test|example|changeme|default|secret|password)$")
+        secret_var_re = regex.compile(
+            r"(?i)(password|passwd|api_key|secret_key|auth_token|private_key|access_key)"
+        )
+        placeholder_re = regex.compile(
+            r"(?i)^(none|null|todo|test|example|changeme|default|secret|password)$"
+        )
 
         for node in ast.walk(context.ast_tree):
             if isinstance(node, ast.Assign):
@@ -419,7 +447,11 @@ class HardcodedSecretRule(Rule):
                         target_name = t.id
                         break
 
-                if target_matches and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                if (
+                    target_matches
+                    and isinstance(node.value, ast.Constant)
+                    and isinstance(node.value.value, str)
+                ):
                     val = node.value.value
                     if len(val) >= 8 and not placeholder_re.match(val):
                         entropy = _shannon_entropy(val)
@@ -429,7 +461,10 @@ class HardcodedSecretRule(Rule):
                                 self.create_finding(
                                     rng=rng,
                                     message=f"Hard-coded credential detected in variable '{target_name}'",
-                                    evidence={"variable": target_name, "entropy": round(entropy, 2)},
+                                    evidence={
+                                        "variable": target_name,
+                                        "entropy": round(entropy, 2),
+                                    },
                                 )
                             )
         return findings
@@ -454,9 +489,19 @@ class InsecureRequestsVerifyRule(Rule):
         for node in ast.walk(context.ast_tree):
             if isinstance(node, ast.Call):
                 name = _get_call_name(node)
-                if name.startswith("requests.") or name in ("get", "post", "put", "delete", "request"):
+                if name.startswith("requests.") or name in (
+                    "get",
+                    "post",
+                    "put",
+                    "delete",
+                    "request",
+                ):
                     for kw in node.keywords:
-                        if kw.arg == "verify" and isinstance(kw.value, ast.Constant) and kw.value.value is False:
+                        if (
+                            kw.arg == "verify"
+                            and isinstance(kw.value, ast.Constant)
+                            and kw.value.value is False
+                        ):
                             rng = context.node_to_range(node)
                             findings.append(
                                 self.create_finding(
@@ -516,7 +561,9 @@ class DynamicImportRule(Rule):
     cwe = "CWE-94"
     severity = Severity.HIGH
     category = "CODE_INJECTION"
-    description = "Importing modules dynamically based on user input allows arbitrary code execution."
+    description = (
+        "Importing modules dynamically based on user input allows arbitrary code execution."
+    )
     explanation = "Restrict dynamically imported modules to an explicit whitelist."
 
     def match(self, context: RuleContext) -> list[Finding]:
@@ -549,7 +596,9 @@ class ObfuscatedPayloadExecutionRule(Rule):
     cwe = "CWE-506"
     severity = Severity.CRITICAL
     category = "MALICIOUS_CODE"
-    description = "Directly executing decoded base64, zlib, or hex streams is an obfuscated malware pattern."
+    description = (
+        "Directly executing decoded base64, zlib, or hex streams is an obfuscated malware pattern."
+    )
     explanation = "Decompressing and immediately evaluating payloads with exec() or eval() is a primary indicator of encoded malware droppers."
 
     def match(self, context: RuleContext) -> list[Finding]:
@@ -557,7 +606,13 @@ class ObfuscatedPayloadExecutionRule(Rule):
         if context.ast_tree is None:
             return findings
 
-        decoder_names = ("b64decode", "base64.b64decode", "zlib.decompress", "codecs.decode", "decode")
+        decoder_names = (
+            "b64decode",
+            "base64.b64decode",
+            "zlib.decompress",
+            "codecs.decode",
+            "decode",
+        )
 
         for node in ast.walk(context.ast_tree):
             if isinstance(node, ast.Call):
@@ -590,7 +645,9 @@ class TemplateInjectionXssRule(Rule):
     cwe = "CWE-79"
     severity = Severity.HIGH
     category = "XSS"
-    description = "Rendering dynamic templates or creating raw Markup from user data causes XSS or SSTI."
+    description = (
+        "Rendering dynamic templates or creating raw Markup from user data causes XSS or SSTI."
+    )
     explanation = "Use render_template() with static template files and automatic escaping, or Markup.escape() for dynamic content."
 
     def match(self, context: RuleContext) -> list[Finding]:

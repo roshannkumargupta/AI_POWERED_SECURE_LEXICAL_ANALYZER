@@ -41,17 +41,12 @@ def test_python_fixture(py_file: Path, expected: list[dict[str, str | int]]) -> 
     """Verify that analyzing a fixture produces the exact expected (rule_id, line) findings."""
     source = py_file.read_text(encoding="utf-8")
     analyzer = Analyzer()
-    result = analyzer.analyze(source=source, language="python", filename=py_file.name)
+    result = analyzer.analyze(
+        source=source, language="python", filename=py_file.name, options={"ml": False}
+    )
 
-    actual_pairs = {
-        (f.rule_id, f.range.start_line)
-        for f in result.findings
-        if not f.suppressed
-    }
-    expected_pairs = {
-        (str(e["rule_id"]), int(e["line"]))
-        for e in expected
-    }
+    actual_pairs = {(f.rule_id, f.range.start_line) for f in result.findings if not f.suppressed}
+    expected_pairs = {(str(e["rule_id"]), int(e["line"])) for e in expected}
 
     assert actual_pairs == expected_pairs, (
         f"Fixture {py_file.name} mismatch!\n"
@@ -66,10 +61,14 @@ def test_senior_probe_1_flask_taint_path():
     fixture_path = FIXTURES_ROOT / "vulnerable" / "cmd_injection_flask.py"
     source = fixture_path.read_text(encoding="utf-8")
     analyzer = Analyzer()
-    result = analyzer.analyze(source=source, language="python", filename=fixture_path.name)
+    result = analyzer.analyze(
+        source=source, language="python", filename=fixture_path.name, options={"ml": False}
+    )
 
     # 1. Finding must exist
-    inj_findings = [f for f in result.findings if f.rule_id == "APS-PY-INJ-002" and not f.suppressed]
+    inj_findings = [
+        f for f in result.findings if f.rule_id == "APS-PY-INJ-002" and not f.suppressed
+    ]
     assert len(inj_findings) == 1, "Expected exactly 1 finding for APS-PY-INJ-002"
 
     f = inj_findings[0]
@@ -77,7 +76,9 @@ def test_senior_probe_1_flask_taint_path():
     assert f.range.start_line == 2
 
     # 2. Taint path must contain at least 3 steps: source -> propagate -> sink
-    assert len(f.taint_path) >= 3, f"Expected 3+ taint steps, got {len(f.taint_path)}: {f.taint_path}"
+    assert len(f.taint_path) >= 3, (
+        f"Expected 3+ taint steps, got {len(f.taint_path)}: {f.taint_path}"
+    )
     assert f.taint_path[0].step.value == "source"
     assert f.taint_path[-1].step.value == "sink"
 
@@ -87,9 +88,13 @@ def test_senior_probe_2_input_seq_taint():
     fixture_path = FIXTURES_ROOT / "vulnerable" / "cmd_injection_input_seq.py"
     source = fixture_path.read_text(encoding="utf-8")
     analyzer = Analyzer()
-    result = analyzer.analyze(source=source, language="python", filename=fixture_path.name)
+    result = analyzer.analyze(
+        source=source, language="python", filename=fixture_path.name, options={"ml": False}
+    )
 
-    inj_findings = [f for f in result.findings if f.rule_id == "APS-PY-INJ-002" and not f.suppressed]
+    inj_findings = [
+        f for f in result.findings if f.rule_id == "APS-PY-INJ-002" and not f.suppressed
+    ]
     assert len(inj_findings) == 1
     f = inj_findings[0]
     assert len(f.taint_path) >= 3
@@ -100,10 +105,14 @@ def test_senior_probe_3_shlex_quote_not_flagged():
     fixture_path = FIXTURES_ROOT / "safe" / "cmd_sanitized_shlex.py"
     source = fixture_path.read_text(encoding="utf-8")
     analyzer = Analyzer()
-    result = analyzer.analyze(source=source, language="python", filename=fixture_path.name)
+    result = analyzer.analyze(
+        source=source, language="python", filename=fixture_path.name, options={"ml": False}
+    )
 
     active_findings = [f for f in result.findings if not f.suppressed]
-    assert len(active_findings) == 0, f"Expected 0 findings for shlex.quote fixture, got: {active_findings}"
+    assert len(active_findings) == 0, (
+        f"Expected 0 findings for shlex.quote fixture, got: {active_findings}"
+    )
     assert result.summary.score == 100
 
 
@@ -112,7 +121,9 @@ def test_senior_probe_4_subprocess_list_safe():
     fixture_path = FIXTURES_ROOT / "safe" / "subprocess_list_safe.py"
     source = fixture_path.read_text(encoding="utf-8")
     analyzer = Analyzer()
-    result = analyzer.analyze(source=source, language="python", filename=fixture_path.name)
+    result = analyzer.analyze(
+        source=source, language="python", filename=fixture_path.name, options={"ml": False}
+    )
 
     active_findings = [f for f in result.findings if not f.suppressed]
     assert len(active_findings) == 0
@@ -124,9 +135,13 @@ def test_senior_probe_5_bidi_flagged():
     fixture_path = FIXTURES_ROOT / "adversarial" / "trojan_source_bidi.py"
     source = fixture_path.read_text(encoding="utf-8")
     analyzer = Analyzer()
-    result = analyzer.analyze(source=source, language="python", filename=fixture_path.name)
+    result = analyzer.analyze(
+        source=source, language="python", filename=fixture_path.name, options={"ml": False}
+    )
 
-    uni_findings = [f for f in result.findings if f.rule_id == "APS-ALL-UNI-001" and not f.suppressed]
+    uni_findings = [
+        f for f in result.findings if f.rule_id == "APS-ALL-UNI-001" and not f.suppressed
+    ]
     assert len(uni_findings) >= 1
 
 
@@ -135,12 +150,18 @@ def test_senior_probe_6_cyrillic_exec_is_high():
     fixture_path = FIXTURES_ROOT / "adversarial" / "cyrillic_homoglyph_exec.py"
     source = fixture_path.read_text(encoding="utf-8")
     analyzer = Analyzer()
-    result = analyzer.analyze(source=source, language="python", filename=fixture_path.name)
+    result = analyzer.analyze(
+        source=source, language="python", filename=fixture_path.name, options={"ml": False}
+    )
 
-    uni_findings = [f for f in result.findings if f.rule_id in ("APS-ALL-UNI-004", "APS-ALL-UNI-006")]
+    uni_findings = [
+        f for f in result.findings if f.rule_id in ("APS-ALL-UNI-004", "APS-ALL-UNI-006")
+    ]
     assert len(uni_findings) >= 1
 
-    inj_findings = [f for f in result.findings if f.rule_id == "APS-PY-INJ-001" and not f.suppressed]
+    inj_findings = [
+        f for f in result.findings if f.rule_id == "APS-PY-INJ-001" and not f.suppressed
+    ]
     assert len(inj_findings) == 1
     assert inj_findings[0].severity in (Severity.HIGH, Severity.CRITICAL)
 
@@ -150,8 +171,12 @@ def test_senior_wrong_variable_bug_gone():
     fixture_path = FIXTURES_ROOT / "safe" / "cmd_wrong_variable_safe.py"
     source = fixture_path.read_text(encoding="utf-8")
     analyzer = Analyzer()
-    result = analyzer.analyze(source=source, language="python", filename=fixture_path.name)
+    result = analyzer.analyze(
+        source=source, language="python", filename=fixture_path.name, options={"ml": False}
+    )
 
     active_findings = [f for f in result.findings if not f.suppressed]
-    assert len(active_findings) == 0, f"Expected 0 findings for wrong variable safe fixture, got: {active_findings}"
+    assert len(active_findings) == 0, (
+        f"Expected 0 findings for wrong variable safe fixture, got: {active_findings}"
+    )
     assert result.summary.score == 100

@@ -104,7 +104,9 @@ def fix_all(
     from apsla.pipeline import Analyzer
 
     analyzer = Analyzer()
-    initial_res = analyzer.analyze(source, language=language, filename=filename, options={"fixes": True})
+    initial_res = analyzer.analyze(
+        source, language=language, filename=filename, options={"fixes": True}
+    )
     score_before = initial_res.summary.score
 
     current_source = source
@@ -114,17 +116,25 @@ def fix_all(
     allowed_confidences = {"safe", "review"} if allow_review else {"safe"}
 
     for _ in range(3):
-        res = analyzer.analyze(current_source, language=language, filename=filename, options={"fixes": True})
+        res = analyzer.analyze(
+            current_source, language=language, filename=filename, options={"fixes": True}
+        )
         applicable_fixes: list[Fix] = []
 
         for f in res.findings:
             for fix in f.fixes:
-                if fix.verification.verified and fix.edits and fix.confidence in allowed_confidences:
+                if (
+                    fix.verification.verified
+                    and fix.edits
+                    and fix.confidence in allowed_confidences
+                ):
                     applicable_fixes.append(fix)
                 elif not fix.verification.verified:
                     skipped_fix_ids[fix.id] = fix.verification.notes
                 elif fix.confidence not in allowed_confidences:
-                    skipped_fix_ids[fix.id] = f"Requires human review (confidence: {fix.confidence})"
+                    skipped_fix_ids[fix.id] = (
+                        f"Requires human review (confidence: {fix.confidence})"
+                    )
 
         if not applicable_fixes:
             break
@@ -145,7 +155,9 @@ def fix_all(
         if not pass_changed:
             break
 
-    final_res = analyzer.analyze(current_source, language=language, filename=filename, options={"fixes": False})
+    final_res = analyzer.analyze(
+        current_source, language=language, filename=filename, options={"fixes": False}
+    )
     score_after = final_res.summary.score
     diff = unified_diff(source, current_source, filename)
 

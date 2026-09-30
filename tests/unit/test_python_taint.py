@@ -47,7 +47,9 @@ def test_taint_sources():
     assert flows[0].rule_id == "APS-PY-INJ-001"
 
     # socket recv
-    flows = _run_taint("import socket\ns = socket.socket()\nbuf = s.recv(1024)\nos.system(buf)").flows
+    flows = _run_taint(
+        "import socket\ns = socket.socket()\nbuf = s.recv(1024)\nos.system(buf)"
+    ).flows
     assert len(flows) == 1
 
     # django request.GET
@@ -55,7 +57,9 @@ def test_taint_sources():
     assert len(flows) == 1
 
     # fastapi parameter
-    flows = _run_taint("@app.get('/items')\ndef endpoint(user_id: str):\n    os.system(user_id)").flows
+    flows = _run_taint(
+        "@app.get('/items')\ndef endpoint(user_id: str):\n    os.system(user_id)"
+    ).flows
     assert len(flows) == 1
 
 
@@ -108,32 +112,20 @@ def test_taint_intra_file_function_summary():
 
 def test_taint_sanitizers():
     # shlex.quote
-    code_shlex = (
-        "import shlex\n"
-        "u = input()\n"
-        "safe_u = shlex.quote(u)\n"
-        "os.system('echo ' + safe_u)"
-    )
+    code_shlex = "import shlex\nu = input()\nsafe_u = shlex.quote(u)\nos.system('echo ' + safe_u)"
     flows = _run_taint(code_shlex).flows
     assert len(flows) == 1
     assert flows[0].sanitized
 
     # int cast
-    code_int = (
-        "u = input()\n"
-        "safe_id = int(u)\n"
-        "os.system(f'echo {safe_id}')"
-    )
+    code_int = "u = input()\nsafe_id = int(u)\nos.system(f'echo {safe_id}')"
     flows = _run_taint(code_int).flows
     assert len(flows) == 1
     assert flows[0].sanitized
 
     # html.escape for XSS
     code_xss = (
-        "import html\n"
-        "u = input()\n"
-        "safe_html = html.escape(u)\n"
-        "render_template_string(safe_html)"
+        "import html\nu = input()\nsafe_html = html.escape(u)\nrender_template_string(safe_html)"
     )
     flows = _run_taint(code_xss).flows
     assert len(flows) == 1
@@ -151,10 +143,7 @@ def test_taint_sanitizers():
     assert flows[0].sanitized
 
     # Parameterized SQL query
-    code_sql = (
-        "u = input()\n"
-        "cursor.execute('SELECT * FROM users WHERE id = %s', (u,))"
-    )
+    code_sql = "u = input()\ncursor.execute('SELECT * FROM users WHERE id = %s', (u,))"
     flows = _run_taint(code_sql).flows
     # Parameterized query should be marked sanitized
     assert len(flows) == 1

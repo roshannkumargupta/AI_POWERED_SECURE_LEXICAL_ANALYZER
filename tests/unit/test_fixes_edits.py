@@ -75,7 +75,7 @@ def test_ensure_import_python_placement():
     edits = ensure_import_python(source, "import shlex")
     assert len(edits) == 1
     modified = apply_edits(source, edits)
-    assert 'from __future__ import annotations\nimport shlex\n' in modified
+    assert "from __future__ import annotations\nimport shlex\n" in modified
 
 
 def test_ensure_import_python_deduplication():

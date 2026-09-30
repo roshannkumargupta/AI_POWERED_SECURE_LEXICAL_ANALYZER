@@ -144,14 +144,10 @@ class Analyzer:
             # Stage 7: Fusion Stub
             # (a) Filter out findings at sinks where all inputs were sanitized
             sanitized_keys = {
-                (f.rule_id, f.sink_range.start_line)
-                for f in taint_flows
-                if f.sanitized
+                (f.rule_id, f.sink_range.start_line) for f in taint_flows if f.sanitized
             }
             findings = [
-                f
-                for f in findings
-                if (f.rule_id, f.range.start_line) not in sanitized_keys
+                f for f in findings if (f.rule_id, f.range.start_line) not in sanitized_keys
             ]
 
             # (b) Apply confirmed taint flows: boost confidence +0.15, severity + 1, attach path
@@ -166,13 +162,10 @@ class Analyzer:
                     ) or (
                         flow.sink_range.start_line == f.range.start_line
                         and (
-                            f.rule_id.startswith("APS-PY-INJ")
-                            or f.rule_id.startswith("APS-PY-IO")
+                            f.rule_id.startswith("APS-PY-INJ") or f.rule_id.startswith("APS-PY-IO")
                         )
                     ):
-                        matched_flow_keys.add(
-                            (flow.rule_id, flow.sink_range.start_line)
-                        )
+                        matched_flow_keys.add((flow.rule_id, flow.sink_range.start_line))
                         f.confidence = min(1.0, round(f.confidence + 0.15, 2))
                         f.severity = _bump_severity(f.severity)
                         f.label = (
@@ -222,6 +215,37 @@ class Analyzer:
                             suppressed=False,
                         )
                     )
+
+        # Stage 6: Machine Learning Inference
+        ml_engine = None
+        requested_ml_mode = opts.get("ml_mode", "auto")
+        if requested_ml_mode == "off" or not opts.get("ml", True):
+            ml_mode = "off"
+            ml_probs = None
+            ml_threshold_malicious = 0.5
+        else:
+            from apsla.ml.infer import MLInferenceEngine
+
+            ml_engine = MLInferenceEngine(model_id=opts.get("ml_model_id"))
+            ml_mode = ml_engine.get_mode()
+            ml_probs = (
+                ml_engine.predict_token_probabilities(raw_tokens, language=language)
+                if ml_engine.is_available() and raw_tokens
+                else None
+            )
+            ml_threshold_malicious = ml_engine.threshold_malicious
+
+        # Stage 7: Fusion (PROJECT_SPEC Section H)
+        from apsla.fusion import fuse_findings
+
+        findings = fuse_findings(
+            rule_findings=findings,
+            tokens=raw_tokens,
+            ml_probabilities=ml_probs,
+            ml_mode=ml_mode,
+            ml_threshold_malicious=ml_threshold_malicious,
+            filename=filename,
+        )
 
         # Stage 7.5: Fix Generation & Verification
         if opts.get("fixes", True):
@@ -315,8 +339,8 @@ class Analyzer:
         elapsed_ms = round((time.perf_counter() - start_time) * 1000.0, 3)
 
         engine = EngineMetadata(
-            ml_mode=opts.get("ml_mode", "off"),
-            ml_model_id="none",
+            ml_mode=ml_mode,
+            ml_model_id=ml_engine.get_model_id() if ml_engine is not None else "none",
             taint="ast-flow" if plugin and plugin.id == "python" else "none",
             version="0.1.0",
             elapsed_ms=elapsed_ms,

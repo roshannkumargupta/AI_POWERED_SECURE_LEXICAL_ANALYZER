@@ -83,7 +83,7 @@ def apply_edits(source: str, edits: list[Edit]) -> str:
 
     result = source
     for edit_item in resolved:
-        result = result[:edit_item.start_py] + edit_item.new_text + result[edit_item.end_py:]
+        result = result[: edit_item.start_py] + edit_item.new_text + result[edit_item.end_py :]
 
     return result
 

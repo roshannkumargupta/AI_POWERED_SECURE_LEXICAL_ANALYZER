@@ -137,7 +137,9 @@ class PythonTaintAnalyzer:
             val = self._evaluate_expression(stmt.value, env, record_sinks=record_sinks)
             if isinstance(stmt.target, ast.Name):
                 orig = env.get(stmt.target.id, TaintValue(is_tainted=False))
-                combined = self._merge_taint(orig, val, stmt, f"Augmented assignment to '{stmt.target.id}'")
+                combined = self._merge_taint(
+                    orig, val, stmt, f"Augmented assignment to '{stmt.target.id}'"
+                )
                 env[stmt.target.id] = combined
 
         # 3. Expression Statements: func(...)
@@ -237,7 +239,9 @@ class PythonTaintAnalyzer:
                 )
             else:
                 # Variable reassigned to constant becomes clean! (Flow-sensitive)
-                env[target.id] = TaintValue(is_tainted=False, sanitized=val.sanitized, path=val.path)
+                env[target.id] = TaintValue(
+                    is_tainted=False, sanitized=val.sanitized, path=val.path
+                )
 
         # Tuple unpacking: a, b = val
         elif isinstance(target, (ast.Tuple, ast.List)):
@@ -368,7 +372,9 @@ class PythonTaintAnalyzer:
 
             # 4. Check standard propagation functions: e.g. .format(), .join()
             if call_name.endswith(".format"):
-                args_val = [self._evaluate_expression(a, env, record_sinks=record_sinks) for a in expr.args]
+                args_val = [
+                    self._evaluate_expression(a, env, record_sinks=record_sinks) for a in expr.args
+                ]
                 for a_val in args_val:
                     if a_val.is_tainted:
                         rng = self.context.node_to_range(expr)
@@ -394,7 +400,9 @@ class PythonTaintAnalyzer:
                 summary = self.function_summaries[call_name]
                 for (param_name, returns_taint), arg_expr in zip(summary.items(), expr.args):
                     if returns_taint:
-                        arg_val = self._evaluate_expression(arg_expr, env, record_sinks=record_sinks)
+                        arg_val = self._evaluate_expression(
+                            arg_expr, env, record_sinks=record_sinks
+                        )
                         if arg_val.is_tainted:
                             rng = self.context.node_to_range(expr)
                             prop_step = self._create_step(
@@ -467,8 +475,14 @@ class PythonTaintAnalyzer:
 
         # 4. Flask request: request.args, request.form, request.values, request.json, request.headers, etc.
         flask_patterns = (
-            "request.args", "request.form", "request.values", "request.json",
-            "request.data", "request.cookies", "request.headers", "request.get_json",
+            "request.args",
+            "request.form",
+            "request.values",
+            "request.json",
+            "request.data",
+            "request.cookies",
+            "request.headers",
+            "request.get_json",
         )
         if any(p in node_name for p in flask_patterns):
             rng = self.context.node_to_range(node)
@@ -528,7 +542,12 @@ class PythonTaintAnalyzer:
         elif call_name in ("html.escape", "markupsafe.escape", "escape", "Markup.escape"):
             is_san = True
         # 4. os.path.basename / secure_filename -> clears path traversal taint
-        elif call_name in ("os.path.basename", "basename", "secure_filename", "werkzeug.utils.secure_filename"):
+        elif call_name in (
+            "os.path.basename",
+            "basename",
+            "secure_filename",
+            "werkzeug.utils.secure_filename",
+        ):
             is_san = True
 
         if is_san:
@@ -628,7 +647,9 @@ class PythonTaintAnalyzer:
         # (c) SQL Injection Sinks: cursor.execute(query)
         elif any(call_name.endswith(f".{s}") for s in SQL_SINKS) or call_name in SQL_SINKS:
             rng = self.context.node_to_range(call_node)
-            is_parameterized = len(call_node.args) >= 2 or any(kw.arg == "params" for kw in call_node.keywords)
+            is_parameterized = len(call_node.args) >= 2 or any(
+                kw.arg == "params" for kw in call_node.keywords
+            )
             if is_parameterized or arg_val.sanitized:
                 self.flows.append(
                     TaintFlow(

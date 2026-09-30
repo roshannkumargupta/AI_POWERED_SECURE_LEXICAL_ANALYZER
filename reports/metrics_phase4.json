@@ -1,0 +1,417 @@
+{
+  "model_id": "random_forest_20260929_221524",
+  "feature_schema_hash": "313113ff1b1c3eaaef410590101e19a00c1721aa822f0c90e1034f7d06cc5b90",
+  "model_type": "random_forest",
+  "test_split_metrics": {
+    "touched_timestamp": "2026-09-30T07:27:03.796961+00:00",
+    "dataset_hash": "d4f93d648268110090a8664b7fe17f4534a0ccbcec498fa5b97671ff6375ef76",
+    "num_test_tokens": 1427,
+    "macro_f1": 0.6532,
+    "macro_precision": 0.6174,
+    "macro_recall": 0.7596,
+    "classes": {
+      "SAFE": {
+        "precision": 0.9486,
+        "recall": 0.7402,
+        "f1": 0.8315
+      },
+      "SUSPICIOUS": {
+        "precision": 0.4751,
+        "recall": 0.6562,
+        "f1": 0.5512
+      },
+      "MALICIOUS": {
+        "precision": 0.4286,
+        "recall": 0.8824,
+        "f1": 0.5769
+      }
+    },
+    "confusion_matrix": [
+      [
+        812,
+        115,
+        170
+      ],
+      [
+        25,
+        105,
+        30
+      ],
+      [
+        19,
+        1,
+        150
+      ]
+    ]
+  },
+  "external_benchmark_metrics": {
+    "total_files": 42,
+    "ml": {
+      "f1": 0.7407,
+      "precision": 0.6667,
+      "recall": 0.8333
+    },
+    "rule_baseline": {
+      "f1": 0.807,
+      "precision": 0.697,
+      "recall": 0.9583
+    },
+    "per_file": [
+      {
+        "filename": "ext_01_user_report_open.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.9998,
+        "rule_flagged": true,
+        "rule_findings_count": 7
+      },
+      {
+        "filename": "ext_02_safe_path_resolve.py",
+        "ground_label": "SAFE",
+        "ml_flagged": true,
+        "ml_max_p": 0.9998,
+        "rule_flagged": true,
+        "rule_findings_count": 11
+      },
+      {
+        "filename": "ext_03_payment_gateway_hash.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 1.0,
+        "rule_flagged": true,
+        "rule_findings_count": 2
+      },
+      {
+        "filename": "ext_04_token_generator_secrets.py",
+        "ground_label": "SAFE",
+        "ml_flagged": false,
+        "ml_max_p": 0.4676,
+        "rule_flagged": false,
+        "rule_findings_count": 0
+      },
+      {
+        "filename": "ext_05_backup_db_system.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.9465,
+        "rule_flagged": true,
+        "rule_findings_count": 5
+      },
+      {
+        "filename": "ext_06_docker_exec_subprocess.py",
+        "ground_label": "SAFE",
+        "ml_flagged": true,
+        "ml_max_p": 0.75,
+        "rule_flagged": true,
+        "rule_findings_count": 10
+      },
+      {
+        "filename": "ext_07_eval_math_calculator.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.8998,
+        "rule_flagged": true,
+        "rule_findings_count": 4
+      },
+      {
+        "filename": "ext_08_literal_eval_config.py",
+        "ground_label": "SAFE",
+        "ml_flagged": false,
+        "ml_max_p": 0.4959,
+        "rule_flagged": false,
+        "rule_findings_count": 0
+      },
+      {
+        "filename": "ext_09_sql_search_users.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.8998,
+        "rule_flagged": true,
+        "rule_findings_count": 11
+      },
+      {
+        "filename": "ext_10_sql_parameterized_query.py",
+        "ground_label": "SAFE",
+        "ml_flagged": true,
+        "ml_max_p": 0.9,
+        "rule_flagged": true,
+        "rule_findings_count": 10
+      },
+      {
+        "filename": "ext_11_session_deserialize_pickle.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.9398,
+        "rule_flagged": true,
+        "rule_findings_count": 2
+      },
+      {
+        "filename": "ext_12_json_api_response.py",
+        "ground_label": "SAFE",
+        "ml_flagged": true,
+        "ml_max_p": 0.9498,
+        "rule_flagged": true,
+        "rule_findings_count": 6
+      },
+      {
+        "filename": "ext_13_webhook_ssl_verify_false.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": false,
+        "ml_max_p": 0.4178,
+        "rule_flagged": true,
+        "rule_findings_count": 1
+      },
+      {
+        "filename": "ext_14_api_client_verify_true.py",
+        "ground_label": "SAFE",
+        "ml_flagged": false,
+        "ml_max_p": 0.3847,
+        "rule_flagged": false,
+        "rule_findings_count": 0
+      },
+      {
+        "filename": "ext_15_hardcoded_aws_key.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.7122,
+        "rule_flagged": true,
+        "rule_findings_count": 3
+      },
+      {
+        "filename": "ext_16_env_secret_retrieval.py",
+        "ground_label": "SAFE",
+        "ml_flagged": false,
+        "ml_max_p": 0.4726,
+        "rule_flagged": false,
+        "rule_findings_count": 0
+      },
+      {
+        "filename": "ext_17_xss_render_template.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.7,
+        "rule_flagged": true,
+        "rule_findings_count": 1
+      },
+      {
+        "filename": "ext_18_escaped_html_output.py",
+        "ground_label": "SAFE",
+        "ml_flagged": false,
+        "ml_max_p": 0.3752,
+        "rule_flagged": false,
+        "rule_findings_count": 0
+      },
+      {
+        "filename": "ext_19_bidi_spoofed_check.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": false,
+        "ml_max_p": 0.4309,
+        "rule_flagged": true,
+        "rule_findings_count": 2
+      },
+      {
+        "filename": "ext_20_cyrillic_homoglyph_exec.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": false,
+        "ml_max_p": 0.3957,
+        "rule_flagged": true,
+        "rule_findings_count": 6
+      },
+      {
+        "filename": "ext_21_zero_width_auth.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.63,
+        "rule_flagged": true,
+        "rule_findings_count": 3
+      },
+      {
+        "filename": "ext_22_subprocess_shell_true.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 1.0,
+        "rule_flagged": true,
+        "rule_findings_count": 2
+      },
+      {
+        "filename": "ext_23_base64_hidden_payload.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.85,
+        "rule_flagged": true,
+        "rule_findings_count": 2
+      },
+      {
+        "filename": "ext_24_yaml_load_unsafe.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.98,
+        "rule_flagged": true,
+        "rule_findings_count": 3
+      },
+      {
+        "filename": "ext_25_yaml_safe_load.py",
+        "ground_label": "SAFE",
+        "ml_flagged": true,
+        "ml_max_p": 0.7806,
+        "rule_flagged": true,
+        "rule_findings_count": 8
+      },
+      {
+        "filename": "ext_26_random_password_reset.py",
+        "ground_label": "SUSPICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.6548,
+        "rule_flagged": true,
+        "rule_findings_count": 4
+      },
+      {
+        "filename": "ext_27_secrets_password_reset.py",
+        "ground_label": "SAFE",
+        "ml_flagged": true,
+        "ml_max_p": 0.81,
+        "rule_flagged": true,
+        "rule_findings_count": 10
+      },
+      {
+        "filename": "ext_28_dynamic_import_plugin.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.8298,
+        "rule_flagged": true,
+        "rule_findings_count": 1
+      },
+      {
+        "filename": "ext_29_static_import_map.py",
+        "ground_label": "SAFE",
+        "ml_flagged": true,
+        "ml_max_p": 0.5193,
+        "rule_flagged": true,
+        "rule_findings_count": 2
+      },
+      {
+        "filename": "ext_30_tar_extract_traversal.py",
+        "ground_label": "SUSPICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.723,
+        "rule_flagged": true,
+        "rule_findings_count": 7
+      },
+      {
+        "filename": "ext_31_safe_tar_extract.py",
+        "ground_label": "SAFE",
+        "ml_flagged": true,
+        "ml_max_p": 0.8097,
+        "rule_flagged": true,
+        "rule_findings_count": 10
+      },
+      {
+        "filename": "ext_32_jwt_weak_secret.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": false,
+        "ml_max_p": 0.4094,
+        "rule_flagged": false,
+        "rule_findings_count": 0
+      },
+      {
+        "filename": "ext_33_jwt_env_secret.py",
+        "ground_label": "SAFE",
+        "ml_flagged": false,
+        "ml_max_p": 0.4298,
+        "rule_flagged": false,
+        "rule_findings_count": 0
+      },
+      {
+        "filename": "ext_34_flask_login_sql.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.9098,
+        "rule_flagged": true,
+        "rule_findings_count": 11
+      },
+      {
+        "filename": "ext_35_sqlite_param_query.py",
+        "ground_label": "SAFE",
+        "ml_flagged": true,
+        "ml_max_p": 0.8998,
+        "rule_flagged": true,
+        "rule_findings_count": 10
+      },
+      {
+        "filename": "ext_36_os_popen_grep.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.9618,
+        "rule_flagged": true,
+        "rule_findings_count": 6
+      },
+      {
+        "filename": "ext_37_subprocess_check_output.py",
+        "ground_label": "SAFE",
+        "ml_flagged": true,
+        "ml_max_p": 0.75,
+        "rule_flagged": true,
+        "rule_findings_count": 10
+      },
+      {
+        "filename": "ext_38_jinja_raw_template.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.5014,
+        "rule_flagged": true,
+        "rule_findings_count": 1
+      },
+      {
+        "filename": "ext_39_jinja_sandboxed_env.py",
+        "ground_label": "SAFE",
+        "ml_flagged": false,
+        "ml_max_p": 0.4617,
+        "rule_flagged": false,
+        "rule_findings_count": 0
+      },
+      {
+        "filename": "ext_40_crypto_sha1_sign.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.78,
+        "rule_flagged": true,
+        "rule_findings_count": 4
+      },
+      {
+        "filename": "ext_41_crypto_sha256_sign.py",
+        "ground_label": "SAFE",
+        "ml_flagged": false,
+        "ml_max_p": 0.4709,
+        "rule_flagged": false,
+        "rule_findings_count": 0
+      },
+      {
+        "filename": "ext_42_flask_echo_service.py",
+        "ground_label": "MALICIOUS",
+        "ml_flagged": true,
+        "ml_max_p": 0.95,
+        "rule_flagged": true,
+        "rule_findings_count": 1
+      }
+    ]
+  },
+  "senior_baseline_comparison": {
+    "senior_reported_metrics": {
+      "accuracy": 0.9412,
+      "precision": 0.9412,
+      "recall": 0.9412,
+      "f1": 0.9412,
+      "status": "not reproducible: identical scores across all metrics due to artificial synthetic evaluation artifact"
+    },
+    "apsla_ml_test_split": {
+      "macro_f1": 0.6532,
+      "macro_precision": 0.6174,
+      "macro_recall": 0.7596
+    },
+    "apsla_external_handwritten": {
+      "f1": 0.7407,
+      "precision": 0.6667,
+      "recall": 0.8333
+    }
+  }
+}

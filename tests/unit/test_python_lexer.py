@@ -40,7 +40,9 @@ def test_keywords_and_unicode_identifiers():
     """Verify keywords and Unicode-aware PEP 3131 identifiers."""
     sample = "def calculate_π(r, über_größe=True):\n    return r * 3.14\n"
     lexer = PythonLexer(sample)
-    tokens = [t for t in lexer.tokenize() if t.kind not in ("WHITESPACE", "NEWLINE", "INDENT", "DEDENT")]
+    tokens = [
+        t for t in lexer.tokenize() if t.kind not in ("WHITESPACE", "NEWLINE", "INDENT", "DEDENT")
+    ]
 
     assert tokens[0].kind == "KEYWORD"
     assert tokens[0].text == "def"
@@ -61,8 +63,16 @@ def test_number_literals():
     tokens = [t for t in lexer.tokenize() if t.kind == "NUMBER"]
 
     expected_texts = [
-        "1_000_000", "0x1A_3F", "0o755", "0b1010_0110",
-        "3.14159", ".5", "1e-5", "2.5E+3", "3j", "4.5e2j",
+        "1_000_000",
+        "0x1A_3F",
+        "0o755",
+        "0b1010_0110",
+        "3.14159",
+        ".5",
+        "1e-5",
+        "2.5E+3",
+        "3j",
+        "4.5e2j",
     ]
     actual_texts = [t.text for t in tokens]
     assert actual_texts == expected_texts
@@ -72,7 +82,7 @@ def test_string_prefixes_and_quotes():
     """Verify r, u, b, f, rb, br prefixes and triple quotes."""
     sample = (
         "s1 = r'raw string\\n'\n"
-        "s2 = b\"byte string\"\n"
+        's2 = b"byte string"\n'
         "s3 = u'unicode string'\n"
         "s4 = rb'''bytes raw'''\n"
         's5 = """triple double"""\n'
@@ -124,12 +134,7 @@ def test_operators_including_walrus_and_ellipsis():
 
 def test_indentation_stack_and_dedents():
     """Verify INDENT and DEDENT token emissions on nested code blocks."""
-    sample = (
-        "def outer():\n"
-        "    if True:\n"
-        "        pass\n"
-        "    return 1\n"
-    )
+    sample = "def outer():\n    if True:\n        pass\n    return 1\n"
     lexer = PythonLexer(sample)
     tokens = lexer.tokenize()
 
@@ -165,9 +170,13 @@ def test_cross_check_with_python_tokenize_on_stdlib_files():
     stdlib_dir = Path(tokenize.__file__).resolve().parent
     py_files = sorted(stdlib_dir.glob("*.py"))
     # Filter out empty or test files to get high-quality modules
-    candidate_files = [f for f in py_files if f.stat().st_size > 1000 and not f.name.startswith("test_")]
+    candidate_files = [
+        f for f in py_files if f.stat().st_size > 1000 and not f.name.startswith("test_")
+    ]
 
-    assert len(candidate_files) >= 30, f"Expected >= 30 stdlib python files, found {len(candidate_files)}"
+    assert len(candidate_files) >= 30, (
+        f"Expected >= 30 stdlib python files, found {len(candidate_files)}"
+    )
     checked_count = 0
 
     for py_file in candidate_files[:35]:
@@ -181,7 +190,9 @@ def test_cross_check_with_python_tokenize_on_stdlib_files():
         our_tokens = our_lexer.tokenize()
 
         # Invariant: reconstruction must hold on every stdlib file
-        assert "".join(t.text for t in our_tokens) == content, f"Reconstruction failed on {py_file.name}"
+        assert "".join(t.text for t in our_tokens) == content, (
+            f"Reconstruction failed on {py_file.name}"
+        )
 
         # 2. Run standard tokenize
         try:
@@ -191,14 +202,23 @@ def test_cross_check_with_python_tokenize_on_stdlib_files():
 
         # Extract non-trivia tokens from standard library
         std_meaningful = [
-            t for t in std_tokens
-            if t.type not in (tokenize.ENCODING, tokenize.COMMENT, tokenize.NL, tokenize.INDENT, tokenize.DEDENT)
+            t
+            for t in std_tokens
+            if t.type
+            not in (
+                tokenize.ENCODING,
+                tokenize.COMMENT,
+                tokenize.NL,
+                tokenize.INDENT,
+                tokenize.DEDENT,
+            )
             and t.string.strip() != ""
         ]
 
         # Extract non-trivia tokens from our lexer
         our_meaningful = [
-            t for t in our_tokens
+            t
+            for t in our_tokens
             if t.kind not in ("WHITESPACE", "COMMENT", "NL", "INDENT", "DEDENT", "ERROR")
             and t.text.strip() != ""
         ]
@@ -209,4 +229,6 @@ def test_cross_check_with_python_tokenize_on_stdlib_files():
         assert len(our_meaningful) > 0 and len(std_meaningful) > 0
         checked_count += 1
 
-    assert checked_count >= 30, f"Successfully cross-checked on {checked_count} stdlib files (required >= 30)"
+    assert checked_count >= 30, (
+        f"Successfully cross-checked on {checked_count} stdlib files (required >= 30)"
+    )

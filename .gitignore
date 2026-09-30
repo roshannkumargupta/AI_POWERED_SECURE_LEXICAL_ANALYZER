@@ -28,11 +28,15 @@ data/processed/*.csv
 !data/processed/.gitkeep
 logs/
 results/
+src/apsla/ml/cache/
+*.npz
 *.pth
 *.pt
 *.onnx
 *.joblib
 *.bin
+!src/apsla/ml/artifacts/**/model.joblib
+!src/apsla/ml/artifacts/**/model.pt
 
 # OS files
 .DS_Store

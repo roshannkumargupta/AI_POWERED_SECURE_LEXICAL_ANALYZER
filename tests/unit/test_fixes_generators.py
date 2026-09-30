@@ -39,7 +39,9 @@ def test_generator_verified_on_fixture(fixture_rel: str, target_rule: str):
     source = file_path.read_text(encoding="utf-8")
 
     analyzer = Analyzer()
-    result = analyzer.analyze(source, language="python", filename=file_path.name, options={"fixes": True})
+    result = analyzer.analyze(
+        source, language="python", filename=file_path.name, options={"fixes": True}
+    )
 
     matching_findings = [f for f in result.findings if f.rule_id == target_rule]
     assert matching_findings, f"Target rule {target_rule} not detected in {fixture_rel}"
@@ -57,7 +59,9 @@ def test_generator_verified_on_fixture(fixture_rel: str, target_rule: str):
     best_fix = verified_fixes[0]
     if best_fix.edits:
         fixed_source = apply_edits(source, best_fix.edits)
-        post_res = analyzer.analyze(fixed_source, language="python", filename=file_path.name, options={"fixes": False})
+        post_res = analyzer.analyze(
+            fixed_source, language="python", filename=file_path.name, options={"fixes": False}
+        )
         post_rules = [f.rule_id for f in post_res.findings]
         assert target_rule not in post_rules, f"Rule {target_rule} still present in fixed file"
 
@@ -70,8 +74,12 @@ def test_fix_all_idempotency_on_all_vulnerable_fixtures():
     for py_file in py_files:
         source = py_file.read_text(encoding="utf-8")
         # Run fix_all with allow_review=True to ensure multi-pass convergence
-        fixed_once, _, _, _, _, _ = fix_all(source, language="python", filename=py_file.name, allow_review=True)
-        fixed_twice, applied_2, _, _, _, _ = fix_all(fixed_once, language="python", filename=py_file.name, allow_review=True)
+        fixed_once, _, _, _, _, _ = fix_all(
+            source, language="python", filename=py_file.name, allow_review=True
+        )
+        fixed_twice, applied_2, _, _, _, _ = fix_all(
+            fixed_once, language="python", filename=py_file.name, allow_review=True
+        )
 
         assert fixed_once == fixed_twice, (
             f"fix_all was not idempotent on {py_file.name}!\n"
@@ -86,7 +94,9 @@ def test_property_verified_fix_never_breaks_syntax():
 
     for py_file in py_files:
         source = py_file.read_text(encoding="utf-8")
-        res = analyzer.analyze(source, language="python", filename=py_file.name, options={"fixes": True})
+        res = analyzer.analyze(
+            source, language="python", filename=py_file.name, options={"fixes": True}
+        )
 
         for finding in res.findings:
             for fix in finding.fixes:
@@ -96,4 +106,6 @@ def test_property_verified_fix_never_breaks_syntax():
                     try:
                         ast.parse(fixed_code)
                     except SyntaxError as exc:
-                        pytest.fail(f"Verified fix for {finding.rule_id} produced invalid syntax: {exc}\n{fixed_code}")
+                        pytest.fail(
+                            f"Verified fix for {finding.rule_id} produced invalid syntax: {exc}\n{fixed_code}"
+                        )

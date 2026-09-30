@@ -1,0 +1,212 @@
+{
+  "ext_01_user_report_open.py": {
+    "label": "MALICIOUS",
+    "note": "open(path, ...) on concatenated user input",
+    "length": 151
+  },
+  "ext_02_safe_path_resolve.py": {
+    "label": "SAFE",
+    "note": "path sanitized with os.path.basename",
+    "length": 212
+  },
+  "ext_03_payment_gateway_hash.py": {
+    "label": "MALICIOUS",
+    "note": "MD5 weak crypto for payment signature",
+    "length": 156
+  },
+  "ext_04_token_generator_secrets.py": {
+    "label": "SAFE",
+    "note": "cryptographically strong token generation",
+    "length": 87
+  },
+  "ext_05_backup_db_system.py": {
+    "label": "MALICIOUS",
+    "note": "os.system with dynamic table_name",
+    "length": 134
+  },
+  "ext_06_docker_exec_subprocess.py": {
+    "label": "SAFE",
+    "note": "subprocess.run with argument list and shell=False",
+    "length": 195
+  },
+  "ext_07_eval_math_calculator.py": {
+    "label": "MALICIOUS",
+    "note": "eval on dynamic input string",
+    "length": 87
+  },
+  "ext_08_literal_eval_config.py": {
+    "label": "SAFE",
+    "note": "ast.literal_eval for safe literal data",
+    "length": 98
+  },
+  "ext_09_sql_search_users.py": {
+    "label": "MALICIOUS",
+    "note": "SQL concatenated query execution",
+    "length": 175
+  },
+  "ext_10_sql_parameterized_query.py": {
+    "label": "SAFE",
+    "note": "parameterized SQL query execution",
+    "length": 158
+  },
+  "ext_11_session_deserialize_pickle.py": {
+    "label": "MALICIOUS",
+    "note": "pickle.loads on untrusted cookie",
+    "length": 114
+  },
+  "ext_12_json_api_response.py": {
+    "label": "SAFE",
+    "note": "safe json.loads",
+    "length": 82
+  },
+  "ext_13_webhook_ssl_verify_false.py": {
+    "label": "MALICIOUS",
+    "note": "requests verify=False disables TLS certificate validation",
+    "length": 150
+  },
+  "ext_14_api_client_verify_true.py": {
+    "label": "SAFE",
+    "note": "requests with verify=True",
+    "length": 139
+  },
+  "ext_15_hardcoded_aws_key.py": {
+    "label": "MALICIOUS",
+    "note": "hardcoded AWS credential constants",
+    "length": 166
+  },
+  "ext_16_env_secret_retrieval.py": {
+    "label": "SAFE",
+    "note": "secrets loaded from environment variables",
+    "length": 91
+  },
+  "ext_17_xss_render_template.py": {
+    "label": "MALICIOUS",
+    "note": "Markup wrapper around unescaped user string",
+    "length": 149
+  },
+  "ext_18_escaped_html_output.py": {
+    "label": "SAFE",
+    "note": "markupsafe.escape protects against XSS",
+    "length": 150
+  },
+  "ext_19_bidi_spoofed_check.py": {
+    "label": "MALICIOUS",
+    "note": "Trojan Source bidirectional control characters",
+    "length": 95
+  },
+  "ext_20_cyrillic_homoglyph_exec.py": {
+    "label": "MALICIOUS",
+    "note": "confusable Cyrillic homoglyph concealing exec",
+    "length": 38
+  },
+  "ext_21_zero_width_auth.py": {
+    "label": "MALICIOUS",
+    "note": "invisible zero-width space in identifier",
+    "length": 68
+  },
+  "ext_22_subprocess_shell_true.py": {
+    "label": "MALICIOUS",
+    "note": "subprocess shell=True command injection",
+    "length": 107
+  },
+  "ext_23_base64_hidden_payload.py": {
+    "label": "MALICIOUS",
+    "note": "base64 decoded payload passed to exec",
+    "length": 116
+  },
+  "ext_24_yaml_load_unsafe.py": {
+    "label": "MALICIOUS",
+    "note": "unsafe yaml.load deserialization",
+    "length": 89
+  },
+  "ext_25_yaml_safe_load.py": {
+    "label": "SAFE",
+    "note": "safe yaml.safe_load",
+    "length": 79
+  },
+  "ext_26_random_password_reset.py": {
+    "label": "SUSPICIOUS",
+    "note": "pseudo-random generator for authentication pin",
+    "length": 88
+  },
+  "ext_27_secrets_password_reset.py": {
+    "label": "SAFE",
+    "note": "cryptographically strong pin generation",
+    "length": 114
+  },
+  "ext_28_dynamic_import_plugin.py": {
+    "label": "MALICIOUS",
+    "note": "dynamic __import__ on user string",
+    "length": 79
+  },
+  "ext_29_static_import_map.py": {
+    "label": "SAFE",
+    "note": "static dictionary dispatch",
+    "length": 162
+  },
+  "ext_30_tar_extract_traversal.py": {
+    "label": "SUSPICIOUS",
+    "note": "tarfile extractall without path traversal check",
+    "length": 146
+  },
+  "ext_31_safe_tar_extract.py": {
+    "label": "SAFE",
+    "note": "validated tar member extraction",
+    "length": 340
+  },
+  "ext_32_jwt_weak_secret.py": {
+    "label": "MALICIOUS",
+    "note": "hardcoded trivial secret",
+    "length": 89
+  },
+  "ext_33_jwt_env_secret.py": {
+    "label": "SAFE",
+    "note": "secret loaded from env",
+    "length": 124
+  },
+  "ext_34_flask_login_sql.py": {
+    "label": "MALICIOUS",
+    "note": "f-string SQL query execution",
+    "length": 181
+  },
+  "ext_35_sqlite_param_query.py": {
+    "label": "SAFE",
+    "note": "parameterized SQLite query",
+    "length": 185
+  },
+  "ext_36_os_popen_grep.py": {
+    "label": "MALICIOUS",
+    "note": "os.popen with concatenated command",
+    "length": 138
+  },
+  "ext_37_subprocess_check_output.py": {
+    "label": "SAFE",
+    "note": "subprocess.check_output with argument list",
+    "length": 166
+  },
+  "ext_38_jinja_raw_template.py": {
+    "label": "MALICIOUS",
+    "note": "dynamic Template construction allows SSTI",
+    "length": 133
+  },
+  "ext_39_jinja_sandboxed_env.py": {
+    "label": "SAFE",
+    "note": "SandboxedEnvironment mitigates SSTI",
+    "length": 198
+  },
+  "ext_40_crypto_sha1_sign.py": {
+    "label": "MALICIOUS",
+    "note": "SHA-1 deprecated broken digest for signature",
+    "length": 110
+  },
+  "ext_41_crypto_sha256_sign.py": {
+    "label": "SAFE",
+    "note": "SHA-256 secure hash for signature",
+    "length": 117
+  },
+  "ext_42_flask_echo_service.py": {
+    "label": "MALICIOUS",
+    "note": "os.system command injection",
+    "length": 66
+  }
+}

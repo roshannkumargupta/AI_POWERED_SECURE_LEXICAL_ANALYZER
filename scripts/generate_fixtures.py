@@ -38,7 +38,7 @@ VULNERABLE_FIXTURES: dict[str, tuple[str, list[dict[str, str | int]]]] = {
         [{"rule_id": "APS-PY-INJ-001", "line": 2}],
     ),
     "subprocess_shell_true.py": (
-        'cmd = input()\nsubprocess.run(cmd, shell=True)\n',
+        "cmd = input()\nsubprocess.run(cmd, shell=True)\n",
         [{"rule_id": "APS-PY-INJ-003", "line": 2}],
     ),
     "subprocess_popen_shell.py": (
@@ -50,7 +50,7 @@ VULNERABLE_FIXTURES: dict[str, tuple[str, list[dict[str, str | int]]]] = {
         [{"rule_id": "APS-PY-INJ-004", "line": 2}],
     ),
     "sql_injection_fstring.py": (
-        'user = input()\ncursor.execute(f"SELECT * FROM accounts WHERE name = \'{user}\'")\n',
+        "user = input()\ncursor.execute(f\"SELECT * FROM accounts WHERE name = '{user}'\")\n",
         [{"rule_id": "APS-PY-INJ-004", "line": 2}],
     ),
     "sql_injection_percent.py": (
@@ -204,11 +204,11 @@ SAFE_FIXTURES: dict[str, tuple[str, list[dict[str, str | int]]]] = {
         [],
     ),
     "random_secrets_token_safe.py": (
-        'import secrets\nauth_token = secrets.token_hex(32)\n',
+        "import secrets\nauth_token = secrets.token_hex(32)\n",
         [],
     ),
     "random_non_sensitive_var.py": (
-        'import random\ndie_roll = random.randint(1, 6)\n',
+        "import random\ndie_roll = random.randint(1, 6)\n",
         [],
     ),
     "secret_env_variable_safe.py": (
@@ -244,7 +244,7 @@ SAFE_FIXTURES: dict[str, tuple[str, list[dict[str, str | int]]]] = {
         [],
     ),
     "static_import_statement_safe.py": (
-        'import math\nx = math.sqrt(16)\n',
+        "import math\nx = math.sqrt(16)\n",
         [],
     ),
     "template_render_static_safe.py": (
@@ -273,22 +273,22 @@ ADVERSARIAL_FIXTURES: dict[str, tuple[str, list[dict[str, str | int]]]] = {
         ],
     ),
     "zero_width_space_ident.py": (
-        'adm\u200bin = 1\n',
+        "adm\u200bin = 1\n",
         [{"rule_id": "APS-ALL-UNI-002", "line": 1}],
     ),
     "bidi_comment_spoof.py": (
-        '# \u202e return; \u202d access_granted = True\n',
+        "# \u202e return; \u202d access_granted = True\n",
         [{"rule_id": "APS-ALL-UNI-001", "line": 1}],
     ),
     "mixed_script_func.py": (
-        'def p\u0430yload(): pass\n',
+        "def p\u0430yload(): pass\n",
         [
             {"rule_id": "APS-ALL-UNI-004", "line": 1},
             {"rule_id": "APS-ALL-UNI-005", "line": 1},
         ],
     ),
     "confusable_eval_homoglyph.py": (
-        '\u0435val(payload)\n',
+        "\u0435val(payload)\n",
         [
             {"rule_id": "APS-ALL-UNI-004", "line": 1},
             {"rule_id": "APS-ALL-UNI-005", "line": 1},
@@ -297,11 +297,11 @@ ADVERSARIAL_FIXTURES: dict[str, tuple[str, list[dict[str, str | int]]]] = {
         ],
     ),
     "invisible_tag_chars.py": (
-        f'x = "{chr(0xe0001)}{chr(0xe0020)}hidden"\n',
+        f'x = "{chr(0xE0001)}{chr(0xE0020)}hidden"\n',
         [{"rule_id": "APS-ALL-UNI-003", "line": 1}],
     ),
     "soft_hyphen_split.py": (
-        'ex\u00adecutable = True\n',
+        "ex\u00adecutable = True\n",
         [{"rule_id": "APS-ALL-UNI-002", "line": 1}],
     ),
     "bidi_string_literal.py": (
@@ -309,7 +309,7 @@ ADVERSARIAL_FIXTURES: dict[str, tuple[str, list[dict[str, str | int]]]] = {
         [{"rule_id": "APS-ALL-UNI-001", "line": 1}],
     ),
     "confusable_import_homoglyph.py": (
-        '__\u0456mport__(mod_name)\n',
+        "__\u0456mport__(mod_name)\n",
         [
             {"rule_id": "APS-ALL-UNI-004", "line": 1},
             {"rule_id": "APS-ALL-UNI-005", "line": 1},
@@ -359,9 +359,7 @@ def main() -> None:
         "safe": safe_expect,
         "adversarial": adv_expect,
     }
-    (FIXTURES_DIR / "expect.json").write_text(
-        json.dumps(master_expect, indent=2), encoding="utf-8"
-    )
+    (FIXTURES_DIR / "expect.json").write_text(json.dumps(master_expect, indent=2), encoding="utf-8")
 
     print(
         f"Generated {len(vuln_expect)} vulnerable, {len(safe_expect)} safe, "

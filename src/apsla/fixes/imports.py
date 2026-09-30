@@ -75,7 +75,9 @@ def ensure_import_python(source: str, import_stmt: str) -> list[Edit]:
         for stmt in tree.body:
             if isinstance(stmt, (ast.Import, ast.ImportFrom)):
                 # Only consider imports near the top of the file
-                if stmt.lineno <= insert_line + 5 or (last_import_line and stmt.lineno <= last_import_line + 2):
+                if stmt.lineno <= insert_line + 5 or (
+                    last_import_line and stmt.lineno <= last_import_line + 2
+                ):
                     last_import_line = max(last_import_line, stmt.end_lineno)
         if last_import_line >= insert_line:
             insert_line = last_import_line + 1

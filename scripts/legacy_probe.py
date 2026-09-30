@@ -277,6 +277,7 @@ def main() -> None:
 
     # Run our analyzer for all probes (Phase 2 AST & Taint comparison)
     from apsla.pipeline import Analyzer
+
     our_analyzer = Analyzer()
 
     for r in results:
@@ -286,7 +287,9 @@ def main() -> None:
             r["ours"] = "SAFE (0 findings)"
         else:
             sev_rank = {"critical": 5, "high": 4, "medium": 3, "low": 2, "info": 1}
-            highest_sev = max(our_res.findings, key=lambda f: sev_rank.get(f.severity.value, 0)).severity
+            highest_sev = max(
+                our_res.findings, key=lambda f: sev_rank.get(f.severity.value, 0)
+            ).severity
             first_f = next(f for f in our_res.findings if f.severity == highest_sev)
             f_ids = [f.rule_id for f in our_res.findings]
             taint_info = f", {len(first_f.taint_path)} taint steps" if first_f.taint_path else ""
@@ -295,10 +298,7 @@ def main() -> None:
     if args.json:
         output_payload = {
             "ml_status": ml_status,
-            "probes": [
-                {k: v for k, v in r.items() if k != "our_res"}
-                for r in results
-            ],
+            "probes": [{k: v for k, v in r.items() if k != "our_res"} for r in results],
             "defects": defect_evidence,
         }
         print(json.dumps(output_payload, indent=2, ensure_ascii=False))
@@ -342,10 +342,7 @@ def main() -> None:
         elif r["id"] == 6:
             flaw = "Senior Blind; Ours Unicode+Exec High"
 
-        print(
-            f"{r['id']:<3} | {r['title']:<36} | {verdict:<22} | "
-            f"{r['ours']:<38} | {flaw:<24}"
-        )
+        print(f"{r['id']:<3} | {r['title']:<36} | {verdict:<22} | {r['ours']:<38} | {flaw:<24}")
 
     print("-" * 130)
     print()

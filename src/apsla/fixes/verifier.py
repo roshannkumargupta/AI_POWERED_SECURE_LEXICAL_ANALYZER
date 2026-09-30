@@ -41,7 +41,7 @@ def _verify_worker(
         modified_source,
         language=language,
         filename="<shadow_verification>",
-        options={"fixes": False},
+        options={"fixes": False, "ml": False},
     )
 
     # 3. Check if target finding is gone near the original logical location
