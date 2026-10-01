@@ -70,9 +70,9 @@ def analyze(
         typer.Option(
             "--language",
             "-l",
-            help="Target language identifier (default: python).",
+            help="Target language identifier (default: auto).",
         ),
-    ] = "python",
+    ] = "auto",
     ml: Annotated[
         bool,
         typer.Option(
@@ -86,12 +86,21 @@ def analyze(
     console = Console()
 
     source = file.read_text(encoding="utf-8", errors="replace")
+
+    from apsla.languages import registry
+
+    if language.lower() == "auto":
+        detected = registry.detect(str(file), source)
+        target_lang = detected.id if detected else "python"
+    else:
+        target_lang = language
+
     analyzer = Analyzer()
     result = analyzer.analyze(
         source=source,
-        language=language,
+        language=target_lang,
         filename=str(file),
-        options={"ml": ml},
+        options={"ml": ml, "fixes": True},
     )
 
     if format.lower() == "json":
@@ -148,6 +157,21 @@ def analyze(
                     title="Clean",
                 )
             )
+
+        # Display verified automated fixes if available
+        verified_fixes = []
+        for f in result.findings:
+            for fix in f.fixes:
+                if fix.verification.verified:
+                    verified_fixes.append((f, fix))
+        if verified_fixes:
+            console.print()
+            console.print("[bold green]Verified Automated Fixes Available:[/bold green]")
+            for f, fix in verified_fixes:
+                console.print(
+                    f"  • [bold]{fix.title}[/bold] (for {f.rule_id} at line {f.range.start_line})"
+                )
+                console.print(f"    [dim]{fix.description}[/dim]")
 
         console.print()
         ml_status = f"{result.engine.ml_mode.upper()} ({result.engine.ml_model_id})"

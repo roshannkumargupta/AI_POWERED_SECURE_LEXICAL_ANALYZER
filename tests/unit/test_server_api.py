@@ -83,7 +83,7 @@ def test_samples_endpoint(client: TestClient):
     # Filter by language
     py_resp = client.get("/api/samples?language=python")
     assert py_resp.status_code == 200
-    assert len(py_resp.json()) == len(samples)
+    assert len(py_resp.json()) == len([s for s in samples if s["language"] == "python"])
 
     empty_resp = client.get("/api/samples?language=nonexistent")
     assert empty_resp.status_code == 200

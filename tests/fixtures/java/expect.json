@@ -1,0 +1,209 @@
+{
+  "vulnerable": {
+    "sqli_servlet.java": [
+      {
+        "rule_id": "APS-JV-INJ-002",
+        "line": 16
+      }
+    ],
+    "sqli_statement_concat.java": [
+      {
+        "rule_id": "APS-JV-INJ-002",
+        "line": 8
+      }
+    ],
+    "sqli_stringbuilder.java": [
+      {
+        "rule_id": "APS-JV-INJ-002",
+        "line": 14
+      }
+    ],
+    "sqli_create_query.java": [
+      {
+        "rule_id": "APS-JV-INJ-002",
+        "line": 8
+      }
+    ],
+    "cmd_injection_runtime_exec.java": [
+      {
+        "rule_id": "APS-JV-INJ-001",
+        "line": 8
+      }
+    ],
+    "cmd_injection_process_builder.java": [
+      {
+        "rule_id": "APS-JV-INJ-001",
+        "line": 7
+      }
+    ],
+    "cmd_injection_scanner.java": [
+      {
+        "rule_id": "APS-JV-INJ-001",
+        "line": 8
+      }
+    ],
+    "deserialization_object_input_stream.java": [
+      {
+        "rule_id": "APS-JV-DES-001",
+        "line": 9
+      }
+    ],
+    "deserialization_xml_decoder.java": [
+      {
+        "rule_id": "APS-JV-DES-001",
+        "line": 7
+      }
+    ],
+    "deserialization_xstream.java": [
+      {
+        "rule_id": "APS-JV-DES-001",
+        "line": 7
+      }
+    ],
+    "crypto_md5.java": [
+      {
+        "rule_id": "APS-JV-CRY-001",
+        "line": 5
+      }
+    ],
+    "crypto_sha1.java": [
+      {
+        "rule_id": "APS-JV-CRY-001",
+        "line": 5
+      }
+    ],
+    "crypto_des.java": [
+      {
+        "rule_id": "APS-JV-CRY-002",
+        "line": 5
+      }
+    ],
+    "crypto_ecb.java": [
+      {
+        "rule_id": "APS-JV-CRY-002",
+        "line": 5
+      }
+    ],
+    "insecure_random_token.java": [
+      {
+        "rule_id": "APS-JV-CRY-003",
+        "line": 5
+      }
+    ],
+    "hardcoded_password.java": [
+      {
+        "rule_id": "APS-JV-SEC-001",
+        "line": 2
+      }
+    ],
+    "hardcoded_api_key.java": [
+      {
+        "rule_id": "APS-JV-SEC-001",
+        "line": 2
+      }
+    ],
+    "xxe_document_builder.java": [
+      {
+        "rule_id": "APS-JV-XML-001",
+        "line": 6
+      }
+    ],
+    "xxe_sax_parser.java": [
+      {
+        "rule_id": "APS-JV-XML-001",
+        "line": 6
+      }
+    ],
+    "path_traversal_file.java": [
+      {
+        "rule_id": "APS-JV-IO-001",
+        "line": 7
+      }
+    ],
+    "path_traversal_input_stream.java": [
+      {
+        "rule_id": "APS-JV-IO-001",
+        "line": 7
+      }
+    ],
+    "xss_servlet_writer.java": [
+      {
+        "rule_id": "APS-JV-XSS-001",
+        "line": 7
+      }
+    ],
+    "ssrf_url_connection.java": [
+      {
+        "rule_id": "APS-JV-NET-001",
+        "line": 7
+      }
+    ],
+    "insecure_trust_manager.java": [
+      {
+        "rule_id": "APS-JV-NET-002",
+        "line": 6
+      }
+    ],
+    "insecure_hostname_verifier.java": [
+      {
+        "rule_id": "APS-JV-NET-002",
+        "line": 5
+      }
+    ],
+    "reflection_class_for_name.java": [
+      {
+        "rule_id": "APS-JV-INJ-003",
+        "line": 6
+      }
+    ],
+    "script_engine_eval.java": [
+      {
+        "rule_id": "APS-JV-INJ-004",
+        "line": 9
+      }
+    ]
+  },
+  "safe": {
+    "sqli_prepared_statement.java": [],
+    "sqli_static_query.java": [],
+    "sqli_numeric_sanitizer.java": [],
+    "cmd_static_command.java": [],
+    "cmd_array_args.java": [],
+    "crypto_sha256.java": [],
+    "crypto_sha512.java": [],
+    "crypto_aes_gcm.java": [],
+    "secure_random_token.java": [],
+    "random_game_dice.java": [],
+    "secret_from_env.java": [],
+    "secret_placeholder.java": [],
+    "xxe_disabled_doctype.java": [],
+    "path_traversal_normalized.java": [],
+    "xss_escaped_html.java": [],
+    "xss_numeric_output.java": [],
+    "ssrf_whitelisted_domain.java": [],
+    "valid_trust_manager.java": [],
+    "reflection_static_class.java": [],
+    "script_static_eval.java": [],
+    "safe_record_model.java": []
+  },
+  "adversarial": {
+    "adv_comment_exec.java": [],
+    "adv_string_sqli.java": [],
+    "adv_comment_md5.java": [],
+    "adv_trojan_source_bidi.java": [
+      {
+        "rule_id": "APS-ALL-UNI-001",
+        "line": 4
+      }
+    ],
+    "adv_unicode_escape_eval.java": [
+      {
+        "rule_id": "APS-JV-UNI-001",
+        "line": 4
+      }
+    ],
+    "adv_variable_name_exec.java": [],
+    "adv_method_name_read_object.java": [],
+    "adv_obfuscated_concat_comment.java": []
+  }
+}

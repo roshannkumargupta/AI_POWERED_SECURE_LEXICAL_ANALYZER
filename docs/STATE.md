@@ -1,9 +1,9 @@
 # Project State & Progress Tracking
 
-**Current Phase:** Phase 6 Complete — IDE Web Application (Vite, React 18, Monaco Editor, SecureLex Night Theme, Offline Bundle)  
-**Phase Tag:** `phase-6`  
-**Date:** September 30, 2026  
-**Status:** Complete / Verified (202 Python pytest tests passing, 14 Vitest unit tests passing, 100% clean ruff linter & formatter, production build validated)  
+**Current Phase:** Phase 9 Complete — C/C++ Language Plugin  
+**Phase Tag:** `phase-9`  
+**Date:** October 1, 2026  
+**Status:** Complete / Verified (554 Python pytest tests passing, 14 Vitest unit tests passing, 100% clean ruff linter & formatter, zero diff on protected files)  
 
 ---
 
@@ -29,9 +29,13 @@
 - `docs/explained/phase4.md`: Educational documentation for Phase 4 (45-dim feature space, leak-free group splitting, calibration, occlusion explainability, 5 viva Q&As).
 - `docs/explained/phase5.md`: Educational documentation for Phase 5 (REST, JSON, pure function LRU caching, error shielding, 5 viva Q&As).
 - `docs/explained/phase6.md`: Educational documentation for Phase 6 (Monaco Editor integration, UTF-16 coordinates, debouncing, AbortController, 5 viva Q&As).
+- `docs/explained/phase8.md`: Educational documentation for Phase 8 (regex vs division disambiguation, recursive template literals, DOM XSS, prototype pollution, 5 viva Q&As).
+- `docs/explained/phase9.md`: Educational documentation for Phase 9 (lexer-level C/C++, preprocessor directive tokens, buffer overflows, format string vulnerabilities, 5 viva Q&As).
 - `reports/phase_5_evidence.md`: Evidence report for Phase 5 REST API and caching.
 - `reports/phase_6_evidence.md`: Evidence report for Phase 6 IDE web app and bundle telemetry.
-- `docs/screenshots/`: Visual UI evidence (`empty_state.png`, `taint_path.png`, `trojan_source.png`, `fix_all_remediation.png`, `summary_tab.png`).
+- `reports/phase_8_evidence.md`: Evidence report for Phase 8 JavaScript plugin and telemetry.
+- `reports/phase_9_evidence.md`: Evidence report for Phase 9 C/C++ plugin and telemetry.
+- `docs/screenshots/`: Visual UI evidence (`empty_state.png`, `taint_path.png`, `trojan_source.png`, `fix_all_remediation.png`, `summary_tab.png`, `dom_xss_taint.png`).
 
 ### Phase 1 Implemented Shared Core Components (`src/apsla/`)
 1. **Pydantic v2 Unified Schema (`src/apsla/models.py`):**
@@ -183,6 +187,49 @@
    - Validates `npm ci`, runs `npm run build`, and verifies all 177 bundle assets (12.04 MB) including fonts and Monaco web workers.
 8. **Frontend Unit Test Suite (`web/src/test/`):**
    - 14 Vitest unit tests verifying offsets, markers, debouncing, edit application, and severity mapping.
+
+### Phase 7 Implemented Java Plugin Components
+- Modular Java plugin: `JavaLexer`, `JAVA_TAINT_PROFILE`, 17 deterministic Java security rules, verified fix generators, and import injection.
+
+### Phase 8 Implemented JavaScript Plugin Components (`src/apsla/languages/javascript_lang/`)
+1. **Resilient JavaScript Lexer (`lexer.py`):**
+   - Hand-written, zero-crash state machine with lossless source reconstruction (`"".join(t.text for t in tokens) == source`).
+   - ES2024 keywords and contextual keywords (`async`, `await`, `of`, `get`, `set`, `static`, `let`).
+   - Hex, octal, binary, BigInt (`10n`), and numeric separators (`1_000`).
+   - Modal template literal state machine (`_MODE_TEMPLATE`, `_MODE_TEMPLATE_EXPR`) supporting arbitrary recursive nesting of `${ ... }`.
+   - Context-sensitive lookback disambiguation of `/` for regular expression literals vs. division operators.
+   - Private field identifiers (`#field`) and JSX tolerance without error tokens.
+2. **JavaScript Taint Profile (`profile.py` & `src/apsla/taint/lite.py`):**
+   - Sources: Express (`req.query`, `req.params`, `req.body`, `req.headers`, `req.cookies`), browser navigation (`location.search`, `location.hash`, `location.href`, `document.URL`, `document.referrer`, `document.cookie`, `window.name`), `URLSearchParams`, `process.argv`, `process.env`.
+   - Sinks: `eval`, `new Function`, `setTimeout`/`setInterval` strings, `child_process.exec`, `innerHTML`, `outerHTML`, `document.write`, `dangerouslySetInnerHTML`, `location = tainted`, SQL queries, `fs.readFile`, `axios`/`fetch` SSRF, `Math.random`, `createHash("md5"/"sha1")`, hard-coded secrets, `jwt.verify` algorithm none, `Object.assign` prototype pollution, dynamic `RegExp` ReDoS.
+   - Sanitizers: `DOMPurify.sanitize`, `encodeURIComponent`, `escape-html`, `textContent`, `parseInt`, `path.basename`.
+3. **Deterministic JavaScript Security Rules (`rules.py`):**
+   - 16 rules: `APS-JS-INJ-001` through `005`, `APS-JS-XSS-001` through `002`, `APS-JS-NET-001` through `003`, `APS-JS-IO-001`, `APS-JS-CRY-001` through `002`, `APS-JS-SEC-001` through `002`, and `APS-JS-OBF-001`.
+4. **Verified Remediation & Imports (`fixes.py` & `src/apsla/fixes/imports.py`):**
+   - Verified automated fixes for innerHTML, dangerouslySetInnerHTML, eval, exec, SQL injection, Math.random, weak hash, hard-coded secret, and TLS verification.
+   - `ensure_import_javascript`: Automatically detects CommonJS (`require`) vs. ESM (`import`), inserting after shebangs and `"use strict"` directives without duplicate imports.
+5. **Fixtures & Visual Evidence:**
+   - 61 test fixtures (28 vulnerable, 25 safe, 8 adversarial) in `tests/fixtures/javascript/`.
+   - Verified DOM XSS taint data-flow UI screenshot in `docs/screenshots/dom_xss_taint.png`.
+
+### Phase 9 Implemented C/C++ Plugin Components (`src/apsla/languages/cpp_lang/`)
+1. **Resilient C/C++ Lexer (`lexer.py`):**
+   - Hand-written, zero-crash state machine that elegantly parses C/C++ without a full preprocessor evaluation.
+   - Treats preprocessor directives (`#include`, `#define`) as single tokens, properly interpreting backslash line continuations and protecting `<` and `>` characters within header names.
+   - Lossless support for C/C++20 keywords, numbers (binary, hex, digit separators `1'000`, floats), and all C++ operators (`<=>`, `->*`).
+   - Parses C++11 raw string literals (`R"delim(...)delim"`) properly capturing internal whitespace and escapes.
+   - Avoids template parsing, treating `<` and `>` as separate tokens, keeping lexing decoupled from deep semantic analysis.
+2. **C/C++ Taint Profile (`profile.py` & `src/apsla/taint/lite.py`):**
+   - Sources: `argv`, `getenv`, `recv`, `fread`, `read`, `scanf`, `fscanf`, `sscanf`, `gets`.
+   - Sinks: `strcpy`, `strcat`, `sprintf`, `vsprintf`, `printf`, `syslog`, `system`, `popen`, `malloc`, `fopen`.
+   - Sanitizers: Safe wrapper functions or size verifications.
+3. **Deterministic C/C++ Security Rules (`rules.py`):**
+   - 12 rules targeting critical memory safety and injection flaws: `APS-CP-MEM-001` through `007`, `APS-CP-INJ-001`, `APS-CP-IO-001`, `APS-CP-IO-002`, `APS-CP-SEC-001`, `APS-CP-CRY-001`.
+4. **Verified Remediation & Imports (`fixes.py` & `src/apsla/fixes/imports.py`):**
+   - Automated verified patches for `strcpy` $\to$ `snprintf`, `sprintf` $\to$ `snprintf`, `tmpnam` $\to$ `mkstemp`, `gets` $\to$ `fgets`.
+   - `ensure_import_cpp`: Language-variant aware header injection (distinguishing `<cstdio>` for C++ from `<stdio.h>` for C).
+5. **Fixtures & Visual Evidence:**
+   - 54 test fixtures (23 vulnerable, 22 safe, 9 adversarial) in `tests/fixtures/cpp/`.
 
 ---
 

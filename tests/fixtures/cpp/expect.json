@@ -1,0 +1,212 @@
+{
+  "vulnerable": {
+    "alloca_variable.c": [
+      {
+        "rule_id": "APS-CP-MEM-007",
+        "line": 4
+      }
+    ],
+    "cmd_injection_popen.c": [
+      {
+        "rule_id": "APS-CP-INJ-001",
+        "line": 5
+      }
+    ],
+    "cmd_injection_system.c": [
+      {
+        "rule_id": "APS-CP-INJ-001",
+        "line": 5
+      }
+    ],
+    "double_free.c": [
+      {
+        "rule_id": "APS-CP-MEM-006",
+        "line": 6
+      },
+      {
+        "rule_id": "APS-CP-MEM-005",
+        "line": 6
+      }
+    ],
+    "format_string_fprintf.c": [
+      {
+        "rule_id": "APS-CP-FMT-001",
+        "line": 4
+      }
+    ],
+    "format_string_printf.c": [
+      {
+        "rule_id": "APS-CP-FMT-001",
+        "line": 6
+      }
+    ],
+    "format_string_syslog.c": [
+      {
+        "rule_id": "APS-CP-FMT-001",
+        "line": 4
+      }
+    ],
+    "fscanf_no_width.c": [
+      {
+        "rule_id": "APS-CP-MEM-003",
+        "line": 5
+      }
+    ],
+    "gets_stdin.c": [
+      {
+        "rule_id": "APS-CP-MEM-001",
+        "line": 5
+      }
+    ],
+    "hardcoded_password.c": [
+      {
+        "rule_id": "APS-CP-SEC-001",
+        "line": 3
+      }
+    ],
+    "insecure_rand.c": [
+      {
+        "rule_id": "APS-CP-CRY-001",
+        "line": 4
+      }
+    ],
+    "insecure_tmpnam.c": [
+      {
+        "rule_id": "APS-CP-IO-002",
+        "line": 5
+      }
+    ],
+    "malloc_overflow.c": [
+      {
+        "rule_id": "APS-CP-MEM-004",
+        "line": 4
+      }
+    ],
+    "memcpy_wrong_sizeof.c": [
+      {
+        "rule_id": "APS-CP-MEM-002",
+        "line": 6
+      }
+    ],
+    "path_traversal_fopen.c": [
+      {
+        "rule_id": "APS-CP-IO-001",
+        "line": 5
+      }
+    ],
+    "scanf_no_width.c": [
+      {
+        "rule_id": "APS-CP-MEM-003",
+        "line": 5
+      }
+    ],
+    "sprintf_unbounded.c": [
+      {
+        "rule_id": "APS-CP-MEM-001",
+        "line": 5
+      }
+    ],
+    "sscanf_no_width.c": [
+      {
+        "rule_id": "APS-CP-MEM-003",
+        "line": 5
+      }
+    ],
+    "strcat_unbounded.c": [
+      {
+        "rule_id": "APS-CP-MEM-001",
+        "line": 7
+      }
+    ],
+    "strcpy_argv.c": [
+      {
+        "rule_id": "APS-CP-MEM-001",
+        "line": 7
+      }
+    ],
+    "strncpy_wrong_sizeof.c": [
+      {
+        "rule_id": "APS-CP-MEM-002",
+        "line": 6
+      }
+    ],
+    "use_after_free.c": [
+      {
+        "rule_id": "APS-CP-MEM-005",
+        "line": 7
+      }
+    ],
+    "vsprintf_unbounded.c": [
+      {
+        "rule_id": "APS-CP-MEM-001",
+        "line": 8
+      }
+    ]
+  },
+  "safe": {
+    "safe_alloca_constant.c": [],
+    "safe_bounds_check.c": [],
+    "safe_cpp_ifstream.cpp": [],
+    "safe_cpp_random.cpp": [],
+    "safe_cpp_string.cpp": [],
+    "safe_cpp_vector.cpp": [],
+    "safe_fgets.c": [],
+    "safe_fprintf_format.c": [],
+    "safe_free_null.c": [],
+    "safe_fscanf_width.c": [],
+    "safe_malloc_calloc.c": [],
+    "safe_malloc_single.c": [],
+    "safe_math_sin.c": [],
+    "safe_mkstemp.c": [],
+    "safe_printf_format.c": [],
+    "safe_scanf_width.c": [],
+    "safe_snprintf.c": [],
+    "safe_sscanf_width.c": [],
+    "safe_strncat.c": [],
+    "safe_strncpy_dest_size.c": [],
+    "safe_syslog_format.c": [],
+    "safe_system_constant.c": []
+  },
+  "adversarial": {
+    "adv_comment_gets.c": [],
+    "adv_comment_strcpy.c": [],
+    "adv_cyrillic_homoglyph.c": [
+      {
+        "rule_id": "APS-ALL-UNI-004",
+        "line": 4
+      },
+      {
+        "rule_id": "APS-ALL-UNI-005",
+        "line": 4
+      }
+    ],
+    "adv_define_system.c": [],
+    "adv_printf_format_literal.c": [],
+    "adv_string_sprintf.c": [],
+    "adv_strncpy_constant_bound.c": [],
+    "adv_trojan_source_bidi.c": [
+      {
+        "rule_id": "APS-ALL-UNI-001",
+        "line": 6
+      },
+      {
+        "rule_id": "APS-ALL-UNI-001",
+        "line": 6
+      },
+      {
+        "rule_id": "APS-ALL-UNI-001",
+        "line": 6
+      },
+      {
+        "rule_id": "APS-ALL-UNI-001",
+        "line": 6
+      }
+    ],
+    "adv_zero_width_space.c": [
+      {
+        "rule_id": "APS-ALL-UNI-002",
+        "line": 4
+      }
+    ]
+  }
+}

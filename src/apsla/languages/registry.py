@@ -31,10 +31,36 @@ def get(plugin_id: str) -> LanguagePlugin | None:
         LanguagePlugin | None: The matching plugin or None if not registered.
     """
     key = plugin_id.lower()
-    if key not in _REGISTRY and key == "python":
-        from apsla.languages.python_lang import PythonPlugin
+    if key not in _REGISTRY:
+        if key in ("python", "py"):
+            from apsla.languages.python_lang import PythonPlugin
 
-        register(PythonPlugin())
+            register(PythonPlugin())
+            # Ensure other standard plugins (Java, JavaScript) are loaded alongside standard plugins
+            if "java" not in _REGISTRY:
+                from apsla.languages.java_lang import JavaPlugin
+
+                register(JavaPlugin())
+            if "javascript" not in _REGISTRY:
+                from apsla.languages.javascript_lang import JavaScriptPlugin
+
+                register(JavaScriptPlugin())
+            if "cpp" not in _REGISTRY:
+                from apsla.languages.cpp_lang import CppPlugin
+
+                register(CppPlugin())
+        elif key in ("java",):
+            from apsla.languages.java_lang import JavaPlugin
+
+            register(JavaPlugin())
+        elif key in ("javascript", "js", "mjs", "cjs", "jsx"):
+            from apsla.languages.javascript_lang import JavaScriptPlugin
+
+            register(JavaScriptPlugin())
+        elif key in ("cpp", "c", "c++", "cc", "cxx"):
+            from apsla.languages.cpp_lang import CppPlugin
+
+            register(CppPlugin())
     return _REGISTRY.get(key)
 
 
@@ -59,6 +85,10 @@ def detect(filename: str, text: str = "") -> LanguagePlugin | None:
     # Shebang detection
     if text.startswith("#!"):
         first_line = text.split("\n", 1)[0].lower()
+        if "node" in first_line:
+            js = get("javascript")
+            if js:
+                return js
         for plugin in _REGISTRY.values():
             if plugin.id in first_line:
                 return plugin
