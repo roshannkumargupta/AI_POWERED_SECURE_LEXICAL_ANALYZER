@@ -128,7 +128,7 @@ def fuse_findings(
 
         # 1. Compute ml_p over overlapping tokens
         ml_p = 0.0
-        if is_ml_active and overlapping_indices:
+        if is_ml_active and ml_probabilities is not None and overlapping_indices:
             token_p_vals = []
             for idx in overlapping_indices:
                 p_safe, p_susp, p_mal = ml_probabilities[idx]
@@ -210,7 +210,7 @@ def fuse_findings(
         fused_findings.append(fused)
 
     # 5. ML-Only Anomaly Rule (APS-ALL-ML-001)
-    if is_ml_active:
+    if is_ml_active and ml_probabilities is not None:
         ml_only_count = 0
         anomaly_thresh = max(0.5, ml_threshold_malicious)
         for i, tok in enumerate(tokens):

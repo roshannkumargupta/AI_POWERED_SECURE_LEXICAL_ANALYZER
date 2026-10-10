@@ -168,9 +168,6 @@ class CppStructParser:
 
     # ── Declarations & Statements ──────────────────────────────────────────────
 
-    def _parse_top_level_or_statement() -> StructNode | None:
-        pass
-
     def _parse_top_level_or_statement(self) -> StructNode | None:
         if self._is_at_end():
             return None

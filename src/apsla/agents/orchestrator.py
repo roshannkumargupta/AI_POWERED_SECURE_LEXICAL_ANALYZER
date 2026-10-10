@@ -55,6 +55,7 @@ class AgentOrchestrator:
         self.max_llm_calls = max_llm_calls
         self.timeout_s = timeout_s
 
+        self.llm_planner: LLMPlanner | None = None
         tool_schemas = {name: tool.parameters_schema for name, tool in TOOL_REGISTRY.items()}
         if self.mode == "local" and self.local_llm:
             self.llm_planner = LLMPlanner(
@@ -62,8 +63,6 @@ class AgentOrchestrator:
                 rules_planner=self.rules_planner,
                 tool_schemas=tool_schemas,
             )
-        else:
-            self.llm_planner = None
 
     def run(
         self,

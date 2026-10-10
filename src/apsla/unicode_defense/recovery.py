@@ -42,6 +42,11 @@ class RecoveryResult:
     offset_map_rec: OffsetMap
     rec_to_orig_py: list[int] = field(default_factory=list)
 
+    @property
+    def replacement_count(self) -> int:
+        """Total number of Unicode characters replaced or removed."""
+        return self.confusables_replaced + self.invisibles_removed
+
     def map_py_offset(self, rec_py_idx: int) -> int:
         """Map a character index in recovered text back to original character index."""
         if not self.rec_to_orig_py or rec_py_idx <= 0:

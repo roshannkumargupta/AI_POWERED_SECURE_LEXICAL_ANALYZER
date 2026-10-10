@@ -149,7 +149,7 @@ class RulesPlanner:
             # Review medium-confidence findings (0.40 <= confidence <= 0.60)
             if "run_taint" in allowed_tools and not session.deep_taint_ran:
                 candidates = [
-                    f.sink
+                    str(getattr(f, "sink", ""))
                     for f in session.findings
                     if 0.40 <= getattr(f, "confidence", 0.5) <= 0.60 and getattr(f, "sink", None)
                 ]

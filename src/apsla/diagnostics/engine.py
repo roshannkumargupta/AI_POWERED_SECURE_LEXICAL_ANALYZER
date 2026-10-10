@@ -1065,11 +1065,11 @@ def analyze_syntax_diagnostics(
     # -------------------------------------------------------------------------
     if language == "java":
         # 1. Illegal break outside loop or switch: break;
-        if re.search(r"^\s*break\s*;", source, re.MULTILINE) and not any(
+        m_java_break = re.search(r"^\s*break\s*;", source, re.MULTILINE)
+        if m_java_break and not any(
             k in source for k in ("while", "for", "switch", "do")
         ):
-            m = re.search(r"\bbreak\s*;", source)
-            start_p, end_p = m.span()
+            start_p, end_p = m_java_break.span()
             rng = _offset_to_range(source, start_p, end_p)
             fix_edit = Edit(range=rng, new_text="while (true) { break; }")
             fix = _make_fix(
@@ -1528,11 +1528,11 @@ def analyze_syntax_diagnostics(
     # -------------------------------------------------------------------------
     if language == "cpp":
         # 1. Illegal break outside loop or switch: int main(){ break; return 0; }
-        if re.search(r"\bbreak\s*;", source) and not any(
+        m_cpp_break = re.search(r"\bbreak\s*;", source)
+        if m_cpp_break and not any(
             k in source for k in ("while", "for", "switch", "do")
         ):
-            m = re.search(r"\bbreak\s*;", source)
-            start_p, end_p = m.span()
+            start_p, end_p = m_cpp_break.span()
             rng = _offset_to_range(source, start_p, end_p)
             fix_edit = Edit(range=rng, new_text="while (true) { break; }")
             fix = _make_fix(

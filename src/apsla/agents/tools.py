@@ -14,7 +14,7 @@ from typing import Any
 from apsla.languages.registry import get_plugin
 from apsla.lexing.common import OffsetMap
 from apsla.lexing.token import Token
-from apsla.models import Finding, Label, Severity
+from apsla.models import Edit, Finding, Label, Severity
 from apsla.rules.generic import evaluate_unicode_rules
 from apsla.unicode_defense.recovery import recover_text
 
@@ -485,7 +485,9 @@ def tool_apply_fix_to_copy(session: AnalysisSession, fix_id: str) -> dict[str, A
 
     from apsla.fixes.engine import apply_edits
 
-    mod_source = apply_edits(session.source, matched_candidate)
+    raw_edits = matched_candidate.get("edits", [])
+    edits_list = [Edit(**e) if isinstance(e, dict) else e for e in raw_edits]
+    mod_source = apply_edits(session.source, edits_list)
     session.copies[fix_id] = mod_source
     session.active_copy_id = fix_id
 

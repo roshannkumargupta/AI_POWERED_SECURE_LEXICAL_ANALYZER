@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
 
+from apsla.languages.base import Rule as BaseRule
 from apsla.lexing.common import OffsetMap
 from apsla.lexing.token import Token
 from apsla.models import Finding, Label, Range, Severity
@@ -44,17 +45,9 @@ class RuleContext:
         return self.recovery.map_recovered_range(rec_range)
 
 
-class Rule(ABC):
-    """Base class for AST and lexical security analysis rules."""
 
-    id: str
-    title: str
-    cwe: str
-    severity: Severity
-    category: str
-    description: str = ""
-    explanation: str = ""
-    noisy: bool = False
+class Rule(BaseRule, ABC):
+    """Base class for AST and lexical security analysis rules."""
 
     @abstractmethod
     def match(self, context: RuleContext) -> list[Finding]:

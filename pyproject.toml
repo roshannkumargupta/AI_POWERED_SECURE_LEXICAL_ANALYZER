@@ -32,6 +32,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "ruff",
+    "mypy",
     "hypothesis",
     "codecarbon",
 ]

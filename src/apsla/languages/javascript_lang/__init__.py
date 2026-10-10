@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from apsla.languages.base import (
@@ -38,7 +39,7 @@ class JavaScriptPlugin(LanguagePlugin):
         """Tokenize JavaScript source code using hand-written state machine lexer."""
         return JavaScriptLexer(source).tokenize()
 
-    def rules(self) -> list[Rule]:
+    def rules(self) -> Sequence[Rule]:
         """Return all deterministic JavaScript security rules."""
         return ALL_JAVASCRIPT_RULES
 

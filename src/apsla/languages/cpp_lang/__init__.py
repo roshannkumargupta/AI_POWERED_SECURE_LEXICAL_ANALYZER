@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from typing import Any
 
 from apsla.languages.base import (
@@ -41,7 +42,7 @@ class CppPlugin(LanguagePlugin):
         """Tokenize C/C++ source code using hand-written state machine lexer."""
         return CppLexer(source).tokenize()
 
-    def rules(self) -> list[Rule]:
+    def rules(self) -> Sequence[Rule]:
         """Return all deterministic C/C++ security rules."""
         return ALL_CPP_RULES
 
@@ -133,3 +134,10 @@ class CppPlugin(LanguagePlugin):
                 pass
 
         return True, None
+
+    def dangerous_apis(self) -> dict[str, str]:
+        """Return mapping of dangerous C/C++ APIs."""
+        from apsla.languages.cpp_lang.profile import CPP_DANGEROUS_APIS
+
+        return CPP_DANGEROUS_APIS
+

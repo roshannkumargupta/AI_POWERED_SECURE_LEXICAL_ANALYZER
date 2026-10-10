@@ -63,12 +63,14 @@ def ensure_import_python(source: str, import_stmt: str) -> list[Edit]:
         if tree.body and isinstance(tree.body[0], ast.Expr):
             val = getattr(tree.body[0], "value", None)
             if isinstance(val, ast.Constant) and isinstance(val.value, str):
-                insert_line = tree.body[0].end_lineno + 1
+                first_end = tree.body[0].end_lineno or tree.body[0].lineno
+                insert_line = first_end + 1
 
         # 2. Skip __future__ imports
         for stmt in tree.body:
             if isinstance(stmt, ast.ImportFrom) and stmt.module == "__future__":
-                insert_line = max(insert_line, stmt.end_lineno + 1)
+                stmt_end = stmt.end_lineno or stmt.lineno
+                insert_line = max(insert_line, stmt_end + 1)
 
         # 3. If there are other top-level imports right after, merge after the last contiguous import
         last_import_line = 0
@@ -78,7 +80,8 @@ def ensure_import_python(source: str, import_stmt: str) -> list[Edit]:
                     last_import_line and stmt.lineno <= last_import_line + 2
                 )
             ):
-                last_import_line = max(last_import_line, stmt.end_lineno)
+                stmt_end = stmt.end_lineno or stmt.lineno
+                last_import_line = max(last_import_line, stmt_end)
         if last_import_line >= insert_line:
             insert_line = last_import_line + 1
 

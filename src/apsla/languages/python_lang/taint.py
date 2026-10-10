@@ -93,7 +93,7 @@ class PythonTaintAnalyzer:
 
         # Phase 2: Flow-sensitive analysis of module-level statements and functions
         env: dict[str, TaintValue] = {}
-        for stmt in tree.body:
+        for stmt in getattr(tree, "body", []):
             self._analyze_statement(stmt, env)
 
         return TaintResult(flows=self.flows)

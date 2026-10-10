@@ -90,7 +90,7 @@ def prepare_language_arrays(
     for snip in snippets:
         feats, _lang_id = extract_file_features(snip.tokens, language=language)
         w3d, wflat, wy, whashes = build_token_windows(snip.tokens, feats, labels=snip.token_labels)
-        if len(wy) == 0:
+        if wy is None or len(wy) == 0:
             continue
 
         all_3d.append(w3d)
