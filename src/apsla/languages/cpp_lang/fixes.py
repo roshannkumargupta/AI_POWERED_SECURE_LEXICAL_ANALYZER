@@ -57,7 +57,7 @@ def generate_unbounded_copy_fix(ctx: FixContext) -> list[Fix]:
             new_text=f"fgets({buf}, sizeof({buf}), stdin)",
         )
         import_edits = ensure_import_cpp(source, "stdio.h", filename=getattr(ctx, "filename", ""))
-        all_edits = import_edits + [call_edit]
+        all_edits = [*import_edits, call_edit]
         return [
             Fix(
                 id=f"fix-{finding.id}-0",
@@ -91,7 +91,7 @@ def generate_unbounded_copy_fix(ctx: FixContext) -> list[Fix]:
             import_edits = ensure_import_cpp(
                 source, "stdio.h", filename=getattr(ctx, "filename", "")
             )
-            all_edits = import_edits + [call_edit]
+            all_edits = [*import_edits, call_edit]
             return [
                 Fix(
                     id=f"fix-{finding.id}-0",
@@ -104,25 +104,24 @@ def generate_unbounded_copy_fix(ctx: FixContext) -> list[Fix]:
                     verification=_create_initial_verification(),
                 )
             ]
-        else:
-            return [
-                Fix(
-                    id=f"fix-{finding.id}-0",
-                    finding_id=finding.id,
-                    title="Replace strcpy with bounded copy",
-                    description="Manual remediation required: ensure destination buffer is bounded using snprintf() or strncpy().",
-                    confidence="manual",
-                    kind="rule",
-                    edits=[],
-                    verification=VerificationResult(
-                        syntax_ok=True,
-                        finding_gone=False,
-                        new_findings=[],
-                        verified=False,
-                        notes="Manual review required: destination buffer size could not be determined statically.",
-                    ),
-                )
-            ]
+        return [
+            Fix(
+                id=f"fix-{finding.id}-0",
+                finding_id=finding.id,
+                title="Replace strcpy with bounded copy",
+                description="Manual remediation required: ensure destination buffer is bounded using snprintf() or strncpy().",
+                confidence="manual",
+                kind="rule",
+                edits=[],
+                verification=VerificationResult(
+                    syntax_ok=True,
+                    finding_gone=False,
+                    new_findings=[],
+                    verified=False,
+                    notes="Manual review required: destination buffer size could not be determined statically.",
+                ),
+            )
+        ]
 
     # Case C: sprintf(buf, fmt, ...) -> snprintf(buf, sizeof(buf), fmt, ...)
     m_sprintf = re.search(r"\bsprintf\s*\(\s*([A-Za-z0-9_]+)\s*,\s*(.+)\)", target_line)
@@ -136,7 +135,7 @@ def generate_unbounded_copy_fix(ctx: FixContext) -> list[Fix]:
             new_text=f"snprintf({buf}, sizeof({buf}), {rest})",
         )
         import_edits = ensure_import_cpp(source, "stdio.h", filename=getattr(ctx, "filename", ""))
-        all_edits = import_edits + [call_edit]
+        all_edits = [*import_edits, call_edit]
         return [
             Fix(
                 id=f"fix-{finding.id}-0",
@@ -320,26 +319,36 @@ def generate_random_fix(ctx: FixContext) -> list[Fix]:
 
 
 class CppUnboundedCopyFixGenerator(FixGenerator):
+    """Generates remediation patches for unbounded C buffer copies (strcpy, gets)."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_unbounded_copy_fix(context)
 
 
 class CppFormatStringFixGenerator(FixGenerator):
+    """Generates remediation patches for non-literal format strings (printf, syslog)."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_format_string_fix(context)
 
 
 class CppScanfFixGenerator(FixGenerator):
+    """Generates remediation patches for unbounded scanf %s buffer reads."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_scanf_fix(context)
 
 
 class CppCommandInjectionFixGenerator(FixGenerator):
+    """Generates remediation patches for system/popen command execution calls."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_command_injection_fix(context)
 
 
 class CppRandomFixGenerator(FixGenerator):
+    """Generates remediation patches upgrading rand() to std::random_device."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_random_fix(context)
 

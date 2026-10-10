@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 import re
-import shutil
-import subprocess
-import tempfile
-from pathlib import Path
-from typing import Any, Final
+from collections.abc import Sequence
+from typing import Any
 
 from apsla.languages.base import (
     FixGenerator,
@@ -18,10 +15,7 @@ from apsla.languages.base import (
 )
 from apsla.languages.cpp_lang.fixes import register_cpp_fix_generators
 from apsla.languages.cpp_lang.lexer import ALL_CPP_KEYWORDS, CppLexer
-from apsla.languages.cpp_lang.profile import (
-    CPP_DANGEROUS_APIS,
-    CPP_TAINT_PROFILE,
-)
+from apsla.languages.cpp_lang.profile import CPP_TAINT_PROFILE
 from apsla.languages.cpp_lang.rules import ALL_CPP_RULES
 from apsla.lexing.token import Token
 from apsla.taint.lite import TaintLiteEngine
@@ -48,7 +42,7 @@ class CppPlugin(LanguagePlugin):
         """Tokenize C/C++ source code using hand-written state machine lexer."""
         return CppLexer(source).tokenize()
 
-    def rules(self) -> list[Rule]:
+    def rules(self) -> Sequence[Rule]:
         """Return all deterministic C/C++ security rules."""
         return ALL_CPP_RULES
 
@@ -140,3 +134,10 @@ class CppPlugin(LanguagePlugin):
                 pass
 
         return True, None
+
+    def dangerous_apis(self) -> dict[str, str]:
+        """Return mapping of dangerous C/C++ APIs."""
+        from apsla.languages.cpp_lang.profile import CPP_DANGEROUS_APIS
+
+        return CPP_DANGEROUS_APIS
+

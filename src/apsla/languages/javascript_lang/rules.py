@@ -2,47 +2,24 @@
 
 from __future__ import annotations
 
-import math
 import re
 from typing import Final
 
 from apsla.languages.javascript_lang.profile import JS_TAINT_PROFILE
-from apsla.lexing.token import Token
 from apsla.models import Finding, Range, Severity
 from apsla.rules.base import Rule, RuleContext
+from apsla.rules.helpers import (
+    get_non_trivia_tokens,
+    is_inside_comment,
+    is_inside_comment_or_string,
+    shannon_entropy,
+)
 from apsla.taint.lite import TaintLiteEngine
 
-
-def _shannon_entropy(s: str) -> float:
-    """Calculate Shannon entropy in bits per character."""
-    if not s:
-        return 0.0
-    freq: dict[str, int] = {}
-    for c in s:
-        freq[c] = freq.get(c, 0) + 1
-    length = len(s)
-    return -sum((cnt / length) * math.log2(cnt / length) for cnt in freq.values())
-
-
-def _is_inside_comment_or_string(pos: int, tokens: list[Token]) -> bool:
-    """Check if character index is strictly inside a comment or string token."""
-    for tok in tokens:
-        if tok.start <= pos < tok.end:
-            return tok.kind in ("COMMENT", "STRING")
-    return False
-
-
-def _is_inside_comment(pos: int, tokens: list[Token]) -> bool:
-    """Check if character index is inside a comment."""
-    for tok in tokens:
-        if tok.start <= pos < tok.end:
-            return tok.kind == "COMMENT"
-    return False
-
-
-def _get_non_trivia_tokens(tokens: list[Token]) -> list[Token]:
-    """Filter out whitespace and comment tokens."""
-    return [t for t in tokens if t.kind not in ("WHITESPACE", "COMMENT")]
+_shannon_entropy = shannon_entropy
+_is_inside_comment_or_string = is_inside_comment_or_string
+_is_inside_comment = is_inside_comment
+_get_non_trivia_tokens = get_non_trivia_tokens
 
 
 # ── Rule 1: Code Injection (CWE-95) ──────────────────────────────────────────

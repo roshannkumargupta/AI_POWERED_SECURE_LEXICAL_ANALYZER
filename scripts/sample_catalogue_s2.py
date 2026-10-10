@@ -482,7 +482,7 @@ DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(request.getInput
                 for n, line in enumerate(source.splitlines(), 1)
                 if any(
                     term in line
-                    for term in {
+                    for term in (
                         "eval(",
                         "new Function",
                         "setTimeout(",
@@ -504,7 +504,7 @@ DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(request.getInput
                         "atob(",
                         "fromCharCode",
                         "exec(`",
-                    }
+                    )
                 )
             ),
             1,

@@ -26,11 +26,7 @@ export function generateUnifiedDiff(
   // Find first mismatch from bottom
   let oldEnd = oldLines.length - 1;
   let newEnd = newLines.length - 1;
-  while (
-    oldEnd >= start &&
-    newEnd >= start &&
-    oldLines[oldEnd] === newLines[newEnd]
-  ) {
+  while (oldEnd >= start && newEnd >= start && oldLines[oldEnd] === newLines[newEnd]) {
     oldEnd--;
     newEnd--;
   }
@@ -72,4 +68,38 @@ export function generateUnifiedDiff(
   }
 
   return diffLines.join('\n');
+}
+
+export interface RangeLike {
+  start_line: number;
+  start_col: number;
+  end_line: number;
+  end_col: number;
+}
+
+export interface EditLike {
+  range: RangeLike;
+  new_text: string;
+}
+
+export function extractEditText(source: string, edits?: EditLike[]): string {
+  if (!edits || edits.length === 0) return '';
+  const lines = source.split('\n');
+  return edits
+    .map((edit) => {
+      const startLine = Math.max(0, edit.range.start_line - 1);
+      const endLine = Math.max(startLine, edit.range.end_line - 1);
+      if (startLine === endLine) {
+        return (lines[startLine] || '').slice(
+          edit.range.start_col - 1,
+          Math.max(edit.range.start_col - 1, edit.range.end_col - 1)
+        );
+      }
+      return [
+        lines[startLine]?.slice(edit.range.start_col - 1),
+        ...lines.slice(startLine + 1, endLine),
+        lines[endLine]?.slice(0, edit.range.end_col - 1),
+      ].join('\n');
+    })
+    .join('\n');
 }

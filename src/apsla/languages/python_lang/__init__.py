@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Sequence
 from typing import Final
 
 from apsla.languages.base import (
@@ -46,7 +47,7 @@ class PythonPlugin(LanguagePlugin):
         """Tokenize Python source using hand-written state machine lexer."""
         return PythonLexer(source).tokenize()
 
-    def rules(self) -> list[Rule]:
+    def rules(self) -> Sequence[Rule]:
         """Return all deterministic Python security rules."""
         return ALL_PYTHON_RULES
 
@@ -157,6 +158,13 @@ class PythonPlugin(LanguagePlugin):
             if gens:
                 res[rule.id] = gens[0]
         return res
+
+    def parse_structure(self, source: str) -> ast.AST | None:
+        """Parse Python source into AST."""
+        try:
+            return ast.parse(source)
+        except SyntaxError:
+            return None
 
     def syntax_check(self, source: str) -> tuple[bool, str | None]:
         """Check whether source is valid Python syntax."""

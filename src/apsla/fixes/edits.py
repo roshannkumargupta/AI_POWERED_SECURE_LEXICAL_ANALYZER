@@ -5,12 +5,9 @@ from __future__ import annotations
 import difflib
 from dataclasses import dataclass
 
+from apsla.exceptions import OverlappingEditsError
 from apsla.lexing.common import OffsetMap
 from apsla.models import Edit, Range
-
-
-class OverlappingEditsError(ValueError):
-    """Raised when two or more text edits overlap in source coordinates."""
 
 
 @dataclass(slots=True)

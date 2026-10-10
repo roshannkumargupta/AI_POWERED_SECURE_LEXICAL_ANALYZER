@@ -86,7 +86,10 @@ export function utf16OffsetToPoint(source: string, offset: number): { line: numb
 /**
  * Converts a 1-based Range to start and end 0-based string offsets.
  */
-export function rangeToOffsets(source: string, range: Range): { startOffset: number; endOffset: number } {
+export function rangeToOffsets(
+  source: string,
+  range: Range
+): { startOffset: number; endOffset: number } {
   const startOffset = pointToUtf16Offset(source, range.start_line, range.start_col);
   const endOffset = pointToUtf16Offset(source, range.end_line, range.end_col);
   return {

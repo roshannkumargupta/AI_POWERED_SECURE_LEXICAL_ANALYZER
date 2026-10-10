@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from collections.abc import Sequence
+from typing import Any
 
 from apsla.languages.base import (
     FixGenerator,
@@ -35,7 +36,7 @@ class JavaPlugin(LanguagePlugin):
         """Tokenize Java source code using hand-written state machine lexer."""
         return JavaLexer(source).tokenize()
 
-    def rules(self) -> list[Rule]:
+    def rules(self) -> Sequence[Rule]:
         """Return all deterministic Java security rules."""
         return ALL_JAVA_RULES
 

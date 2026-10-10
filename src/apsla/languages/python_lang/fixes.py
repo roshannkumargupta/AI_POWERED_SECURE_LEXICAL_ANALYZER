@@ -21,6 +21,17 @@ def _create_initial_verification() -> VerificationResult:
     )
 
 
+def _get_node_end_py(node: ast.AST, context: FixContext) -> int:
+    end_lineno = getattr(node, "end_lineno", None)
+    end_col = getattr(node, "end_col_offset", None)
+    if end_lineno is not None and end_col is not None:
+        return context.offset_map.pos_to_py(end_lineno, end_col + 1)
+    lineno = getattr(node, "lineno", 1)
+    col = getattr(node, "col_offset", 0)
+    return context.offset_map.pos_to_py(lineno, col + 1)
+
+
+
 class UnicodeBidiFixGenerator(FixGenerator):
     """Removes Trojan Source bidirectional override characters."""
 
@@ -271,9 +282,7 @@ class OsSystemFixGenerator(FixGenerator):
             replacement_args = f"shlex.split({arg_text}), check=True"
 
         call_start_py = context.offset_map.pos_to_py(target_call.lineno, target_call.col_offset + 1)
-        call_end_py = context.offset_map.pos_to_py(
-            target_call.end_lineno, target_call.end_col_offset + 1
-        )
+        call_end_py = _get_node_end_py(target_call, context)
         call_range = context.offset_map.span_to_range(call_start_py, call_end_py)
 
         call_edit = Edit(range=call_range, new_text=f"subprocess.run({replacement_args})")
@@ -281,7 +290,7 @@ class OsSystemFixGenerator(FixGenerator):
         if "shlex.split" in replacement_args:
             import_edits.extend(ensure_import_python(context.source, "import shlex"))
 
-        all_edits = import_edits + [call_edit]
+        all_edits = [*import_edits, call_edit]
 
         return [
             Fix(
@@ -327,9 +336,7 @@ class SubprocessShellFixGenerator(FixGenerator):
                     kw_start = context.offset_map.pos_to_py(
                         kw_target.lineno, kw_target.col_offset + 1
                     )
-                    kw_end = context.offset_map.pos_to_py(
-                        kw_target.end_lineno, kw_target.end_col_offset + 1
-                    )
+                    kw_end = _get_node_end_py(kw_target, context)
                     kw_range = context.offset_map.span_to_range(kw_start, kw_end)
                     edits = [Edit(range=kw_range, new_text="shell=False")]
 
@@ -337,9 +344,7 @@ class SubprocessShellFixGenerator(FixGenerator):
                     # If arg0 is not already a list or tuple, wrap it as a list
                     if not isinstance(arg0, (ast.List, ast.Tuple)):
                         arg0_start = context.offset_map.pos_to_py(arg0.lineno, arg0.col_offset + 1)
-                        arg0_end = context.offset_map.pos_to_py(
-                            arg0.end_lineno, arg0.end_col_offset + 1
-                        )
+                        arg0_end = _get_node_end_py(arg0, context)
                         arg0_range = context.offset_map.span_to_range(arg0_start, arg0_end)
 
                         if isinstance(arg0, ast.Constant) and isinstance(arg0.value, str):
@@ -403,9 +408,7 @@ class EvalFixGenerator(FixGenerator):
 
                     if is_literal_candidate:
                         call_start = context.offset_map.pos_to_py(node.lineno, node.col_offset + 1)
-                        call_end = context.offset_map.pos_to_py(
-                            node.end_lineno, node.end_col_offset + 1
-                        )
+                        call_end = _get_node_end_py(node, context)
                         call_range = context.offset_map.span_to_range(call_start, call_end)
                         call_edit = Edit(range=call_range, new_text=f"ast.literal_eval({arg_seg})")
                         import_edits = ensure_import_python(context.source, "import ast")
@@ -417,7 +420,7 @@ class EvalFixGenerator(FixGenerator):
                                 description="Replaces dangerous eval() with ast.literal_eval().",
                                 confidence="review",
                                 kind="rule",
-                                edits=import_edits + [call_edit],
+                                edits=[*import_edits, call_edit],
                                 verification=_create_initial_verification(),
                             )
                         ]
@@ -452,13 +455,12 @@ def _extract_sql_and_params(source: str, node: ast.AST, placeholder: str) -> tup
                 params.append(param_seg)
         cleaned_parts: list[str] = []
         for i, part in enumerate(parts):
-            if (
-                i > 0
-                and parts[i - 1] == placeholder
-                and (part.startswith("'") or part.startswith('"'))
-            ):
-                part = part[1:]
-            cleaned_parts.append(part)
+            cur_part = (
+                part[1:]
+                if (i > 0 and parts[i - 1] == placeholder and part.startswith(("'", '"')))
+                else part
+            )
+            cleaned_parts.append(cur_part)
         return "".join(cleaned_parts).strip(), params
 
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
@@ -481,13 +483,12 @@ def _extract_sql_and_params(source: str, node: ast.AST, placeholder: str) -> tup
                 params.append(seg)
         cleaned_parts = []
         for i, part in enumerate(parts):
-            if (
-                i > 0
-                and parts[i - 1] == placeholder
-                and (part.startswith("'") or part.startswith('"'))
-            ):
-                part = part[1:]
-            cleaned_parts.append(part)
+            cur_part = (
+                part[1:]
+                if (i > 0 and parts[i - 1] == placeholder and part.startswith(("'", '"')))
+                else part
+            )
+            cleaned_parts.append(cur_part)
         return "".join(cleaned_parts).strip(), params
 
     return "SELECT ...", params
@@ -529,9 +530,7 @@ class SqlInjectionFixGenerator(FixGenerator):
                         )
                         new_call = f"{ast.get_source_segment(context.source, node.func)}({clean_sql!r}, {params_tuple})"
                         call_start = context.offset_map.pos_to_py(node.lineno, node.col_offset + 1)
-                        call_end = context.offset_map.pos_to_py(
-                            node.end_lineno, node.end_col_offset + 1
-                        )
+                        call_end = _get_node_end_py(node, context)
                         call_range = context.offset_map.span_to_range(call_start, call_end)
                         return [
                             Fix(
@@ -546,7 +545,7 @@ class SqlInjectionFixGenerator(FixGenerator):
                             )
                         ]
                     # Case 2: Variable name referencing preceding assignment
-                    elif isinstance(sql_arg, ast.Name):
+                    if isinstance(sql_arg, ast.Name):
                         var_name = sql_arg.id
                         target_assign: ast.Assign | None = None
                         for stmt in ast.walk(tree):
@@ -568,10 +567,7 @@ class SqlInjectionFixGenerator(FixGenerator):
                             assign_val_start = context.offset_map.pos_to_py(
                                 target_assign.value.lineno, target_assign.value.col_offset + 1
                             )
-                            assign_val_end = context.offset_map.pos_to_py(
-                                target_assign.value.end_lineno,
-                                target_assign.value.end_col_offset + 1,
-                            )
+                            assign_val_end = _get_node_end_py(target_assign.value, context)
                             assign_range = context.offset_map.span_to_range(
                                 assign_val_start, assign_val_end
                             )
@@ -586,9 +582,7 @@ class SqlInjectionFixGenerator(FixGenerator):
                             call_start = context.offset_map.pos_to_py(
                                 node.lineno, node.col_offset + 1
                             )
-                            call_end = context.offset_map.pos_to_py(
-                                node.end_lineno, node.end_col_offset + 1
-                            )
+                            call_end = _get_node_end_py(node, context)
                             call_range = context.offset_map.span_to_range(call_start, call_end)
                             call_edit = Edit(range=call_range, new_text=new_call)
 
@@ -627,9 +621,7 @@ class YamlLoadFixGenerator(FixGenerator):
                 if func_name in ("yaml.load", "yaml.unsafe_load") and node.args:
                     arg_seg = ast.get_source_segment(context.source, node.args[0]) or ""
                     call_start = context.offset_map.pos_to_py(node.lineno, node.col_offset + 1)
-                    call_end = context.offset_map.pos_to_py(
-                        node.end_lineno, node.end_col_offset + 1
-                    )
+                    call_end = _get_node_end_py(node, context)
                     call_range = context.offset_map.span_to_range(call_start, call_end)
                     edit = Edit(range=call_range, new_text=f"yaml.safe_load({arg_seg})")
                     return [
@@ -679,44 +671,41 @@ class HashlibFixGenerator(FixGenerator):
             if (
                 isinstance(node, ast.Call)
                 and getattr(node, "lineno", 0) == finding.range.start_line
-            ):
-                if isinstance(node.func, ast.Attribute) and node.func.attr in ("md5", "sha1"):
-                    # Check if compared to a literal hash in the line/statement
-                    line_start = context.offset_map.pos_to_py(node.lineno, 1)
-                    line_end = (
-                        context.offset_map.pos_to_py(node.lineno + 1, 1)
-                        if node.lineno < context.offset_map.line_count
-                        else context.offset_map.py_len
-                    )
-                    line_text = context.source[line_start:line_end]
-                    has_literal_hash = bool(
-                        re.search(r'==\s*["\'][a-fA-F0-9]{32,40}["\']', line_text)
-                    )
+            ) and isinstance(node.func, ast.Attribute) and node.func.attr in ("md5", "sha1"):
+                # Check if compared to a literal hash in the line/statement
+                line_start = context.offset_map.pos_to_py(node.lineno, 1)
+                line_end = (
+                    context.offset_map.pos_to_py(node.lineno + 1, 1)
+                    if node.lineno < context.offset_map.line_count
+                    else context.offset_map.py_len
+                )
+                line_text = context.source[line_start:line_end]
+                has_literal_hash = bool(
+                    re.search(r'==\s*["\'][a-fA-F0-9]{32,40}["\']', line_text)
+                )
 
-                    attr_start = context.offset_map.pos_to_py(
-                        node.func.lineno, node.func.col_offset + 1
-                    )
-                    attr_end = context.offset_map.pos_to_py(
-                        node.func.end_lineno, node.func.end_col_offset + 1
-                    )
-                    func_seg = ast.get_source_segment(context.source, node.func) or ""
-                    new_func = func_seg.replace("md5", "sha256").replace("sha1", "sha256")
-                    attr_range = context.offset_map.span_to_range(attr_start, attr_end)
-                    edit = Edit(range=attr_range, new_text=new_func)
+                attr_start = context.offset_map.pos_to_py(
+                    node.func.lineno, node.func.col_offset + 1
+                )
+                attr_end = _get_node_end_py(node.func, context)
+                func_seg = ast.get_source_segment(context.source, node.func) or ""
+                new_func = func_seg.replace("md5", "sha256").replace("sha1", "sha256")
+                attr_range = context.offset_map.span_to_range(attr_start, attr_end)
+                edit = Edit(range=attr_range, new_text=new_func)
 
-                    confidence = "review" if has_literal_hash else "safe"
-                    return [
-                        Fix(
-                            id=f"fix-{finding.id}-1",
-                            finding_id=finding.id,
-                            title="Upgrade weak cryptographic hash to SHA-256",
-                            description="Replaces broken MD5/SHA-1 hash with secure SHA-256.",
-                            confidence=confidence,
-                            kind="rule",
-                            edits=[edit],
-                            verification=_create_initial_verification(),
-                        )
-                    ]
+                confidence = "review" if has_literal_hash else "safe"
+                return [
+                    Fix(
+                        id=f"fix-{finding.id}-1",
+                        finding_id=finding.id,
+                        title="Upgrade weak cryptographic hash to SHA-256",
+                        description="Replaces broken MD5/SHA-1 hash with secure SHA-256.",
+                        confidence=confidence,
+                        kind="rule",
+                        edits=[edit],
+                        verification=_create_initial_verification(),
+                    )
+                ]
         return []
 
 
@@ -742,9 +731,7 @@ class RandomModuleFixGenerator(FixGenerator):
                         .replace("random.", "secrets.")
                     )
                     call_start = context.offset_map.pos_to_py(node.lineno, node.col_offset + 1)
-                    call_end = context.offset_map.pos_to_py(
-                        node.end_lineno, node.end_col_offset + 1
-                    )
+                    call_end = _get_node_end_py(node, context)
                     call_range = context.offset_map.span_to_range(call_start, call_end)
                     call_edit = Edit(range=call_range, new_text=new_call)
                     import_edits = ensure_import_python(context.source, "import secrets")
@@ -756,7 +743,7 @@ class RandomModuleFixGenerator(FixGenerator):
                             description="Replaces pseudorandom generator with cryptographically strong secrets module.",
                             confidence="review",
                             kind="rule",
-                            edits=import_edits + [call_edit],
+                            edits=[*import_edits, call_edit],
                             verification=_create_initial_verification(),
                         )
                     ]
@@ -790,9 +777,7 @@ class HardcodedSecretFixGenerator(FixGenerator):
             const_start = context.offset_map.pos_to_py(
                 target_const.lineno, target_const.col_offset + 1
             )
-            const_end = context.offset_map.pos_to_py(
-                target_const.end_lineno, target_const.end_col_offset + 1
-            )
+            const_end = _get_node_end_py(target_const, context)
             const_range = context.offset_map.span_to_range(const_start, const_end)
             edit = Edit(range=const_range, new_text=f'os.environ.get("{var_name}", "")')
             import_edits = ensure_import_python(context.source, "import os")
@@ -804,7 +789,7 @@ class HardcodedSecretFixGenerator(FixGenerator):
                     description=f"Replaces hardcoded credential literal with os.environ.get('{var_name}', '').",
                     confidence="review",
                     kind="rule",
-                    edits=import_edits + [edit],
+                    edits=[*import_edits, edit],
                     verification=_create_initial_verification(),
                 )
             ]
@@ -832,7 +817,7 @@ class RequestsVerifyFixGenerator(FixGenerator):
                         and kw.value.value is False
                     ):
                         kw_start = context.offset_map.pos_to_py(kw.lineno, kw.col_offset + 1)
-                        kw_end = context.offset_map.pos_to_py(kw.end_lineno, kw.end_col_offset + 1)
+                        kw_end = _get_node_end_py(kw, context)
                         kw_range = context.offset_map.span_to_range(kw_start, kw_end)
                         edit = Edit(range=kw_range, new_text="verify=True")
                         return [
@@ -875,9 +860,7 @@ class PathTraversalFixGenerator(FixGenerator):
                     arg_start = context.offset_map.pos_to_py(
                         path_arg.lineno, path_arg.col_offset + 1
                     )
-                    arg_end = context.offset_map.pos_to_py(
-                        path_arg.end_lineno, path_arg.end_col_offset + 1
-                    )
+                    arg_end = _get_node_end_py(path_arg, context)
                     arg_range = context.offset_map.span_to_range(arg_start, arg_end)
                     edit = Edit(range=arg_range, new_text=f"os.path.basename({arg_seg})")
                     import_edits = ensure_import_python(context.source, "import os")
@@ -889,7 +872,7 @@ class PathTraversalFixGenerator(FixGenerator):
                             description="Wraps path parameter in os.path.basename() to prevent directory traversal.",
                             confidence="review",
                             kind="rule",
-                            edits=import_edits + [edit],
+                            edits=[*import_edits, edit],
                             verification=_create_initial_verification(),
                         )
                     ]
@@ -921,9 +904,7 @@ class XssEscapeFixGenerator(FixGenerator):
                     arg_start = context.offset_map.pos_to_py(
                         arg_node.lineno, arg_node.col_offset + 1
                     )
-                    arg_end = context.offset_map.pos_to_py(
-                        arg_node.end_lineno, arg_node.end_col_offset + 1
-                    )
+                    arg_end = _get_node_end_py(arg_node, context)
                     arg_range = context.offset_map.span_to_range(arg_start, arg_end)
                     edit = Edit(range=arg_range, new_text=f"markupsafe.escape({arg_seg})")
                     import_edits = ensure_import_python(context.source, "import markupsafe")
@@ -935,7 +916,7 @@ class XssEscapeFixGenerator(FixGenerator):
                             description="Escapes HTML metacharacters to prevent Cross-Site Scripting (XSS).",
                             confidence="review",
                             kind="rule",
-                            edits=import_edits + [edit],
+                            edits=[*import_edits, edit],
                             verification=_create_initial_verification(),
                         )
                     ]

@@ -96,7 +96,6 @@ DANGEROUS_TARGETS: Final[frozenset[str]] = frozenset(
         "def",
         "class",
         "return",
-        "import",
         "from",
     }
 )

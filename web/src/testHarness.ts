@@ -33,20 +33,32 @@ export class TestHarness {
 
   constructor() {
     if (typeof window !== 'undefined') {
-      window.addEventListener('keydown', () => { this.lastUserGestureTime = Date.now(); }, true);
-      window.addEventListener('mousedown', () => { this.lastUserGestureTime = Date.now(); }, true);
+      window.addEventListener(
+        'keydown',
+        () => {
+          this.lastUserGestureTime = Date.now();
+        },
+        true
+      );
+      window.addEventListener(
+        'mousedown',
+        () => {
+          this.lastUserGestureTime = Date.now();
+        },
+        true
+      );
       this.interceptFetch();
     }
   }
 
   private interceptFetch(): void {
     const originalFetch = window.fetch;
-    const self = this;
-    window.fetch = async function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const url =
+        typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
       const method = init?.method || 'GET';
-      self.requestLog.push({ url, method, t: Date.now() });
-      return originalFetch.apply(this, [input, init]);
+      this.requestLog.push({ url, method, t: Date.now() });
+      return originalFetch(input, init);
     };
   }
 
@@ -140,7 +152,8 @@ export class TestHarness {
     const decorations = model.getAllDecorations();
     if (!kind) return decorations.length;
     return decorations.filter((d) => {
-      const cls = d.options.inlineClassName || d.options.className || d.options.glyphMarginClassName || '';
+      const cls =
+        d.options.inlineClassName || d.options.className || d.options.glyphMarginClassName || '';
       return cls.includes(kind);
     }).length;
   }
@@ -158,13 +171,15 @@ export class TestHarness {
   }
 
   public state(): TestHarnessState {
-    return this.stateGetter?.() || {
-      activeDocId: null,
-      isDirty: false,
-      status: 'unknown',
-      resultVersion: 0,
-      openDocsCount: 0,
-    };
+    return (
+      this.stateGetter?.() || {
+        activeDocId: null,
+        isDirty: false,
+        status: 'unknown',
+        resultVersion: 0,
+        openDocsCount: 0,
+      }
+    );
   }
 }
 
@@ -177,6 +192,9 @@ declare global {
 }
 
 // Hook ONLY in DEV or VITE_E2E=1 builds
-if (typeof window !== 'undefined' && (import.meta.env.DEV || (import.meta.env as any).VITE_E2E === '1')) {
+if (
+  typeof window !== 'undefined' &&
+  (import.meta.env.DEV || (import.meta.env as any).VITE_E2E === '1')
+) {
   window.__slTest = harness;
 }

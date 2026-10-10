@@ -149,7 +149,6 @@ def test_tiny_e2e_training_run_under_3_minutes() -> None:
                 shutil.rmtree(art_dir)
 
 
-
 def test_multilang_inference_prob_shapes() -> None:
     """Verifies token probability prediction across all four languages."""
     engine = MLInferenceEngine()

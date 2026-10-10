@@ -1,0 +1,424 @@
+{
+  "repository": {
+    "tracked_files_count": 1737,
+    "tracked_size_bytes": 103409375,
+    "tracked_size_mb": 98.62
+  },
+  "languages": {
+    "Other": {
+      "files": 348,
+      "lines": 1278612,
+      "blank_lines": 44411
+    },
+    "YAML": {
+      "files": 1,
+      "lines": 37,
+      "blank_lines": 2
+    },
+    "Markdown": {
+      "files": 94,
+      "lines": 11425,
+      "blank_lines": 2387
+    },
+    "C": {
+      "files": 118,
+      "lines": 687,
+      "blank_lines": 51
+    },
+    "C++": {
+      "files": 40,
+      "lines": 247,
+      "blank_lines": 17
+    },
+    "JSON": {
+      "files": 254,
+      "lines": 68412,
+      "blank_lines": 2
+    },
+    "Java": {
+      "files": 163,
+      "lines": 2112,
+      "blank_lines": 158
+    },
+    "JavaScript": {
+      "files": 172,
+      "lines": 1672,
+      "blank_lines": 103
+    },
+    "Python": {
+      "files": 427,
+      "lines": 101469,
+      "blank_lines": 7848
+    },
+    "JavaScript (React)": {
+      "files": 2,
+      "lines": 324,
+      "blank_lines": 21
+    },
+    "HTML": {
+      "files": 3,
+      "lines": 566,
+      "blank_lines": 64
+    },
+    "TOML": {
+      "files": 2,
+      "lines": 139,
+      "blank_lines": 11
+    },
+    "TypeScript (React)": {
+      "files": 55,
+      "lines": 8362,
+      "blank_lines": 463
+    },
+    "TypeScript": {
+      "files": 56,
+      "lines": 6466,
+      "blank_lines": 531
+    },
+    "CSS": {
+      "files": 2,
+      "lines": 895,
+      "blank_lines": 1
+    }
+  },
+  "modules": {
+    "python_modules_in_src": 167,
+    "typescript_modules_in_web_src": 110
+  },
+  "dependencies": {
+    "python_runtime_dependencies": 12,
+    "python_dev_dependencies": 6,
+    "node_dependencies": 8,
+    "node_dev_dependencies": 16
+  },
+  "code_quality": {
+    "strict_ruff_violations": 0,
+    "tsc_errors": 0,
+    "eslint_configured": true,
+    "mypy_configured": true,
+    "test_count_python": 789,
+    "test_coverage_python_percent": 87,
+    "test_count_web": 148,
+    "duplication": {
+      "total_6_line_blocks": 39519,
+      "duplicate_blocks": 1136,
+      "estimated_duplication_percent": 2.87
+    },
+    "annotations": {
+      "TODO": 10,
+      "FIXME": 6,
+      "XXX": 10,
+      "HACK": 5,
+      "python_print_in_src": 52,
+      "console_log_in_web_src": 0,
+      "heuristic_commented_code_lines": 2
+    }
+  },
+  "most_complex_python_functions": [
+    {
+      "name": "analyze",
+      "file": "src/apsla/pipeline.py",
+      "line": 50,
+      "cyclomatic_complexity": 62
+    },
+    {
+      "name": "_find_sink",
+      "file": "src/apsla/taint/lite.py",
+      "line": 543,
+      "cyclomatic_complexity": 53
+    },
+    {
+      "name": "analyze_lexical_diagnostics",
+      "file": "src/apsla/diagnostics/lexical.py",
+      "line": 19,
+      "cyclomatic_complexity": 52
+    },
+    {
+      "name": "plan",
+      "file": "src/apsla/agents/planner_rules.py",
+      "line": 20,
+      "cyclomatic_complexity": 51
+    },
+    {
+      "name": "extract_token_features",
+      "file": "src/apsla/ml/features.py",
+      "line": 350,
+      "cyclomatic_complexity": 46
+    },
+    {
+      "name": "_lex_number",
+      "file": "src/apsla/languages/cpp_lang/lexer.py",
+      "line": 584,
+      "cyclomatic_complexity": 41
+    },
+    {
+      "name": "analyze",
+      "file": "src/apsla/taint/lite.py",
+      "line": 79,
+      "cyclomatic_complexity": 41
+    },
+    {
+      "name": "_evaluate_expression",
+      "file": "src/apsla/languages/python_lang/taint.py",
+      "line": 269,
+      "cyclomatic_complexity": 38
+    },
+    {
+      "name": "fuse_findings",
+      "file": "src/apsla/fusion.py",
+      "line": 59,
+      "cyclomatic_complexity": 37
+    },
+    {
+      "name": "ensure_import_python",
+      "file": "src/apsla/fixes/imports.py",
+      "line": 11,
+      "cyclomatic_complexity": 36
+    },
+    {
+      "name": "_lex_number",
+      "file": "src/apsla/languages/java_lang/lexer.py",
+      "line": 409,
+      "cyclomatic_complexity": 36
+    },
+    {
+      "name": "check_python_syntax",
+      "file": "src/apsla/diagnostics/python_diag.py",
+      "line": 16,
+      "cyclomatic_complexity": 35
+    },
+    {
+      "name": "_parse_expression_or_assignment_statement",
+      "file": "src/apsla/languages/javascript_lang/parser.py",
+      "line": 461,
+      "cyclomatic_complexity": 33
+    },
+    {
+      "name": "ensure_import_java",
+      "file": "src/apsla/fixes/imports.py",
+      "line": 115,
+      "cyclomatic_complexity": 31
+    },
+    {
+      "name": "ensure_import_javascript",
+      "file": "src/apsla/fixes/imports.py",
+      "line": 209,
+      "cyclomatic_complexity": 30
+    },
+    {
+      "name": "tokenize",
+      "file": "src/apsla/languages/javascript_lang/lexer.py",
+      "line": 244,
+      "cyclomatic_complexity": 29
+    },
+    {
+      "name": "_check_sink",
+      "file": "src/apsla/languages/python_lang/taint.py",
+      "line": 565,
+      "cyclomatic_complexity": 29
+    },
+    {
+      "name": "check_numeric_lexical_diagnostics",
+      "file": "src/apsla/diagnostics/numeric_lexical.py",
+      "line": 15,
+      "cyclomatic_complexity": 28
+    },
+    {
+      "name": "_lex_preprocessor",
+      "file": "src/apsla/languages/cpp_lang/lexer.py",
+      "line": 327,
+      "cyclomatic_complexity": 27
+    },
+    {
+      "name": "_lex_number",
+      "file": "src/apsla/languages/javascript_lang/lexer.py",
+      "line": 496,
+      "cyclomatic_complexity": 27
+    }
+  ],
+  "largest_tracked_files": [
+    {
+      "path": "src/apsla/ml/artifacts/random_forest_20260929_221524/model.joblib",
+      "size_bytes": 1638321,
+      "size_kb": 1599.92
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261001_162207/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261001_163417/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261002_122201/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261002_131455/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261002_161420/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261002_161713/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261002_194952/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261002_195407/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261003_054746/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261009_115719/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261009_133747/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261009_144532/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261009_213046/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261009_214100/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/separate_javascript_random_forest_20261009_214933/model.joblib",
+      "size_bytes": 1254289,
+      "size_kb": 1224.89
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261001_163417/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261002_122201/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261002_131455/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261002_161420/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261002_161713/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261002_194952/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261002_195407/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261003_054746/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261009_115719/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261009_133747/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261009_144532/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261009_213046/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261009_214100/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    },
+    {
+      "path": "src/apsla/ml/artifacts/joint_hist_gradient_boosting_20261009_214933/model.joblib",
+      "size_bytes": 952688,
+      "size_kb": 930.36
+    }
+  ],
+  "web_dist_bundle": {
+    "exists": true,
+    "total_files": 178,
+    "total_size_bytes": 12741869,
+    "total_size_mb": 12.15,
+    "largest_assets": [
+      {
+        "path": "assets/ts.worker-BSIRc3Qe.js",
+        "size_bytes": 4857277,
+        "size_kb": 4743.43
+      },
+      {
+        "path": "assets/index-ipFdIcxv.js",
+        "size_bytes": 3637834,
+        "size_kb": 3552.57
+      },
+      {
+        "path": "assets/css.worker-BR_Yf3uq.js",
+        "size_bytes": 993821,
+        "size_kb": 970.53
+      },
+      {
+        "path": "assets/html.worker-DKUc1FTU.js",
+        "size_bytes": 657546,
+        "size_kb": 642.13
+      },
+      {
+        "path": "assets/json.worker-dFtpb4ik.js",
+        "size_bytes": 348502,
+        "size_kb": 340.33
+      }
+    ]
+  }
+}

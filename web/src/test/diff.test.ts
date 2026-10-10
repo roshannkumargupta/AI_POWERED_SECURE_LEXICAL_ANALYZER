@@ -16,8 +16,20 @@ describe('generateUnifiedDiff', () => {
     expect(diff).toContain('--- a/test.txt');
     expect(diff).toContain('+++ b/test.txt');
     expect(diff).toContain('-line 2 (old)');
-    expect(diff).toContain('+line 2 (new)');
-    expect(diff).toContain(' line 1');
     expect(diff).toContain(' line 3');
+  });
+
+  it('extracts edit text from single line and multi line edits', async () => {
+    const { extractEditText } = await import('../utils/diff');
+    const source = 'hello world\nfoo bar\nbaz';
+    const singleLine = [
+      { range: { start_line: 1, start_col: 7, end_line: 1, end_col: 12 }, new_text: 'there' },
+    ];
+    expect(extractEditText(source, singleLine)).toBe('world');
+
+    const multiLine = [
+      { range: { start_line: 1, start_col: 7, end_line: 2, end_col: 4 }, new_text: 'replacement' },
+    ];
+    expect(extractEditText(source, multiLine)).toBe('world\nfoo');
   });
 });

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 import re
 from typing import Final
 
@@ -10,26 +9,18 @@ from apsla.languages.cpp_lang.profile import CPP_TAINT_PROFILE
 from apsla.lexing.token import Token
 from apsla.models import Finding, Range, Severity
 from apsla.rules.base import Rule, RuleContext
+from apsla.rules.helpers import (
+    is_inside_comment_or_string,
+    shannon_entropy,
+)
 from apsla.taint.lite import TaintLiteEngine
 
-
-def _shannon_entropy(s: str) -> float:
-    """Calculate Shannon entropy in bits per character."""
-    if not s:
-        return 0.0
-    freq: dict[str, int] = {}
-    for c in s:
-        freq[c] = freq.get(c, 0) + 1
-    length = len(s)
-    return -sum((cnt / length) * math.log2(cnt / length) for cnt in freq.values())
+_shannon_entropy = shannon_entropy
 
 
 def _is_inside_comment_or_string(pos: int, tokens: list[Token]) -> bool:
     """Check if character index is strictly inside a comment or string token."""
-    for tok in tokens:
-        if tok.start <= pos < tok.end:
-            return tok.kind in ("COMMENT", "STRING", "RAW_STRING", "CHAR")
-    return False
+    return is_inside_comment_or_string(pos, tokens, ("RAW_STRING", "CHAR"))
 
 
 def _is_inside_comment_string_or_directive(

@@ -44,8 +44,8 @@ def build_confusables_json() -> int:
     mapping: dict[str, str] = {}
 
     with open(file_path, encoding="utf-8", errors="replace") as f:
-        for line in f:
-            line = line.strip()
+        for raw_line in f:
+            line = raw_line.strip()
             if not line or line.startswith("#"):
                 continue
 

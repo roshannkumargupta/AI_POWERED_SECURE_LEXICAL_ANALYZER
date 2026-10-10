@@ -14,7 +14,7 @@ from typing import Any
 from apsla.languages.registry import get_plugin
 from apsla.lexing.common import OffsetMap
 from apsla.lexing.token import Token
-from apsla.models import Finding, Label, Severity
+from apsla.models import Edit, Finding, Label, Severity
 from apsla.rules.generic import evaluate_unicode_rules
 from apsla.unicode_defense.recovery import recover_text
 
@@ -67,7 +67,7 @@ class AnalysisSession:
 
     def get_next_unverified_candidate(self) -> dict[str, Any] | None:
         """Find the next fix candidate that hasn't been verified or rejected yet."""
-        for finding_id, cands in self.fix_candidates.items():
+        for _finding_id, cands in self.fix_candidates.items():
             for c in cands:
                 cid = c.get("id")
                 if cid and cid not in self.verified_fixes and cid not in self.copies:
@@ -411,7 +411,7 @@ def tool_ml_score(session: AnalysisSession) -> dict[str, Any]:
         for f in session.findings:
             # Find tokens overlapping with finding range
             overlap_scores: list[float] = []
-            for t, p in zip(session.tokens, probs):
+            for t, p in zip(session.tokens, probs, strict=False):
                 if f.range.start_line <= t.line <= f.range.end_line:
                     overlap_scores.append(p)
             if overlap_scores:
@@ -485,7 +485,9 @@ def tool_apply_fix_to_copy(session: AnalysisSession, fix_id: str) -> dict[str, A
 
     from apsla.fixes.engine import apply_edits
 
-    mod_source = apply_edits(session.source, matched_candidate)
+    raw_edits = matched_candidate.get("edits", [])
+    edits_list = [Edit(**e) if isinstance(e, dict) else e for e in raw_edits]
+    mod_source = apply_edits(session.source, edits_list)
     session.copies[fix_id] = mod_source
     session.active_copy_id = fix_id
 

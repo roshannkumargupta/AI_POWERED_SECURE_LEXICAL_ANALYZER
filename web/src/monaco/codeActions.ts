@@ -61,9 +61,7 @@ export function createCodeActionProvider(
   return {
     provideCodeActions(model, range, _context) {
       const findings = getFindings().filter((f) => !f.suppressed);
-      const matchingFindings = findings.filter((f) =>
-        intersectsRange(range, f.range)
-      );
+      const matchingFindings = findings.filter((f) => intersectsRange(range, f.range));
 
       const actions: monaco.languages.CodeAction[] = [];
 
@@ -76,21 +74,19 @@ export function createCodeActionProvider(
 
           if (fix.confidence === 'safe' && fix.edits && fix.edits.length > 0) {
             // Apply atomically as a single undoable workspace edit
-            const workspaceEdits: monaco.languages.IWorkspaceTextEdit[] = fix.edits.map(
-              (edit) => ({
-                resource: model.uri,
-                textEdit: {
-                  range: new monacoInstance.Range(
-                    edit.range.start_line,
-                    edit.range.start_col,
-                    edit.range.end_line,
-                    edit.range.end_col
-                  ),
-                  text: edit.new_text,
-                },
-                versionId: model.getVersionId(),
-              })
-            );
+            const workspaceEdits: monaco.languages.IWorkspaceTextEdit[] = fix.edits.map((edit) => ({
+              resource: model.uri,
+              textEdit: {
+                range: new monacoInstance.Range(
+                  edit.range.start_line,
+                  edit.range.start_col,
+                  edit.range.end_line,
+                  edit.range.end_col
+                ),
+                text: edit.new_text,
+              },
+              versionId: model.getVersionId(),
+            }));
 
             actions.push({
               title: `⚡ ${title}`,

@@ -316,9 +316,7 @@ def _check_hex(text: str) -> bool:
     clean = text.strip("'\"` \t\r\n")
     if clean.startswith(("0x", "0X")):
         clean = clean[2:]
-    if len(clean) >= 8 and len(clean) % 2 == 0 and re.fullmatch(r"[0-9a-fA-F]+", clean):
-        return True
-    return False
+    return bool(len(clean) >= 8 and len(clean) % 2 == 0 and re.fullmatch(r"[0-9a-fA-F]+", clean))
 
 
 def _check_decoded_payload_danger(text: str) -> bool:
@@ -536,10 +534,8 @@ def extract_token_features(
                     close_paren_idx = j
                     break
         for j in range(enclosing_open_idx + 1, close_paren_idx):
-            if (
-                tokens[j].text in ("+", "%")
-                or tokens[j].kind == "OPERATOR"
-                and "+" in tokens[j].text
+            if tokens[j].text in ("+", "%") or (
+                tokens[j].kind == "OPERATOR" and "+" in tokens[j].text
             ):
                 has_concat = 1.0
                 break

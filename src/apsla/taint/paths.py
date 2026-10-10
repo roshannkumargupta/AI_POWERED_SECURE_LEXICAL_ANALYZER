@@ -22,10 +22,7 @@ def create_taint_step(
     Returns:
         TaintPathStep: Formatted path step.
     """
-    if isinstance(kind, str):
-        step_enum = TaintStepKind(kind.lower())
-    else:
-        step_enum = kind
+    step_enum = TaintStepKind(kind.lower()) if isinstance(kind, str) else kind
 
     return TaintPathStep(
         step=step_enum,

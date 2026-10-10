@@ -113,7 +113,9 @@ export const ReviewFixesModal: React.FC<ReviewFixesModalProps> = ({
                       <span className="ui6-meta-pill">{item.finding.rule_id}</span>
                       <span className="ui6-badge insecure">review</span>
                     </div>
-                    <p style={{ margin: '4px 0 8px', fontSize: 11, color: 'var(--text-secondary)' }}>
+                    <p
+                      style={{ margin: '4px 0 8px', fontSize: 11, color: 'var(--text-secondary)' }}
+                    >
                       {item.fix.description}
                     </p>
 

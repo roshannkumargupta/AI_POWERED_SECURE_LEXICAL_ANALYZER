@@ -2,13 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import Editor, { loader, OnMount } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
-import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
-
-import { buildMonacoTheme } from '../theme/monacoTheme';
 import { useTheme } from '../theme/theme';
 import { updateMonacoMarkers } from '../monaco/markers';
 import { createHoverProvider, setHoverActionHandlers } from '../monaco/hover';
@@ -16,26 +9,20 @@ import { createCodeActionProvider, setCodeActionHandlers } from '../monaco/codeA
 import { DecorationManager } from '../monaco/decorations';
 import { AnalysisResult, Finding, Fix } from '../api/client';
 import type { TokenInfo } from '../api/client';
-import {
-  setEditorPosition,
-  setEditorSelection,
-  revealEditorRange,
-} from '../editor/navigation';
+import { setEditorPosition, setEditorSelection, revealEditorRange } from '../editor/navigation';
 import { harness } from '../testHarness';
+import {
+  initMonacoWorkers,
+  getMonacoLanguage,
+  DEFAULT_MONACO_OPTIONS,
+  bindEditorCommands,
+  applyMonacoTheme,
+  editorContainerStyle,
+  editorPlaceholderStyle,
+} from '../monaco/setupMonaco';
 
 // Configure Monaco Environment for Vite with locally bundled web workers (NO CDN)
-if (typeof window !== 'undefined') {
-  (window as any).MonacoEnvironment = {
-    getWorker(_: any, label: string) {
-      if (label === 'json') return new jsonWorker();
-      if (label === 'css' || label === 'scss' || label === 'less') return new cssWorker();
-      if (label === 'html' || label === 'handlebars' || label === 'razor') return new htmlWorker();
-      if (label === 'typescript' || label === 'javascript') return new tsWorker();
-      return new editorWorker();
-    },
-  };
-}
-
+initMonacoWorkers();
 loader.config({ monaco });
 
 export interface NavTarget {
@@ -109,8 +96,6 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
   tokensRef.current = tokens;
   onSelectTokenRef.current = onSelectToken;
 
-  // Keep React-originated replacements (new/open sample, verified fix) in sync,
-  // while leaving ordinary keystrokes to Monaco so its cursor and undo stack survive.
   useEffect(() => {
     const editor = editorRef.current;
     const model = editor?.getModel();
@@ -124,7 +109,6 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
     if (view) editor.restoreViewState(view);
   }, [source]);
 
-  // View state preservation when switching tabs/documents
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
@@ -142,47 +126,16 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
     prevModelKeyRef.current = currentKey;
   }, [modelKey, filename]);
 
-  // Language mapping to Monaco IDs
-  const getMonacoLanguage = (lang: string) => {
-    switch (lang.toLowerCase()) {
-      case 'python':
-      case 'py':
-        return 'python';
-      case 'javascript':
-      case 'js':
-        return 'javascript';
-      case 'java':
-        return 'java';
-      case 'cpp':
-      case 'c++':
-      case 'c':
-        return 'cpp';
-      default:
-        return 'python';
-    }
-  };
-
   const handleEditorDidMount: OnMount = (editor, monacoInstance) => {
     editorRef.current = editor;
     harness.setEditor(editor);
 
-    // Define and apply theme
-    const styles = getComputedStyle(document.documentElement);
-    const themeTokens = Object.fromEntries(
-      Array.from(styles)
-        .filter((name) => name.startsWith('--'))
-        .map((name) => [name, styles.getPropertyValue(name)])
-    );
-    monacoInstance.editor.defineTheme('securelex-dark', buildMonacoTheme(themeTokens, 'dark'));
-    monacoInstance.editor.defineTheme('securelex-light', buildMonacoTheme(themeTokens, 'light'));
-    monacoInstance.editor.setTheme(themeName);
+    applyMonacoTheme(monacoInstance, themeName);
     void document.fonts.ready.then(() => monacoInstance.editor.remeasureFonts());
 
-    // Initialize decoration manager
     const decManager = new DecorationManager(editor, monacoInstance);
     decorationManagerRef.current = decManager;
 
-    // Register hover and code action providers for all supported languages
     ['python', 'javascript', 'java', 'cpp'].forEach((lang) => {
       monacoInstance.languages.registerHoverProvider(
         lang,
@@ -195,35 +148,22 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
       );
     });
 
-    // Wire global action handlers for Monaco Hover widgets
     setHoverActionHandlers({
       onQuickFix: (findingId: string) => onSelectFinding(findingId),
       onShowDataFlow: (findingId: string) => onSelectFinding(findingId),
     });
 
-    // Wire action handlers for Code Action Lightbulb Quick Fixes
     setCodeActionHandlers({
       onOpenDiffView: (fix: Fix, finding: Finding) => onOpenDiff(fix, finding),
     });
 
-    // Keybindings inside Monaco
-    editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter, () => {
-      onAnalyzeShortcut();
+    bindEditorCommands(editor, monacoInstance, {
+      onAnalyze: onAnalyzeShortcut,
+      onDownload: onDownloadShortcut,
+      onNextProblem,
+      onPrevProblem,
     });
 
-    editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS, () => {
-      onDownloadShortcut();
-    });
-
-    editor.addCommand(monacoInstance.KeyCode.F8, () => {
-      onNextProblem();
-    });
-
-    editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.F8, () => {
-      onPrevProblem();
-    });
-
-    // Cursor tracking with 50ms debounced token table highlight sync
     let cursorTimer: number | undefined;
     let lastCursorToken: number = -1;
 
@@ -258,7 +198,6 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
       );
     });
 
-    // Initial markers update
     const model = editor.getModel();
     if (model) {
       updateMonacoMarkers(model, findingsRef.current, monacoInstance);
@@ -267,18 +206,9 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
   };
 
   useEffect(() => {
-    const styles = getComputedStyle(document.documentElement);
-    const themeTokens = Object.fromEntries(
-      Array.from(styles)
-        .filter((name) => name.startsWith('--'))
-        .map((name) => [name, styles.getPropertyValue(name)])
-    );
-    monaco.editor.defineTheme('securelex-dark', buildMonacoTheme(themeTokens, 'dark'));
-    monaco.editor.defineTheme('securelex-light', buildMonacoTheme(themeTokens, 'light'));
-    monaco.editor.setTheme(themeName);
+    applyMonacoTheme(monaco, themeName);
   }, [resolved, themeName]);
 
-  // Synchronize markers whenever findings change
   useEffect(() => {
     if (!editorRef.current) return;
     const model = editorRef.current.getModel();
@@ -288,7 +218,6 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
     }
   }, [findings]);
 
-  // Synchronize taint flow decorations
   useEffect(() => {
     if (!decorationManagerRef.current) return;
 
@@ -306,14 +235,18 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
   }, [activeDataFlowFindingId, findings]);
 
   useEffect(() => {
-    decorationManagerRef.current?.updateTokenMap(tokenMap, analysis, selectedTokenIndex, tokenCategory);
+    decorationManagerRef.current?.updateTokenMap(
+      tokenMap,
+      analysis,
+      selectedTokenIndex,
+      tokenCategory
+    );
   }, [tokenMap, analysis, selectedTokenIndex, tokenCategory]);
 
   useEffect(() => {
     decorationManagerRef.current?.updateSecurityDecorations(analysis, selectedTokenIndex);
   }, [analysis, selectedTokenIndex]);
 
-  // Explicit user navigation ONLY (clicking row in token table or finding list, or F8)
   useEffect(() => {
     if (!editorRef.current || !navTarget) return;
     const { range, type } = navTarget;
@@ -329,17 +262,12 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
         'user-nav-token'
       );
     } else {
-      setEditorPosition(
-        editorRef.current,
-        range.start_line,
-        range.start_col,
-        'user-nav-finding'
-      );
+      setEditorPosition(editorRef.current, range.start_line, range.start_col, 'user-nav-finding');
     }
   }, [navTarget]);
 
   return (
-    <div style={containerStyle}>
+    <div style={editorContainerStyle}>
       <Editor
         height="100%"
         width="100%"
@@ -349,54 +277,13 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
         theme={themeName}
         onChange={(val) => onChangeSource(val || '')}
         onMount={handleEditorDidMount}
-        options={{
-          readOnly: false,
-          domReadOnly: false,
-          minimap: { enabled: false },
-          lineNumbers: 'on',
-          glyphMargin: true,
-          bracketPairColorization: { enabled: false },
-          renderControlCharacters: true,
-          renderLineHighlight: 'none',
-          unicodeHighlight: {
-            ambiguousCharacters: true,
-            invisibleCharacters: true,
-            nonBasicASCII: false,
-          },
-          fontFamily: 'var(--font-code)',
-          fontSize: 12,
-          lineHeight: 24,
-          scrollBeyondLastLine: false,
-          automaticLayout: true,
-          cursorBlinking: 'smooth',
-          cursorSmoothCaretAnimation: 'on',
-          smoothScrolling: true,
-          tabSize: 4,
-          wordWrap: 'off',
-        }}
+        options={DEFAULT_MONACO_OPTIONS}
       />
       {!source && (
-        <div style={placeholderStyle}>
+        <div style={editorPlaceholderStyle}>
           Type or paste code. The language is detected automatically.
         </div>
       )}
     </div>
   );
-};
-
-const placeholderStyle: React.CSSProperties = {
-  position: 'absolute',
-  top: 12,
-  left: 76,
-  color: 'var(--muted)',
-  opacity: 0.6,
-  fontFamily: 'var(--font-code)',
-  fontSize: 12,
-  pointerEvents: 'none',
-};
-
-const containerStyle: React.CSSProperties = {
-  height: '100%',
-  width: '100%',
-  position: 'relative',
 };

@@ -104,7 +104,9 @@ export function createHoverProvider(
         }
         if (f.taint_path && f.taint_path.length > 0) {
           const flowArgs = encodeURIComponent(JSON.stringify({ findingId: f.id }));
-          actionLinks.push(`[🔍 **Show data flow** (${f.taint_path.length} steps)](command:securelex.showDataFlow?${flowArgs})`);
+          actionLinks.push(
+            `[🔍 **Show data flow** (${f.taint_path.length} steps)](command:securelex.showDataFlow?${flowArgs})`
+          );
         }
 
         if (actionLinks.length > 0) {

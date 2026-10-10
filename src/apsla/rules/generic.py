@@ -181,7 +181,7 @@ def evaluate_unicode_rules(
                 "Mixed-script identifiers are a primary indicator of homoglyph spoofing attacks. "
                 "Normalize the identifier to a single consistent script."
             )
-            recovered_word = hit.recovered_to
+            recovered_word = hit.recovered_to or ""
             if recovered_word:
                 fix = Fix(
                     id=_generate_fix_id(rule_id, hit.range),

@@ -16,13 +16,13 @@ class OffsetMap:
     """
 
     __slots__ = (
-        "_text",
-        "_py_len",
-        "_utf16_len",
-        "_py_to_u16",
-        "_u16_to_py",
         "_line_starts_py",
         "_line_starts_u16",
+        "_py_len",
+        "_py_to_u16",
+        "_text",
+        "_u16_to_py",
+        "_utf16_len",
     )
 
     def __init__(self, text: str) -> None:

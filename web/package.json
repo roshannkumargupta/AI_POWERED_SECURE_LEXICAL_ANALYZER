@@ -7,8 +7,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "format": "prettier --check src",
+    "format:fix": "prettier --write src",
     "e2e": "node ../scripts/cdp_matrix_runner.mjs",
-    "qa:full": "node ../scripts/qa_full.mjs"
+    "qa": "node ../scripts/qa_full.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.0.21",
@@ -26,8 +30,14 @@
     "@types/node": "^22.5.4",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.71.1",
+    "@typescript-eslint/parser": "^8.71.1",
     "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^9.39.5",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "jsdom": "^25.0.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.5.4",
     "vite": "^5.4.2",
     "vitest": "^2.0.5"

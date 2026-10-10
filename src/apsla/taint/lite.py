@@ -105,30 +105,37 @@ class TaintLiteEngine:
                         scope_stack = [global_scope, {}]
 
             # Scope entry/exit based on block start and end
-            if stmt.tokens and stmt.tokens[0].text == "}" and stmt.tokens[0].kind != "TEMPLATE":
-                if len(scope_stack) > 1:
-                    scope_stack.pop()
+            if (
+                stmt.tokens
+                and stmt.tokens[0].text == "}"
+                and stmt.tokens[0].kind != "TEMPLATE"
+                and len(scope_stack) > 1
+            ):
+                scope_stack.pop()
 
             if stmt.tokens and stmt.tokens[-1].text == "{" and stmt.tokens[-1].kind != "TEMPLATE":
-                new_scope = {k: v for k, v in scope_stack[-1].items()}
+                new_scope = dict(scope_stack[-1].items())
                 scope_stack.append(new_scope)
 
             current_scope = scope_stack[-1]
 
             # In C/C++, seed argv/argc if encountered or in main signature
-            if ("argv" in stmt_text or "argc" in stmt_text) and "argv" not in current_scope:
-                if re.search(r"\bargv\b", stmt_text):
-                    source_step = create_taint_step(
-                        kind=TaintStepKind.SOURCE,
-                        range=stmt.range,
-                        text=stmt_text,
-                        note="Command-line argument 'argv' retrieved from process entry",
-                    )
-                    current_scope["argv"] = TaintState(
-                        var_name="argv",
-                        path=[source_step],
-                        categories={"ALL", "COMMAND", "IO", "MEM"},
-                    )
+            if (
+                ("argv" in stmt_text or "argc" in stmt_text)
+                and "argv" not in current_scope
+                and re.search(r"\bargv\b", stmt_text)
+            ):
+                source_step = create_taint_step(
+                    kind=TaintStepKind.SOURCE,
+                    range=stmt.range,
+                    text=stmt_text,
+                    note="Command-line argument 'argv' retrieved from process entry",
+                )
+                current_scope["argv"] = TaintState(
+                    var_name="argv",
+                    path=[source_step],
+                    categories={"ALL", "COMMAND", "IO", "MEM"},
+                )
 
             # 1. Check for Sanitizers & Sources in statement
             sanitizer_found, sanitized_var = self._check_sanitizer(stmt, current_scope)
@@ -186,7 +193,7 @@ class TaintLiteEngine:
                     current_scope[assigned_var] = TaintState(
                         var_name=assigned_var,
                         categories=set(source_state.categories),
-                        path=list(source_state.path) + [prop_step],
+                        path=[*list(source_state.path), prop_step],
                         sanitized=False,
                     )
 
@@ -206,7 +213,7 @@ class TaintLiteEngine:
                     current_scope[sb_var] = TaintState(
                         var_name=sb_var,
                         categories=set(source_state.categories),
-                        path=list(source_state.path) + [prop_step],
+                        path=[*list(source_state.path), prop_step],
                         sanitized=False,
                     )
 
@@ -220,7 +227,7 @@ class TaintLiteEngine:
                     if self.struct_tree and getattr(self.struct_tree, "calls", None):
                         for c in self.struct_tree.calls:
                             if c.range.start_line == stmt.range.start_line:
-                                for arg_range, arg_text in zip(c.args, c.arg_texts):
+                                for arg_range, arg_text in zip(c.args, c.arg_texts, strict=False):
                                     if re.search(rf"\b{re.escape(tainted_var)}\b", arg_text):
                                         sink_range = arg_range
                                         break
@@ -289,9 +296,7 @@ class TaintLiteEngine:
                         ":",
                         ",",
                         "return",
-                    ):
-                        is_obj = True
-                    elif len(current) >= 2 and current[-2].text in ("const", "let", "var"):
+                    ) or (len(current) >= 2 and current[-2].text in ("const", "let", "var")):
                         is_obj = True
                 if is_obj:
                     brace_stack.append("OBJECT")
@@ -749,9 +754,12 @@ class TaintLiteEngine:
                     if not state.sanitized and re.search(rf"\b{re.escape(var_name)}\b", text):
                         # SQL Injection safety check: if PreparedStatement or parameterized placeholders used
                         if rule_id in ("APS-JV-INJ-002", "APS-JS-INJ-003"):
-                            if "prepareStatement(" in text or "PreparedStatement" in text:
-                                if "?" in text and "+" not in text:
-                                    continue
+                            if (
+                                ("prepareStatement(" in text or "PreparedStatement" in text)
+                                and "?" in text
+                                and "+" not in text
+                            ):
+                                continue
                             # JS parameterized queries with placeholders and parameters array
                             if ("?" in text or "$1" in text) and "[" in text and "+" not in text:
                                 continue
@@ -769,39 +777,41 @@ class TaintLiteEngine:
                                 continue
 
                         # JS Command Injection safety: execFile or spawn with argument array and no shell:true is safe
-                        if rule_id == "APS-JS-INJ-002":
-                            if "execFile" in text or (
-                                "spawn(" in text and "shell: true" not in text
-                            ):
-                                if "[" in text and "shell: true" not in text and "+" not in text:
-                                    continue
+                        if (
+                            rule_id == "APS-JS-INJ-002"
+                            and ("execFile" in text or ("spawn(" in text and "shell: true" not in text))
+                            and "[" in text
+                            and "shell: true" not in text
+                            and "+" not in text
+                        ):
+                            continue
 
                         # JS XSS safety: DOMPurify.sanitize or escapeHtml is safe
-                        if rule_id in ("APS-JS-XSS-001", "APS-JS-XSS-002"):
-                            if (
-                                "DOMPurify.sanitize" in text
-                                or "escapeHtml" in text
-                                or "textContent" in text
-                            ):
-                                continue
+                        if rule_id in ("APS-JS-XSS-001", "APS-JS-XSS-002") and (
+                            "DOMPurify.sanitize" in text
+                            or "escapeHtml" in text
+                            or "textContent" in text
+                        ):
+                            continue
 
                         # JS Path Traversal safety: path.basename is safe
-                        if rule_id == "APS-JS-IO-001":
-                            if "path.basename" in text:
-                                continue
+                        if rule_id == "APS-JS-IO-001" and "path.basename" in text:
+                            continue
 
                         # JS setTimeout / setInterval: safe if first arg is arrow fn or function callback
-                        if rule_id == "APS-JS-INJ-001" and (
-                            "setTimeout" in text or "setInterval" in text
-                        ):
-                            if re.search(
+                        if (
+                            rule_id == "APS-JS-INJ-001"
+                            and ("setTimeout" in text or "setInterval" in text)
+                            and re.search(
                                 r"set(?:Timeout|Interval)\s*\(\s*(?:\(\s*\)\s*=>|function\b|[A-Za-z0-9_]+\s*,)",
                                 text,
-                            ):
-                                if "+" not in text and not re.search(
-                                    rf"[`\"'].*\b{re.escape(var_name)}\b.*[`\"']", text
-                                ):
-                                    continue
+                            )
+                            and "+" not in text
+                            and not re.search(
+                                rf"[`\"'].*\b{re.escape(var_name)}\b.*[`\"']", text
+                            )
+                        ):
+                            continue
 
                         # C/C++ format string: safe if format argument is a string literal starting with '"'
                         if rule_id == "APS-CP-FMT-001":

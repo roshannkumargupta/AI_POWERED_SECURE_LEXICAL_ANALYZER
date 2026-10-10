@@ -24,7 +24,11 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   isAnalyzing,
   findingCount = 0,
   analysisReady: _analysisReady = false,
-  lexicalCount = 0, syntaxCount = 0, parser, onRetry, analysisFailed = false,
+  lexicalCount = 0,
+  syntaxCount = 0,
+  parser,
+  onRetry,
+  analysisFailed = false,
   fileState = 'not analysed',
   agentMode = 'off',
   agentModel = 'qwen2.5-coder:3b',
@@ -35,18 +39,44 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
   const statePill = () => {
     if (analysisFailed || fileState === 'error') {
-      return <button style={textMutedStyle} onClick={onRetry}>Analysis failed - Retry</button>;
+      return (
+        <button style={textMutedStyle} onClick={onRetry}>
+          Analysis failed - Retry
+        </button>
+      );
     }
     if (fileState === 'analysing' || isAnalyzing) {
-      return <span style={{ ...pillStyle, color: 'var(--text-neutral)', background: 'var(--bg-neutral)' }}>Analysing...</span>;
+      return (
+        <span
+          style={{ ...pillStyle, color: 'var(--text-neutral)', background: 'var(--bg-neutral)' }}
+        >
+          Analysing...
+        </span>
+      );
     }
     if (fileState === 'stale') {
-      return <span style={{ ...pillStyle, color: 'var(--text-warning)', background: 'var(--bg-warning)' }}>Edited since last analysis - press Analyze</span>;
+      return (
+        <span
+          style={{ ...pillStyle, color: 'var(--text-warning)', background: 'var(--bg-warning)' }}
+        >
+          Edited since last analysis - press Analyze
+        </span>
+      );
     }
     if (fileState === 'analysed') {
-      return <span style={{ ...pillStyle, color: 'var(--text-success)', background: 'var(--bg-success)' }}>Analysed {elapsedMs !== undefined ? `${elapsedMs.toFixed(0)} ms` : ''}</span>;
+      return (
+        <span
+          style={{ ...pillStyle, color: 'var(--text-success)', background: 'var(--bg-success)' }}
+        >
+          Analysed {elapsedMs !== undefined ? `${elapsedMs.toFixed(0)} ms` : ''}
+        </span>
+      );
     }
-    return <span style={{ ...pillStyle, color: 'var(--muted)', background: 'var(--surface-2)' }}>Not analysed - press Analyze</span>;
+    return (
+      <span style={{ ...pillStyle, color: 'var(--muted)', background: 'var(--surface-2)' }}>
+        Not analysed - press Analyze
+      </span>
+    );
   };
 
   const agentPill = () => {
@@ -60,10 +90,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       color = 'var(--text-accent)';
     }
     return (
-      <span
-        data-qa="status-agent-pill"
-        style={{ ...pillStyle, color, borderColor: color }}
-      >
+      <span data-qa="status-agent-pill" style={{ ...pillStyle, color, borderColor: color }}>
         {text}
       </span>
     );
@@ -75,7 +102,20 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       <div style={sectionStyle}>
         <span style={pillStyle}>{parser || engine?.parser || 'lexer-only'}</span>
         <span style={pillStyle}>taint {taintType}</span>
-        <span style={{...pillStyle,color:mlMode==='on'?'var(--text-success)':'var(--text-danger)',background:mlMode==='on'?'var(--bg-success)':'var(--bg-danger)'}} title={mlMode === 'off' ? 'ML unavailable; rules and taint remain active.' : `Model ${engine?.ml_model_id || 'available'}`}>{mlMode==='on'?'ML on':'ML off'}</span>
+        <span
+          style={{
+            ...pillStyle,
+            color: mlMode === 'on' ? 'var(--text-success)' : 'var(--text-danger)',
+            background: mlMode === 'on' ? 'var(--bg-success)' : 'var(--bg-danger)',
+          }}
+          title={
+            mlMode === 'off'
+              ? 'ML unavailable; rules and taint remain active.'
+              : `Model ${engine?.ml_model_id || 'available'}`
+          }
+        >
+          {mlMode === 'on' ? 'ML on' : 'ML off'}
+        </span>
         {agentPill()}
         {statePill()}
       </div>
@@ -85,10 +125,15 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         {/* Latency */}
         <div style={itemStyle}>
           <Clock size={12} color="var(--muted)" />
-          <span style={textMutedStyle}>{elapsedMs !== undefined ? `${elapsedMs.toFixed(0)} ms` : '-- ms'}</span>
+          <span style={textMutedStyle}>
+            {elapsedMs !== undefined ? `${elapsedMs.toFixed(0)} ms` : '-- ms'}
+          </span>
         </div>
 
-        <span style={coordStyle}>Security {findingCount} - Lexical {lexicalCount} - Syntax {syntaxCount} - Ln {cursorPosition.line}, Col {cursorPosition.col}</span>
+        <span style={coordStyle}>
+          Security {findingCount} - Lexical {lexicalCount} - Syntax {syntaxCount} - Ln{' '}
+          {cursorPosition.line}, Col {cursorPosition.col}
+        </span>
       </div>
     </footer>
   );

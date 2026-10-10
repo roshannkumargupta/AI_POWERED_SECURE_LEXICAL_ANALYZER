@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import ast
-import math
 from typing import Final
 
 import regex
 
 from apsla.models import Finding, Severity
 from apsla.rules.base import Rule, RuleContext
+from apsla.rules.helpers import shannon_entropy
+
+_shannon_entropy = shannon_entropy
 
 
-# Helpers
 def _is_constant_str(node: ast.AST) -> bool:
     """Check if AST node is a string constant literal."""
     return isinstance(node, ast.Constant) and isinstance(node.value, str)
@@ -33,17 +34,6 @@ def _get_call_name(node: ast.Call) -> str:
             parts.append(curr.id)
         return ".".join(reversed(parts))
     return ""
-
-
-def _shannon_entropy(s: str) -> float:
-    """Calculate Shannon entropy in bits per character."""
-    if not s:
-        return 0.0
-    freq: dict[str, int] = {}
-    for c in s:
-        freq[c] = freq.get(c, 0) + 1
-    length = len(s)
-    return -sum((cnt / length) * math.log2(cnt / length) for cnt in freq.values())
 
 
 def _is_built_string(node: ast.AST) -> bool:
@@ -206,7 +196,7 @@ class SqlInjectionRule(Rule):
         for node in ast.walk(context.ast_tree):
             if isinstance(node, ast.Call):
                 name = _get_call_name(node)
-                if (name.endswith(".execute") or name.endswith(".executemany")) and node.args:
+                if (name.endswith((".execute", ".executemany"))) and node.args:
                     query_arg = node.args[0]
                     is_dynamic_sql = _is_built_string(query_arg) or (
                         isinstance(query_arg, ast.Name) and query_arg.id in dynamic_vars

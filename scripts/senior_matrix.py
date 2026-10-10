@@ -38,10 +38,7 @@ def main() -> None:
     try:
         for module_name in list(sys.modules):
             if (
-                module_name == "lexer"
-                or module_name.startswith("lexer.")
-                or module_name == "ml"
-                or module_name.startswith("ml.")
+                module_name == "lexer" or module_name.startswith(("lexer.", "ml.")) or module_name == "ml"
             ):
                 sys.modules.pop(module_name, None)
         sys.path.insert(0, str(ROOT / "legacy" / "senior-part2" / "src"))

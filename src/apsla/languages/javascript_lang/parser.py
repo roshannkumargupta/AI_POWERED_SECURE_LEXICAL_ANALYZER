@@ -400,9 +400,13 @@ class JavaScriptStructParser:
                     brace_depth -= 1
                 elif curr.kind != "TEMPLATE":
                     break
-            elif curr.text == ";":
-                if paren_depth == 0 and bracket_depth == 0 and brace_depth == 0:
-                    break
+            elif (
+                curr.text == ";"
+                and paren_depth == 0
+                and bracket_depth == 0
+                and brace_depth == 0
+            ):
+                break
             # Check for newline ASI (if next token is on subsequent line and not an operator)
             if (
                 paren_depth == 0
@@ -641,8 +645,7 @@ class JavaScriptStructParser:
                         arg_ranges.append(self._token_range(current_arg[0], current_arg[-1]))
                         arg_texts.append(" ".join(x.text for x in current_arg))
                     break
-                else:
-                    current_arg.append(t)
+                current_arg.append(t)
             elif t.text == "," and depth == 1:
                 if current_arg:
                     arg_ranges.append(self._token_range(current_arg[0], current_arg[-1]))

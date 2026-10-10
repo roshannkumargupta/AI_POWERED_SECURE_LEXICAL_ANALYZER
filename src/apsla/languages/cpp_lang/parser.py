@@ -168,9 +168,6 @@ class CppStructParser:
 
     # ── Declarations & Statements ──────────────────────────────────────────────
 
-    def _parse_top_level_or_statement() -> StructNode | None:
-        pass
-
     def _parse_top_level_or_statement(self) -> StructNode | None:
         if self._is_at_end():
             return None
@@ -620,8 +617,7 @@ class CppStructParser:
                         arg_ranges.append(self._token_range(current_arg[0], current_arg[-1]))
                         arg_texts.append(" ".join(x.text for x in current_arg))
                     break
-                else:
-                    current_arg.append(t)
+                current_arg.append(t)
             elif t.text == "," and depth == 1:
                 if current_arg:
                     arg_ranges.append(self._token_range(current_arg[0], current_arg[-1]))

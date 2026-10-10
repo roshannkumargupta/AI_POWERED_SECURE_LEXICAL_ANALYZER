@@ -14,13 +14,18 @@ function toHex(val: string): string {
     const g = parseInt(match[2], 10).toString(16).padStart(2, '0');
     const b = parseInt(match[3], 10).toString(16).padStart(2, '0');
     const aNum = match[4] !== undefined ? parseFloat(match[4]) : 1;
-    const a = Math.round(aNum * 255).toString(16).padStart(2, '0');
+    const a = Math.round(aNum * 255)
+      .toString(16)
+      .padStart(2, '0');
     return `#${r}${g}${b}${a}`;
   }
   return trimmed;
 }
 
-export function buildMonacoTheme(tokens: Record<string, string>, resolved: ResolvedTheme): editor.IStandaloneThemeData {
+export function buildMonacoTheme(
+  tokens: Record<string, string>,
+  resolved: ResolvedTheme
+): editor.IStandaloneThemeData {
   const token = (name: string) => toHex((tokens[name] || '').trim());
   const dark = resolved === 'dark';
   return {
@@ -28,13 +33,19 @@ export function buildMonacoTheme(tokens: Record<string, string>, resolved: Resol
     inherit: false,
     rules: [
       { token: '', foreground: token('--text-primary').replace(/^#/, '') },
-      { token: 'comment', foreground: token('--text-muted').replace(/^#/, ''), fontStyle: 'italic' },
+      {
+        token: 'comment',
+        foreground: token('--text-muted').replace(/^#/, ''),
+        fontStyle: 'italic',
+      },
     ],
     colors: {
       'editor.background': token('--surface-2'),
       'editor.foreground': token('--text-primary'),
       'editorLineNumber.foreground': token('--text-muted'),
-      'editorLineNumber.activeForeground': dark ? token('--text-secondary') : token('--text-primary'),
+      'editorLineNumber.activeForeground': dark
+        ? token('--text-secondary')
+        : token('--text-primary'),
       'editor.lineHighlightBackground': token('--editor-line-highlight'),
       'editor.lineHighlightBorder': '#00000000',
       'editor.selectionBackground': token('--editor-selection'),
@@ -58,4 +69,3 @@ export function buildMonacoTheme(tokens: Record<string, string>, resolved: Resol
     },
   };
 }
-

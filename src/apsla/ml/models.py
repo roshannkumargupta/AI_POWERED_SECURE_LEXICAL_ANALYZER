@@ -9,9 +9,9 @@ from typing import Any
 import joblib
 import numpy as np
 import torch
-import torch.nn as nn
 from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from torch import nn
 
 # ── Neural Windowed BiLSTM ────────────────────────────────────────────────────
 
@@ -93,8 +93,7 @@ class WindowedBiLSTM(nn.Module):
         center_repr = lstm_out[:, center_idx, :]  # (B, 128)
 
         # 5. MLP 128->64->3
-        logits = self.mlp(center_repr)  # (B, 3)
-        return logits
+        return self.mlp(center_repr)  # (B, 3)
 
 
 # ── Model Wrapper ─────────────────────────────────────────────────────────────
@@ -189,7 +188,7 @@ class UnifiedModelWrapper:
             if lang_ids is None:
                 lang_ids = np.zeros(N, dtype=np.int64)
 
-            for epoch in range(epochs):
+            for _epoch in range(epochs):
                 np.random.shuffle(indices)
                 for start_idx in range(0, N, batch_size):
                     batch_idx = indices[start_idx : start_idx + batch_size]
@@ -235,7 +234,7 @@ class UnifiedModelWrapper:
         if lang_ids is None:
             lang_ids = np.zeros(N, dtype=np.int64)
 
-        for epoch in range(epochs):
+        for _epoch in range(epochs):
             np.random.shuffle(indices)
             for start_idx in range(0, N, batch_size):
                 batch_idx = indices[start_idx : start_idx + batch_size]
@@ -288,7 +287,7 @@ class UnifiedModelWrapper:
                 probs = exp_l / np.sum(exp_l, axis=1, keepdims=True)
             return probs.astype(np.float32)
 
-        elif self.model_type == "windowed_bilstm":
+        if self.model_type == "windowed_bilstm":
             device = torch.device("cpu")
             self.model.to(device)
             self.model.eval()

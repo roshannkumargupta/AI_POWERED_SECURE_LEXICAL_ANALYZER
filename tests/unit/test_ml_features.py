@@ -24,7 +24,7 @@ def test_feature_count_and_schema_hash():
 
     # Schema hash must be SHA-256 of comma-joined feature names
     expected_hash = hashlib.sha256(",".join(FEATURE_NAMES).encode("utf-8")).hexdigest()
-    assert FEATURE_SCHEMA_HASH == expected_hash
+    assert expected_hash == FEATURE_SCHEMA_HASH
 
     # Reordering any feature must change the hash
     reordered_names = list(FEATURE_NAMES)

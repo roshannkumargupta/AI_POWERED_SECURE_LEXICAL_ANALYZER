@@ -147,9 +147,12 @@ def _generate_snippet(
 
         tok_label = LABEL_SAFE
         for start_c, end_c, lbl in offset_map:
-            if max(tok_start, start_c) < min(tok_end, end_c):
-                if tok.kind not in ("WHITESPACE", "NEWLINE", "COMMENT"):
-                    tok_label = max(tok_label, lbl)
+            if max(tok_start, start_c) < min(tok_end, end_c) and tok.kind not in (
+                "WHITESPACE",
+                "NEWLINE",
+                "COMMENT",
+            ):
+                tok_label = max(tok_label, lbl)
         token_labels.append(tok_label)
 
     return SyntheticSnippet(

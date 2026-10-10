@@ -2,7 +2,8 @@ import type * as monaco from 'monaco-editor';
 import { Finding, TaintPathStep } from '../api/client';
 import { deriveTokens } from '../tokens/derive';
 
-const themeToken = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const themeToken = (name: string) =>
+  getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
 export class DecorationManager {
   private editor: monaco.editor.IStandaloneCodeEditor;
@@ -19,10 +20,14 @@ export class DecorationManager {
     this.activeModel = editor.getModel();
     editor.onDidChangeModel((event) => {
       if (this.activeModel) {
-        if (this.taintDecorationIds.length) this.activeModel.deltaDecorations(this.taintDecorationIds, []);
-        if (this.unicodeDecorationIds.length) this.activeModel.deltaDecorations(this.unicodeDecorationIds, []);
-        if (this.tokenDecorationIds.length) this.activeModel.deltaDecorations(this.tokenDecorationIds, []);
-        if (this.securityDecorationIds.length) this.activeModel.deltaDecorations(this.securityDecorationIds, []);
+        if (this.taintDecorationIds.length)
+          this.activeModel.deltaDecorations(this.taintDecorationIds, []);
+        if (this.unicodeDecorationIds.length)
+          this.activeModel.deltaDecorations(this.unicodeDecorationIds, []);
+        if (this.tokenDecorationIds.length)
+          this.activeModel.deltaDecorations(this.tokenDecorationIds, []);
+        if (this.securityDecorationIds.length)
+          this.activeModel.deltaDecorations(this.securityDecorationIds, []);
       }
       this.tokenDecorationIds = [];
       this.securityDecorationIds = [];
@@ -77,7 +82,12 @@ export class DecorationManager {
           glyphMarginHoverMessage: { value: `Step ${stepNumber}: ${label}` },
           hoverMessage: { value: hoverText },
           overviewRuler: {
-            color: step.step === 'source' ? themeToken('--flow-source') : step.step === 'sink' ? themeToken('--flow-sink') : themeToken('--flow-propagate'),
+            color:
+              step.step === 'source'
+                ? themeToken('--flow-source')
+                : step.step === 'sink'
+                  ? themeToken('--flow-sink')
+                  : themeToken('--flow-propagate'),
             position: this.monacoInstance.editor.OverviewRulerLane.Right,
           },
         },
@@ -130,28 +140,97 @@ export class DecorationManager {
     this.securityDecorationIds = this.editor.deltaDecorations(this.securityDecorationIds, []);
   }
 
-  public updateTokenMap(mode: 'off'|'security'|'full', result: Parameters<typeof deriveTokens>[0] | null, selectedIndex: number | null, category = ''): void {
-    if ((mode === 'off' && !category) || !result) { this.tokenDecorationIds = this.editor.deltaDecorations(this.tokenDecorationIds, []); return; }
+  public updateTokenMap(
+    mode: 'off' | 'security' | 'full',
+    result: Parameters<typeof deriveTokens>[0] | null,
+    selectedIndex: number | null,
+    category = ''
+  ): void {
+    if ((mode === 'off' && !category) || !result) {
+      this.tokenDecorationIds = this.editor.deltaDecorations(this.tokenDecorationIds, []);
+      return;
+    }
     const derived = deriveTokens(result);
     const selected = selectedIndex === null ? null : derived[selectedIndex];
-    const marks = derived.filter((t) => category ? t.categories.includes(category) : mode === 'security' ? t.securityRelevant : selected?.index === t.index).map((t) => ({
-      range: new this.monacoInstance.Range(t.range.start_line,t.range.start_col,t.range.end_line,t.range.end_col),
-      options: { inlineClassName: mode === 'full' ? 'token-map-selected' : t.role === 'Source' ? 'token-map-source' : t.role === 'Sink' ? 'token-map-sink' : 'token-map-security', glyphMarginClassName: mode === 'security' ? (t.role === 'Source' ? 'token-map-glyph-source' : t.role === 'Sink' ? 'token-map-glyph-sink' : 'token-map-glyph') : undefined, hoverMessage: { value: `${t.lexicalType} · ${t.role} · ${t.severity}` } },
-    }));
+    const marks = derived
+      .filter((t) =>
+        category
+          ? t.categories.includes(category)
+          : mode === 'security'
+            ? t.securityRelevant
+            : selected?.index === t.index
+      )
+      .map((t) => ({
+        range: new this.monacoInstance.Range(
+          t.range.start_line,
+          t.range.start_col,
+          t.range.end_line,
+          t.range.end_col
+        ),
+        options: {
+          inlineClassName:
+            mode === 'full'
+              ? 'token-map-selected'
+              : t.role === 'Source'
+                ? 'token-map-source'
+                : t.role === 'Sink'
+                  ? 'token-map-sink'
+                  : 'token-map-security',
+          glyphMarginClassName:
+            mode === 'security'
+              ? t.role === 'Source'
+                ? 'token-map-glyph-source'
+                : t.role === 'Sink'
+                  ? 'token-map-glyph-sink'
+                  : 'token-map-glyph'
+              : undefined,
+          hoverMessage: { value: `${t.lexicalType} · ${t.role} · ${t.severity}` },
+        },
+      }));
     this.tokenDecorationIds = this.editor.deltaDecorations(this.tokenDecorationIds, marks);
   }
 
-  public updateSecurityDecorations(result: Parameters<typeof deriveTokens>[0] | null, selectedIndex: number | null): void {
-    if (!result) { this.securityDecorationIds = this.editor.deltaDecorations(this.securityDecorationIds, []); return; }
-    const decorations: monaco.editor.IModelDeltaDecoration[] = deriveTokens(result).flatMap((token) => {
-      const className = selectedIndex === token.index ? 'sl-selected' : token.relatedFindings.some((finding) => finding.kind === 'lexical') ? 'sl-lexerr' : token.securityRelevant ? 'sl-insecure' : '';
-      if (!className) return [];
-      const messages = token.relatedFindings.map((finding) => finding.message).filter(Boolean);
-      return [{
-        range: new this.monacoInstance.Range(token.range.start_line, token.range.start_col, token.range.end_line, token.range.end_col),
-        options: { inlineClassName: className, hoverMessage: messages.length ? [{ value: `${messages[0]}\n\nClick for details` }] : undefined },
-      }];
-    });
-    this.securityDecorationIds = this.editor.deltaDecorations(this.securityDecorationIds, decorations);
+  public updateSecurityDecorations(
+    result: Parameters<typeof deriveTokens>[0] | null,
+    selectedIndex: number | null
+  ): void {
+    if (!result) {
+      this.securityDecorationIds = this.editor.deltaDecorations(this.securityDecorationIds, []);
+      return;
+    }
+    const decorations: monaco.editor.IModelDeltaDecoration[] = deriveTokens(result).flatMap(
+      (token) => {
+        const className =
+          selectedIndex === token.index
+            ? 'sl-selected'
+            : token.relatedFindings.some((finding) => finding.kind === 'lexical')
+              ? 'sl-lexerr'
+              : token.securityRelevant
+                ? 'sl-insecure'
+                : '';
+        if (!className) return [];
+        const messages = token.relatedFindings.map((finding) => finding.message).filter(Boolean);
+        return [
+          {
+            range: new this.monacoInstance.Range(
+              token.range.start_line,
+              token.range.start_col,
+              token.range.end_line,
+              token.range.end_col
+            ),
+            options: {
+              inlineClassName: className,
+              hoverMessage: messages.length
+                ? [{ value: `${messages[0]}\n\nClick for details` }]
+                : undefined,
+            },
+          },
+        ];
+      }
+    );
+    this.securityDecorationIds = this.editor.deltaDecorations(
+      this.securityDecorationIds,
+      decorations
+    );
   }
 }

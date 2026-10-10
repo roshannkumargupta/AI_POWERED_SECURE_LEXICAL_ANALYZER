@@ -610,7 +610,7 @@ if __name__ == '__main__':
         f"# note {tag}\nstatus = 'ready'\nprint(status)\n",
         [("APS-ALL-UNI-003", 1)],
         fix="safe",
-        chars=[f"U+{cp:04X}" for cp in list(range(0xE0061, 0xE0066)) + [0xE007F]],
+        chars=[f"U+{cp:04X}" for cp in [*list(range(917601, 917606)), 917631]],
     )
     cyr_exec = "".join(chr(cp) for cp in [0x0435, 0x0445, 0x0435, 0x0441])
     add(
@@ -722,8 +722,8 @@ def build() -> int:
     expected_count = 41 + 35 + 34 + 34 + 2
     if len(ids) != len(set(ids)) or len(ids) != expected_count:
         raise RuntimeError(f"expected {expected_count} unique catalogue entries, found {len(ids)}")
-    for row, code in entries:
-        code = code.replace("__BIDI_SAMPLE__", chr(0x202E) + chr(0x2066) + chr(0x2069)).replace(
+    for row, raw_code in entries:
+        code = raw_code.replace("__BIDI_SAMPLE__", chr(0x202E) + chr(0x2066) + chr(0x2069)).replace(
             "__CYRILLIC_A__", chr(0x0430)
         )
         prior = pending.get(row["id"])

@@ -575,36 +575,50 @@ def generate_hardcoded_secret_getenv_fix(ctx: FixContext) -> list[Fix]:
 
 
 class JavaCommandInjectionFixGenerator(FixGenerator):
+    """Generates remediation patches replacing Runtime.getRuntime().exec() with ProcessBuilder."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_command_injection_process_builder_fix(context)
 
 
 class JavaSqlInjectionFixGenerator(FixGenerator):
+    """Generates remediation patches converting Statement concatenation to PreparedStatement."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_sqli_prepared_statement_fix(context)
 
 
 class JavaBrokenHashFixGenerator(FixGenerator):
+    """Generates remediation patches upgrading MessageDigest.getInstance('MD5') to SHA-256."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_sha256_hash_fix(context)
 
 
 class JavaWeakCipherFixGenerator(FixGenerator):
+    """Generates remediation patches upgrading DES/ECB ciphers to AES/GCM/NoPadding."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_aes_gcm_cipher_fix(context)
 
 
 class JavaXmlSecureFeaturesFixGenerator(FixGenerator):
+    """Generates remediation patches configuring XML parsers to disable external entities (XXE)."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_xml_secure_features_fix(context)
 
 
 class JavaSecureRandomFixGenerator(FixGenerator):
+    """Generates remediation patches upgrading java.util.Random to java.security.SecureRandom."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_secure_random_fix(context)
 
 
 class JavaHardcodedSecretFixGenerator(FixGenerator):
+    """Generates remediation patches replacing hardcoded credentials with System.getenv() lookups."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_hardcoded_secret_getenv_fix(context)
 

@@ -10,7 +10,13 @@ interface TaintPathProps {
   isEditorActive?: boolean;
 }
 
-export const TaintPath: React.FC<TaintPathProps> = ({ steps, onJumpToStep, engine, onToggleEditor, isEditorActive }) => {
+export const TaintPath: React.FC<TaintPathProps> = ({
+  steps,
+  onJumpToStep,
+  engine,
+  onToggleEditor,
+  isEditorActive,
+}) => {
   if (!steps || steps.length === 0) {
     return (
       <div style={emptyStyle}>
@@ -22,8 +28,19 @@ export const TaintPath: React.FC<TaintPathProps> = ({ steps, onJumpToStep, engin
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <span style={titleStyle}>Source to sink for {steps.find((step) => step.step === 'sink')?.text || 'selected sink'}, engine {engine || 'unknown'}</span>
-        <span style={{display:'flex',alignItems:'center',gap:8}}>{onToggleEditor&&<label style={{fontSize:10,whiteSpace:'nowrap'}}><input type="checkbox" checked={Boolean(isEditorActive)} onChange={onToggleEditor}/> Show in editor</label>}<span style={stepCountStyle}>{steps.length} steps</span></span>
+        <span style={titleStyle}>
+          Source to sink for {steps.find((step) => step.step === 'sink')?.text || 'selected sink'},
+          engine {engine || 'unknown'}
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {onToggleEditor && (
+            <label style={{ fontSize: 10, whiteSpace: 'nowrap' }}>
+              <input type="checkbox" checked={Boolean(isEditorActive)} onChange={onToggleEditor} />{' '}
+              Show in editor
+            </label>
+          )}
+          <span style={stepCountStyle}>{steps.length} steps</span>
+        </span>
       </div>
 
       <div style={timelineStyle}>
@@ -42,7 +59,7 @@ export const TaintPath: React.FC<TaintPathProps> = ({ steps, onJumpToStep, engin
             stepColor = 'var(--critical)';
             stepLabel = 'SINK';
           } else if (isMissingSanitizer) {
-          stepColor = 'var(--critical)';
+            stepColor = 'var(--critical)';
             stepLabel = 'MISSING SANITIZER';
           }
 
@@ -54,8 +71,8 @@ export const TaintPath: React.FC<TaintPathProps> = ({ steps, onJumpToStep, engin
                   borderColor: isSource
                     ? 'color-mix(in srgb, var(--flow-source) 40%, transparent)'
                     : isSink
-                    ? 'color-mix(in srgb, var(--flow-sink) 40%, transparent)'
-                    : 'var(--border)',
+                      ? 'color-mix(in srgb, var(--flow-sink) 40%, transparent)'
+                      : 'var(--border)',
                 }}
                 onClick={() => onJumpToStep(step)}
                 title="Click to jump to line in editor"

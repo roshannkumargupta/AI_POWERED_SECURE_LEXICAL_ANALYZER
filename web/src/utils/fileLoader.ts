@@ -13,8 +13,18 @@ export interface FileLoadOutcome {
 }
 
 const SUPPORTED_EXTENSIONS = new Set([
-  'py', 'java', 'js', 'jsx', 'mjs', 'cjs',
-  'c', 'h', 'cc', 'cpp', 'cxx', 'hpp'
+  'py',
+  'java',
+  'js',
+  'jsx',
+  'mjs',
+  'cjs',
+  'c',
+  'h',
+  'cc',
+  'cpp',
+  'cxx',
+  'hpp',
 ]);
 
 async function readFileAsUint8Array(file: File): Promise<Uint8Array> {
@@ -32,7 +42,10 @@ async function readFileAsUint8Array(file: File): Promise<Uint8Array> {
   });
 }
 
-export async function processFileForOpen(file: File, folderPath?: string): Promise<FileLoadOutcome> {
+export async function processFileForOpen(
+  file: File,
+  folderPath?: string
+): Promise<FileLoadOutcome> {
   const ext = file.name.toLowerCase().split('.').pop() || '';
   if (!SUPPORTED_EXTENSIONS.has(ext)) {
     return { isUnsupported: true };
@@ -76,7 +89,7 @@ export async function processFileForOpen(file: File, folderPath?: string): Promi
     }
 
     // Strip BOM (Byte Order Mark U+FEFF)
-    if (text.charCodeAt(0) === 0xFEFF) {
+    if (text.charCodeAt(0) === 0xfeff) {
       text = text.slice(1);
     }
 

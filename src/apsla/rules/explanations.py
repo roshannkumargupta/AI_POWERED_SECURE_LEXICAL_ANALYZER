@@ -1022,7 +1022,7 @@ def generate_rules_catalogue(output_file: Path | None = None) -> str:
         "|---|---|---|---|---|",
     ]
 
-    for rule_id, tmpl in sorted(RULE_TEMPLATES.items()):
+    for _rule_id, tmpl in sorted(RULE_TEMPLATES.items()):
         lines.append(
             f"| `{tmpl.rule_id}` | {tmpl.language.capitalize()} | {tmpl.cwe} | {tmpl.severity.upper()} | {tmpl.title} |"
         )
@@ -1037,7 +1037,7 @@ def generate_rules_catalogue(output_file: Path | None = None) -> str:
         ]
     )
 
-    for rule_id, tmpl in sorted(RULE_TEMPLATES.items()):
+    for _rule_id, tmpl in sorted(RULE_TEMPLATES.items()):
         lines.extend(
             [
                 f"### {tmpl.rule_id} — {tmpl.title}",

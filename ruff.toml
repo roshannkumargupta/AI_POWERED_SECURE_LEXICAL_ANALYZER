@@ -1,22 +1,81 @@
-line-length = 100
+# Ruff configuration for SecureLex IDE (CLEAN-2)
 target-version = "py312"
+line-length = 100
+force-exclude = true
+
 exclude = [
-    ".venv",
     "legacy",
-    "build",
-    "dist",
     "tests/fixtures",
+    "src/apsla/samples",
     "data",
-    "src/apsla/samples/python",
-    "src/apsla/samples/pending",
-    ".pytest-s1",
-    ".pytest-s1-full",
     "web",
+    ".venv",
 ]
 
 [lint]
-select = ["E", "F", "I", "W", "UP"]
-ignore = ["E501"]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+    "C4",   # flake8-comprehensions
+    "PIE",  # flake8-pie
+    "RET",  # flake8-return
+    "RUF",  # ruff-specific rules
+    "PLC",  # pylint conventions
+    "PLE",  # pylint errors
+    "PLW",  # pylint warnings
+    "PLR0402", # Consider `from ... import`
+    "PLR1711", # Useless return statement
+    "PLR1714", # Repeated equality comparison
+]
+
+ignore = [
+    "E501",    # line length handled by formatter
+    "B008",    # do not perform function calls in argument defaults (FastAPI Depends/Query/Path)
+    "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`
+    "SIM105",  # Use `contextlib.suppress(...)` instead of `try-except-pass`
+    "PLC0415", # Allow lazy imports where circular references or heavy dependencies exist
+]
 
 [lint.per-file-ignores]
-"__init__.py" = ["F401"]
+"src/apsla/unicode_defense/**" = [
+    "RUF001",  # Ambiguous unicode characters (intentional in confusable tables)
+    "RUF002",  # Ambiguous docstring unicode
+    "RUF003",  # Ambiguous comment unicode
+]
+"src/apsla/rules/**" = [
+    "RUF001",  # Ambiguous unicode in homoglyph explanations (APS-ALL-UNI-006)
+    "RUF002",
+    "RUF003",
+]
+"src/apsla/server/samples.py" = [
+    "RUF001",  # Ambiguous unicode in bundled security sample definitions
+    "RUF002",
+    "RUF003",
+]
+"tests/**" = [
+    "B018",    # Useless expression
+    "RET504",  # Unnecessary assignment before return
+    "SIM117",  # Multiple with statements
+    "PLW0603", # Global statement
+    "PLW2901", # Outer for loop variable overwritten
+    "RUF001",  # Ambiguous unicode characters (intentional in security fixtures/tests)
+    "RUF002",  # Ambiguous docstring unicode
+    "RUF003",  # Ambiguous comment unicode
+    "B007",    # Loop control variable not used
+    "PLC0415", # Import outside top-level (needed for monkeypatching/lazy imports in tests)
+    "RUF059",  # Unused unpacked variable in tests
+]
+"scripts/**" = [
+    "PLW0603", # Global statement
+    "RET504",  # Unnecessary assignment
+]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"

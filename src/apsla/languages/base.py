@@ -2,25 +2,63 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
+from apsla.fixes.registry import FixGenerator
 from apsla.lexing.token import Token
-from apsla.models import Finding, Fix, Range, Severity, TaintPathStep
+from apsla.models import Finding, Range, Severity, TaintPathStep
 
 
-@dataclass(slots=True, frozen=True)
 class Rule:
-    """Deterministic security rule metadata."""
+    """Deterministic security rule metadata and execution interface."""
 
-    id: str  # Format: APS-<LANG>-<CAT>-<NNN>
-    title: str
-    cwe: str
-    severity: Severity
-    category: str
+    id: str = ""
+    title: str = ""
+    cwe: str = ""
+    severity: Severity = Severity.MEDIUM
+    category: str = ""
     description: str = ""
     explanation_template: str = ""
+    explanation: str = ""
+    noisy: bool = False
+
+    def __init__(
+        self,
+        id: str = "",
+        title: str = "",
+        cwe: str = "",
+        severity: Severity = Severity.MEDIUM,
+        category: str = "",
+        description: str = "",
+        explanation_template: str = "",
+        explanation: str = "",
+        noisy: bool = False,
+    ) -> None:
+        if id:
+            self.id = id
+        if title:
+            self.title = title
+        if cwe:
+            self.cwe = cwe
+        if severity != Severity.MEDIUM or not hasattr(self, "severity"):
+            self.severity = severity
+        if category:
+            self.category = category
+        if description:
+            self.description = description
+        if explanation_template:
+            self.explanation_template = explanation_template
+        if explanation:
+            self.explanation = explanation
+        if noisy:
+            self.noisy = noisy
+
+    def match(self, context: Any) -> list[Finding]:
+        """Evaluate rule against context."""
+        return []
+
 
 
 @dataclass(slots=True)
@@ -63,17 +101,6 @@ class TaintResult:
 TaintFinding = TaintResult
 
 
-@dataclass(slots=True)
-class FixGenerator:
-    """Remediation patch generator for a specific rule ID."""
-
-    rule_id: str
-    generator_func: Callable[[Finding, str], list[Fix]]
-
-    def generate(self, finding: Finding, source: str) -> list[Fix]:
-        """Generate candidate fixes for a given finding and source."""
-        return self.generator_func(finding, source)
-
 
 @runtime_checkable
 class LanguagePlugin(Protocol):
@@ -93,7 +120,7 @@ class LanguagePlugin(Protocol):
         """Tokenize source string without raising exceptions."""
         ...
 
-    def rules(self) -> list[Rule]:
+    def rules(self) -> Sequence[Rule]:
         """Return all deterministic rules for this language."""
         ...
 

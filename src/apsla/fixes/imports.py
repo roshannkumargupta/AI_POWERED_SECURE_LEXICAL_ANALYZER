@@ -22,7 +22,7 @@ def ensure_import_python(source: str, import_stmt: str) -> list[Edit]:
         List of Edit instances (empty list if import already exists).
     """
     clean_stmt = import_stmt.strip()
-    if not (clean_stmt.startswith("import ") or clean_stmt.startswith("from ")):
+    if not (clean_stmt.startswith(("import ", "from "))):
         clean_stmt = f"import {clean_stmt}"
 
     # Determine what module or names this import provides
@@ -63,22 +63,25 @@ def ensure_import_python(source: str, import_stmt: str) -> list[Edit]:
         if tree.body and isinstance(tree.body[0], ast.Expr):
             val = getattr(tree.body[0], "value", None)
             if isinstance(val, ast.Constant) and isinstance(val.value, str):
-                insert_line = tree.body[0].end_lineno + 1
+                first_end = tree.body[0].end_lineno or tree.body[0].lineno
+                insert_line = first_end + 1
 
         # 2. Skip __future__ imports
         for stmt in tree.body:
             if isinstance(stmt, ast.ImportFrom) and stmt.module == "__future__":
-                insert_line = max(insert_line, stmt.end_lineno + 1)
+                stmt_end = stmt.end_lineno or stmt.lineno
+                insert_line = max(insert_line, stmt_end + 1)
 
         # 3. If there are other top-level imports right after, merge after the last contiguous import
         last_import_line = 0
         for stmt in tree.body:
-            if isinstance(stmt, (ast.Import, ast.ImportFrom)):
-                # Only consider imports near the top of the file
-                if stmt.lineno <= insert_line + 5 or (
+            if isinstance(stmt, (ast.Import, ast.ImportFrom)) and (
+                stmt.lineno <= insert_line + 5 or (
                     last_import_line and stmt.lineno <= last_import_line + 2
-                ):
-                    last_import_line = max(last_import_line, stmt.end_lineno)
+                )
+            ):
+                stmt_end = stmt.end_lineno or stmt.lineno
+                last_import_line = max(last_import_line, stmt_end)
         if last_import_line >= insert_line:
             insert_line = last_import_line + 1
 
@@ -282,7 +285,7 @@ def ensure_import_javascript(
     last_import_line = 0
     for idx, line in enumerate(lines, 1):
         stripped = line.strip()
-        if not stripped or stripped.startswith("//") or stripped.startswith("/*"):
+        if not stripped or stripped.startswith(("//", "/*")):
             continue
         if stripped in ('"use strict";', "'use strict';", '"use strict"', "'use strict'"):
             continue
@@ -396,10 +399,12 @@ def ensure_import_cpp(
             last_include_line = idx
         elif re.match(r"#\s*pragma\s+once\b", stripped):
             pragma_once_line = idx
-        elif re.match(r"#\s*define\s+[A-Za-z0-9_]+", stripped):
-            # Check if immediately preceded by #ifndef
-            if idx > 1 and re.match(r"#\s*ifndef\s+[A-Za-z0-9_]+", lines[idx - 2].strip()):
-                guard_define_line = idx
+        elif (
+            re.match(r"#\s*define\s+[A-Za-z0-9_]+", stripped)
+            and idx > 1
+            and re.match(r"#\s*ifndef\s+[A-Za-z0-9_]+", lines[idx - 2].strip())
+        ):
+            guard_define_line = idx
 
     if last_include_line > 0:
         insert_line = last_include_line + 1

@@ -48,11 +48,9 @@ def _verify_worker(
     orig_line = finding.range.start_line
     finding_still_present = False
     for f in re_result.findings:
-        if f.rule_id == finding.rule_id:
-            # Check proximity allowing for minor line offset shifts (+/- 5 lines)
-            if abs(f.range.start_line - orig_line) <= 5:
-                finding_still_present = True
-                break
+        if f.rule_id == finding.rule_id and abs(f.range.start_line - orig_line) <= 5:
+            finding_still_present = True
+            break
 
     finding_gone = not finding_still_present
 
@@ -171,6 +169,5 @@ def verify_fix(
 
     if verified:
         return fix.model_copy(update={"verification": res})
-    else:
-        # Downgrade to manual and remove edits
-        return fix.model_copy(update={"verification": res, "confidence": "manual", "edits": []})
+    # Downgrade to manual and remove edits
+    return fix.model_copy(update={"verification": res, "confidence": "manual", "edits": []})

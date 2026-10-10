@@ -65,7 +65,10 @@ export type Action =
   | { type: 'SELECT_TOKEN_INDEX'; payload: number | null }
   | { type: 'SET_ML_INSIGHTS'; payload: MLInsightsResponse | null }
   | { type: 'SET_LOADING_INSIGHTS'; payload: boolean }
-  | { type: 'SET_ACTIVE_TAB'; payload: 'problems' | 'finding' | 'tokens' | 'taint' | 'summary' | 'ml' | 'trace' }
+  | {
+      type: 'SET_ACTIVE_TAB';
+      payload: 'problems' | 'finding' | 'tokens' | 'taint' | 'summary' | 'ml' | 'trace';
+    }
   | { type: 'SET_AGENT_MODE'; payload: 'off' | 'rules' | 'local' }
   | { type: 'SET_AGENT_STATUS'; payload: AgentStatus | null }
   | { type: 'SET_PROBLEMS_FILTER'; payload: 'all' | Severity }
@@ -103,7 +106,12 @@ export const initialState: AppState = {
   languages: [
     { id: 'python', display_name: 'Python 3', extensions: ['.py'], monaco_id: 'python' },
     { id: 'java', display_name: 'Java', extensions: ['.java'], monaco_id: 'java' },
-    { id: 'javascript', display_name: 'JavaScript', extensions: ['.js', '.jsx'], monaco_id: 'javascript' },
+    {
+      id: 'javascript',
+      display_name: 'JavaScript',
+      extensions: ['.js', '.jsx'],
+      monaco_id: 'javascript',
+    },
     { id: 'cpp', display_name: 'C++', extensions: ['.cpp', '.cc', '.h'], monaco_id: 'cpp' },
   ],
   samples: BUNDLED_SAMPLES,
@@ -133,14 +141,21 @@ export function appReducer(state: AppState, action: Action): AppState {
         selectedFindingId: stillSelected ? stillSelected.id : activeFindings[0]?.id || null,
         activeDataFlowFindingId:
           state.activeDataFlowFindingId &&
-            activeFindings.find((f) => f.id === state.activeDataFlowFindingId)
+          activeFindings.find((f) => f.id === state.activeDataFlowFindingId)
             ? state.activeDataFlowFindingId
             : null,
       };
     }
 
     case 'CLEAR_ANALYSIS':
-      return { ...state, analysis: null, isAnalyzing: false, selectedFindingId: null, activeDataFlowFindingId: null, mlInsights: null };
+      return {
+        ...state,
+        analysis: null,
+        isAnalyzing: false,
+        selectedFindingId: null,
+        activeDataFlowFindingId: null,
+        mlInsights: null,
+      };
 
     case 'SET_BACKEND_AVAILABLE':
       return { ...state, isBackendAvailable: action.payload };

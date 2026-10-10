@@ -44,7 +44,7 @@ class LLMPlanner:
         Returns:
             tuple[AgentAction, decision_source ("llm" | "rules"), rejection_reason (str | None)]
         """
-        allowed_list = sorted(list(allowed_tools))
+        allowed_list = sorted(allowed_tools)
         schema = {
             "type": "object",
             "required": ["reason", "action", "args"],

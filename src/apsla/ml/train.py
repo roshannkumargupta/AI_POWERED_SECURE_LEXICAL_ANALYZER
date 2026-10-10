@@ -88,9 +88,9 @@ def prepare_language_arrays(
     target_lang_id = LANGUAGE_IDS.get(language.lower(), 0)
 
     for snip in snippets:
-        feats, lang_id = extract_file_features(snip.tokens, language=language)
+        feats, _lang_id = extract_file_features(snip.tokens, language=language)
         w3d, wflat, wy, whashes = build_token_windows(snip.tokens, feats, labels=snip.token_labels)
-        if len(wy) == 0:
+        if wy is None or len(wy) == 0:
             continue
 
         all_3d.append(w3d)
@@ -505,7 +505,7 @@ def train_pipeline(
 
     # Compute overall dataset hash
     hasher = hashlib.sha256()
-    for lang, snips in snippets_by_lang.items():
+    for snips in snippets_by_lang.values():
         for s in snips:
             hasher.update(s.snippet_id.encode("utf-8"))
             hasher.update(s.code.encode("utf-8"))
