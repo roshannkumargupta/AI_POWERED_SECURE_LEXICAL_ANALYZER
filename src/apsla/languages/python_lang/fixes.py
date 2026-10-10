@@ -546,7 +546,7 @@ class SqlInjectionFixGenerator(FixGenerator):
                             )
                         ]
                     # Case 2: Variable name referencing preceding assignment
-                    elif isinstance(sql_arg, ast.Name):
+                    if isinstance(sql_arg, ast.Name):
                         var_name = sql_arg.id
                         target_assign: ast.Assign | None = None
                         for stmt in ast.walk(tree):

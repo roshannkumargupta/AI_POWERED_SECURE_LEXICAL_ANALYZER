@@ -104,25 +104,24 @@ def generate_unbounded_copy_fix(ctx: FixContext) -> list[Fix]:
                     verification=_create_initial_verification(),
                 )
             ]
-        else:
-            return [
-                Fix(
-                    id=f"fix-{finding.id}-0",
-                    finding_id=finding.id,
-                    title="Replace strcpy with bounded copy",
-                    description="Manual remediation required: ensure destination buffer is bounded using snprintf() or strncpy().",
-                    confidence="manual",
-                    kind="rule",
-                    edits=[],
-                    verification=VerificationResult(
-                        syntax_ok=True,
-                        finding_gone=False,
-                        new_findings=[],
-                        verified=False,
-                        notes="Manual review required: destination buffer size could not be determined statically.",
-                    ),
-                )
-            ]
+        return [
+            Fix(
+                id=f"fix-{finding.id}-0",
+                finding_id=finding.id,
+                title="Replace strcpy with bounded copy",
+                description="Manual remediation required: ensure destination buffer is bounded using snprintf() or strncpy().",
+                confidence="manual",
+                kind="rule",
+                edits=[],
+                verification=VerificationResult(
+                    syntax_ok=True,
+                    finding_gone=False,
+                    new_findings=[],
+                    verified=False,
+                    notes="Manual review required: destination buffer size could not be determined statically.",
+                ),
+            )
+        ]
 
     # Case C: sprintf(buf, fmt, ...) -> snprintf(buf, sizeof(buf), fmt, ...)
     m_sprintf = re.search(r"\bsprintf\s*\(\s*([A-Za-z0-9_]+)\s*,\s*(.+)\)", target_line)

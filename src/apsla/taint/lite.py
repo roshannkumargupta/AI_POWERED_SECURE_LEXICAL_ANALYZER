@@ -289,9 +289,7 @@ class TaintLiteEngine:
                         ":",
                         ",",
                         "return",
-                    ):
-                        is_obj = True
-                    elif len(current) >= 2 and current[-2].text in ("const", "let", "var"):
+                    ) or (len(current) >= 2 and current[-2].text in ("const", "let", "var")):
                         is_obj = True
                 if is_obj:
                     brace_stack.append("OBJECT")

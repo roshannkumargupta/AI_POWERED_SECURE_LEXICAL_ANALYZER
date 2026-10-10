@@ -533,20 +533,17 @@ class PythonTaintAnalyzer:
         is_san = False
 
         # 1. shlex.quote() -> clears command injection taint
-        if call_name in ("shlex.quote", "quote"):
-            is_san = True
-        # 2. int() / float() casts -> clears all injection taint
-        elif call_name in ("int", "float"):
-            is_san = True
-        # 3. html.escape / markupsafe.escape -> clears XSS taint
-        elif call_name in ("html.escape", "markupsafe.escape", "escape", "Markup.escape"):
-            is_san = True
-        # 4. os.path.basename / secure_filename -> clears path traversal taint
-        elif call_name in (
-            "os.path.basename",
-            "basename",
-            "secure_filename",
-            "werkzeug.utils.secure_filename",
+        if (
+            call_name in ("shlex.quote", "quote")
+            or call_name in ("int", "float")
+            or call_name in ("html.escape", "markupsafe.escape", "escape", "Markup.escape")
+            or call_name
+            in (
+                "os.path.basename",
+                "basename",
+                "secure_filename",
+                "werkzeug.utils.secure_filename",
+            )
         ):
             is_san = True
 
@@ -588,10 +585,7 @@ class PythonTaintAnalyzer:
             is_cmd_sink = True
             rule_id = "APS-PY-INJ-002"
         elif call_name.startswith("subprocess."):
-            if has_shell_true:
-                is_cmd_sink = True
-                rule_id = "APS-PY-INJ-003"
-            elif not isinstance(call_node.args[0], (ast.List, ast.Tuple)):
+            if has_shell_true or not isinstance(call_node.args[0], (ast.List, ast.Tuple)):
                 is_cmd_sink = True
                 rule_id = "APS-PY-INJ-003"
 

@@ -278,50 +278,47 @@ def analyze_lexical_diagnostics(
                     fix,
                 )
                 return findings
+            semi_pos = tok.text.find(";")
+            if semi_pos != -1:
+                rng = Range(
+                    start_line=tok.line,
+                    start_col=tok.col,
+                    end_line=tok.line,
+                    end_col=tok.col + semi_pos,
+                )
+                fix_range = Range(
+                    start_line=tok.line,
+                    start_col=tok.col + semi_pos,
+                    end_line=tok.line,
+                    end_col=tok.col + semi_pos,
+                )
+                fix_text = q
             else:
-                semi_pos = tok.text.find(";")
-                if semi_pos != -1:
-                    rng = Range(
-                        start_line=tok.line,
-                        start_col=tok.col,
-                        end_line=tok.line,
-                        end_col=tok.col + semi_pos,
-                    )
-                    fix_range = Range(
-                        start_line=tok.line,
-                        start_col=tok.col + semi_pos,
-                        end_line=tok.line,
-                        end_col=tok.col + semi_pos,
-                    )
-                    fix_text = q
-                else:
-                    rng = tok.to_range()
-                    fix_range = Range(
-                        start_line=tok.end_line,
-                        start_col=tok.end_col,
-                        end_line=tok.end_line,
-                        end_col=tok.end_col,
-                    )
-                    fix_text = q + (
-                        ";" if language in ("java", "cpp") and ";" not in tok.text else ""
-                    )
+                rng = tok.to_range()
+                fix_range = Range(
+                    start_line=tok.end_line,
+                    start_col=tok.end_col,
+                    end_line=tok.end_line,
+                    end_col=tok.end_col,
+                )
+                fix_text = q + (";" if language in ("java", "cpp") and ";" not in tok.text else "")
 
-                fix_edit = Edit(range=fix_range, new_text=fix_text)
-                fix = _make_fix(
-                    "lex",
-                    "Insert missing closing quote",
-                    f"Inserts closing quote {q} to terminate string literal.",
-                    [fix_edit],
-                )
-                add_finding(
-                    "001",
-                    "Unterminated string literal",
-                    f"Unterminated string literal at line {tok.line}, col {tok.col}. The closing quote is missing.",
-                    "The string literal was not closed before the end of the line.",
-                    rng,
-                    fix,
-                )
-                return findings
+            fix_edit = Edit(range=fix_range, new_text=fix_text)
+            fix = _make_fix(
+                "lex",
+                "Insert missing closing quote",
+                f"Inserts closing quote {q} to terminate string literal.",
+                [fix_edit],
+            )
+            add_finding(
+                "001",
+                "Unterminated string literal",
+                f"Unterminated string literal at line {tok.line}, col {tok.col}. The closing quote is missing.",
+                "The string literal was not closed before the end of the line.",
+                rng,
+                fix,
+            )
+            return findings
 
     # 7. Invalid Character Literal (Java: char c = 'ab';)
     if language in ("java", "cpp"):
@@ -570,24 +567,28 @@ def analyze_lexical_diagnostics(
             continue
         # Check valid suffixes
         is_valid_suffix = False
-        if language == "python" and suffix.lower() == "j":
-            is_valid_suffix = True
-        elif language in ("java", "cpp") and suffix in (
-            "L",
-            "l",
-            "f",
-            "F",
-            "d",
-            "D",
-            "u",
-            "U",
-            "ul",
-            "UL",
-            "ll",
-            "LL",
+        if (
+            (language == "python" and suffix.lower() == "j")
+            or (
+                language in ("java", "cpp")
+                and suffix
+                in (
+                    "L",
+                    "l",
+                    "f",
+                    "F",
+                    "d",
+                    "D",
+                    "u",
+                    "U",
+                    "ul",
+                    "UL",
+                    "ll",
+                    "LL",
+                )
+            )
+            or (language == "javascript" and suffix == "n")
         ):
-            is_valid_suffix = True
-        elif language == "javascript" and suffix == "n":
             is_valid_suffix = True
 
         if not is_valid_suffix:

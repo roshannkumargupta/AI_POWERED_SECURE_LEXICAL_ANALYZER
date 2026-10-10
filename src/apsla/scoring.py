@@ -21,12 +21,12 @@ def compute_health_score(findings: list[Finding]) -> int:
     Returns:
         int: Security health score from 0 (heavily vulnerable) to 100 (clean).
     """
-    counts: dict[Severity, int] = {s: 0 for s in Severity}
+    counts: dict[Severity, int] = dict.fromkeys(Severity, 0)
     for f in findings:
         if not f.suppressed:
             counts[f.severity] = counts.get(f.severity, 0) + 1
 
-    security_counts: dict[Severity, int] = {s: 0 for s in Severity}
+    security_counts: dict[Severity, int] = dict.fromkeys(Severity, 0)
     for f in findings:
         if not f.suppressed and f.kind == "security":
             security_counts[f.severity] += 1
@@ -59,7 +59,7 @@ def create_analysis_summary(
         AnalysisSummary: Populated summary metrics.
     """
     token_list = tokens or []
-    counts: dict[Severity, int] = {s: 0 for s in Severity}
+    counts: dict[Severity, int] = dict.fromkeys(Severity, 0)
     for f in findings:
         if not f.suppressed:
             counts[f.severity] = counts.get(f.severity, 0) + 1

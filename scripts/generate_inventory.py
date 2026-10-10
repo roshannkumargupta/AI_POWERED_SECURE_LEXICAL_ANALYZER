@@ -107,7 +107,9 @@ def compute_sha256(path: Path) -> str:
 
 
 def get_tracked_files() -> list[Path]:
-    res = subprocess.run(["git", "ls-files", "-s"], cwd=ROOT, capture_output=True, text=True, check=True)
+    res = subprocess.run(
+        ["git", "ls-files", "-s"], cwd=ROOT, capture_output=True, text=True, check=True
+    )
     files = []
     for line in res.stdout.splitlines():
         parts = line.strip().split()
@@ -174,7 +176,9 @@ def main() -> None:
     empty_dirs = []
     for root, dirs, files in os.walk(ROOT):
         rel_root = str(Path(root).relative_to(ROOT)).replace("\\", "/")
-        if any(rel_root.startswith(ignored) for ignored in (".git", ".venv", "node_modules", "legacy")):
+        if any(
+            rel_root.startswith(ignored) for ignored in (".git", ".venv", "node_modules", "legacy")
+        ):
             continue
         if not dirs and not files:
             empty_dirs.append(rel_root)
@@ -226,21 +230,34 @@ def main() -> None:
         (re.compile(r"AKIA[0-9A-Z]{16}"), "AWS Access Key ID"),
         (re.compile(r"ghp_[0-9a-zA-Z]{36}"), "GitHub Personal Access Token"),
         (re.compile(r"-----BEGIN (RSA|EC|OPENSSH|PRIVATE) KEY-----"), "Private Key"),
-        (re.compile(r"(api[_-]?key|secret[_-]?key|password)\s*[:=]\s*['\"][A-Za-z0-9_\-]{16,}['\"]", re.IGNORECASE), "Generic Hardcoded Secret"),
+        (
+            re.compile(
+                r"(api[_-]?key|secret[_-]?key|password)\s*[:=]\s*['\"][A-Za-z0-9_\-]{16,}['\"]",
+                re.IGNORECASE,
+            ),
+            "Generic Hardcoded Secret",
+        ),
     ]
     for p, mode, rel in tracked_entries:
         rel_posix = rel.replace("\\", "/")
-        if rel_posix.startswith("legacy/") or "tests/fixtures" in rel_posix or "samples" in rel_posix or "tests/golden" in rel_posix:
+        if (
+            rel_posix.startswith("legacy/")
+            or "tests/fixtures" in rel_posix
+            or "samples" in rel_posix
+            or "tests/golden" in rel_posix
+        ):
             continue  # Security test fixtures intentionally contain synthetic sample secrets
         try:
             content = p.read_text(encoding="utf-8", errors="replace")
             for pat, desc in secret_patterns:
                 for m in pat.finditer(content):
-                    secret_findings.append({
-                        "file": rel_posix,
-                        "description": desc,
-                        "snippet": m.group(0)[:40] + "...",
-                    })
+                    secret_findings.append(
+                        {
+                            "file": rel_posix,
+                            "description": desc,
+                            "snippet": m.group(0)[:40] + "...",
+                        }
+                    )
         except Exception:
             pass
 
@@ -276,111 +293,137 @@ def main() -> None:
         else:
             lines.append(f"| `{folder}/` | {purpose} |")
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 2. Tracked Artefacts & Stray Cache Files",
-        "",
-        f"**Total stray tracked artefacts found:** {len(tracked_junk)}",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 2. Tracked Artefacts & Stray Cache Files",
+            "",
+            f"**Total stray tracked artefacts found:** {len(tracked_junk)}",
+            "",
+        ]
+    )
     if tracked_junk:
         for f in tracked_junk:
             lines.append(f"- `{f}`")
     else:
-        lines.append("*None. All build outputs, logs, and environments are properly excluded by git.*")
+        lines.append(
+            "*None. All build outputs, logs, and environments are properly excluded by git.*"
+        )
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 3. Duplicate Files by SHA-256 Hash",
-        "",
-        f"**Duplicate file clusters (outside `legacy/`):** {len(duplicates)}",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 3. Duplicate Files by SHA-256 Hash",
+            "",
+            f"**Duplicate file clusters (outside `legacy/`):** {len(duplicates)}",
+            "",
+        ]
+    )
     for h, locs in duplicates.items():
         lines.append(f"- **SHA-256:** `{h[:12]}...` ({len(locs)} copies):")
         for loc in locs:
             lines.append(f"  - `{loc}`")
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 4. Empty Files and Directories",
-        "",
-        f"**Empty (0-byte) tracked files:** {len(empty_files)}",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 4. Empty Files and Directories",
+            "",
+            f"**Empty (0-byte) tracked files:** {len(empty_files)}",
+            "",
+        ]
+    )
     for ef in empty_files:
         lines.append(f"- `{ef}` (intentional package or git anchor if `__init__.py` or `.gitkeep`)")
 
-    lines.extend([
-        "",
-        f"**Empty directories:** {len(empty_dirs)}",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            f"**Empty directories:** {len(empty_dirs)}",
+            "",
+        ]
+    )
     if empty_dirs:
         for ed in empty_dirs:
             lines.append(f"- `{ed}/`")
     else:
         lines.append("*None.*")
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 5. Large Files (> 1 MB)",
-        "",
-        f"**Total files > 1 MB:** {len(large_files)}",
-        "",
-        "| Path | Size (MB) | Category | Action |",
-        "|---|---|---|---|",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 5. Large Files (> 1 MB)",
+            "",
+            f"**Total files > 1 MB:** {len(large_files)}",
+            "",
+            "| Path | Size (MB) | Category | Action |",
+            "|---|---|---|---|",
+        ]
+    )
     for lf, sz in large_files:
-        category = "Model weights" if "ml/artifacts" in lf else ("Web bundle" if "web/dist" in lf else "Dataset/Doc")
-        action = "Preserve (Required runtime artifact)" if "artifacts" in lf or "dist" in lf else "Review"
+        category = (
+            "Model weights"
+            if "ml/artifacts" in lf
+            else ("Web bundle" if "web/dist" in lf else "Dataset/Doc")
+        )
+        action = (
+            "Preserve (Required runtime artifact)"
+            if "artifacts" in lf or "dist" in lf
+            else "Review"
+        )
         lines.append(f"| `{lf}` | {sz} MB | {category} | {action} |")
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 6. Line Endings & Encodings",
-        "",
-        f"- **Files with CRLF line endings:** {len(crlf_files)}",
-        f"- **Files with Mixed line endings:** {len(mixed_files)}",
-        f"- **Non-UTF-8 / Binary files:** {len(non_utf8_files)} (images, model weights, binaries)",
-        f"- **Executable tracked files (mode 100755):** {len(executable_files)}",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 6. Line Endings & Encodings",
+            "",
+            f"- **Files with CRLF line endings:** {len(crlf_files)}",
+            f"- **Files with Mixed line endings:** {len(mixed_files)}",
+            f"- **Non-UTF-8 / Binary files:** {len(non_utf8_files)} (images, model weights, binaries)",
+            f"- **Executable tracked files (mode 100755):** {len(executable_files)}",
+            "",
+        ]
+    )
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 7. Secret-Like Strings Audit",
-        "",
-        f"**Suspicious string patterns outside test fixtures/samples:** {len(secret_findings)}",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 7. Secret-Like Strings Audit",
+            "",
+            f"**Suspicious string patterns outside test fixtures/samples:** {len(secret_findings)}",
+            "",
+        ]
+    )
     if secret_findings:
         for sf in secret_findings:
             lines.append(f"- `{sf['file']}`: {sf['description']} (`{sf['snippet']}`)")
     else:
         lines.append("*None found in production source or configuration files.*")
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 8. Large Generated Outputs in `reports/`",
-        "",
-        "| Report File | Size |",
-        "|---|---|",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 8. Large Generated Outputs in `reports/`",
+            "",
+            "| Report File | Size |",
+            "|---|---|",
+        ]
+    )
     for rf, sz in report_files[:15]:
         lines.append(f"| `{rf}` | {round(sz / 1024, 2)} KB |")
 

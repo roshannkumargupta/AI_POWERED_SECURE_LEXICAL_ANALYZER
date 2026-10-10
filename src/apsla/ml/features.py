@@ -536,10 +536,8 @@ def extract_token_features(
                     close_paren_idx = j
                     break
         for j in range(enclosing_open_idx + 1, close_paren_idx):
-            if (
-                tokens[j].text in ("+", "%")
-                or tokens[j].kind == "OPERATOR"
-                and "+" in tokens[j].text
+            if tokens[j].text in ("+", "%") or (
+                tokens[j].kind == "OPERATOR" and "+" in tokens[j].text
             ):
                 has_concat = 1.0
                 break

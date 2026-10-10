@@ -8,10 +8,10 @@ from apsla.agents.planner_rules import RulesPlanner
 from apsla.agents.tools import TOOL_REGISTRY, AnalysisSession, Tool
 
 __all__ = [
+    "TOOL_REGISTRY",
     "AgentOrchestrator",
     "AnalysisSession",
     "LLMPlanner",
     "RulesPlanner",
-    "TOOL_REGISTRY",
     "Tool",
 ]

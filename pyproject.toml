@@ -45,18 +45,6 @@ where = ["src"]
 [tool.setuptools.package-data]
 "apsla.samples" = ["manifest.json", "python/*.py", "java/*.java", "javascript/*.js", "cpp/*.cpp", "pending/*"]
 
-[tool.ruff]
-line-length = 100
-target-version = "py312"
-force-exclude = true
-exclude = [
-    "legacy",
-    "tests/fixtures",
-    "src/apsla/samples",
-    "data",
-    "web",
-]
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]

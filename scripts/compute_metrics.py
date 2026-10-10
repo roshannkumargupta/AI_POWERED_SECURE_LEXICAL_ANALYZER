@@ -405,6 +405,7 @@ def main() -> None:
     }
 
     import sys
+
     out_filename = sys.argv[1] if len(sys.argv) > 1 else "reports/cleanup/metrics_before.json"
     out_path = Path(out_filename) if Path(out_filename).is_absolute() else ROOT / out_filename
     out_path.parent.mkdir(parents=True, exist_ok=True)

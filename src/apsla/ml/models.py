@@ -9,9 +9,9 @@ from typing import Any
 import joblib
 import numpy as np
 import torch
-import torch.nn as nn
 from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from torch import nn
 
 # ── Neural Windowed BiLSTM ────────────────────────────────────────────────────
 
@@ -288,7 +288,7 @@ class UnifiedModelWrapper:
                 probs = exp_l / np.sum(exp_l, axis=1, keepdims=True)
             return probs.astype(np.float32)
 
-        elif self.model_type == "windowed_bilstm":
+        if self.model_type == "windowed_bilstm":
             device = torch.device("cpu")
             self.model.to(device)
             self.model.eval()

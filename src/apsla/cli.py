@@ -24,7 +24,6 @@ app = typer.Typer(
 @app.callback()
 def main_callback() -> None:
     """SecureLex IDE Command Line Interface."""
-    pass
 
 
 def _configure_windows_encoding() -> None:

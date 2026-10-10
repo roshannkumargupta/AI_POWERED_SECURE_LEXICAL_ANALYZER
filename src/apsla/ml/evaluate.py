@@ -113,7 +113,7 @@ def evaluate_test_split(
         )
 
         per_language_results[lang] = {
-            "num_test_tokens": int(len(l_y)),
+            "num_test_tokens": len(l_y),
             "macro_f1": round(macro_f1, 4),
             "macro_precision": round(macro_prec, 4),
             "macro_recall": round(macro_rec, 4),
@@ -163,7 +163,7 @@ def evaluate_test_split(
     return {
         "touched_timestamp": touch_time,
         "dataset_hash": dataset_hash,
-        "total_test_tokens": int(len(y_test)),
+        "total_test_tokens": len(y_test),
         "overall_macro_f1": round(overall_macro_f1, 4),
         "overall_macro_precision": round(overall_prec, 4),
         "overall_macro_recall": round(overall_rec, 4),

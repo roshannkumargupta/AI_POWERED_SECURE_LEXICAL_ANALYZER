@@ -171,6 +171,5 @@ def verify_fix(
 
     if verified:
         return fix.model_copy(update={"verification": res})
-    else:
-        # Downgrade to manual and remove edits
-        return fix.model_copy(update={"verification": res, "confidence": "manual", "edits": []})
+    # Downgrade to manual and remove edits
+    return fix.model_copy(update={"verification": res, "confidence": "manual", "edits": []})
