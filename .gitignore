@@ -1,4 +1,4 @@
-# Python environment
+# Python environment & packaging
 .venv/
 env/
 venv/
@@ -6,21 +6,46 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+build/
+dist/
+*.egg-info/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+parts/
+var/
+sdist/
+wheels/
+*.egg
+
+# Test & coverage outputs
 .pytest_cache/
 .coverage
+.coverage.*
+coverage/
 htmlcov/
-dist/
-build/
-*.egg-info/
+coverage.xml
+coverage.json
+.hypothesis/
+.ruff_cache/
+.pytest-*/
+reports/.pytest-*/
 
-# Node / Web dependencies
+# Node, Vite & Web frontend
 node_modules/
-dist/
+web/node_modules/
+web/dist/
 .npm/
+.vite/
+web/.vite/
+web/coverage/
+.vitest/
 
-# Environment variables
+# Environment variables & local secrets
 .env
 .env.local
+.env.*.local
 
 # Project data and model outputs
 data/feedback/
@@ -39,19 +64,46 @@ src/apsla/ml/cache/
 !src/apsla/ml/artifacts/**/model.pt
 
 # Runtime logs
+*.log
 *.err.log
 api-run.log
 web-run.log
 
-# Tool caches
-.ruff_cache/
-.hypothesis/
-.pytest-s1-full/
-.pytest-s2-run/
-.pytest-*/
-reports/.pytest-*/
+# Raw bulky report outputs while keeping markdown and json reports
+reports/**/*.html
+reports/**/*.xml
+reports/tmp/
+!reports/**/*.md
+!reports/**/*.json
+!reports/cleanup/**
+!reports/ui7/**
+!reports/ui9/**
+
+# Editor & IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
 
 # OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 desktop.ini
+
+# Temporary and backup files
+*.tmp
+*.bak
+*.orig
+*.swp
+*~
