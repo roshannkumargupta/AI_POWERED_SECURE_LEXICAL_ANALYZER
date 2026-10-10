@@ -45,11 +45,24 @@ export interface DocItem {
 
 export const App: React.FC = () => {
   const { state, dispatch } = useApp();
-  const { mode: themeMode, resolved: themeResolved, setMode: setThemeMode, toggleTheme } = useTheme();
+  const {
+    mode: themeMode,
+    resolved: themeResolved,
+    setMode: setThemeMode,
+    toggleTheme,
+  } = useTheme();
   const abortControllerRef = useRef<AbortController | null>(null);
   const analysisRequestRef = useRef(0);
-  const currentContextRef = useRef({ source: state.source, language: state.language, filename: state.filename });
-  currentContextRef.current = { source: state.source, language: state.language, filename: state.filename };
+  const currentContextRef = useRef({
+    source: state.source,
+    language: state.language,
+    filename: state.filename,
+  });
+  currentContextRef.current = {
+    source: state.source,
+    language: state.language,
+    filename: state.filename,
+  };
   const debounceTimerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const dirtyRef = useRef(false);
@@ -63,7 +76,9 @@ export const App: React.FC = () => {
   const [isAskingAI, setIsAskingAI] = useState(false);
   const [tokenMap, setTokenMap] = useState<'off' | 'security' | 'full'>('off');
   const [tokenCategory, setTokenCategory] = useState('');
-  const [tokenMainFilter, setTokenMainFilter] = useState<'All' | 'Security' | 'Lexical' | 'Syntax'>('All');
+  const [tokenMainFilter, setTokenMainFilter] = useState<'All' | 'Security' | 'Lexical' | 'Syntax'>(
+    'All'
+  );
   const [tokenGroups, setTokenGroups] = useState<string[]>([]);
   const [showAllTokens, setShowAllTokens] = useState(false);
   const [activeSample, setActiveSample] = useState<SampleItem | null>(null);
@@ -96,7 +111,9 @@ export const App: React.FC = () => {
     dispatch({
       type: 'ADD_TOAST',
       payload: {
-        message: enabled ? 'Analyze while typing enabled' : 'Analyze while typing disabled (manual mode)',
+        message: enabled
+          ? 'Analyze while typing enabled'
+          : 'Analyze while typing disabled (manual mode)',
         type: 'info',
       },
     });
@@ -121,7 +138,11 @@ export const App: React.FC = () => {
         userZoom = Number(localStorage.getItem('securelex-interface-size') || 1);
       } catch {}
       if (![0.85, 1, 1.15].includes(userZoom)) userZoom = 1;
-      const scale = computeUiScale(window.innerWidth, window.innerHeight, userZoom as 0.85 | 1 | 1.15);
+      const scale = computeUiScale(
+        window.innerWidth,
+        window.innerHeight,
+        userZoom as 0.85 | 1 | 1.15
+      );
       document.documentElement.style.setProperty('--ui-scale', String(scale));
       document.documentElement.style.setProperty('--ui-frame-size', `${100 / scale}%`);
     };
@@ -234,7 +255,11 @@ export const App: React.FC = () => {
           )
         );
       } catch (err: any) {
-        if (err.name === 'AbortError' || controller.signal.aborted || requestId !== analysisRequestRef.current) {
+        if (
+          err.name === 'AbortError' ||
+          controller.signal.aborted ||
+          requestId !== analysisRequestRef.current
+        ) {
           return;
         }
 
@@ -242,7 +267,9 @@ export const App: React.FC = () => {
         dispatch({ type: 'SET_BACKEND_AVAILABLE', payload: false });
         setOpenDocs((docs) =>
           docs.map((d) =>
-            d.id === targetDocId ? { ...d, status: 'error', errorMessage: err.detail || err.message } : d
+            d.id === targetDocId
+              ? { ...d, status: 'error', errorMessage: err.detail || err.message }
+              : d
           )
         );
         dispatch({
@@ -278,7 +305,8 @@ export const App: React.FC = () => {
   // Query Local Agent status on mount
   useEffect(() => {
     let mounted = true;
-    api.getAgentStatus()
+    api
+      .getAgentStatus()
       .then((status) => {
         if (mounted) {
           dispatch({ type: 'SET_AGENT_STATUS', payload: status });
@@ -299,7 +327,8 @@ export const App: React.FC = () => {
       try {
         const res = await api.getMLInsights({
           source: state.source,
-          language: state.language === 'auto' ? state.analysis?.language || 'python' : state.language,
+          language:
+            state.language === 'auto' ? state.analysis?.language || 'python' : state.language,
           token_index: tokenIdx,
         });
         dispatch({ type: 'SET_ML_INSIGHTS', payload: res });
@@ -315,7 +344,10 @@ export const App: React.FC = () => {
     if (activeDoc?.status === 'stale') {
       dispatch({
         type: 'ADD_TOAST',
-        payload: { message: 'Analyse again first: code was edited since last analysis', type: 'warning' },
+        payload: {
+          message: 'Analyse again first: code was edited since last analysis',
+          type: 'warning',
+        },
       });
       return;
     }
@@ -381,7 +413,12 @@ export const App: React.FC = () => {
       setOpenDocs((docs) =>
         docs.map((doc) =>
           doc.id === activeDocId
-            ? { ...doc, content: res.new_source, dirty: true, contentVersion: doc.contentVersion + 1 }
+            ? {
+                ...doc,
+                content: res.new_source,
+                dirty: true,
+                contentVersion: doc.contentVersion + 1,
+              }
             : doc
         )
       );
@@ -520,7 +557,8 @@ export const App: React.FC = () => {
       dispatch({
         type: 'ADD_TOAST',
         payload: {
-          message: 'No LLM provider configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY in .env',
+          message:
+            'No LLM provider configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY in .env',
           type: 'info',
         },
       });
@@ -558,7 +596,10 @@ export const App: React.FC = () => {
         }
         dispatch({
           type: 'ADD_TOAST',
-          payload: { message: `Generated ${res.fixes.length} AI fix candidate(s)`, type: 'success' },
+          payload: {
+            message: `Generated ${res.fixes.length} AI fix candidate(s)`,
+            type: 'success',
+          },
         });
       } else {
         dispatch({
@@ -689,12 +730,12 @@ export const App: React.FC = () => {
         ext === 'py'
           ? 'python'
           : ext === 'java'
-          ? 'java'
-          : ['js', 'jsx', 'mjs', 'cjs'].includes(ext)
-          ? 'javascript'
-          : ['c', 'h', 'cc', 'cpp', 'cxx', 'hpp'].includes(ext)
-          ? 'cpp'
-          : 'auto';
+            ? 'java'
+            : ['js', 'jsx', 'mjs', 'cjs'].includes(ext)
+              ? 'javascript'
+              : ['c', 'h', 'cc', 'cpp', 'cxx', 'hpp'].includes(ext)
+                ? 'cpp'
+                : 'auto';
       const id = `file-${Date.now()}-${untitledIndexRef.current++}`;
       const newDoc: DocItem = {
         id,
@@ -751,7 +792,9 @@ export const App: React.FC = () => {
     if (!docToClose) return;
 
     if (docToClose.dirty) {
-      const confirmClose = window.confirm(`File "${docToClose.name}" has unsaved changes. Close anyway?`);
+      const confirmClose = window.confirm(
+        `File "${docToClose.name}" has unsaved changes. Close anyway?`
+      );
       if (!confirmClose) return;
     }
 
@@ -856,7 +899,10 @@ export const App: React.FC = () => {
         event.key === '?' &&
         !cmdOrCtrl &&
         !event.altKey &&
-        !(event.target instanceof HTMLElement && (event.target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(event.target.tagName)))
+        !(
+          event.target instanceof HTMLElement &&
+          (event.target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(event.target.tagName))
+        )
       ) {
         setShortcutsOpen(true);
         return;
@@ -923,9 +969,8 @@ export const App: React.FC = () => {
   const safeFixCount = activeFindings.reduce(
     (count, finding) =>
       count +
-      (finding.fixes || []).filter(
-        (fix) => fix.confidence === 'safe' && fix.verification?.verified
-      ).length,
+      (finding.fixes || []).filter((fix) => fix.confidence === 'safe' && fix.verification?.verified)
+        .length,
     0
   );
 
@@ -933,22 +978,24 @@ export const App: React.FC = () => {
   activeFindings.forEach((finding) => {
     (finding.fixes || []).forEach((fix) => {
       if (fix.confidence === 'review' && fix.edits && fix.edits.length > 0) {
-        const oldSnippet = fix.edits.map((e) => {
-          const lines = state.source.split('\n');
-          const startLine = Math.max(0, e.range.start_line - 1);
-          const endLine = Math.max(startLine, e.range.end_line - 1);
-          if (startLine === endLine) {
-            return (lines[startLine] || '').slice(
-              e.range.start_col - 1,
-              Math.max(e.range.start_col - 1, e.range.end_col - 1)
-            );
-          }
-          return [
-            lines[startLine]?.slice(e.range.start_col - 1),
-            ...lines.slice(startLine + 1, endLine),
-            lines[endLine]?.slice(0, e.range.end_col - 1),
-          ].join('\n');
-        }).join('\n');
+        const oldSnippet = fix.edits
+          .map((e) => {
+            const lines = state.source.split('\n');
+            const startLine = Math.max(0, e.range.start_line - 1);
+            const endLine = Math.max(startLine, e.range.end_line - 1);
+            if (startLine === endLine) {
+              return (lines[startLine] || '').slice(
+                e.range.start_col - 1,
+                Math.max(e.range.start_col - 1, e.range.end_col - 1)
+              );
+            }
+            return [
+              lines[startLine]?.slice(e.range.start_col - 1),
+              ...lines.slice(startLine + 1, endLine),
+              lines[endLine]?.slice(0, e.range.end_col - 1),
+            ].join('\n');
+          })
+          .join('\n');
 
         reviewFixItems.push({
           finding,
@@ -973,7 +1020,12 @@ export const App: React.FC = () => {
       setOpenDocs((docs) =>
         docs.map((doc) =>
           doc.id === activeDocId
-            ? { ...doc, content: currentSource, dirty: true, contentVersion: doc.contentVersion + 1 }
+            ? {
+                ...doc,
+                content: currentSource,
+                dirty: true,
+                contentVersion: doc.contentVersion + 1,
+              }
             : doc
         )
       );
@@ -1127,7 +1179,12 @@ export const App: React.FC = () => {
           <Panel defaultSize={39} minSize={34}>
             <div data-qa="code-pane" className="ui5-editor">
               {openDocs.length >= 2 && (
-                <div data-qa="strip-files" className="ui6-tabs" role="tablist" aria-label="Open files">
+                <div
+                  data-qa="strip-files"
+                  className="ui6-tabs"
+                  role="tablist"
+                  aria-label="Open files"
+                >
                   {openDocs.map((doc) => (
                     <div
                       role="presentation"
@@ -1143,7 +1200,10 @@ export const App: React.FC = () => {
                         {doc.name}
                         {doc.dirty && <i aria-label="Unsaved changes" />}
                       </button>
-                      <button aria-label={`Close ${doc.name}`} onClick={() => closeCurrentFile(doc.id)}>
+                      <button
+                        aria-label={`Close ${doc.name}`}
+                        onClick={() => closeCurrentFile(doc.id)}
+                      >
                         <X size={12} />
                       </button>
                     </div>
@@ -1296,10 +1356,10 @@ export const App: React.FC = () => {
             {filter === 'Security'
               ? ` ${activeFindings.filter((f) => !['lexical', 'syntax'].includes(f.kind || 'security')).length}`
               : filter === 'Lexical'
-              ? ` ${activeFindings.filter((f) => f.kind === 'lexical').length}`
-              : filter === 'Syntax'
-              ? ` ${activeFindings.filter((f) => f.kind === 'syntax').length}`
-              : ''}
+                ? ` ${activeFindings.filter((f) => f.kind === 'lexical').length}`
+                : filter === 'Syntax'
+                  ? ` ${activeFindings.filter((f) => f.kind === 'syntax').length}`
+                  : ''}
           </button>
         ))}
         {(['dangerous', 'suspicious', 'malicious'] as const).map((group) => (
@@ -1309,7 +1369,9 @@ export const App: React.FC = () => {
             aria-pressed={tokenGroups.includes(group)}
             onClick={() => {
               setTokenGroups((current) =>
-                current.includes(group) ? current.filter((item) => item !== group) : [...current, group]
+                current.includes(group)
+                  ? current.filter((item) => item !== group)
+                  : [...current, group]
               );
               dispatch({ type: 'SET_ACTIVE_TAB', payload: 'tokens' });
             }}
@@ -1337,7 +1399,9 @@ export const App: React.FC = () => {
         cursorPosition={state.cursorPosition}
         isAnalyzing={state.isAnalyzing}
         findingCount={
-          activeFindings.filter((finding) => !['lexical', 'syntax'].includes(finding.kind || 'security')).length
+          activeFindings.filter(
+            (finding) => !['lexical', 'syntax'].includes(finding.kind || 'security')
+          ).length
         }
         analysisReady={Boolean(state.analysis)}
         lexicalCount={activeFindings.filter((finding) => finding.kind === 'lexical').length}
@@ -1363,20 +1427,35 @@ export const App: React.FC = () => {
             { label: 'Open Folder', run: () => directoryInputRef.current?.click() },
             { label: 'Save', run: handleDownload },
             { label: 'Close File', run: closeCurrentFile },
-            { label: 'Analyze', run: () => runAnalysis(state.source, state.language, state.filename) },
+            {
+              label: 'Analyze',
+              run: () => runAnalysis(state.source, state.language, state.filename),
+            },
             {
               label: `Fix All (${safeFixCount})`,
               run: handleFixAll,
             },
             { label: 'Next Problem', run: handleNextProblem },
             { label: 'Previous Problem', run: handlePrevProblem },
-            { label: 'Show Token Security', run: () => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'tokens' }) },
+            {
+              label: 'Show Token Security',
+              run: () => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'tokens' }),
+            },
             {
               label: 'Toggle Token Map',
-              run: () => setTokenMap((mode) => (mode === 'off' ? 'security' : mode === 'security' ? 'full' : 'off')),
+              run: () =>
+                setTokenMap((mode) =>
+                  mode === 'off' ? 'security' : mode === 'security' ? 'full' : 'off'
+                ),
             },
-            { label: 'Show Summary', run: () => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'summary' }) },
-            { label: 'Show ML Insights', run: () => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'ml' }) },
+            {
+              label: 'Show Summary',
+              run: () => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'summary' }),
+            },
+            {
+              label: 'Show ML Insights',
+              run: () => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'ml' }),
+            },
             { label: 'Toggle Sidebar', run: () => dispatch({ type: 'TOGGLE_SIDEBAR' }) },
             ...state.samples.slice(0, 20).map((sample) => ({
               label: `Open Sample: ${sample.title}`,
@@ -1392,10 +1471,7 @@ export const App: React.FC = () => {
         }
       />
 
-      <KeyboardShortcutsModal
-        isOpen={shortcutsOpen}
-        onClose={() => setShortcutsOpen(false)}
-      />
+      <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
 
       {/* Hidden File Input for Open File */}
       <input
@@ -1414,7 +1490,10 @@ export const App: React.FC = () => {
           if (unsupportedCount > 0) {
             dispatch({
               type: 'ADD_TOAST',
-              payload: { message: `Skipped ${unsupportedCount} unsupported file(s).`, type: 'info' },
+              payload: {
+                message: `Skipped ${unsupportedCount} unsupported file(s).`,
+                type: 'info',
+              },
             });
           }
           event.currentTarget.value = '';
@@ -1433,21 +1512,26 @@ export const App: React.FC = () => {
           const skipPatterns = /(node_modules|\.git|venv|__pycache__|dist|build)/i;
           const filtered = files
             .filter((f) => {
-              const rel = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
+              const rel =
+                (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
               return !skipPatterns.test(rel);
             })
             .slice(0, 200);
 
           let unsupportedCount = 0;
           for (const file of filtered) {
-            const rel = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
+            const rel =
+              (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
             const res = await handleOpenFileObject(file, rel);
             if (res.unsupported) unsupportedCount++;
           }
           if (unsupportedCount > 0) {
             dispatch({
               type: 'ADD_TOAST',
-              payload: { message: `Skipped ${unsupportedCount} unsupported file(s).`, type: 'info' },
+              payload: {
+                message: `Skipped ${unsupportedCount} unsupported file(s).`,
+                type: 'info',
+              },
             });
           }
           event.currentTarget.value = '';
@@ -1476,7 +1560,10 @@ export const App: React.FC = () => {
         onApplySelected={handleApplySelectedReviewFixes}
       />
 
-      <ToastContainer toasts={state.toasts} onDismiss={(id) => dispatch({ type: 'REMOVE_TOAST', payload: id })} />
+      <ToastContainer
+        toasts={state.toasts}
+        onDismiss={(id) => dispatch({ type: 'REMOVE_TOAST', payload: id })}
+      />
     </div>
   );
 };

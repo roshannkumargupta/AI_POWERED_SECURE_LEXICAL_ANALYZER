@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { AnalysisResult, Finding, Fix } from '../api/client';
-import { adaptTokens, confidenceText, explanationText, findingGroup, foundBy } from '../model/adapt';
+import {
+  adaptTokens,
+  confidenceText,
+  explanationText,
+  findingGroup,
+  foundBy,
+} from '../model/adapt';
 import { Check, Copy } from 'lucide-react';
 
 type Props = {
@@ -38,14 +44,16 @@ export const ExplanationPanel: React.FC<Props> = ({
         .map((id) => analysis?.findings.find((finding) => finding.id === id))
         .filter((item): item is Finding => Boolean(item))
     : selectedFinding
-    ? [selectedFinding]
-    : [];
+      ? [selectedFinding]
+      : [];
+
+  const relatedIds = related.map((item) => item.id).join('|');
 
   useEffect(() => {
     setFindingIndex(0);
     setFixIndex(0);
     setCopiedAdvice(false);
-  }, [selectedIndex, related.map((item) => item.id).join('|')]);
+  }, [selectedIndex, relatedIds]);
 
   const finding = related[findingIndex] || selectedFinding;
   const fixes = finding?.fixes || [];
@@ -55,18 +63,16 @@ export const ExplanationPanel: React.FC<Props> = ({
     ? row?.lexical === 'error'
       ? ['Lexical error', 'error']
       : row?.security === 'insecure'
-      ? ['Valid but insecure', 'insecure']
-      : ['Valid and safe', 'safe']
+        ? ['Valid but insecure', 'insecure']
+        : ['Valid and safe', 'safe']
     : finding.kind === 'lexical'
-    ? ['Lexical error', 'error']
-    : finding.kind === 'syntax'
-    ? ['Syntax error', 'error']
-    : ['Valid but insecure', 'insecure'];
+      ? ['Lexical error', 'error']
+      : finding.kind === 'syntax'
+        ? ['Syntax error', 'error']
+        : ['Valid but insecure', 'insecure'];
 
   const findingType =
-    finding?.kind === 'lexical' || finding?.kind === 'syntax'
-      ? finding.rule_id
-      : finding?.cwe;
+    finding?.kind === 'lexical' || finding?.kind === 'syntax' ? finding.rule_id : finding?.cwe;
   const group = finding ? titleCase(findingGroup(finding)) : '';
 
   const oldText =
@@ -254,7 +260,13 @@ export const ExplanationPanel: React.FC<Props> = ({
             <button
               className="ui6-apply-fix"
               disabled={isStale}
-              title={isStale ? 'Analyse again first' : isVerifiedSafe ? 'Apply verified fix' : 'Apply review fix'}
+              title={
+                isStale
+                  ? 'Analyse again first'
+                  : isVerifiedSafe
+                    ? 'Apply verified fix'
+                    : 'Apply review fix'
+              }
               onClick={() => onApplyFix(fix, finding!)}
               style={{
                 cursor: isStale ? 'not-allowed' : 'pointer',

@@ -26,11 +26,7 @@ export function generateUnifiedDiff(
   // Find first mismatch from bottom
   let oldEnd = oldLines.length - 1;
   let newEnd = newLines.length - 1;
-  while (
-    oldEnd >= start &&
-    newEnd >= start &&
-    oldLines[oldEnd] === newLines[newEnd]
-  ) {
+  while (oldEnd >= start && newEnd >= start && oldLines[oldEnd] === newLines[newEnd]) {
     oldEnd--;
     newEnd--;
   }

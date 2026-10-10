@@ -13,7 +13,9 @@ describe('UI-9 Guards: File Analysis State Machine', () => {
     status: 'not analysed' | 'analysing' | 'analysed' | 'stale' | 'error';
   }
 
-  function getDocState(doc: MockDoc): 'not analysed' | 'analysing' | 'analysed' | 'stale' | 'error' {
+  function getDocState(
+    doc: MockDoc
+  ): 'not analysed' | 'analysing' | 'analysed' | 'stale' | 'error' {
     if (doc.status === 'analysing') return 'analysing';
     if (doc.status === 'error') return 'error';
     if (!doc.analysis) return 'not analysed';
@@ -84,7 +86,7 @@ describe('UI-9 Guards: File Analysis State Machine', () => {
 
 describe('UI-9 Guards: File Loader and Encoding Boundaries', () => {
   it('strips UTF-8 BOM cleanly', async () => {
-    const withBom = new Uint8Array([0xEF, 0xBB, 0xBF, 0x61, 0x62, 0x63]);
+    const withBom = new Uint8Array([0xef, 0xbb, 0xbf, 0x61, 0x62, 0x63]);
     const file = new File([withBom], 'test.py', { type: 'text/plain' });
     const outcome = await processFileForOpen(file);
     expect(outcome.error).toBeUndefined();
@@ -101,7 +103,7 @@ describe('UI-9 Guards: File Loader and Encoding Boundaries', () => {
   });
 
   it('refuses binary files containing NUL bytes', async () => {
-    const binaryBytes = new Uint8Array([0x70, 0x72, 0x69, 0x00, 0x6E, 0x74]);
+    const binaryBytes = new Uint8Array([0x70, 0x72, 0x69, 0x00, 0x6e, 0x74]);
     const file = new File([binaryBytes], 'corrupt.py', { type: 'text/plain' });
     const outcome = await processFileForOpen(file);
     expect(outcome.error).toContain('appears to be a binary file');
@@ -109,7 +111,7 @@ describe('UI-9 Guards: File Loader and Encoding Boundaries', () => {
   });
 
   it('decodes invalid UTF-8 with replacement character and warning', async () => {
-    const invalidUtf8 = new Uint8Array([0x61, 0xFF, 0x62]);
+    const invalidUtf8 = new Uint8Array([0x61, 0xff, 0x62]);
     const file = new File([invalidUtf8], 'invalid.py', { type: 'text/plain' });
     const outcome = await processFileForOpen(file);
     expect(outcome.warning).toContain('Not valid UTF-8');

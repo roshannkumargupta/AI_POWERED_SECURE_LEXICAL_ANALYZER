@@ -82,7 +82,8 @@ describe('AgentTraceTab Component', () => {
         stage: 'semantic',
         action: 'run_rules',
         args_summary: '',
-        reason: '<img src="x" onerror="window.maliciousHacked=true" /><script>alert("hacked")</script><b>Bold exploit</b>',
+        reason:
+          '<img src="x" onerror="window.maliciousHacked=true" /><script>alert("hacked")</script><b>Bold exploit</b>',
         observation_summary: '<svg onload="alert(1)">',
         decision_source: 'llm',
         ms: 5.0,
@@ -90,12 +91,7 @@ describe('AgentTraceTab Component', () => {
       },
     ];
 
-    const { container } = render(
-      <AgentTraceTab
-        trace={maliciousTrace}
-        agentMode="local"
-      />
-    );
+    const { container } = render(<AgentTraceTab trace={maliciousTrace} agentMode="local" />);
 
     // Verify no injected executable DOM nodes
     expect(container.querySelector('img')).toBeNull();
@@ -105,7 +101,9 @@ describe('AgentTraceTab Component', () => {
     // The text content is displayed safely as plain text
     const reasonElement = container.querySelector('[data-qa="trace-reason"]');
     expect(reasonElement).toBeTruthy();
-    expect(reasonElement?.textContent).toContain('<img src="x" onerror="window.maliciousHacked=true" />');
+    expect(reasonElement?.textContent).toContain(
+      '<img src="x" onerror="window.maliciousHacked=true" />'
+    );
     expect(reasonElement?.innerHTML).not.toContain('<img');
   });
 

@@ -1,14 +1,5 @@
 import React from 'react';
-import {
-  ShieldCheck,
-  Play,
-  Wand2,
-  Download,
-  Loader2,
-  ChevronDown,
-  Sun,
-  Moon,
-} from 'lucide-react';
+import { ShieldCheck, Play, Wand2, Download, Loader2, ChevronDown, Sun, Moon } from 'lucide-react';
 import { LanguageInfo } from '../api/client';
 import type { ResolvedTheme } from '../theme/theme';
 
@@ -62,9 +53,16 @@ export const TopBar: React.FC<TopBarProps> = ({
   fileState = 'not analysed',
   onOpenReviewFixes,
   backendAvailable = false,
-  files = [], activeFileId = null, onSwitchFile, onCloseFileById,
-  themeResolved = 'dark', onThemeToggle = () => {},
-  agentMode = 'off', onChangeAgentMode, ollamaReachable = false, ollamaModel = 'qwen2.5-coder:3b',
+  files = [],
+  activeFileId = null,
+  onSwitchFile,
+  onCloseFileById,
+  themeResolved = 'dark',
+  onThemeToggle = () => {},
+  agentMode = 'off',
+  onChangeAgentMode,
+  ollamaReachable = false,
+  ollamaModel = 'qwen2.5-coder:3b',
 }) => {
   const [isFileMenuOpen, setIsFileMenuOpen] = React.useState(false);
   const [isFileListOpen, setIsFileListOpen] = React.useState(false);
@@ -87,22 +85,121 @@ export const TopBar: React.FC<TopBarProps> = ({
       {/* Middle Controls */}
       <div style={middleControlsStyle}>
         <div style={{ position: 'relative' }}>
-          <button style={secondaryButtonStyle} onClick={() => setIsFileMenuOpen((open) => !open)} aria-label="File menu">File</button>
-          {isFileMenuOpen && <div style={dropdownMenuStyle}>
-            <button style={dropdownItemStyle} onClick={() => { onNewFile(); setIsFileMenuOpen(false); }}>New File <small>Ctrl+N</small></button>
-            <button style={dropdownItemStyle} onClick={() => { onOpenFile(); setIsFileMenuOpen(false); }}>Open File... <small>Ctrl+O</small></button>
-            <button style={dropdownItemStyle} onClick={() => { onCloseFile(); setIsFileMenuOpen(false); }}>Close File <small>Ctrl+W</small></button>
-          </div>}
+          <button
+            style={secondaryButtonStyle}
+            onClick={() => setIsFileMenuOpen((open) => !open)}
+            aria-label="File menu"
+          >
+            File
+          </button>
+          {isFileMenuOpen && (
+            <div style={dropdownMenuStyle}>
+              <button
+                style={dropdownItemStyle}
+                onClick={() => {
+                  onNewFile();
+                  setIsFileMenuOpen(false);
+                }}
+              >
+                New File <small>Ctrl+N</small>
+              </button>
+              <button
+                style={dropdownItemStyle}
+                onClick={() => {
+                  onOpenFile();
+                  setIsFileMenuOpen(false);
+                }}
+              >
+                Open File... <small>Ctrl+O</small>
+              </button>
+              <button
+                style={dropdownItemStyle}
+                onClick={() => {
+                  onCloseFile();
+                  setIsFileMenuOpen(false);
+                }}
+              >
+                Close File <small>Ctrl+W</small>
+              </button>
+            </div>
+          )}
         </div>
-        <div style={{ position:'relative' }}><button aria-label="Open file list" aria-expanded={isFileListOpen} onClick={()=>setIsFileListOpen((open)=>!open)} title={filename || 'No file open'} style={{ color: 'var(--text-primary)', fontSize: 12, maxWidth: 220, height:26, display:'inline-flex',alignItems:'center',padding:'0 9px',border:'1px solid var(--border)',borderRadius:8,background:'var(--surface-2)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{filename || 'No file'} <ChevronDown size={12}/></button>
-          {isFileListOpen && <div style={dropdownMenuStyle} role="menu" aria-label="Open files">
-            {files.map((file)=><div key={file.id} style={{display:'flex',alignItems:'center'}}><button role="menuitem" aria-current={file.id===activeFileId?'true':undefined} style={{...dropdownItemStyle,flex:1}} onClick={()=>{onSwitchFile?.(file.id);setIsFileListOpen(false);}}>{file.name}{file.dirty?' •':''}</button><button aria-label={`Close ${file.name}`} onClick={()=>onCloseFileById?.(file.id)}>×</button></div>)}
-            <button role="menuitem" style={dropdownItemStyle} onClick={()=>{onNewFile();setIsFileListOpen(false);}}>New</button><button role="menuitem" style={dropdownItemStyle} onClick={()=>{onOpenFile();setIsFileListOpen(false);}}>Open</button>
-          </div>}
+        <div style={{ position: 'relative' }}>
+          <button
+            aria-label="Open file list"
+            aria-expanded={isFileListOpen}
+            onClick={() => setIsFileListOpen((open) => !open)}
+            title={filename || 'No file open'}
+            style={{
+              color: 'var(--text-primary)',
+              fontSize: 12,
+              maxWidth: 220,
+              height: 26,
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '0 9px',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              background: 'var(--surface-2)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {filename || 'No file'} <ChevronDown size={12} />
+          </button>
+          {isFileListOpen && (
+            <div style={dropdownMenuStyle} role="menu" aria-label="Open files">
+              {files.map((file) => (
+                <div key={file.id} style={{ display: 'flex', alignItems: 'center' }}>
+                  <button
+                    role="menuitem"
+                    aria-current={file.id === activeFileId ? 'true' : undefined}
+                    style={{ ...dropdownItemStyle, flex: 1 }}
+                    onClick={() => {
+                      onSwitchFile?.(file.id);
+                      setIsFileListOpen(false);
+                    }}
+                  >
+                    {file.name}
+                    {file.dirty ? ' •' : ''}
+                  </button>
+                  <button
+                    aria-label={`Close ${file.name}`}
+                    onClick={() => onCloseFileById?.(file.id)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button
+                role="menuitem"
+                style={dropdownItemStyle}
+                onClick={() => {
+                  onNewFile();
+                  setIsFileListOpen(false);
+                }}
+              >
+                New
+              </button>
+              <button
+                role="menuitem"
+                style={dropdownItemStyle}
+                onClick={() => {
+                  onOpenFile();
+                  setIsFileListOpen(false);
+                }}
+              >
+                Open
+              </button>
+            </div>
+          )}
         </div>
         {/* Language Selector */}
         <div style={selectorWrapperStyle}>
-          <label htmlFor="lang-select" style={visuallyHiddenStyle}>Language</label>
+          <label htmlFor="lang-select" style={visuallyHiddenStyle}>
+            Language
+          </label>
           <select
             data-qa="select-language"
             id="lang-select"
@@ -111,7 +208,9 @@ export const TopBar: React.FC<TopBarProps> = ({
             style={selectStyle}
             aria-label="Select target programming language"
           >
-            <option value="auto">{detectedLanguage ? `Auto - ${detectedLanguage}` : 'Auto-detect'}</option>
+            <option value="auto">
+              {detectedLanguage ? `Auto - ${detectedLanguage}` : 'Auto-detect'}
+            </option>
             {languages.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.display_name}
@@ -136,7 +235,9 @@ export const TopBar: React.FC<TopBarProps> = ({
           role="group"
           aria-label="Agent Mode Toggle"
         >
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', padding: '0 4px', fontWeight: 600 }}>
+          <span
+            style={{ fontSize: 11, color: 'var(--text-muted)', padding: '0 4px', fontWeight: 600 }}
+          >
             Agent:
           </span>
           <button
@@ -196,7 +297,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             Local AI
           </button>
         </div>
-
       </div>
 
       {/* Right Action Buttons */}
@@ -217,10 +317,10 @@ export const TopBar: React.FC<TopBarProps> = ({
             fileState === 'not analysed'
               ? 'Not analysed - press Analyze (Ctrl+Enter)'
               : fileState === 'analysing'
-              ? 'Analysing...'
-              : fileState === 'stale'
-              ? 'Edited since last analysis - press Analyze (Ctrl+Enter)'
-              : 'Analyze Code (Ctrl+Enter)'
+                ? 'Analysing...'
+                : fileState === 'stale'
+                  ? 'Edited since last analysis - press Analyze (Ctrl+Enter)'
+                  : 'Analyze Code (Ctrl+Enter)'
           }
           aria-label="Analyze Code"
         >
@@ -290,18 +390,64 @@ export const TopBar: React.FC<TopBarProps> = ({
         )}
 
         <div style={{ position: 'relative' }}>
-          <button type="button" style={{ ...iconButtonStyle, width: 32, height: 32 }} aria-label={`Switch to ${nextThemeLabel} theme`} title={`Switch to ${nextThemeLabel} theme`} onClick={() => { onThemeToggle(); setThemeAnnouncement(`${nextThemeLabel[0].toUpperCase()}${nextThemeLabel.slice(1)} theme`); }}>
-            {themeResolved === 'dark' ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+          <button
+            type="button"
+            style={{ ...iconButtonStyle, width: 32, height: 32 }}
+            aria-label={`Switch to ${nextThemeLabel} theme`}
+            title={`Switch to ${nextThemeLabel} theme`}
+            onClick={() => {
+              onThemeToggle();
+              setThemeAnnouncement(
+                `${nextThemeLabel[0].toUpperCase()}${nextThemeLabel.slice(1)} theme`
+              );
+            }}
+          >
+            {themeResolved === 'dark' ? (
+              <Sun size={16} aria-hidden="true" />
+            ) : (
+              <Moon size={16} aria-hidden="true" />
+            )}
           </button>
-          <span aria-live="polite" aria-atomic="true" style={visuallyHiddenStyle}>{themeAnnouncement}</span>
+          <span aria-live="polite" aria-atomic="true" style={visuallyHiddenStyle}>
+            {themeAnnouncement}
+          </span>
         </div>
         <div style={{ position: 'relative' }}>
-          <button style={iconButtonStyle} aria-label="More actions" title="More actions" onClick={() => setIsMoreOpen((open) => !open)}>···</button>
-          {isMoreOpen && <div style={{ ...dropdownMenuStyle, left: 'auto', right: 0, width: 220 }}>
-            <button style={dropdownItemStyle} onClick={() => { onDownload(); setIsMoreOpen(false); }}><span><Download size={13} /> Download <small>Ctrl+S</small></span></button>
-            <button style={dropdownItemStyle} onClick={() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true })); setIsMoreOpen(false); }}>Keyboard shortcuts <small>?</small></button>
-            <div style={{ padding: '7px 8px', color: 'var(--muted)', fontSize: 11 }}>Backend: {backendAvailable ? 'Connected' : 'Offline'}</div>
-          </div>}
+          <button
+            style={iconButtonStyle}
+            aria-label="More actions"
+            title="More actions"
+            onClick={() => setIsMoreOpen((open) => !open)}
+          >
+            ···
+          </button>
+          {isMoreOpen && (
+            <div style={{ ...dropdownMenuStyle, left: 'auto', right: 0, width: 220 }}>
+              <button
+                style={dropdownItemStyle}
+                onClick={() => {
+                  onDownload();
+                  setIsMoreOpen(false);
+                }}
+              >
+                <span>
+                  <Download size={13} /> Download <small>Ctrl+S</small>
+                </span>
+              </button>
+              <button
+                style={dropdownItemStyle}
+                onClick={() => {
+                  window.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }));
+                  setIsMoreOpen(false);
+                }}
+              >
+                Keyboard shortcuts <small>?</small>
+              </button>
+              <div style={{ padding: '7px 8px', color: 'var(--muted)', fontSize: 11 }}>
+                Backend: {backendAvailable ? 'Connected' : 'Offline'}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
@@ -374,8 +520,8 @@ const selectStyle: React.CSSProperties = {
   border: '1px solid var(--border)',
   borderRadius: 'var(--radius)',
   color: 'var(--text)',
-  width:110,
-  height:26,
+  width: 110,
+  height: 26,
   padding: '3px 24px 3px 8px',
   fontSize: '12px',
   fontWeight: 500,

@@ -72,10 +72,24 @@ export const DiffView: React.FC<DiffViewProps> = ({
           {fix.description && <p style={descStyle}>{fix.description}</p>}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, minHeight: 160 }}>
-            <div style={diffContainerStyle}><div style={diffHeaderStyle}>Before</div><pre style={diffPreStyle}>{before}</pre></div>
-            <div style={diffContainerStyle}><div style={diffHeaderStyle}>After</div><pre style={diffPreStyle}>{after}</pre></div>
+            <div style={diffContainerStyle}>
+              <div style={diffHeaderStyle}>Before</div>
+              <pre style={diffPreStyle}>{before}</pre>
+            </div>
+            <div style={diffContainerStyle}>
+              <div style={diffHeaderStyle}>After</div>
+              <pre style={diffPreStyle}>{after}</pre>
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 11, color: 'var(--text-secondary)' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 6,
+              fontSize: 11,
+              color: 'var(--text-secondary)',
+            }}
+          >
             <span>{fix.verification?.syntax_ok ? '✓' : '×'} Syntax valid</span>
             <span>{fix.verification?.finding_gone ? '✓' : '×'} Original finding removed</span>
             <span>{fix.verification?.new_findings?.length === 0 ? '✓' : '×'} No new findings</span>
@@ -99,7 +113,10 @@ export const DiffView: React.FC<DiffViewProps> = ({
                 }
 
                 return (
-                  <div key={idx} style={{ backgroundColor: lineBg, color: lineFg, padding: '0 8px' }}>
+                  <div
+                    key={idx}
+                    style={{ backgroundColor: lineBg, color: lineFg, padding: '0 8px' }}
+                  >
                     {line}
                   </div>
                 );

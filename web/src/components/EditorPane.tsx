@@ -16,11 +16,7 @@ import { createCodeActionProvider, setCodeActionHandlers } from '../monaco/codeA
 import { DecorationManager } from '../monaco/decorations';
 import { AnalysisResult, Finding, Fix } from '../api/client';
 import type { TokenInfo } from '../api/client';
-import {
-  setEditorPosition,
-  setEditorSelection,
-  revealEditorRange,
-} from '../editor/navigation';
+import { setEditorPosition, setEditorSelection, revealEditorRange } from '../editor/navigation';
 import { harness } from '../testHarness';
 
 // Configure Monaco Environment for Vite with locally bundled web workers (NO CDN)
@@ -306,7 +302,12 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
   }, [activeDataFlowFindingId, findings]);
 
   useEffect(() => {
-    decorationManagerRef.current?.updateTokenMap(tokenMap, analysis, selectedTokenIndex, tokenCategory);
+    decorationManagerRef.current?.updateTokenMap(
+      tokenMap,
+      analysis,
+      selectedTokenIndex,
+      tokenCategory
+    );
   }, [tokenMap, analysis, selectedTokenIndex, tokenCategory]);
 
   useEffect(() => {
@@ -329,12 +330,7 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
         'user-nav-token'
       );
     } else {
-      setEditorPosition(
-        editorRef.current,
-        range.start_line,
-        range.start_col,
-        'user-nav-finding'
-      );
+      setEditorPosition(editorRef.current, range.start_line, range.start_col, 'user-nav-finding');
     }
   }, [navTarget]);
 

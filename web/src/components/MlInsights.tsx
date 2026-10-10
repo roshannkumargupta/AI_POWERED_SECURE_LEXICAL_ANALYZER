@@ -12,7 +12,15 @@ interface MlInsightsProps {
   mlReason?: string;
 }
 
-export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlMode, modelId, selectedToken, lexicalError, mlReason }) => {
+export const MlInsights: React.FC<MlInsightsProps> = ({
+  insights,
+  isLoading,
+  mlMode,
+  modelId,
+  selectedToken,
+  lexicalError,
+  mlReason,
+}) => {
   if (lexicalError) return <div className="ui5-empty">n/a - lexical errors do not use ML</div>;
   if (mlMode === 'off' || (insights && insights.ml_mode === 'off')) {
     return (
@@ -22,7 +30,8 @@ export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlM
           <span style={noticeTitleStyle}>ML OFF</span>
         </div>
         <p style={noticeTextStyle}>
-          ML off - Rules and Taint remain active. Reason: {mlReason || 'the API did not provide an ML-off reason.'}
+          ML off - Rules and Taint remain active. Reason:{' '}
+          {mlReason || 'the API did not provide an ML-off reason.'}
         </p>
       </div>
     );
@@ -39,11 +48,15 @@ export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlM
 
   if (!insights) {
     return (
-      <div style={{...emptyStyle,alignItems:'stretch'}}>
-        <div className="ui6-ml-header">ML on - model {modelId || 'unknown'} - 9-token window - token: {selectedToken || 'unknown'}</div>
+      <div style={{ ...emptyStyle, alignItems: 'stretch' }}>
+        <div className="ui6-ml-header">
+          ML on - model {modelId || 'unknown'} - 9-token window - token:{' '}
+          {selectedToken || 'unknown'}
+        </div>
         <Brain size={24} color="var(--muted)" />
         <p style={{ marginTop: '8px', color: 'var(--muted)', fontSize: '13px' }}>
-          Click any token or select a finding to inspect machine learning confidence probabilities and feature-group occlusion impacts.
+          Click any token or select a finding to inspect machine learning confidence probabilities
+          and feature-group occlusion impacts.
         </p>
       </div>
     );
@@ -63,15 +76,27 @@ export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlM
 
   return (
     <div style={containerStyle}>
-      <div className="ui6-ml-header">ML on - model {modelId || 'unknown'} - 9-token window - token: {selectedToken || insights.token_text || 'unknown'}</div>
+      <div className="ui6-ml-header">
+        ML on - model {modelId || 'unknown'} - 9-token window - token:{' '}
+        {selectedToken || insights.token_text || 'unknown'}
+      </div>
       {/* Token Header */}
       <div style={tokenHeaderCardStyle}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase' }}>Target Token</span>
+            <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase' }}>
+              Target Token
+            </span>
             <code style={tokenCodeStyle}>{insights.token_text || '<unnamed>'}</code>
           </div>
-          <span style={{ ...predBadgeStyle, color: predColor, borderColor: predColor, backgroundColor: `${predColor}15` }}>
+          <span
+            style={{
+              ...predBadgeStyle,
+              color: predColor,
+              borderColor: predColor,
+              backgroundColor: `${predColor}15`,
+            }}
+          >
             {predLabel}
           </span>
         </div>
@@ -83,11 +108,13 @@ export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlM
 
         <div style={probRowStyle}>
           <div style={probLabelRowStyle}>
-          <span style={{ color: 'var(--success)', fontWeight: 600 }}>SAFE</span>
-          <span style={probValStyle}>{safePct}%</span>
+            <span style={{ color: 'var(--success)', fontWeight: 600 }}>SAFE</span>
+            <span style={probValStyle}>{safePct}%</span>
           </div>
           <div style={barTrackStyle}>
-            <div style={{ ...barFillStyle, width: `${safePct}%`, backgroundColor: 'var(--success)' }} />
+            <div
+              style={{ ...barFillStyle, width: `${safePct}%`, backgroundColor: 'var(--success)' }}
+            />
           </div>
         </div>
 
@@ -97,24 +124,35 @@ export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlM
             <span style={probValStyle}>{suspPct}%</span>
           </div>
           <div style={barTrackStyle}>
-            <div style={{ ...barFillStyle, width: `${suspPct}%`, backgroundColor: 'var(--medium)' }} />
+            <div
+              style={{ ...barFillStyle, width: `${suspPct}%`, backgroundColor: 'var(--medium)' }}
+            />
           </div>
         </div>
 
         <div style={probRowStyle}>
           <div style={probLabelRowStyle}>
-          <span style={{ color: 'var(--critical)', fontWeight: 600 }}>MALICIOUS</span>
-          <span style={probValStyle}>{malPct}%</span>
+            <span style={{ color: 'var(--critical)', fontWeight: 600 }}>MALICIOUS</span>
+            <span style={probValStyle}>{malPct}%</span>
           </div>
           <div style={barTrackStyle}>
-            <div style={{ ...barFillStyle, width: `${malPct}%`, backgroundColor: 'var(--critical)' }} />
+            <div
+              style={{ ...barFillStyle, width: `${malPct}%`, backgroundColor: 'var(--critical)' }}
+            />
           </div>
         </div>
       </div>
 
       {/* Feature Group Occlusion Bars */}
       <div style={sectionStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '8px',
+          }}
+        >
           <span style={sectionTitleStyle}>Feature Group Occlusion Impact (ΔP)</span>
           <span style={{ fontSize: '10px', color: 'var(--muted)' }}>Higher = stronger signal</span>
         </div>
@@ -131,10 +169,21 @@ export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlM
               .map(([groupName, dropVal]) => {
                 const dropPct = Math.min(100, Math.round(dropVal * 100));
                 return (
-                  <div key={groupName} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                      <span style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-code)' }}>{groupName}</span>
-                      <span style={{ color: 'var(--accent)', fontWeight: 600 }}>+{dropVal.toFixed(3)}</span>
+                  <div
+                    key={groupName}
+                    style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}
+                  >
+                    <div
+                      style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}
+                    >
+                      <span
+                        style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-code)' }}
+                      >
+                        {groupName}
+                      </span>
+                      <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
+                        +{dropVal.toFixed(3)}
+                      </span>
                     </div>
                     <div style={barTrackSmallStyle}>
                       <div

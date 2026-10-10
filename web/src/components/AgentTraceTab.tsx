@@ -42,7 +42,9 @@ export const AgentTraceTab: React.FC<AgentTraceTabProps> = ({
       <div style={emptyContainerStyle}>
         <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)' }}>
           <Workflow size={32} style={{ marginBottom: 12, opacity: 0.5 }} />
-          <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)' }}>No Agent Trace Available</h4>
+          <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)' }}>
+            No Agent Trace Available
+          </h4>
           <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
             {agentMode === 'off'
               ? 'Agent is currently turned off. Switch agent mode to "Rules" or "Local AI" in the top bar and click Analyze.'
@@ -79,13 +81,31 @@ export const AgentTraceTab: React.FC<AgentTraceTabProps> = ({
       <div style={securityBannerStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
           <ShieldCheck size={14} color="var(--text-success)" />
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-success)' }}>Local Isolation Guarantee</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-success)' }}>
+            Local Isolation Guarantee
+          </span>
         </div>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 8px' }}>
-          <div>Outbound network calls: <strong style={{ color: 'var(--text-primary)' }}>0</strong></div>
-          <div>Endpoint: <strong style={{ color: 'var(--text-primary)' }}>{ollamaUrl}</strong></div>
-          <div>Model: <strong style={{ color: 'var(--text-primary)' }}>{agentModel}</strong></div>
-          <div>Deterministic fallback: <strong style={{ color: 'var(--text-primary)' }}>Active</strong></div>
+        <div
+          style={{
+            fontSize: 11,
+            color: 'var(--text-muted)',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '4px 8px',
+          }}
+        >
+          <div>
+            Outbound network calls: <strong style={{ color: 'var(--text-primary)' }}>0</strong>
+          </div>
+          <div>
+            Endpoint: <strong style={{ color: 'var(--text-primary)' }}>{ollamaUrl}</strong>
+          </div>
+          <div>
+            Model: <strong style={{ color: 'var(--text-primary)' }}>{agentModel}</strong>
+          </div>
+          <div>
+            Deterministic fallback: <strong style={{ color: 'var(--text-primary)' }}>Active</strong>
+          </div>
         </div>
       </div>
 
@@ -95,7 +115,9 @@ export const AgentTraceTab: React.FC<AgentTraceTabProps> = ({
           <div key={stage} style={stageGroupStyle}>
             <div style={stageHeaderStyle}>
               <span style={stageBadgeStyle}>{stage.toUpperCase()} STAGE</span>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{steps.length} step(s)</span>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                {steps.length} step(s)
+              </span>
             </div>
 
             <div style={stepsListStyle}>

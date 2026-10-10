@@ -27,7 +27,10 @@ const SHORTCUTS: ShortcutItem[] = [
   { keys: ['Escape'], description: 'Close active modal or flyout', category: 'Navigation' },
 ];
 
-export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen, onClose }) => {
+export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   React.useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -50,11 +53,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ 
       aria-modal="true"
       aria-labelledby="shortcuts-title"
     >
-      <div
-        data-qa="shortcuts-modal"
-        style={modalStyle}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div data-qa="shortcuts-modal" style={modalStyle} onClick={(e) => e.stopPropagation()}>
         <div style={headerStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Keyboard size={18} color="var(--accent)" />

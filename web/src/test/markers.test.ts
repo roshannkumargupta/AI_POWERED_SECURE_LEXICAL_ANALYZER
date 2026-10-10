@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  severityToMarkerSeverity,
-  findingToMarker,
-  MARKER_SOURCE,
-} from '../monaco/markers';
+import { severityToMarkerSeverity, findingToMarker, MARKER_SOURCE } from '../monaco/markers';
 import { Finding } from '../api/client';
 
 // Mock Monaco instance

@@ -9,11 +9,24 @@ interface EmptyStateProps {
   onOpenFile: () => void;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ samples, onSelectSample, onNewFile, onOpenFile }) => {
+export const EmptyState: React.FC<EmptyStateProps> = ({
+  samples,
+  onSelectSample,
+  onNewFile,
+  onOpenFile,
+}) => {
   const exampleLanguages = [
-    ['python', 'Python'], ['java', 'Java'], ['javascript', 'JavaScript'], ['cpp', 'C/C++'],
+    ['python', 'Python'],
+    ['java', 'Java'],
+    ['javascript', 'JavaScript'],
+    ['cpp', 'C/C++'],
   ];
-  const examples = exampleLanguages.map(([language, label]) => [label, samples.find((s) => s.language === language && s.category === 'vulnerable')]).filter((entry) => entry[1]) as Array<[string, SampleItem]>;
+  const examples = exampleLanguages
+    .map(([language, label]) => [
+      label,
+      samples.find((s) => s.language === language && s.category === 'vulnerable'),
+    ])
+    .filter((entry) => entry[1]) as Array<[string, SampleItem]>;
 
   return (
     <div style={containerStyle}>
@@ -25,19 +38,19 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ samples, onSelectSample,
       <p style={subtitleStyle}>Open or paste code to check it for security problems.</p>
 
       <div style={buttonsGroupStyle}>
-        <button style={sampleButtonStyle} onClick={onNewFile}>New file</button>
-        <button style={sampleButtonStyle} onClick={onOpenFile}>Open file</button>
+        <button style={sampleButtonStyle} onClick={onNewFile}>
+          New file
+        </button>
+        <button style={sampleButtonStyle} onClick={onOpenFile}>
+          Open file
+        </button>
       </div>
 
       <div style={samplesBoxStyle}>
         <span style={samplesBoxTitleStyle}>Try an example:</span>
         <div style={exampleLinksStyle}>
           {examples.map(([label, sample]) => (
-            <button
-              key={sample.id}
-              style={exampleLinkStyle}
-              onClick={() => onSelectSample(sample)}
-            >
+            <button key={sample.id} style={exampleLinkStyle} onClick={() => onSelectSample(sample)}>
               {label}
             </button>
           ))}
@@ -111,7 +124,14 @@ const buttonsGroupStyle: React.CSSProperties = {
 };
 
 const exampleLinksStyle: React.CSSProperties = { display: 'flex', gap: 12 };
-const exampleLinkStyle: React.CSSProperties = { color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 12, background: 'transparent', border: 0 };
+const exampleLinkStyle: React.CSSProperties = {
+  color: 'var(--accent)',
+  textDecoration: 'underline',
+  cursor: 'pointer',
+  fontSize: 12,
+  background: 'transparent',
+  border: 0,
+};
 
 const sampleButtonStyle: React.CSSProperties = {
   display: 'flex',

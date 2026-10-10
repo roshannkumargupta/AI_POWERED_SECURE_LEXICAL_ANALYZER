@@ -124,7 +124,11 @@ export interface TokenInfo {
   label: string;
   score: number;
   // Legacy aliases are accepted to keep older cached API payloads usable.
-  text?: string; line?: number; col?: number; confidence?: number; utf16_offset?: number;
+  text?: string;
+  line?: number;
+  col?: number;
+  confidence?: number;
+  utf16_offset?: number;
 }
 
 export interface HealthResponse {
@@ -327,7 +331,8 @@ export const apiClient = {
     const suffix = query.toString() ? `?${query.toString()}` : '';
     return request<SampleItem[]>(`/samples${suffix}`, { signal });
   },
-  getSample: (id: string, signal?: AbortSignal) => request<SampleItem>(`/samples/${id}`, { signal }),
+  getSample: (id: string, signal?: AbortSignal) =>
+    request<SampleItem>(`/samples/${id}`, { signal }),
   applyFix: (req: FixRequest, signal?: AbortSignal) =>
     request<FixResponse>('/fix', {
       method: 'POST',
@@ -352,8 +357,7 @@ export const apiClient = {
       body: JSON.stringify(req),
       signal,
     }),
-  getLLMStatus: (signal?: AbortSignal) =>
-    request<LLMStatusResponse>('/llm/status', { signal }),
+  getLLMStatus: (signal?: AbortSignal) => request<LLMStatusResponse>('/llm/status', { signal }),
   requestLLMFix: (req: LLMFixRequest, signal?: AbortSignal) =>
     request<LLMFixResponse>('/llm/fix', {
       method: 'POST',
@@ -366,8 +370,7 @@ export const apiClient = {
       body: JSON.stringify(req),
       signal,
     }),
-  getAgentStatus: (signal?: AbortSignal) =>
-    request<AgentStatus>('/agent/status', { signal }),
+  getAgentStatus: (signal?: AbortSignal) => request<AgentStatus>('/agent/status', { signal }),
 };
 
 export const api = apiClient;

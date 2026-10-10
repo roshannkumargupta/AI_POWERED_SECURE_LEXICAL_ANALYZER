@@ -8,13 +8,17 @@ function readMode(): ThemeMode {
   try {
     const saved = localStorage.getItem(THEME_STORAGE_KEY);
     if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
-  } catch { /* Storage can be unavailable; the in-memory mode still works. */ }
+  } catch {
+    /* Storage can be unavailable; the in-memory mode still works. */
+  }
   return 'dark';
 }
 
 function resolveMode(mode: ThemeMode): ResolvedTheme {
   return mode === 'system'
-    ? (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    ? window.matchMedia?.('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light'
     : mode;
 }
 
@@ -25,7 +29,9 @@ function applyTheme(mode: ThemeMode, resolved: ResolvedTheme) {
   root.dataset.themeMode = mode;
   const meta = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]');
   if (meta) meta.content = resolved;
-  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')));
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => root.classList.remove('theme-switching'))
+  );
 }
 
 interface ThemeContextValue {
@@ -54,15 +60,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => query.removeEventListener?.('change', update);
   }, []);
 
-  useEffect(() => { applyTheme(mode, resolved); }, [mode, resolved]);
+  useEffect(() => {
+    applyTheme(mode, resolved);
+  }, [mode, resolved]);
 
   const setMode = useCallback((next: ThemeMode) => {
     applyTheme(next, resolveMode(next));
     setModeState(next);
-    try { localStorage.setItem(THEME_STORAGE_KEY, next); } catch { /* In-memory mode remains active. */ }
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, next);
+    } catch {
+      /* In-memory mode remains active. */
+    }
   }, []);
-  const toggleTheme = useCallback(() => setMode(resolved === 'dark' ? 'light' : 'dark'), [resolved, setMode]);
-  const value = useMemo(() => ({ mode, resolved, setMode, toggleTheme }), [mode, resolved, setMode, toggleTheme]);
+  const toggleTheme = useCallback(
+    () => setMode(resolved === 'dark' ? 'light' : 'dark'),
+    [resolved, setMode]
+  );
+  const value = useMemo(
+    () => ({ mode, resolved, setMode, toggleTheme }),
+    [mode, resolved, setMode, toggleTheme]
+  );
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
