@@ -1,0 +1,48 @@
+{
+  "model_id": "separate_java_hist_gradient_boosting_20261001_163417",
+  "model_type": "hist_gradient_boosting",
+  "feature_schema_hash": "313113ff1b1c3eaaef410590101e19a00c1721aa822f0c90e1034f7d06cc5b90",
+  "feature_dim": 45,
+  "use_lang_features": false,
+  "library_versions": {
+    "torch": "2.14.0+cpu",
+    "sklearn": "1.9.1",
+    "numpy": "2.5.3"
+  },
+  "created_at": "2026-10-01T16:34:17.981642+00:00",
+  "model_file_size_bytes": 919968,
+  "strategy": "separate",
+  "supported_languages": [
+    "java"
+  ],
+  "language": "java",
+  "thresholds": {
+    "tau_malicious": 0.5
+  },
+  "temperature": 1.0,
+  "validation_macro_f1": 0.6488,
+  "candidate_metrics": {
+    "logistic_regression": {
+      "macro_f1": 0.4596,
+      "macro_precision": 0.4738,
+      "macro_recall": 0.5722
+    },
+    "random_forest": {
+      "macro_f1": 0.6348,
+      "macro_precision": 0.6634,
+      "macro_recall": 0.641
+    },
+    "hist_gradient_boosting": {
+      "macro_f1": 0.6488,
+      "macro_precision": 0.692,
+      "macro_recall": 0.6411
+    },
+    "windowed_bilstm": {
+      "macro_f1": 0.369,
+      "macro_precision": 0.3815,
+      "macro_recall": 0.454
+    }
+  },
+  "dataset_hash": "2b5bbfb9cc2bac485dfdc68531e66bc9566740adea29afbc206cd483a3b4c904",
+  "seed": 42
+}

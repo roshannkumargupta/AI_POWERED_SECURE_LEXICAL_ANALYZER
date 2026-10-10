@@ -1,0 +1,48 @@
+{
+  "model_id": "separate_cpp_windowed_bilstm_20261001_101642",
+  "model_type": "windowed_bilstm",
+  "feature_schema_hash": "313113ff1b1c3eaaef410590101e19a00c1721aa822f0c90e1034f7d06cc5b90",
+  "feature_dim": 45,
+  "use_lang_features": false,
+  "library_versions": {
+    "torch": "2.14.0+cpu",
+    "sklearn": "1.9.1",
+    "numpy": "2.5.3"
+  },
+  "created_at": "2026-10-01T10:16:42.813146+00:00",
+  "model_file_size_bytes": 334018,
+  "strategy": "separate",
+  "supported_languages": [
+    "cpp"
+  ],
+  "language": "cpp",
+  "thresholds": {
+    "tau_malicious": 0.5
+  },
+  "temperature": 1.0,
+  "validation_macro_f1": 0.4994,
+  "candidate_metrics": {
+    "logistic_regression": {
+      "macro_f1": 0.418,
+      "macro_precision": 0.43,
+      "macro_recall": 0.5361
+    },
+    "random_forest": {
+      "macro_f1": 0.4372,
+      "macro_precision": 0.5526,
+      "macro_recall": 0.5411
+    },
+    "hist_gradient_boosting": {
+      "macro_f1": 0.4448,
+      "macro_precision": 0.4447,
+      "macro_recall": 0.5462
+    },
+    "windowed_bilstm": {
+      "macro_f1": 0.4994,
+      "macro_precision": 0.55,
+      "macro_recall": 0.5708
+    }
+  },
+  "dataset_hash": "12ef7f0baec51e1c88f6fed1cd4bfef5debdfeaade824321b0986b519d0d8a16",
+  "seed": 42
+}

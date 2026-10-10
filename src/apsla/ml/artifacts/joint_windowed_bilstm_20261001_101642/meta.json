@@ -1,0 +1,73 @@
+{
+  "model_id": "joint_windowed_bilstm_20261001_101642",
+  "model_type": "windowed_bilstm",
+  "feature_schema_hash": "313113ff1b1c3eaaef410590101e19a00c1721aa822f0c90e1034f7d06cc5b90",
+  "feature_dim": 45,
+  "use_lang_features": true,
+  "library_versions": {
+    "torch": "2.14.0+cpu",
+    "sklearn": "1.9.1",
+    "numpy": "2.5.3"
+  },
+  "created_at": "2026-10-01T10:16:42.693237+00:00",
+  "model_file_size_bytes": 334018,
+  "strategy": "joint",
+  "supported_languages": [
+    "python",
+    "java",
+    "javascript",
+    "cpp"
+  ],
+  "language": "all",
+  "thresholds": {
+    "tau_malicious": 0.5
+  },
+  "temperature": 1.0,
+  "validation_macro_f1": 0.489,
+  "candidate_metrics": {
+    "logistic_regression": {
+      "macro_f1": 0.4202,
+      "macro_precision": 0.4481,
+      "macro_recall": 0.6216
+    },
+    "random_forest": {
+      "macro_f1": 0.4205,
+      "macro_precision": 0.4656,
+      "macro_recall": 0.6279
+    },
+    "hist_gradient_boosting": {
+      "macro_f1": 0.4516,
+      "macro_precision": 0.4785,
+      "macro_recall": 0.6413
+    },
+    "windowed_bilstm": {
+      "macro_f1": 0.489,
+      "macro_precision": 0.471,
+      "macro_recall": 0.6611
+    }
+  },
+  "per_language_val_metrics": {
+    "python": {
+      "macro_f1": 0.7137,
+      "macro_precision": 0.6805,
+      "macro_recall": 0.7691
+    },
+    "java": {
+      "macro_f1": 0.4238,
+      "macro_precision": 0.426,
+      "macro_recall": 0.5964
+    },
+    "javascript": {
+      "macro_f1": 0.4609,
+      "macro_precision": 0.4805,
+      "macro_recall": 0.6811
+    },
+    "cpp": {
+      "macro_f1": 0.4893,
+      "macro_precision": 0.5407,
+      "macro_recall": 0.5607
+    }
+  },
+  "dataset_hash": "12ef7f0baec51e1c88f6fed1cd4bfef5debdfeaade824321b0986b519d0d8a16",
+  "seed": 42
+}
