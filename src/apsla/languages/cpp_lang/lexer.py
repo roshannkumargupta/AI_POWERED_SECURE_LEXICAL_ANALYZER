@@ -479,7 +479,7 @@ class CppLexer(LexerBase):
         delimiter = self.source[delim_start : self.cursor]
         self.advance()  # consume '('
 
-        target_closing = f"){delimiter}\""
+        target_closing = f'){delimiter}"'
 
         # Scan for closing sequence
         while not self.is_eof:

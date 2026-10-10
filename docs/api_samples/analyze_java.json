@@ -1,0 +1,707 @@
+{
+  "language": "java",
+  "filename": "Demo.java",
+  "findings": [
+    {
+      "id": "ML-1-59",
+      "rule_id": "APS-ALL-ML-001",
+      "title": "Machine Learning Anomaly Detected",
+      "cwe": "CWE-20",
+      "severity": "low",
+      "label": "SUSPICIOUS",
+      "confidence": 0.9998,
+      "range": {
+        "start_line": 1,
+        "start_col": 59,
+        "end_line": 1,
+        "end_col": 60
+      },
+      "message": "Token '.' flagged as anomalous by security ML model",
+      "explanation": "The security classifier detected high anomaly probability (1.00) over this token window without a matching AST rule pattern.",
+      "evidence": {
+        "ml_score": 0.9998,
+        "ml_mode": "on",
+        "p_malicious": 0.9998,
+        "p_suspicious": 0.0001,
+        "p_safe": 0.0002,
+        "confidence_breakdown": {
+          "rule_score": null,
+          "ml_score": 0.9998,
+          "ml_mode": "on",
+          "rule_weight": 0.0,
+          "ml_weight": 1.0,
+          "taint_bonus": 0.0,
+          "taint_confirmed": false,
+          "fused": 0.9998
+        }
+      },
+      "taint_path": [],
+      "fixes": [],
+      "sources": [
+        "ml"
+      ],
+      "suppressed": false,
+      "kind": "security",
+      "attack": null
+    },
+    {
+      "id": "ML-1-64",
+      "rule_id": "APS-ALL-ML-001",
+      "title": "Machine Learning Anomaly Detected",
+      "cwe": "CWE-20",
+      "severity": "low",
+      "label": "SUSPICIOUS",
+      "confidence": 0.9994,
+      "range": {
+        "start_line": 1,
+        "start_col": 64,
+        "end_line": 1,
+        "end_col": 65
+      },
+      "message": "Token '(' flagged as anomalous by security ML model",
+      "explanation": "The security classifier detected high anomaly probability (1.00) over this token window without a matching AST rule pattern.",
+      "evidence": {
+        "ml_score": 0.9994,
+        "ml_mode": "on",
+        "p_malicious": 0.9994,
+        "p_suspicious": 0.0,
+        "p_safe": 0.0006,
+        "confidence_breakdown": {
+          "rule_score": null,
+          "ml_score": 0.9994,
+          "ml_mode": "on",
+          "rule_weight": 0.0,
+          "ml_weight": 1.0,
+          "taint_bonus": 0.0,
+          "taint_confirmed": false,
+          "fused": 0.9994
+        }
+      },
+      "taint_path": [],
+      "fixes": [],
+      "sources": [
+        "ml"
+      ],
+      "suppressed": false,
+      "kind": "security",
+      "attack": null
+    },
+    {
+      "id": "ML-1-60",
+      "rule_id": "APS-ALL-ML-001",
+      "title": "Machine Learning Anomaly Detected",
+      "cwe": "CWE-20",
+      "severity": "low",
+      "label": "SUSPICIOUS",
+      "confidence": 0.9989,
+      "range": {
+        "start_line": 1,
+        "start_col": 60,
+        "end_line": 1,
+        "end_col": 64
+      },
+      "message": "Token 'exec' flagged as anomalous by security ML model",
+      "explanation": "The security classifier detected high anomaly probability (1.00) over this token window without a matching AST rule pattern.",
+      "evidence": {
+        "ml_score": 0.9989,
+        "ml_mode": "on",
+        "p_malicious": 0.9989,
+        "p_suspicious": 0.0005,
+        "p_safe": 0.0005,
+        "confidence_breakdown": {
+          "rule_score": null,
+          "ml_score": 0.9989,
+          "ml_mode": "on",
+          "rule_weight": 0.0,
+          "ml_weight": 1.0,
+          "taint_bonus": 0.0,
+          "taint_confirmed": false,
+          "fused": 0.9989
+        }
+      },
+      "taint_path": [],
+      "fixes": [],
+      "sources": [
+        "ml"
+      ],
+      "suppressed": false,
+      "kind": "security",
+      "attack": null
+    },
+    {
+      "id": "ML-1-71",
+      "rule_id": "APS-ALL-ML-001",
+      "title": "Machine Learning Anomaly Detected",
+      "cwe": "CWE-20",
+      "severity": "low",
+      "label": "SUSPICIOUS",
+      "confidence": 0.9956,
+      "range": {
+        "start_line": 1,
+        "start_col": 71,
+        "end_line": 1,
+        "end_col": 72
+      },
+      "message": "Token ';' flagged as anomalous by security ML model",
+      "explanation": "The security classifier detected high anomaly probability (1.00) over this token window without a matching AST rule pattern.",
+      "evidence": {
+        "ml_score": 0.9956,
+        "ml_mode": "on",
+        "p_malicious": 0.9956,
+        "p_suspicious": 0.0001,
+        "p_safe": 0.0044,
+        "confidence_breakdown": {
+          "rule_score": null,
+          "ml_score": 0.9956,
+          "ml_mode": "on",
+          "rule_weight": 0.0,
+          "ml_weight": 1.0,
+          "taint_bonus": 0.0,
+          "taint_confirmed": false,
+          "fused": 0.9956
+        }
+      },
+      "taint_path": [],
+      "fixes": [],
+      "sources": [
+        "ml"
+      ],
+      "suppressed": false,
+      "kind": "security",
+      "attack": null
+    },
+    {
+      "id": "ML-1-70",
+      "rule_id": "APS-ALL-ML-001",
+      "title": "Machine Learning Anomaly Detected",
+      "cwe": "CWE-20",
+      "severity": "low",
+      "label": "SUSPICIOUS",
+      "confidence": 0.9943,
+      "range": {
+        "start_line": 1,
+        "start_col": 70,
+        "end_line": 1,
+        "end_col": 71
+      },
+      "message": "Token ')' flagged as anomalous by security ML model",
+      "explanation": "The security classifier detected high anomaly probability (0.99) over this token window without a matching AST rule pattern.",
+      "evidence": {
+        "ml_score": 0.9943,
+        "ml_mode": "on",
+        "p_malicious": 0.9943,
+        "p_suspicious": 0.0001,
+        "p_safe": 0.0056,
+        "confidence_breakdown": {
+          "rule_score": null,
+          "ml_score": 0.9943,
+          "ml_mode": "on",
+          "rule_weight": 0.0,
+          "ml_weight": 1.0,
+          "taint_bonus": 0.0,
+          "taint_confirmed": false,
+          "fused": 0.9943
+        }
+      },
+      "taint_path": [],
+      "fixes": [],
+      "sources": [
+        "ml"
+      ],
+      "suppressed": false,
+      "kind": "security",
+      "attack": null
+    },
+    {
+      "id": "ML-1-65",
+      "rule_id": "APS-ALL-ML-001",
+      "title": "Machine Learning Anomaly Detected",
+      "cwe": "CWE-20",
+      "severity": "low",
+      "label": "SUSPICIOUS",
+      "confidence": 0.9936,
+      "range": {
+        "start_line": 1,
+        "start_col": 65,
+        "end_line": 1,
+        "end_col": 70
+      },
+      "message": "Token 'input' flagged as anomalous by security ML model",
+      "explanation": "The security classifier detected high anomaly probability (0.99) over this token window without a matching AST rule pattern.",
+      "evidence": {
+        "ml_score": 0.9936,
+        "ml_mode": "on",
+        "p_malicious": 0.9936,
+        "p_suspicious": 0.0001,
+        "p_safe": 0.0063,
+        "confidence_breakdown": {
+          "rule_score": null,
+          "ml_score": 0.9936,
+          "ml_mode": "on",
+          "rule_weight": 0.0,
+          "ml_weight": 1.0,
+          "taint_bonus": 0.0,
+          "taint_confirmed": false,
+          "fused": 0.9936
+        }
+      },
+      "taint_path": [],
+      "fixes": [],
+      "sources": [
+        "ml"
+      ],
+      "suppressed": false,
+      "kind": "security",
+      "attack": null
+    },
+    {
+      "id": "ML-1-58",
+      "rule_id": "APS-ALL-ML-001",
+      "title": "Machine Learning Anomaly Detected",
+      "cwe": "CWE-20",
+      "severity": "low",
+      "label": "SUSPICIOUS",
+      "confidence": 0.935,
+      "range": {
+        "start_line": 1,
+        "start_col": 58,
+        "end_line": 1,
+        "end_col": 59
+      },
+      "message": "Token ')' flagged as anomalous by security ML model",
+      "explanation": "The security classifier detected high anomaly probability (0.93) over this token window without a matching AST rule pattern.",
+      "evidence": {
+        "ml_score": 0.935,
+        "ml_mode": "on",
+        "p_malicious": 0.935,
+        "p_suspicious": 0.0636,
+        "p_safe": 0.0014,
+        "confidence_breakdown": {
+          "rule_score": null,
+          "ml_score": 0.935,
+          "ml_mode": "on",
+          "rule_weight": 0.0,
+          "ml_weight": 1.0,
+          "taint_bonus": 0.0,
+          "taint_confirmed": false,
+          "fused": 0.935
+        }
+      },
+      "taint_path": [],
+      "fixes": [],
+      "sources": [
+        "ml"
+      ],
+      "suppressed": false,
+      "kind": "security",
+      "attack": null
+    }
+  ],
+  "tokens": [
+    {
+      "token": "class",
+      "token_type": "KEYWORD",
+      "range": {
+        "start_line": 1,
+        "start_col": 1,
+        "end_line": 1,
+        "end_col": 6
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 1,
+        "start_col": 6,
+        "end_line": 1,
+        "end_col": 7
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "Demo",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 1,
+        "start_col": 7,
+        "end_line": 1,
+        "end_col": 11
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 1,
+        "start_col": 11,
+        "end_line": 1,
+        "end_col": 12
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "{",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 12,
+        "end_line": 1,
+        "end_col": 13
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 1,
+        "start_col": 13,
+        "end_line": 1,
+        "end_col": 14
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "void",
+      "token_type": "KEYWORD",
+      "range": {
+        "start_line": 1,
+        "start_col": 14,
+        "end_line": 1,
+        "end_col": 18
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 1,
+        "start_col": 18,
+        "end_line": 1,
+        "end_col": 19
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "run",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 1,
+        "start_col": 19,
+        "end_line": 1,
+        "end_col": 22
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "(",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 22,
+        "end_line": 1,
+        "end_col": 23
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "String",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 1,
+        "start_col": 23,
+        "end_line": 1,
+        "end_col": 29
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 1,
+        "start_col": 29,
+        "end_line": 1,
+        "end_col": 30
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "input",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 1,
+        "start_col": 30,
+        "end_line": 1,
+        "end_col": 35
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": ")",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 35,
+        "end_line": 1,
+        "end_col": 36
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 1,
+        "start_col": 36,
+        "end_line": 1,
+        "end_col": 37
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "{",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 37,
+        "end_line": 1,
+        "end_col": 38
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 1,
+        "start_col": 38,
+        "end_line": 1,
+        "end_col": 39
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "Runtime",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 1,
+        "start_col": 39,
+        "end_line": 1,
+        "end_col": 46
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": ".",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 46,
+        "end_line": 1,
+        "end_col": 47
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "getRuntime",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 1,
+        "start_col": 47,
+        "end_line": 1,
+        "end_col": 57
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "(",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 57,
+        "end_line": 1,
+        "end_col": 58
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": ")",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 58,
+        "end_line": 1,
+        "end_col": 59
+      },
+      "label": "SUSPICIOUS",
+      "score": 0.935
+    },
+    {
+      "token": ".",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 59,
+        "end_line": 1,
+        "end_col": 60
+      },
+      "label": "SUSPICIOUS",
+      "score": 0.9998
+    },
+    {
+      "token": "exec",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 1,
+        "start_col": 60,
+        "end_line": 1,
+        "end_col": 64
+      },
+      "label": "SUSPICIOUS",
+      "score": 0.9989
+    },
+    {
+      "token": "(",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 64,
+        "end_line": 1,
+        "end_col": 65
+      },
+      "label": "SUSPICIOUS",
+      "score": 0.9994
+    },
+    {
+      "token": "input",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 1,
+        "start_col": 65,
+        "end_line": 1,
+        "end_col": 70
+      },
+      "label": "SUSPICIOUS",
+      "score": 0.9936
+    },
+    {
+      "token": ")",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 70,
+        "end_line": 1,
+        "end_col": 71
+      },
+      "label": "SUSPICIOUS",
+      "score": 0.9943
+    },
+    {
+      "token": ";",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 71,
+        "end_line": 1,
+        "end_col": 72
+      },
+      "label": "SUSPICIOUS",
+      "score": 0.9956
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 1,
+        "start_col": 72,
+        "end_line": 1,
+        "end_col": 73
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "}",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 73,
+        "end_line": 1,
+        "end_col": 74
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 1,
+        "start_col": 74,
+        "end_line": 1,
+        "end_col": 75
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "}",
+      "token_type": "PUNCTUATION",
+      "range": {
+        "start_line": 1,
+        "start_col": 75,
+        "end_line": 1,
+        "end_col": 76
+      },
+      "label": "SAFE",
+      "score": 0.0
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 7,
+    "info": 0,
+    "score": 86,
+    "tokens_total": 32,
+    "tokens_malicious": 0,
+    "tokens_suspicious": 7,
+    "lexical_errors": 0,
+    "syntax_errors": 0
+  },
+  "engine": {
+    "ml_mode": "on",
+    "ml_model_id": "separate_java_hist_gradient_boosting_20261002_195407",
+    "taint": "none",
+    "version": "0.1.0",
+    "elapsed_ms": 148.359,
+    "parser": "lexer-only"
+  }
+}

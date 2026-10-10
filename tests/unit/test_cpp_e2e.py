@@ -50,7 +50,7 @@ def test_cpp_api_samples(client: TestClient):
     resp = client.get("/api/samples?language=cpp")
     assert resp.status_code == 200
     samples = resp.json()
-    assert len(samples) == 5
+    assert len(samples) >= 35
     sample_ids = {s["id"] for s in samples}
     assert "cpp-vuln-strcpy-argv" in sample_ids
     assert "cpp-vuln-format-string" in sample_ids

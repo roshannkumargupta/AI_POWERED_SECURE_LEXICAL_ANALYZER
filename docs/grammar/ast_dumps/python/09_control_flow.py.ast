@@ -1,0 +1,41 @@
+Module(
+  body=[
+    For(
+      target=Name(id='i', ctx=Store()),
+      iter=Call(
+        func=Name(id='range', ctx=Load()),
+        args=[
+          Constant(value=10)],
+        keywords=[]),
+      body=[
+        If(
+          test=Compare(
+            left=Name(id='i', ctx=Load()),
+            ops=[
+              Eq()],
+            comparators=[
+              Constant(value=5)]),
+          body=[
+            Break()],
+          orelse=[
+            If(
+              test=Compare(
+                left=BinOp(
+                  left=Name(id='i', ctx=Load()),
+                  op=Mod(),
+                  right=Constant(value=2)),
+                ops=[
+                  Eq()],
+                comparators=[
+                  Constant(value=0)]),
+              body=[
+                Continue()],
+              orelse=[
+                Expr(
+                  value=Call(
+                    func=Name(id='print', ctx=Load()),
+                    args=[
+                      Name(id='i', ctx=Load())],
+                    keywords=[]))])])],
+      orelse=[])],
+  type_ignores=[])

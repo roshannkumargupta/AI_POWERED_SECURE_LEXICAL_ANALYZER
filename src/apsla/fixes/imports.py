@@ -362,11 +362,15 @@ def ensure_import_cpp(
             is_cpp = False
         else:
             is_cpp = bool(
-                re.search(r"\b(?:std::|namespace\b|cout\b|cin\b|template\b|<iostream>|<cstdio>)", source)
+                re.search(
+                    r"\b(?:std::|namespace\b|cout\b|cin\b|template\b|<iostream>|<cstdio>)", source
+                )
             )
     else:
         is_cpp = bool(
-            re.search(r"\b(?:std::|namespace\b|cout\b|cin\b|template\b|<iostream>|<cstdio>)", source)
+            re.search(
+                r"\b(?:std::|namespace\b|cout\b|cin\b|template\b|<iostream>|<cstdio>)", source
+            )
         )
 
     # Resolve header variants
@@ -418,5 +422,3 @@ def ensure_import_cpp(
     )
     new_text = f"#include <{chosen_header}>\n"
     return [Edit(range=edit_range, new_text=new_text)]
-
-

@@ -1,0 +1,17 @@
+{
+  "valid_05.cpp": [
+    "strncpy"
+  ],
+  "valid_12.cpp": [
+    "fopen",
+    "fprintf",
+    "fclose"
+  ],
+  "valid_14.cpp": [
+    "first",
+    "second"
+  ],
+  "valid_15.cpp": [
+    "close"
+  ]
+}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 import pytest
 
@@ -63,6 +64,9 @@ class DummyPlugin:
 
     def syntax_check(self, source: str) -> tuple[bool, str | None]:
         return (True, None)
+
+    def parse_structure(self, source: str) -> Any:
+        return None
 
     def dangerous_apis(self) -> dict[str, str]:
         return {"dummy_exec": "Executes raw string command"}

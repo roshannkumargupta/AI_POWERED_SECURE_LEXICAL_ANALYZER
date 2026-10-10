@@ -1,0 +1,212 @@
+{
+  "ext_01_user_report_servlet.java": {
+    "label": "MALICIOUS",
+    "note": "File opened directly with user parameter without path canonicalization",
+    "length": 477
+  },
+  "ext_02_safe_path_resolve.java": {
+    "label": "SAFE",
+    "note": "Path traversal prevented using normalize and startsWith verification",
+    "length": 441
+  },
+  "ext_03_payment_gateway_md5.java": {
+    "label": "MALICIOUS",
+    "note": "MD5 weak cryptographic hash used for payment verification signature",
+    "length": 289
+  },
+  "ext_04_token_generator_secure_random.java": {
+    "label": "SAFE",
+    "note": "SecureRandom and Base64 url encoding for session token generation",
+    "length": 387
+  },
+  "ext_05_backup_db_runtime_exec.java": {
+    "label": "MALICIOUS",
+    "note": "Runtime.getRuntime().exec command injection via concatenated table name",
+    "length": 236
+  },
+  "ext_06_docker_process_builder.java": {
+    "label": "SAFE",
+    "note": "ProcessBuilder with safe explicit argument array",
+    "length": 273
+  },
+  "ext_07_hibernate_sqli_search.java": {
+    "label": "MALICIOUS",
+    "note": "Hibernate HQL string concatenation leading to SQL injection",
+    "length": 288
+  },
+  "ext_08_prepared_statement_user.java": {
+    "label": "SAFE",
+    "note": "Parameterized JDBC query preventing SQL injection",
+    "length": 347
+  },
+  "ext_09_session_deserialize_ois.java": {
+    "label": "MALICIOUS",
+    "note": "Unsafe ObjectInputStream readObject on arbitrary incoming stream",
+    "length": 249
+  },
+  "ext_10_json_jackson_deserialize.java": {
+    "label": "SAFE",
+    "note": "Safe Jackson JSON parsing with strict DTO typing",
+    "length": 318
+  },
+  "ext_11_xxe_document_builder.java": {
+    "label": "MALICIOUS",
+    "note": "XML DocumentBuilderFactory vulnerable to XXE external entity resolution",
+    "length": 328
+  },
+  "ext_12_safe_xxe_configured.java": {
+    "label": "SAFE",
+    "note": "DocumentBuilderFactory hardened with disallow-doctype-decl feature",
+    "length": 372
+  },
+  "ext_13_ssrf_url_openstream.java": {
+    "label": "MALICIOUS",
+    "note": "Direct URL openStream on user-controlled endpoint parameter (SSRF)",
+    "length": 251
+  },
+  "ext_14_safe_http_client_allowed_hosts.java": {
+    "label": "SAFE",
+    "note": "Host validation against trusted domain whitelist before HTTP dispatch",
+    "length": 386
+  },
+  "ext_15_hardcoded_aws_credentials.java": {
+    "label": "MALICIOUS",
+    "note": "Embedded static AWS production access key and secret token",
+    "length": 213
+  },
+  "ext_16_env_secret_retrieval.java": {
+    "label": "SAFE",
+    "note": "Retrieval of cloud credentials from environment variables",
+    "length": 158
+  },
+  "ext_17_crypto_des_ecb_cipher.java": {
+    "label": "MALICIOUS",
+    "note": "Legacy DES encryption in insecure ECB mode",
+    "length": 320
+  },
+  "ext_18_crypto_aes_gcm_safe.java": {
+    "label": "SAFE",
+    "note": "Authenticated AES-GCM encryption with 128-bit authentication tag",
+    "length": 402
+  },
+  "ext_19_bidi_override_auth.java": {
+    "label": "MALICIOUS",
+    "note": "CVE-2021-42574 Trojan Source bidirectional override in role check",
+    "length": 192
+  },
+  "ext_20_cyrillic_homoglyph_admin.java": {
+    "label": "MALICIOUS",
+    "note": "Cyrillic homoglyph character shadowing administrative identifier",
+    "length": 170
+  },
+  "ext_21_zero_width_auth_bypass.java": {
+    "label": "MALICIOUS",
+    "note": "Invisible zero-width space characters embedded in secret token string",
+    "length": 116
+  },
+  "ext_22_process_builder_shell_injection.java": {
+    "label": "MALICIOUS",
+    "note": "Invoking /bin/sh -c with arbitrary parameter concatenation",
+    "length": 200
+  },
+  "ext_23_base64_hidden_class_load.java": {
+    "label": "MALICIOUS",
+    "note": "Base64 decoded class name passed directly to reflective Class.forName",
+    "length": 302
+  },
+  "ext_24_ldap_unencoded_search.java": {
+    "label": "MALICIOUS",
+    "note": "Unescaped user input inside JNDI LDAP search filter",
+    "length": 384
+  },
+  "ext_25_ldap_safe_filter.java": {
+    "label": "SAFE",
+    "note": "LDAP filter characters sanitized using RFC 4515 escaping rules",
+    "length": 226
+  },
+  "ext_26_insecure_random_seed.java": {
+    "label": "SUSPICIOUS",
+    "note": "java.util.Random PRNG used for security-critical password reset token",
+    "length": 205
+  },
+  "ext_27_secure_random_otp.java": {
+    "label": "SAFE",
+    "note": "CSPRNG SecureRandom used for one-time passcode generation",
+    "length": 226
+  },
+  "ext_28_reflection_class_for_name.java": {
+    "label": "SUSPICIOUS",
+    "note": "Dynamic unconstrained reflective class instantiation",
+    "length": 216
+  },
+  "ext_29_static_handler_registry.java": {
+    "label": "SAFE",
+    "note": "Safe immutable map lookup mapping string tokens to known supplier types",
+    "length": 361
+  },
+  "ext_30_zip_slip_traversal.java": {
+    "label": "MALICIOUS",
+    "note": "Zip Slip vulnerability extracting zip entry path without canonical check",
+    "length": 336
+  },
+  "ext_31_safe_zip_extract.java": {
+    "label": "SAFE",
+    "note": "Zip Slip defense checking getCanonicalPath startsWith destination directory",
+    "length": 560
+  },
+  "ext_32_jwt_hardcoded_hmac.java": {
+    "label": "MALICIOUS",
+    "note": "Hardcoded symmetric HMAC signing secret for JWT tokens",
+    "length": 132
+  },
+  "ext_33_jwt_vault_secret.java": {
+    "label": "SAFE",
+    "note": "JWT secret retrieved securely from environment or external secret vault",
+    "length": 150
+  },
+  "ext_34_spring_sql_native_query.java": {
+    "label": "MALICIOUS",
+    "note": "JPA createNativeQuery with raw input concatenation",
+    "length": 274
+  },
+  "ext_35_spring_jpa_named_param.java": {
+    "label": "SAFE",
+    "note": "Spring Data JPA query with named parameter binding",
+    "length": 325
+  },
+  "ext_36_runtime_grep_exec.java": {
+    "label": "MALICIOUS",
+    "note": "Runtime.getRuntime().exec grep command with unchecked user search expression",
+    "length": 204
+  },
+  "ext_37_bounded_log_reader.java": {
+    "label": "SAFE",
+    "note": "In-memory Java stream log filtering without shell invocation",
+    "length": 339
+  },
+  "ext_38_xss_servlet_writer.java": {
+    "label": "MALICIOUS",
+    "note": "Reflected XSS writing unsanitized request parameter directly into HTML response",
+    "length": 324
+  },
+  "ext_39_xss_escaped_html.java": {
+    "label": "SAFE",
+    "note": "HTML entity escaping on dynamic input string before response emission",
+    "length": 258
+  },
+  "ext_40_sha1_certificate_fingerprint.java": {
+    "label": "MALICIOUS",
+    "note": "SHA-1 digest used for cryptographic identity verification",
+    "length": 241
+  },
+  "ext_41_sha256_hash_service.java": {
+    "label": "SAFE",
+    "note": "SHA-256 secure hash calculation with standard Java Security API",
+    "length": 247
+  },
+  "ext_42_spring_greeting_controller.java": {
+    "label": "SAFE",
+    "note": "Modern Spring REST controller producing serialized JSON response",
+    "length": 219
+  }
+}

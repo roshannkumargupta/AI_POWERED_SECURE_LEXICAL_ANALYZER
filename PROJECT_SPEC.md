@@ -374,6 +374,8 @@ Severity is **never** communicated by color alone. Every badge pairs a color wit
 | **11** | `phase-11` | Carbon emission measurements, throughput, and latency benchmarks |
 | **12** | `phase-12` | Intelligence polish, active learning feedback loop, explainability |
 | **13** | `v1.0` | Comprehensive test suite, packaging, documentation, viva preparation |
+| **14** | `phase-14` | Privacy-preserving telemetry, offline guarantees, and sandbox hardening |
+| **15** | `phase-15` | Local agentic compiler layer (lexical, syntax, semantic, triage, fix, verify, explain) |
 
 ---
 
@@ -388,3 +390,23 @@ Severity is **never** communicated by color alone. Every badge pairs a color wit
    - Update `docs/STATE.md`
    - Author `docs/explained/phaseN.md` (plain-English overview, concept glossary, and 5 viva questions with answers)
    - Commit phase milestone tag and cleanly stop.
+
+---
+
+## 20. Agentic layer
+
+### Goals & Core Philosophy
+SecureLex IDE embeds a modular agent at every stage of the compilation and security analysis pipeline:
+1. **Lexical Stage (`LexerAgent`):** Inspects Unicode anomalies, lexer statistics, and dynamically re-lexes with error recovery or disambiguates ambiguous multi-language files.
+2. **Syntax Stage (`ParserAgent`):** Builds lightweight recursive-descent structure trees (`StructTree`) for Java, JavaScript, and C++, recovering from syntax errors and computing structure quality scores.
+3. **Semantic Stage (`SemanticAgent`):** Executes deterministic AST/token rules and runs normal taint analysis; conditionally activates targeted deep taint tracking only when tainted values reach unresolved calls.
+4. **Triage Stage (`TriageAgent`):** Reviews findings in ambiguous confidence intervals ($[0.40, 0.60]$) to request targeted taint depth or flag items for human review; **strictly prohibited** from deleting, suppressing, or downgrading findings.
+5. **Fix Generation Stage (`FixAgent`):** Ranks deterministic fix candidates (safe > review > manual); if no candidate exists and local LLM is enabled, generates a single alternative edit proposal (kind `llm`).
+6. **Verification Stage (`VerifierAgent`):** Isolates proposed fixes in memory copies, verifies syntax and security elimination via `verify_fix`, and loops with `FixAgent` up to 3 attempts. Only deterministic verification sets `verified = True`.
+7. **Explanation Stage (`ExplainAgent`):** Generates structured plain-English guidance and applies strict token grounding verification against finding facts if LLM rephrasing is enabled.
+8. **Orchestrator (`Orchestrator`):** Coordinates sequential execution, enforces global step/LLM/timeout budgets, maintains immutable audit traces, and provides safe fallback to deterministic outputs.
+
+### Local-Only & Zero-Trust Constraints
+- **Strictly Local:** Powered exclusively by local Ollama instances (e.g., `qwen2.5-coder:3b` at `http://127.0.0.1:11434` or `localhost`). Remote hosts, external cloud APIs, and runtime internet connections are strictly prohibited ("outbound network calls: 0").
+- **Deterministic Authority:** Agents never replace compiler and analyzer engines; they only observe analysis state and choose tools from an explicit 14-tool allowlist.
+- **Robust Prompt-Injection Defense:** Untrusted source code is framed as data between fixed delimiters with line and character limits; LLM outputs are restricted to strict JSON schemas; agent planners cannot delete findings or bypass the fix verifier.

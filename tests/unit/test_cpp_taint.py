@@ -82,8 +82,8 @@ def test_taint_path_getenv_to_popen():
         "#include <stdlib.h>\n"
         "#include <stdio.h>\n"
         "int main() {\n"
-        "    char *env_val = getenv(\"USER_CMD\");\n"
-        "    FILE *fp = popen(env_val, \"r\");\n"
+        '    char *env_val = getenv("USER_CMD");\n'
+        '    FILE *fp = popen(env_val, "r");\n'
         "    return 0;\n"
         "}\n"
     )

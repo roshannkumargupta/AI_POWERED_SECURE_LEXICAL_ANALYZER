@@ -1,0 +1,29 @@
+Module(
+  body=[
+    FunctionDef(
+      name='calculate_tax',
+      args=arguments(
+        posonlyargs=[],
+        args=[
+          arg(
+            arg='amount',
+            annotation=Name(id='float', ctx=Load())),
+          arg(
+            arg='rate',
+            annotation=Name(id='float', ctx=Load()))],
+        kwonlyargs=[],
+        kw_defaults=[],
+        defaults=[
+          Constant(value=0.05)]),
+      body=[
+        Expr(
+          value=Constant(value='Calculate total tax.')),
+        Return(
+          value=BinOp(
+            left=Name(id='amount', ctx=Load()),
+            op=Mult(),
+            right=Name(id='rate', ctx=Load())))],
+      decorator_list=[],
+      returns=Name(id='float', ctx=Load()),
+      type_params=[])],
+  type_ignores=[])

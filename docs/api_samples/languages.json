@@ -1,0 +1,43 @@
+[
+  {
+    "id": "python",
+    "display_name": "Python",
+    "extensions": [
+      ".py",
+      ".pyw"
+    ],
+    "monaco_id": "python"
+  },
+  {
+    "id": "java",
+    "display_name": "Java",
+    "extensions": [
+      ".java"
+    ],
+    "monaco_id": "java"
+  },
+  {
+    "id": "javascript",
+    "display_name": "JavaScript",
+    "extensions": [
+      ".js",
+      ".mjs",
+      ".cjs",
+      ".jsx"
+    ],
+    "monaco_id": "javascript"
+  },
+  {
+    "id": "cpp",
+    "display_name": "C / C++",
+    "extensions": [
+      ".c",
+      ".cc",
+      ".cpp",
+      ".cxx",
+      ".h",
+      ".hpp"
+    ],
+    "monaco_id": "cpp"
+  }
+]

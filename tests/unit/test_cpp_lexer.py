@@ -58,7 +58,9 @@ def test_raw_string_multiline():
 
 
 def test_raw_string_with_prefix():
-    source = 'auto s1 = u8R"(utf8)"; auto s2 = LR"(wide)"; auto s3 = uR"(utf16)"; auto s4 = UR"(utf32)";'
+    source = (
+        'auto s1 = u8R"(utf8)"; auto s2 = LR"(wide)"; auto s3 = uR"(utf16)"; auto s4 = UR"(utf32)";'
+    )
     lexer = CppLexer(source)
     tokens = [t for t in lexer.tokenize() if t.kind == "STRING"]
     assert len(tokens) == 4
@@ -381,8 +383,7 @@ def test_cpp_realistic_snippets_zero_error_tokens(idx: int, code: str) -> None:
 
     error_tokens = [t for t in tokens if t.kind == "ERROR"]
     assert not error_tokens, (
-        f"Snippet #{idx + 1} produced ERROR tokens: {[t.text for t in error_tokens]}\n"
-        f"Code:\n{code}"
+        f"Snippet #{idx + 1} produced ERROR tokens: {[t.text for t in error_tokens]}\nCode:\n{code}"
     )
 
     # Lossless verification

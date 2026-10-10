@@ -50,7 +50,11 @@ def test_cpp_fixture(cpp_file: Path, expected: list[dict[str, str | int]]) -> No
         source=source, language="cpp", filename=cpp_file.name, options={"ml": False}
     )
 
-    actual_pairs = {(f.rule_id, f.range.start_line) for f in result.findings if not f.suppressed}
+    actual_pairs = {
+        (f.rule_id, f.range.start_line)
+        for f in result.findings
+        if not f.suppressed and f.kind == "security"
+    }
     expected_pairs = {(str(e["rule_id"]), int(e["line"])) for e in expected}
 
     assert actual_pairs == expected_pairs, (

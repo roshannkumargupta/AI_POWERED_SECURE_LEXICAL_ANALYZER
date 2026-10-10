@@ -83,17 +83,21 @@ def generate_unbounded_copy_fix(ctx: FixContext) -> list[Fix]:
         arr_size = _extract_array_size(source, dst)
         if arr_size is not None or re.search(rf"\b{re.escape(dst)}\s*\[", source):
             call_edit = Edit(
-                range=Range(start_line=line_no, start_col=col_start, end_line=line_no, end_col=col_end),
+                range=Range(
+                    start_line=line_no, start_col=col_start, end_line=line_no, end_col=col_end
+                ),
                 new_text=f'snprintf({dst}, sizeof({dst}), "%s", {src})',
             )
-            import_edits = ensure_import_cpp(source, "stdio.h", filename=getattr(ctx, "filename", ""))
+            import_edits = ensure_import_cpp(
+                source, "stdio.h", filename=getattr(ctx, "filename", "")
+            )
             all_edits = import_edits + [call_edit]
             return [
                 Fix(
                     id=f"fix-{finding.id}-0",
                     finding_id=finding.id,
                     title="Replace strcpy() with snprintf() bounded copy",
-                    description="Replaces strcpy() with snprintf(dst, sizeof(dst), \"%s\", src) guaranteeing bounds and null termination.",
+                    description='Replaces strcpy() with snprintf(dst, sizeof(dst), "%s", src) guaranteeing bounds and null termination.',
                     confidence="review",
                     kind="rule",
                     edits=all_edits,

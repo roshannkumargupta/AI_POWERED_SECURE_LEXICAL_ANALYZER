@@ -637,7 +637,9 @@ def generate_disabled_tls_fix(ctx: FixContext) -> list[Fix]:
         ]
 
     # Case B: NODE_TLS_REJECT_UNAUTHORIZED = "0" -> comment out
-    m_env = re.search(r"process\.env\.NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*['\"]?0['\"]?", target_line)
+    m_env = re.search(
+        r"process\.env\.NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*['\"]?0['\"]?", target_line
+    )
     if m_env:
         indent = _get_line_indent(target_line)
         edit = Edit(

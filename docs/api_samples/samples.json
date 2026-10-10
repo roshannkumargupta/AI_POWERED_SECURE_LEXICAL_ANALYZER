@@ -1,0 +1,155 @@
+[
+  {
+    "id": "python-vuln-cmd-injection",
+    "title": "Command Injection via Web Parameter",
+    "category": "vulnerable",
+    "language": "python",
+    "filename": "vulnerable_ping.py",
+    "code": "from flask import Flask, request\nimport os\n\napp = Flask(__name__)\n\n@app.route('/ping')\ndef ping():\n    # Untrusted user parameter flows directly into system shell\n    target = request.args.get('ip')\n    os.system('ping -c 1 ' + target)\n    return 'Ping dispatched'\n",
+    "description": "Vulnerable endpoint where an HTTP request parameter enters via request.args.get and reaches the os.system() sink via dynamic string concatenation."
+  },
+  {
+    "id": "python-adv-trojan-source",
+    "title": "Trojan Source Bidi Override Attack",
+    "category": "adversarial",
+    "language": "python",
+    "filename": "trojan_auth.py",
+    "code": "# Trojan Source Bidirectional Override Attack (CVE-2021-42574)\naccess_level = 'user'\n\n# Visual display appears benign, but bidi control reverses execution logic\nif access_level != 'user‮ ⁦# check admin⁩ ⁦':\n    print('Administrative privileges granted!')\nelse:\n    print('Standard access only.')\n",
+    "description": "Adversarial sample exploiting Right-to-Left Override (U+202E) control characters to reverse visual token order while preserving malicious execution semantics."
+  },
+  {
+    "id": "python-adv-cyrillic-homoglyph",
+    "title": "Cyrillic Homoglyph Execution",
+    "category": "adversarial",
+    "language": "python",
+    "filename": "homoglyph_exec.py",
+    "code": "# Confusable homoglyph: Latin 'e' replaced with Cyrillic 'е' (U+0435)\npayload = input('Enter expression: ')\nеxec(payload)\n",
+    "description": "Adversarial obfuscation substituting Latin characters with visually identical Cyrillic counterparts to evade simple keyword-based detection filters."
+  },
+  {
+    "id": "python-safe-subprocess",
+    "title": "Safe Parameterized Subprocess Execution",
+    "category": "safe",
+    "language": "python",
+    "filename": "safe_ping.py",
+    "code": "import subprocess\nimport shlex\n\ndef safe_ping(target_ip: str) -> None:\n    # Verified remediation: array argument vector without shell=True\n    clean_ip = shlex.quote(target_ip)\n    cmd = ['ping', '-c', '1', clean_ip]\n    subprocess.run(cmd, check=True)\n",
+    "description": "Remediated safe implementation using subprocess.run with argument vector and shlex sanitization, immune to shell command injection."
+  },
+  {
+    "id": "java-vuln-sqli-servlet",
+    "title": "SQL Injection via Servlet Parameter",
+    "category": "vulnerable",
+    "language": "java",
+    "filename": "sqli_servlet.java",
+    "code": "import java.io.IOException;\nimport java.sql.Connection;\nimport java.sql.ResultSet;\nimport java.sql.Statement;\nimport javax.servlet.http.HttpServlet;\nimport javax.servlet.http.HttpServletRequest;\nimport javax.servlet.http.HttpServletResponse;\n\npublic class UserServlet extends HttpServlet {\n    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {\n        String id = request.getParameter(\"id\");\n        try {\n            Connection conn = Database.getConnection();\n            Statement stmt = conn.createStatement();\n            String query = \"SELECT * FROM users WHERE id = '\" + id + \"'\";\n            ResultSet rs = stmt.executeQuery(query);\n        } catch (Exception e) {\n            e.printStackTrace();\n        }\n    }\n}\n",
+    "description": "Vulnerable servlet endpoint where user input flows from request.getParameter into a dynamic SQL query string via concatenation, executed by Statement.executeQuery."
+  },
+  {
+    "id": "java-vuln-deserialization",
+    "title": "Insecure ObjectInputStream Deserialization",
+    "category": "vulnerable",
+    "language": "java",
+    "filename": "deser_handler.java",
+    "code": "import java.io.InputStream;\nimport java.io.ObjectInputStream;\nimport javax.servlet.http.HttpServletRequest;\n\npublic class SessionHandler {\n    public Object restoreSession(HttpServletRequest req) throws Exception {\n        InputStream in = req.getInputStream();\n        ObjectInputStream ois = new ObjectInputStream(in);\n        // Deserializing untrusted object stream triggers gadget chains\n        return ois.readObject();\n    }\n}\n",
+    "description": "Insecure Java object deserialization reading arbitrary serialized classes from an HTTP request stream without an ObjectInputFilter whitelist."
+  },
+  {
+    "id": "java-adv-trojan-source",
+    "title": "Trojan Source Bidi Override in Java",
+    "category": "adversarial",
+    "language": "java",
+    "filename": "trojan_auth.java",
+    "code": "public class AccessControl {\n    public static boolean checkAccess(String role) {\n        boolean isAdmin = false;\n        /* ‮ } ⁦if (isAdmin)⁩ ⁦ begin admin check */\n        if (\"admin\".equals(role)) {\n            isAdmin = true;\n        }\n        return isAdmin;\n    }\n}\n",
+    "description": "Adversarial Java sample using Trojan Source bidirectional override characters inside a comment to visually manipulate the apparent control-flow structure (CVE-2021-42574)."
+  },
+  {
+    "id": "java-safe-prepared-statement",
+    "title": "Safe PreparedStatement Parameterization",
+    "category": "safe",
+    "language": "java",
+    "filename": "safe_prepared_stmt.java",
+    "code": "import java.sql.Connection;\nimport java.sql.PreparedStatement;\nimport java.sql.ResultSet;\nimport javax.servlet.http.HttpServletRequest;\n\npublic class SafeUserQuery {\n    public void queryUser(HttpServletRequest request, Connection conn) throws Exception {\n        String id = request.getParameter(\"id\");\n        String sql = \"SELECT * FROM users WHERE id = ?\";\n        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {\n            pstmt.setString(1, id);\n            try (ResultSet rs = pstmt.executeQuery()) {\n                // Safe parameterized execution\n            }\n        }\n    }\n}\n",
+    "description": "Remediated Java query using java.sql.PreparedStatement with '?' parameter placeholder and typed parameter binding, immune to SQL injection."
+  },
+  {
+    "id": "js-vuln-dom-xss",
+    "title": "DOM Cross-Site Scripting via location.hash",
+    "category": "vulnerable",
+    "language": "javascript",
+    "filename": "dom_xss.js",
+    "code": "// Client-side DOM XSS via unvalidated location.hash\nconst hash = location.hash.slice(1);\nconst output = document.getElementById('output');\noutput.innerHTML = 'Welcome ' + hash;\n",
+    "description": "Unsanitized location.hash reaches innerHTML sink via string concatenation, allowing arbitrary script execution in the user's browser context."
+  },
+  {
+    "id": "js-vuln-express-cmd-injection",
+    "title": "Express Command Injection via Web Parameter",
+    "category": "vulnerable",
+    "language": "javascript",
+    "filename": "express_cmd_injection.js",
+    "code": "const express = require('express');\nconst { exec } = require('child_process');\nconst app = express();\n\napp.get('/ping', (req, res) => {\n    const host = req.query.host;\n    exec('ping -c 1 ' + host, (err, stdout) => {\n        res.send(stdout);\n    });\n});\n",
+    "description": "Untrusted query parameter enters via req.query.host and flows into child_process.exec without argument escaping, permitting shell command injection."
+  },
+  {
+    "id": "js-adv-trojan-source",
+    "title": "Trojan Source Bidi Override in JavaScript",
+    "category": "adversarial",
+    "language": "javascript",
+    "filename": "trojan_source.js",
+    "code": "// Trojan Source Bidirectional Override Attack (CVE-2021-42574)\nconst accessLevel = 'user';\n\n/* ‮ } ⁦if (accessLevel === 'admin')⁦ ‮ */\nif (accessLevel === 'user') {\n    console.log('Standard user access');\n}\n",
+    "description": "Adversarial sample exploiting Right-to-Left Override (U+202E) control characters to reverse visual display order while hiding critical conditional checks."
+  },
+  {
+    "id": "js-safe-text-content",
+    "title": "Safe DOM Rendering with textContent",
+    "category": "safe",
+    "language": "javascript",
+    "filename": "safe_text_content.js",
+    "code": "// Safe DOM text rendering via textContent\nconst hash = location.hash.slice(1);\nconst output = document.getElementById('output');\noutput.textContent = 'Welcome ' + hash;\n",
+    "description": "Remediated safe implementation using textContent, which treats input strictly as plain text without HTML parsing, immune to DOM XSS."
+  },
+  {
+    "id": "cpp-vuln-strcpy-argv",
+    "title": "Buffer Overflow via strcpy(argv[1])",
+    "category": "vulnerable",
+    "language": "cpp",
+    "filename": "strcpy_argv.c",
+    "code": "#include <stdio.h>\n#include <string.h>\n\nint main(int argc, char *argv[]) {\n    char dest[32];\n    char *src = argv[1];\n    strcpy(dest, src);\n    printf(\"Processed input: %s\\n\", dest);\n    return 0;\n}\n",
+    "description": "Untrusted command-line argument argv[1] flows directly into a fixed-size buffer using unbounded strcpy(), leading to stack buffer overflow (CWE-120)."
+  },
+  {
+    "id": "cpp-vuln-format-string",
+    "title": "Format String Vulnerability via printf(user_buf)",
+    "category": "vulnerable",
+    "language": "cpp",
+    "filename": "format_string.c",
+    "code": "#include <stdio.h>\n\nint main(int argc, char *argv[]) {\n    char user_buf[64];\n    fgets(user_buf, sizeof(user_buf), stdin);\n    // Non-literal format string allows arbitrary stack reads and %n memory overwrites\n    printf(user_buf);\n    return 0;\n}\n",
+    "description": "User-controlled input passed directly as the format string argument to printf() (CWE-134)."
+  },
+  {
+    "id": "cpp-vuln-cmd-injection",
+    "title": "Command Injection via system() and getenv()",
+    "category": "vulnerable",
+    "language": "cpp",
+    "filename": "command_injection.c",
+    "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(int argc, char *argv[]) {\n    char *user_path = getenv(\"USER_PATH\");\n    char cmd[128];\n    sprintf(cmd, \"ls -la %s\", user_path);\n    system(cmd);\n    return 0;\n}\n",
+    "description": "Untrusted environment variable concatenated into shell command string and executed via system() (CWE-78)."
+  },
+  {
+    "id": "cpp-adv-trojan-source",
+    "title": "Trojan Source Bidi Override in C",
+    "category": "adversarial",
+    "language": "cpp",
+    "filename": "trojan_source.c",
+    "code": "#include <stdio.h>\n#include <stdbool.h>\n\nint main(int argc, char *argv[]) {\n    bool is_admin = false;\n    /* ‮ } ⁦if (is_admin)⁦ ‮ */\n    if (is_admin) {\n        printf(\"Administrative access granted.\\n\");\n    }\n    return 0;\n}\n",
+    "description": "Adversarial sample exploiting Right-to-Left Override (U+202E) control characters in C comment to disguise control flow."
+  },
+  {
+    "id": "cpp-safe-snprintf",
+    "title": "Safe Bounded Buffer Copy with snprintf",
+    "category": "safe",
+    "language": "cpp",
+    "filename": "safe_snprintf.c",
+    "code": "#include <stdio.h>\n\nint main(int argc, char *argv[]) {\n    char dest[32];\n    if (argc > 1) {\n        snprintf(dest, sizeof(dest), \"%s\", argv[1]);\n        printf(\"%s\\n\", dest);\n    }\n    return 0;\n}\n",
+    "description": "Remediated safe implementation using snprintf with sizeof(dest) and an explicit format specifier, preventing buffer overflow."
+  }
+]

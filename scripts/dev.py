@@ -1,17 +1,23 @@
 """Development server runner for SecureLex IDE (APSLA).
 
-Starts the FastAPI backend with uvicorn and auto-reload on port 8000,
+Starts the FastAPI backend with uvicorn on the local development port,
 printing helpful connection information and endpoints.
 """
 
 from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
 
 import uvicorn
 
 
 def main() -> None:
     host = "127.0.0.1"
-    port = 8000
+    port = int(os.environ.get("APSLA_API_PORT", "8010"))
+    project_root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(project_root / "src"))
 
     print("=" * 60)
     print("  SecureLex IDE (APSLA) - Development API Server")
@@ -28,7 +34,10 @@ def main() -> None:
         "apsla.server.app:app",
         host=host,
         port=port,
-        reload=True,
+        # Running the Windows file-watcher spawns a child interpreter. Avoid
+        # that indirection so this runner works reliably from packaged/source
+        # checkouts; restart the process after backend edits.
+        reload=False,
         log_level="info",
     )
 

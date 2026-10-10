@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from apsla.lexing.token import Token
 from apsla.models import Finding, Fix, Range, Severity, TaintPathStep
@@ -111,6 +111,10 @@ class LanguagePlugin(Protocol):
 
     def syntax_check(self, source: str) -> tuple[bool, str | None]:
         """Check whether source is syntactically well-formed."""
+        ...
+
+    def parse_structure(self, source: str) -> Any:
+        """Parse source into a lightweight StructTree representation."""
         ...
 
     def dangerous_apis(self) -> dict[str, str]:

@@ -106,6 +106,7 @@ class UnifiedModelWrapper:
     def __init__(self, model_type: str, seed: int = 42) -> None:
         self.model_type = model_type
         self.seed = seed
+        self.use_lang_features: bool = False
         self.model: Any = None
         self._init_model()
 
@@ -113,21 +114,22 @@ class UnifiedModelWrapper:
         if self.model_type == "logistic_regression":
             self.model = LogisticRegression(
                 class_weight="balanced",
-                max_iter=300,
+                max_iter=500,
+                tol=1e-3,
                 random_state=self.seed,
             )
         elif self.model_type == "random_forest":
             self.model = RandomForestClassifier(
-                n_estimators=100,
-                max_depth=14,
+                n_estimators=60,
+                max_depth=12,
                 class_weight="balanced",
                 random_state=self.seed,
-                n_jobs=1,
+                n_jobs=-1,
             )
         elif self.model_type == "hist_gradient_boosting":
             self.model = HistGradientBoostingClassifier(
                 class_weight="balanced",
-                max_iter=100,
+                max_iter=80,
                 random_state=self.seed,
             )
         elif self.model_type == "windowed_bilstm":
@@ -136,20 +138,33 @@ class UnifiedModelWrapper:
         else:
             raise ValueError(f"Unknown model_type: {self.model_type}")
 
+    @staticmethod
+    def _augment_flat_with_lang(X_flat: np.ndarray, lang_ids: np.ndarray | None) -> np.ndarray:
+        if lang_ids is None:
+            lang_ids = np.zeros(len(X_flat), dtype=np.int64)
+        one_hot = np.zeros((len(X_flat), 4), dtype=np.float32)
+        one_hot[np.arange(len(lang_ids)), np.clip(lang_ids, 0, 3)] = 1.0
+        return np.hstack([X_flat, one_hot])
+
     def fit(
         self,
         X_3d: np.ndarray,
         X_flat: np.ndarray,
         y: np.ndarray,
         lang_ids: np.ndarray | None = None,
+        use_lang_features: bool = False,
         epochs: int = 5,
         batch_size: int = 128,
         lr: float = 1e-3,
         val_data: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray] | None = None,
     ) -> None:
         """Trains the underlying model."""
+        self.use_lang_features = use_lang_features
         if self.model_type in ("logistic_regression", "random_forest", "hist_gradient_boosting"):
-            self.model.fit(X_flat, y)
+            X_train = (
+                self._augment_flat_with_lang(X_flat, lang_ids) if self.use_lang_features else X_flat
+            )
+            self.model.fit(X_train, y)
 
         elif self.model_type == "windowed_bilstm":
             device = torch.device("cpu")
@@ -188,6 +203,64 @@ class UnifiedModelWrapper:
                     loss.backward()
                     optimizer.step()
 
+    def finetune_neural(
+        self,
+        X_3d: np.ndarray,
+        y: np.ndarray,
+        lang_ids: np.ndarray | None = None,
+        epochs: int = 3,
+        batch_size: int = 128,
+        lr: float = 5e-4,
+    ) -> None:
+        """Fine-tunes WindowedBiLSTM weights on a specific language data slice."""
+        if self.model_type != "windowed_bilstm":
+            return
+        device = torch.device("cpu")
+        self.model.to(device)
+        self.model.train()
+
+        classes, counts = np.unique(y, return_counts=True)
+        total = len(y)
+        n_classes = 3
+        weights_arr = np.ones(n_classes, dtype=np.float32)
+        for c, cnt in zip(classes, counts, strict=False):
+            weights_arr[c] = total / (n_classes * cnt)
+        class_weights = torch.tensor(weights_arr, dtype=torch.float32, device=device)
+
+        criterion = nn.CrossEntropyLoss(weight=class_weights)
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr, weight_decay=1e-4)
+
+        N = len(y)
+        indices = np.arange(N)
+        if lang_ids is None:
+            lang_ids = np.zeros(N, dtype=np.int64)
+
+        for epoch in range(epochs):
+            np.random.shuffle(indices)
+            for start_idx in range(0, N, batch_size):
+                batch_idx = indices[start_idx : start_idx + batch_size]
+                bx = torch.tensor(X_3d[batch_idx], dtype=torch.float32, device=device)
+                blang = torch.tensor(lang_ids[batch_idx], dtype=torch.long, device=device)
+                by = torch.tensor(y[batch_idx], dtype=torch.long, device=device)
+
+                optimizer.zero_grad()
+                logits = self.model(bx, blang)
+                loss = criterion(logits, by)
+                loss.backward()
+                optimizer.step()
+
+    def clone(self) -> UnifiedModelWrapper:
+        """Creates a deep copy of the model wrapper."""
+        wrapper = UnifiedModelWrapper(model_type=self.model_type, seed=self.seed)
+        wrapper.use_lang_features = self.use_lang_features
+        if self.model_type == "windowed_bilstm":
+            wrapper.model.load_state_dict(self.model.state_dict())
+        else:
+            import copy
+
+            wrapper.model = copy.deepcopy(self.model)
+        return wrapper
+
     def predict_proba(
         self,
         X_3d: np.ndarray,
@@ -197,10 +270,13 @@ class UnifiedModelWrapper:
     ) -> np.ndarray:
         """Predicts calibrated class probabilities (SAFE, SUSPICIOUS, MALICIOUS)."""
         if self.model_type in ("logistic_regression", "random_forest", "hist_gradient_boosting"):
-            probs = self.model.predict_proba(X_flat)
+            X_eval = (
+                self._augment_flat_with_lang(X_flat, lang_ids) if self.use_lang_features else X_flat
+            )
+            probs = self.model.predict_proba(X_eval)
             # Ensure 3-column probability array
             if probs.shape[1] < 3:
-                full_probs = np.zeros((len(X_flat), 3), dtype=np.float32)
+                full_probs = np.zeros((len(X_eval), 3), dtype=np.float32)
                 for i, c in enumerate(self.model.classes_):
                     full_probs[:, c] = probs[:, i]
                 probs = full_probs
@@ -278,8 +354,9 @@ class UnifiedModelWrapper:
             raise RuntimeError(f"Model file size ({file_size_mb:.2f} MB) exceeds 50 MB limit!")
         return file_path
 
-    def load(self, model_file: Path) -> None:
+    def load(self, model_file: Path, use_lang_features: bool = False) -> None:
         """Loads model weights from disk."""
+        self.use_lang_features = use_lang_features
         if self.model_type == "windowed_bilstm":
             self.model = WindowedBiLSTM()
             self.model.load_state_dict(torch.load(model_file, map_location=torch.device("cpu")))

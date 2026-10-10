@@ -1,0 +1,21 @@
+Module(
+  body=[
+    Import(
+      names=[
+        alias(name='os')]),
+    Import(
+      names=[
+        alias(name='sys', asname='system')]),
+    ImportFrom(
+      module='collections',
+      names=[
+        alias(name='defaultdict'),
+        alias(name='Counter')],
+      level=0),
+    ImportFrom(
+      module='typing',
+      names=[
+        alias(name='Optional'),
+        alias(name='List')],
+      level=0)],
+  type_ignores=[])

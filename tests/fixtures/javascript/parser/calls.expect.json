@@ -1,0 +1,18 @@
+{
+  "valid_01.js": [
+    "require",
+    "express.Router",
+    "router.get",
+    "res.json"
+  ],
+  "valid_07.js": [
+    "JSON.parse",
+    "console.error",
+    "console.log"
+  ],
+  "valid_10.js": [
+    "require",
+    "execFile",
+    "console.log"
+  ]
+}

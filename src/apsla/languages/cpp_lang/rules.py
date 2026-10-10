@@ -96,7 +96,11 @@ class CppUnboundedCopyRule(Rule):
                     rng=tr.range,
                     message=tr.message,
                     severity_override=sev,
-                    evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                    evidence={
+                        "taint_confirmed": True,
+                        "source": tr.source_text,
+                        "sink": tr.sink_text,
+                    },
                     taint_path=tr.path,
                 )
                 if "gets" in tr.sink_text:
@@ -163,7 +167,11 @@ class CppOutOfBoundsLengthRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -190,7 +198,9 @@ class CppOutOfBoundsLengthRule(Rule):
                 if not any(f.range.start_line == line for f in findings):
                     findings.append(
                         self.create_finding(
-                            rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                            rng=Range(
+                                start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                            ),
                             message=f"Wrong sizeof operand: {m.group(1)} uses sizeof({sizeof_var}) instead of sizeof({dest_var}).",
                             evidence={"dest": dest_var, "src": src_var, "sizeof": sizeof_var},
                         )
@@ -228,7 +238,11 @@ class CppFormatStringRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -268,7 +282,9 @@ class CppFormatStringRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message=f"Non-literal format string passed to {fn}(); use an explicit format specifier like '%s'.",
                         evidence={"call": m.group(0), "format_arg": fmt_arg},
                     )
@@ -306,7 +322,9 @@ class CppScanfNoWidthRule(Rule):
             # Check if format contains '%s' without width
             # Valid bounded: %31s, %100s
             # Vulnerable unbounded: %s (ignoring %*s or %d)
-            if re.search(r'"[^"]*%s[^"]*"', args_str) and not re.search(r'"[^"]*%\d+s[^"]*"', args_str):
+            if re.search(r'"[^"]*%s[^"]*"', args_str) and not re.search(
+                r'"[^"]*%\d+s[^"]*"', args_str
+            ):
                 start_u16 = context.offset_map.py_to_utf16(m.start())
                 end_u16 = context.offset_map.py_to_utf16(m.end())
                 line, col = context.offset_map.utf16_to_pos(start_u16)
@@ -314,7 +332,9 @@ class CppScanfNoWidthRule(Rule):
 
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message=f"Unbounded format string '%s' in {m.group(1)}(); specify maximum field width.",
                         evidence={"call": m.group(0)},
                     )
@@ -352,7 +372,11 @@ class CppCommandInjectionRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -376,7 +400,9 @@ class CppCommandInjectionRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message=f"Command execution via {m.group(1)}() with dynamic command string.",
                         evidence={"call": m.group(0), "cmd": cmd_arg},
                     )
@@ -414,7 +440,11 @@ class CppIntegerOverflowAllocRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -434,7 +464,9 @@ class CppIntegerOverflowAllocRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message=f"Potential integer overflow in malloc({expr}); validate multiplication or use calloc.",
                         evidence={"call": m.group(0), "expr": expr},
                     )
@@ -492,7 +524,9 @@ class CppUseAfterFreeRule(Rule):
 
                     findings.append(
                         self.create_finding(
-                            rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                            rng=Range(
+                                start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                            ),
                             message=f"Pointer '{ptr_name}' used after being freed without reassignment (use-after-free).",
                             evidence={"pointer": ptr_name, "noisy": True},
                         )
@@ -545,9 +579,18 @@ class CppDoubleFreeRule(Rule):
 
                         findings.append(
                             self.create_finding(
-                                rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                                rng=Range(
+                                    start_line=line,
+                                    start_col=col,
+                                    end_line=end_line,
+                                    end_col=end_col,
+                                ),
                                 message=f"Double free of pointer '{ptr1}' without reassignment.",
-                                evidence={"pointer": ptr1, "first_free": m1.group(0), "second_free": m2.group(0)},
+                                evidence={
+                                    "pointer": ptr1,
+                                    "first_free": m1.group(0),
+                                    "second_free": m2.group(0),
+                                },
                             )
                         )
                         break
@@ -582,7 +625,11 @@ class CppPathTraversalRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -664,7 +711,10 @@ class CppHardcodedSecretRule(Rule):
 
             secret_val = m.group(1)
             # Filter dummy placeholders
-            if any(dummy in secret_val.lower() for dummy in ("placeholder", "example", "changeme", "your_api_key")):
+            if any(
+                dummy in secret_val.lower()
+                for dummy in ("placeholder", "example", "changeme", "your_api_key")
+            ):
                 continue
 
             start_u16 = context.offset_map.py_to_utf16(m.start())
@@ -753,7 +803,11 @@ class CppAllocaRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -776,7 +830,9 @@ class CppAllocaRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message="Variable stack allocation via alloca() can exhaust stack memory.",
                         evidence={"call": m.group(0), "arg": arg},
                     )

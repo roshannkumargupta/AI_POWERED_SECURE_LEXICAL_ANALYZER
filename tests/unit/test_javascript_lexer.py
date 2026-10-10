@@ -153,7 +153,7 @@ REALISTIC_JS_FILES = [
         });
 
         module.exports = router;
-        """
+        """,
     ),
     # 2. React JSX Component with hooks
     (
@@ -195,7 +195,7 @@ REALISTIC_JS_FILES = [
                 </section>
             );
         }
-        """
+        """,
     ),
     # 3. Node.js HTTP Server with Event Emitters
     (
@@ -218,7 +218,7 @@ REALISTIC_JS_FILES = [
         });
 
         server.listen(3000, '127.0.0.1');
-        """
+        """,
     ),
     # 4. Modern ES2024 Class with private fields and static block
     (
@@ -253,7 +253,7 @@ REALISTIC_JS_FILES = [
                 return BankAccount.#totalAccounts;
             }
         }
-        """
+        """,
     ),
     # 5. Generator and Async Generator functions
     (
@@ -277,7 +277,7 @@ REALISTIC_JS_FILES = [
                 page++;
             }
         }
-        """
+        """,
     ),
     # 6. Number literals: hex, binary, octal, bigints, separators
     (
@@ -291,7 +291,7 @@ REALISTIC_JS_FILES = [
         const float2 = .95;
         const legacyOctal = 0777;
         const result = hex + bin + oct + Number(big);
-        """
+        """,
     ),
     # 7. Obfuscated patterns: base64, char codes, escapes
     (
@@ -303,7 +303,7 @@ REALISTIC_JS_FILES = [
         const hexString = "\\x48\\x65\\x6c\\x6c\\x6f";
         const unicodeStr = "\\u0048\\u0065\\u006c\\u006c\\u006f";
         const codePoint = "\\u{1F600}";
-        """
+        """,
     ),
     # 8. Complex Regex with flags and character classes
     (
@@ -312,7 +312,7 @@ REALISTIC_JS_FILES = [
         const emailRe = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/iu;
         const urlRe = /https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)/d;
         const multilineSlash = /foo\\/bar\\/[0-9]+/gims;
-        """
+        """,
     ),
     # 9. Modern operators: ??, ?., &&=, ||=, ??=, **=
     (
@@ -327,7 +327,7 @@ REALISTIC_JS_FILES = [
         let pow = 2;
         pow **= 8;
         const isReady = (pow > 100) ? true : false;
-        """
+        """,
     ),
     # 10. CommonJS module with exports and require
     (
@@ -346,7 +346,7 @@ REALISTIC_JS_FILES = [
             readConfig,
             version: '1.0.0',
         };
-        """
+        """,
     ),
     # 11. ESM Module with import and export varieties
     (
@@ -363,7 +363,7 @@ REALISTIC_JS_FILES = [
             }
         }
         export { DefaultClient as Client };
-        """
+        """,
     ),
     # 12. DOM manipulation and events
     (
@@ -378,7 +378,7 @@ REALISTIC_JS_FILES = [
                 console.log('Submitted', payload);
             });
         });
-        """
+        """,
     ),
     # 13. Async / Await with Promise combinators and try/finally
     (
@@ -396,7 +396,7 @@ REALISTIC_JS_FILES = [
                 clearTimeout(timeoutId);
             }
         }
-        """
+        """,
     ),
     # 14. Web Worker and MessageChannel
     (
@@ -409,7 +409,7 @@ REALISTIC_JS_FILES = [
                 self.postMessage({ type: 'RESULT', result });
             }
         });
-        """
+        """,
     ),
     # 15. Shebang, comments, HTML comments, Unicode identifiers
     (
@@ -425,7 +425,7 @@ REALISTIC_JS_FILES = [
         const _private = true;
         console.log(π, 日本語, $element, _private);
         --> End HTML comment line
-        """
+        """,
     ),
 ]
 

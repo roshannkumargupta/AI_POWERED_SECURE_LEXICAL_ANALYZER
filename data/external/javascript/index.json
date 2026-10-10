@@ -1,0 +1,212 @@
+{
+  "ext_01_user_report_open.js": {
+    "label": "MALICIOUS",
+    "note": "fs.readFile path traversal via direct query string concatenation",
+    "length": 195
+  },
+  "ext_02_safe_path_resolve.js": {
+    "label": "SAFE",
+    "note": "path.basename sanitization preventing directory escape",
+    "length": 268
+  },
+  "ext_03_payment_gateway_md5.js": {
+    "label": "MALICIOUS",
+    "note": "crypto.createHash with insecure MD5 for payment signature verification",
+    "length": 154
+  },
+  "ext_04_token_generator_crypto.js": {
+    "label": "SAFE",
+    "note": "CSPRNG crypto.randomBytes generating session authorization token",
+    "length": 121
+  },
+  "ext_05_backup_db_system.js": {
+    "label": "MALICIOUS",
+    "note": "child_process.exec command injection via unsanitized table name",
+    "length": 173
+  },
+  "ext_06_docker_exec_spawn.js": {
+    "label": "SAFE",
+    "note": "child_process.spawn with safe explicit argument array without shell",
+    "length": 148
+  },
+  "ext_07_eval_math_calc.js": {
+    "label": "MALICIOUS",
+    "note": "eval on arbitrary user formula string leading to code execution",
+    "length": 128
+  },
+  "ext_08_safe_math_parser.js": {
+    "label": "SAFE",
+    "note": "Safe numeric evaluation using Math.pow and Number coercion",
+    "length": 193
+  },
+  "ext_09_sql_search_users.js": {
+    "label": "MALICIOUS",
+    "note": "Raw SQL query concatenation with user username input",
+    "length": 153
+  },
+  "ext_10_sql_parameterized.js": {
+    "label": "SAFE",
+    "note": "Parameterized database query using SQL placeholders",
+    "length": 161
+  },
+  "ext_11_dom_xss_innerhtml.js": {
+    "label": "MALICIOUS",
+    "note": "DOM XSS assigning document.location.search to innerHTML",
+    "length": 175
+  },
+  "ext_12_safe_dom_textcontent.js": {
+    "label": "SAFE",
+    "note": "Safe DOM insertion via textContent property preventing script execution",
+    "length": 192
+  },
+  "ext_13_xss_dangerously_set.js": {
+    "label": "MALICIOUS",
+    "note": "React dangerouslySetInnerHTML with unvalidated user profile bio",
+    "length": 101
+  },
+  "ext_14_dom_purify_react.js": {
+    "label": "SAFE",
+    "note": "DOMPurify sanitization before dangerouslySetInnerHTML binding",
+    "length": 185
+  },
+  "ext_15_hardcoded_jwt_secret.js": {
+    "label": "MALICIOUS",
+    "note": "Hardcoded symmetric JWT authorization signing key in module scope",
+    "length": 189
+  },
+  "ext_16_env_jwt_secret.js": {
+    "label": "SAFE",
+    "note": "JWT secret loaded from process.env with runtime presence check",
+    "length": 227
+  },
+  "ext_17_prototype_pollution_assign.js": {
+    "label": "MALICIOUS",
+    "note": "Object.assign on parsed JSON body allowing prototype pollution",
+    "length": 137
+  },
+  "ext_18_safe_shallow_clone.js": {
+    "label": "SAFE",
+    "note": "Safe property copying verifying own properties and key whitelist",
+    "length": 234
+  },
+  "ext_19_bidi_override_check.js": {
+    "label": "MALICIOUS",
+    "note": "Trojan Source bidirectional control characters spoofing security check",
+    "length": 102
+  },
+  "ext_20_cyrillic_homoglyph_var.js": {
+    "label": "MALICIOUS",
+    "note": "Cyrillic homoglyph variable shadowing legitimate auth identifier",
+    "length": 70
+  },
+  "ext_21_zero_width_auth.js": {
+    "label": "MALICIOUS",
+    "note": "Zero width spaces hidden inside authentication secret literal",
+    "length": 41
+  },
+  "ext_22_exec_sync_shell.js": {
+    "label": "MALICIOUS",
+    "note": "execSync executing shell string containing user archive parameter",
+    "length": 121
+  },
+  "ext_23_base64_payload_eval.js": {
+    "label": "MALICIOUS",
+    "note": "Decoding Base64 string from client and executing directly via eval",
+    "length": 115
+  },
+  "ext_24_ssrf_axios_get.js": {
+    "label": "MALICIOUS",
+    "note": "SSRF vulnerability making HTTP requests to arbitrary unvalidated URLs",
+    "length": 170
+  },
+  "ext_25_safe_url_fetch.js": {
+    "label": "SAFE",
+    "note": "URL protocol and hostname validation against trusted whitelist",
+    "length": 261
+  },
+  "ext_26_math_random_password.js": {
+    "label": "SUSPICIOUS",
+    "note": "Insecure Math.random used for OTP password reset token",
+    "length": 100
+  },
+  "ext_27_crypto_random_reset.js": {
+    "label": "SAFE",
+    "note": "crypto.randomInt for cryptographically secure OTP generation",
+    "length": 124
+  },
+  "ext_28_dynamic_require_plugin.js": {
+    "label": "SUSPICIOUS",
+    "note": "Dynamic unconstrained module require from user parameter",
+    "length": 104
+  },
+  "ext_29_static_require_map.js": {
+    "label": "SAFE",
+    "note": "Dictionary map for loading authorized plugin modules",
+    "length": 159
+  },
+  "ext_30_document_write_sink.js": {
+    "label": "MALICIOUS",
+    "note": "document.write with user location search parameter",
+    "length": 146
+  },
+  "ext_31_safe_element_append.js": {
+    "label": "SAFE",
+    "note": "Creating DOM elements and assigning textContent securely",
+    "length": 157
+  },
+  "ext_32_weak_sha1_hash.js": {
+    "label": "MALICIOUS",
+    "note": "Deprecated SHA-1 hashing algorithm for user checksums",
+    "length": 127
+  },
+  "ext_33_safe_sha256_hash.js": {
+    "label": "SAFE",
+    "note": "SHA-256 secure hash calculation via standard crypto module",
+    "length": 131
+  },
+  "ext_34_express_sql_login.js": {
+    "label": "MALICIOUS",
+    "note": "Direct SQL injection in authentication query",
+    "length": 201
+  },
+  "ext_35_pg_client_login.js": {
+    "label": "SAFE",
+    "note": "Parameterized login verification preventing credential bypass",
+    "length": 197
+  },
+  "ext_36_popen_grep_logs.js": {
+    "label": "MALICIOUS",
+    "note": "exec executing grep with user filter",
+    "length": 180
+  },
+  "ext_37_safe_log_search.js": {
+    "label": "SAFE",
+    "note": "Streams-based text file search without spawning subprocesses",
+    "length": 341
+  },
+  "ext_38_new_function_calc.js": {
+    "label": "MALICIOUS",
+    "note": "Dynamic code injection using new Function constructor",
+    "length": 94
+  },
+  "ext_39_safe_json_calc.js": {
+    "label": "SAFE",
+    "note": "JSON.parse for safe data structures instead of dynamic code execution",
+    "length": 142
+  },
+  "ext_40_cors_wildcard_credentials.js": {
+    "label": "SUSPICIOUS",
+    "note": "Insecure CORS header with wildcard reflection",
+    "length": 171
+  },
+  "ext_41_safe_cors_origin.js": {
+    "label": "SAFE",
+    "note": "Strict origin matching for CORS response headers",
+    "length": 190
+  },
+  "ext_42_express_health_route.js": {
+    "label": "SAFE",
+    "note": "Standard Express JSON telemetry status handler",
+    "length": 95
+  }
+}

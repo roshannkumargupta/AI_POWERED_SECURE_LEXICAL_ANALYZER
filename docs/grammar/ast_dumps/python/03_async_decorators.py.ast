@@ -1,0 +1,38 @@
+Module(
+  body=[
+    Import(
+      names=[
+        alias(name='asyncio')]),
+    AsyncFunctionDef(
+      name='fetch_item',
+      args=arguments(
+        posonlyargs=[],
+        args=[
+          arg(
+            arg='item_id',
+            annotation=Name(id='int', ctx=Load()))],
+        kwonlyargs=[],
+        kw_defaults=[],
+        defaults=[]),
+      body=[
+        Expr(
+          value=Await(
+            value=Call(
+              func=Attribute(
+                value=Name(id='asyncio', ctx=Load()),
+                attr='sleep',
+                ctx=Load()),
+              args=[
+                Constant(value=0.1)],
+              keywords=[]))),
+        Return(
+          value=Dict(
+            keys=[
+              Constant(value='id')],
+            values=[
+              Name(id='item_id', ctx=Load())]))],
+      decorator_list=[
+        Name(id='decorator', ctx=Load())],
+      returns=Name(id='dict', ctx=Load()),
+      type_params=[])],
+  type_ignores=[])

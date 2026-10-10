@@ -13,7 +13,9 @@ def test_insert_commonjs_require():
         cjs_stmt="const crypto = require('crypto');",
     )
     res = apply_edits(source, edits) if edits else source
-    expected = "const fs = require('fs');\nconst crypto = require('crypto');\n\nfunction main() {}\n"
+    expected = (
+        "const fs = require('fs');\nconst crypto = require('crypto');\n\nfunction main() {}\n"
+    )
     assert res == expected
 
 

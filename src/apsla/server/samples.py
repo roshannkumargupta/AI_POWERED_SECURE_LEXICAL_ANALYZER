@@ -2,7 +2,22 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
+from apsla.samples.loader import load_sample, load_samples
 from apsla.server.schemas import SampleItem
+
+_SENIOR_PATH = Path(__file__).resolve().parents[1] / "samples" / "senior_results.json"
+
+
+def _senior_results() -> dict[str, dict[str, object]]:
+    try:
+        data = json.loads(_SENIOR_PATH.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
 
 PYTHON_SAMPLES: list[SampleItem] = [
     SampleItem(
@@ -292,7 +307,7 @@ CPP_SAMPLES: list[SampleItem] = [
             "    char dest[32];\n"
             "    char *src = argv[1];\n"
             "    strcpy(dest, src);\n"
-            "    printf(\"Processed input: %s\\n\", dest);\n"
+            '    printf("Processed input: %s\\n", dest);\n'
             "    return 0;\n"
             "}\n"
         ),
@@ -331,9 +346,9 @@ CPP_SAMPLES: list[SampleItem] = [
             "#include <stdio.h>\n"
             "#include <stdlib.h>\n\n"
             "int main(int argc, char *argv[]) {\n"
-            "    char *user_path = getenv(\"USER_PATH\");\n"
+            '    char *user_path = getenv("USER_PATH");\n'
             "    char cmd[128];\n"
-            "    sprintf(cmd, \"ls -la %s\", user_path);\n"
+            '    sprintf(cmd, "ls -la %s", user_path);\n'
             "    system(cmd);\n"
             "    return 0;\n"
             "}\n"
@@ -355,7 +370,7 @@ CPP_SAMPLES: list[SampleItem] = [
             "    bool is_admin = false;\n"
             "    /* \u202e } \u2066if (is_admin)\u2066 \u202e */\n"
             "    if (is_admin) {\n"
-            "        printf(\"Administrative access granted.\\n\");\n"
+            '        printf("Administrative access granted.\\n");\n'
             "    }\n"
             "    return 0;\n"
             "}\n"
@@ -376,8 +391,8 @@ CPP_SAMPLES: list[SampleItem] = [
             "int main(int argc, char *argv[]) {\n"
             "    char dest[32];\n"
             "    if (argc > 1) {\n"
-            "        snprintf(dest, sizeof(dest), \"%s\", argv[1]);\n"
-            "        printf(\"%s\\n\", dest);\n"
+            '        snprintf(dest, sizeof(dest), "%s", argv[1]);\n'
+            '        printf("%s\\n", dest);\n'
             "    }\n"
             "    return 0;\n"
             "}\n"
@@ -400,15 +415,112 @@ def get_samples(language: str | None = None) -> list[SampleItem]:
         List of matching SampleItem objects.
     """
     if language is None:
-        return list(PYTHON_SAMPLES) + list(JAVA_SAMPLES) + list(JAVASCRIPT_SAMPLES) + list(CPP_SAMPLES)
-    lang_key = language.lower()
-    if lang_key in ("python", "py"):
-        return list(PYTHON_SAMPLES)
-    if lang_key in ("java",):
-        return list(JAVA_SAMPLES)
-    if lang_key in ("javascript", "js"):
-        return list(JAVASCRIPT_SAMPLES)
-    if lang_key in ("cpp", "c", "c++"):
-        return list(CPP_SAMPLES)
-    return []
+        legacy = (
+            list(PYTHON_SAMPLES) + list(JAVA_SAMPLES) + list(JAVASCRIPT_SAMPLES) + list(CPP_SAMPLES)
+        )
+        language_key = None
+    else:
+        aliases = {"py": "python", "js": "javascript", "c": "cpp", "c++": "cpp"}
+        language_key = aliases.get(language.lower(), language.lower())
+        legacy = [sample for sample in get_legacy_samples() if sample.language == language_key]
 
+    senior = _senior_results()
+    items = list(legacy)
+    legacy_ids = {sample.id for sample in items}
+    for meta, code in load_samples():
+        if (language_key is None or meta.language == language_key) and meta.id not in legacy_ids:
+            items.append(
+                SampleItem(
+                    id=meta.id,
+                    title=meta.title,
+                    category="adversarial" if meta.kind == "unicode" else meta.kind,
+                    language=meta.language,
+                    filename=meta.file.rsplit("/", 1)[-1],
+                    code=code,
+                    description=meta.summary,
+                    group=meta.language,
+                    kind=meta.kind,
+                    level=meta.level,
+                    topic=meta.topic,
+                    summary=meta.summary,
+                    notes=meta.notes,
+                    expect=meta.expect.model_dump(),
+                    fix_expected=meta.fix_expected,
+                    approximate=meta.approximate,
+                    special_chars=meta.special_chars,
+                    demo_order=meta.demo_order,
+                    senior=senior.get(meta.id),
+                )
+            )
+    items = [_with_metadata_defaults(item) for item in items]
+    language_rank = {"python": 0, "java": 1, "javascript": 2, "cpp": 3}
+    kind_rank = {"basic": 0, "intermediate": 1, "advanced": 2, "safe": 3, "unicode": 4, "lexer": 5}
+    items.sort(
+        key=lambda item: (
+            language_rank.get(item.language, 4),
+            kind_rank.get(item.level or item.kind or item.category, 6),
+            item.id,
+        )
+    )
+    return items
+
+
+def get_legacy_samples() -> list[SampleItem]:
+    """Return the original sample records for backward-compatible UI presets."""
+    return list(PYTHON_SAMPLES) + list(JAVA_SAMPLES) + list(JAVASCRIPT_SAMPLES) + list(CPP_SAMPLES)
+
+
+def _with_metadata_defaults(sample: SampleItem) -> SampleItem:
+    """Add stable metadata fields to a legacy sample without changing its open behavior."""
+    kind = {"adversarial": "unicode"}.get(sample.category, sample.category)
+    return sample.model_copy(
+        update={
+            "group": sample.language,
+            "kind": kind,
+            "level": "basic" if kind == "vulnerable" else None,
+            "topic": sample.title,
+            "summary": sample.description,
+            "notes": [],
+            "expect": {},
+            "fix_expected": "none",
+            "approximate": False,
+            "special_chars": [],
+            "demo_order": None,
+        }
+    )
+
+
+def get_sample(sample_id: str) -> SampleItem | None:
+    """Get a sample by ID, including retained pre-catalogue sample IDs."""
+    found = load_sample(sample_id)
+    if found:
+        meta, code = found
+        return SampleItem(
+            id=meta.id,
+            title=meta.title,
+            category="adversarial" if meta.kind == "unicode" else meta.kind,
+            language=meta.language,
+            filename=meta.file.rsplit("/", 1)[-1],
+            code=code,
+            description=meta.summary,
+            group=meta.language,
+            kind=meta.kind,
+            level=meta.level,
+            topic=meta.topic,
+            summary=meta.summary,
+            notes=meta.notes,
+            expect=meta.expect.model_dump(),
+            fix_expected=meta.fix_expected,
+            approximate=meta.approximate,
+            special_chars=meta.special_chars,
+            demo_order=meta.demo_order,
+            senior=_senior_results().get(meta.id),
+        )
+    return next(
+        (
+            _with_metadata_defaults(sample)
+            for sample in get_legacy_samples()
+            if sample.id == sample_id
+        ),
+        None,
+    )

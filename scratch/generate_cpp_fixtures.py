@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-REPO_ROOT = Path(r"c:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide")
+REPO_ROOT = Path(
+    r"c:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide"
+)
 FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures" / "cpp"
 VULN_DIR = FIXTURES_DIR / "vulnerable"
 SAFE_DIR = FIXTURES_DIR / "safe"
@@ -31,7 +33,7 @@ VULNERABLE_FILES = {
         "#include <stdio.h>\n"
         "#include <string.h>\n\n"
         "int main(int argc, char *argv[]) {\n"
-        "    char dest[32] = \"Hello \";\n"
+        '    char dest[32] = "Hello ";\n'
         "    char *src = argv[1];\n"
         "    strcat(dest, src);\n"
         "    return 0;\n"
@@ -49,7 +51,7 @@ VULNERABLE_FILES = {
         "#include <stdio.h>\n\n"
         "int main(int argc, char *argv[]) {\n"
         "    char buf[64];\n"
-        "    sprintf(buf, \"User %s logged in\", argv[1]);\n"
+        '    sprintf(buf, "User %s logged in", argv[1]);\n'
         "    return 0;\n"
         "}\n"
     ),
@@ -90,10 +92,7 @@ VULNERABLE_FILES = {
         "}\n"
     ),
     "format_string_fprintf.c": (
-        "#include <stdio.h>\n\n"
-        "void report_err(const char *msg) {\n"
-        "    fprintf(stderr, msg);\n"
-        "}\n"
+        "#include <stdio.h>\n\nvoid report_err(const char *msg) {\n    fprintf(stderr, msg);\n}\n"
     ),
     "format_string_syslog.c": (
         "#include <syslog.h>\n\n"
@@ -105,7 +104,7 @@ VULNERABLE_FILES = {
         "#include <stdio.h>\n\n"
         "int main() {\n"
         "    char buf[32];\n"
-        "    scanf(\"%s\", buf);\n"
+        '    scanf("%s", buf);\n'
         "    return 0;\n"
         "}\n"
     ),
@@ -113,14 +112,14 @@ VULNERABLE_FILES = {
         "#include <stdio.h>\n\n"
         "void read_file(FILE *fp) {\n"
         "    char buf[64];\n"
-        "    fscanf(fp, \"%s\", buf);\n"
+        '    fscanf(fp, "%s", buf);\n'
         "}\n"
     ),
     "sscanf_no_width.c": (
         "#include <stdio.h>\n\n"
         "void parse(const char *input) {\n"
         "    char buf[32];\n"
-        "    sscanf(input, \"%s\", buf);\n"
+        '    sscanf(input, "%s", buf);\n'
         "}\n"
     ),
     "cmd_injection_system.c": (
@@ -135,7 +134,7 @@ VULNERABLE_FILES = {
         "#include <stdio.h>\n\n"
         "int main(int argc, char *argv[]) {\n"
         "    char *cmd = argv[1];\n"
-        "    FILE *fp = popen(cmd, \"r\");\n"
+        '    FILE *fp = popen(cmd, "r");\n'
         "    return 0;\n"
         "}\n"
     ),
@@ -151,7 +150,7 @@ VULNERABLE_FILES = {
         "void process() {\n"
         "    char *p = (char *)malloc(32);\n"
         "    free(p);\n"
-        "    printf(\"%s\\n\", p);\n"
+        '    printf("%s\\n", p);\n'
         "}\n"
     ),
     "double_free.c": (
@@ -166,7 +165,7 @@ VULNERABLE_FILES = {
         "#include <stdio.h>\n\n"
         "int main(int argc, char *argv[]) {\n"
         "    char *path = argv[1];\n"
-        "    FILE *fp = fopen(path, \"r\");\n"
+        '    FILE *fp = fopen(path, "r");\n'
         "    return 0;\n"
         "}\n"
     ),
@@ -178,21 +177,13 @@ VULNERABLE_FILES = {
         "}\n"
     ),
     "hardcoded_password.c": (
-        "#include <stdio.h>\n\n"
-        "const char *db_password = \"SuperSecretP@ssword999\";\n"
+        '#include <stdio.h>\n\nconst char *db_password = "SuperSecretP@ssword999";\n'
     ),
     "insecure_tmpnam.c": (
-        "#include <stdio.h>\n\n"
-        "void make_temp() {\n"
-        "    char name[L_tmpnam];\n"
-        "    tmpnam(name);\n"
-        "}\n"
+        "#include <stdio.h>\n\nvoid make_temp() {\n    char name[L_tmpnam];\n    tmpnam(name);\n}\n"
     ),
     "alloca_variable.c": (
-        "#include <alloca.h>\n\n"
-        "void stack_alloc(int n) {\n"
-        "    void *p = alloca(n);\n"
-        "}\n"
+        "#include <alloca.h>\n\nvoid stack_alloc(int n) {\n    void *p = alloca(n);\n}\n"
     ),
 }
 
@@ -204,7 +195,7 @@ SAFE_FILES = {
         "int main(int argc, char *argv[]) {\n"
         "    char dest[32];\n"
         "    if (argc > 1) {\n"
-        "        snprintf(dest, sizeof(dest), \"%s\", argv[1]);\n"
+        '        snprintf(dest, sizeof(dest), "%s", argv[1]);\n'
         "    }\n"
         "    return 0;\n"
         "}\n"
@@ -229,7 +220,7 @@ SAFE_FILES = {
         "#include <stdio.h>\n\n"
         "int main(int argc, char *argv[]) {\n"
         "    if (argc > 1) {\n"
-        "        printf(\"%s\\n\", argv[1]);\n"
+        '        printf("%s\\n", argv[1]);\n'
         "    }\n"
         "    return 0;\n"
         "}\n"
@@ -237,20 +228,20 @@ SAFE_FILES = {
     "safe_fprintf_format.c": (
         "#include <stdio.h>\n\n"
         "void log_err(const char *msg) {\n"
-        "    fprintf(stderr, \"%s\\n\", msg);\n"
+        '    fprintf(stderr, "%s\\n", msg);\n'
         "}\n"
     ),
     "safe_syslog_format.c": (
         "#include <syslog.h>\n\n"
         "void log_info(const char *msg) {\n"
-        "    syslog(LOG_INFO, \"%s\", msg);\n"
+        '    syslog(LOG_INFO, "%s", msg);\n'
         "}\n"
     ),
     "safe_scanf_width.c": (
         "#include <stdio.h>\n\n"
         "int main() {\n"
         "    char buf[32];\n"
-        "    scanf(\"%31s\", buf);\n"
+        '    scanf("%31s", buf);\n'
         "    return 0;\n"
         "}\n"
     ),
@@ -258,14 +249,14 @@ SAFE_FILES = {
         "#include <stdio.h>\n\n"
         "void read_safe(FILE *fp) {\n"
         "    char buf[64];\n"
-        "    fscanf(fp, \"%63s\", buf);\n"
+        '    fscanf(fp, "%63s", buf);\n'
         "}\n"
     ),
     "safe_sscanf_width.c": (
         "#include <stdio.h>\n\n"
         "void parse_safe(const char *in) {\n"
         "    char buf[16];\n"
-        "    sscanf(in, \"%15s\", buf);\n"
+        '    sscanf(in, "%15s", buf);\n'
         "}\n"
     ),
     "safe_malloc_calloc.c": (
@@ -290,38 +281,23 @@ SAFE_FILES = {
         "}\n"
     ),
     "safe_system_constant.c": (
-        "#include <stdlib.h>\n\n"
-        "int main() {\n"
-        "    system(\"echo Done\");\n"
-        "    return 0;\n"
-        "}\n"
+        '#include <stdlib.h>\n\nint main() {\n    system("echo Done");\n    return 0;\n}\n'
     ),
     "safe_mkstemp.c": (
         "#include <stdlib.h>\n\n"
         "void make_file() {\n"
-        "    char template_file[] = \"/tmp/tmpXXXXXX\";\n"
+        '    char template_file[] = "/tmp/tmpXXXXXX";\n'
         "    int fd = mkstemp(template_file);\n"
         "}\n"
     ),
     "safe_alloca_constant.c": (
-        "#include <alloca.h>\n\n"
-        "void alloc_fast() {\n"
-        "    void *p = alloca(64);\n"
-        "}\n"
+        "#include <alloca.h>\n\nvoid alloc_fast() {\n    void *p = alloca(64);\n}\n"
     ),
     "safe_cpp_string.cpp": (
-        "#include <string>\n\n"
-        "void test() {\n"
-        "    std::string s = \"hello\";\n"
-        "    s += \" world\";\n"
-        "}\n"
+        '#include <string>\n\nvoid test() {\n    std::string s = "hello";\n    s += " world";\n}\n'
     ),
     "safe_cpp_vector.cpp": (
-        "#include <vector>\n\n"
-        "void test() {\n"
-        "    std::vector<int> v;\n"
-        "    v.push_back(42);\n"
-        "}\n"
+        "#include <vector>\n\nvoid test() {\n    std::vector<int> v;\n    v.push_back(42);\n}\n"
     ),
     "safe_cpp_random.cpp": (
         "#include <random>\n\n"
@@ -335,7 +311,7 @@ SAFE_FILES = {
         "#include <fstream>\n"
         "#include <string>\n\n"
         "void read_file() {\n"
-        "    std::ifstream f(\"config.txt\");\n"
+        '    std::ifstream f("config.txt");\n'
         "    std::string line;\n"
         "    if (f) {\n"
         "        std::getline(f, line);\n"
@@ -343,10 +319,7 @@ SAFE_FILES = {
         "}\n"
     ),
     "safe_math_sin.c": (
-        "#include <math.h>\n\n"
-        "double compute(double x) {\n"
-        "    return sin(x) + cos(x);\n"
-        "}\n"
+        "#include <math.h>\n\ndouble compute(double x) {\n    return sin(x) + cos(x);\n}\n"
     ),
     "safe_strncat.c": (
         "#include <string.h>\n\n"
@@ -385,14 +358,14 @@ ADVERSARIAL_FILES = {
     ),
     "adv_string_sprintf.c": (
         "#include <stdio.h>\n\n"
-        "const char *msg = \"Warning: sprintf and vsprintf can cause buffer overflows.\";\n"
+        'const char *msg = "Warning: sprintf and vsprintf can cause buffer overflows.";\n'
         "int main() {\n"
         "    return 0;\n"
         "}\n"
     ),
     "adv_define_system.c": (
         "#include <stdio.h>\n\n"
-        "#define SYSTEM_BANNER \"System initialized successfully\"\n"
+        '#define SYSTEM_BANNER "System initialized successfully"\n'
         "#define STRCPY_SECURE 1\n\n"
         "int main() {\n"
         "    return 0;\n"
@@ -402,7 +375,7 @@ ADVERSARIAL_FILES = {
         "#include <string.h>\n\n"
         "int main() {\n"
         "    char buf[64];\n"
-        "    strncpy(buf, \"hello\", 5);\n"
+        '    strncpy(buf, "hello", 5);\n'
         "    buf[5] = '\\0';\n"
         "    return 0;\n"
         "}\n"
@@ -411,7 +384,7 @@ ADVERSARIAL_FILES = {
         "#include <stdio.h>\n\n"
         "int main(int argc, char *argv[]) {\n"
         "    char *user_input = argv[1];\n"
-        "    printf(\"%s\\n\", user_input);\n"
+        '    printf("%s\\n", user_input);\n'
         "    return 0;\n"
         "}\n"
     ),
@@ -425,18 +398,10 @@ ADVERSARIAL_FILES = {
         "}\n"
     ),
     "adv_zero_width_space.c": (
-        "#include <stdio.h>\n\n"
-        "int main() {\n"
-        "    int sec\u200Bret = 42;\n"
-        "    return 0;\n"
-        "}\n"
+        "#include <stdio.h>\n\nint main() {\n    int sec\u200bret = 42;\n    return 0;\n}\n"
     ),
     "adv_cyrillic_homoglyph.c": (
-        "#include <stdio.h>\n\n"
-        "int main() {\n"
-        "    int p\u0430ssword = 123;\n"
-        "    return 0;\n"
-        "}\n"
+        "#include <stdio.h>\n\nint main() {\n    int p\u0430ssword = 123;\n    return 0;\n}\n"
     ),
 }
 
@@ -451,4 +416,6 @@ for fname, content in SAFE_FILES.items():
 for fname, content in ADVERSARIAL_FILES.items():
     (ADV_DIR / fname).write_text(content, encoding="utf-8")
 
-print(f"Generated {len(VULNERABLE_FILES)} vulnerable, {len(SAFE_FILES)} safe, {len(ADVERSARIAL_FILES)} adversarial fixtures.")
+print(
+    f"Generated {len(VULNERABLE_FILES)} vulnerable, {len(SAFE_FILES)} safe, {len(ADVERSARIAL_FILES)} adversarial fixtures."
+)

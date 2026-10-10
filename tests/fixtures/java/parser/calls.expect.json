@@ -1,0 +1,15 @@
+{
+  "valid_01.java": [
+    "list.add"
+  ],
+  "valid_07.java": [
+    "System.out.println",
+    "ex.printStackTrace",
+    "System.out.println"
+  ],
+  "valid_15.java": [
+    "conn.prepareStatement",
+    "ps.setString",
+    "ps.executeQuery"
+  ]
+}

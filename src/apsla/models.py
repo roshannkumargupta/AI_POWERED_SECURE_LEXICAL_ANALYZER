@@ -142,19 +142,26 @@ class Finding(BaseModel):
 
     id: str
     rule_id: str  # Format: APS-<LANG>-<CAT>-<NNN>
-    title: str
-    cwe: str
-    severity: Severity
-    label: Label
-    confidence: float = Field(ge=0.0, le=1.0)
+    title: str = ""
+    cwe: str = "CWE-000"
+    severity: Severity = Severity.MEDIUM
+    label: Label = Label.MALICIOUS
+    confidence: float = Field(default=0.8, ge=0.0, le=1.0)
     range: Range
-    message: str
-    explanation: str
+    message: str = ""
+    explanation: str = ""
     evidence: dict[str, Any] = Field(default_factory=dict)
     taint_path: list[TaintPathStep] = Field(default_factory=list)
     fixes: list[Fix] = Field(default_factory=list)
     sources: list[str] = Field(default_factory=list)  # rule, taint, ml, unicode
     suppressed: bool = False
+    suppression_reason: str | None = None
+    kind: str = "security"  # security | lexical | syntax
+    attack: list[str] | None = None
+    exploitability: float = 0.5
+    priority: float = 0.0
+    simple_explanation: str | None = None
+    detailed_explanation: str | None = None
 
 
 class AnalysisSummary(BaseModel):
@@ -169,6 +176,8 @@ class AnalysisSummary(BaseModel):
     tokens_total: int = 0
     tokens_malicious: int = 0
     tokens_suspicious: int = 0
+    lexical_errors: int = 0
+    syntax_errors: int = 0
 
 
 # Alias for specification naming
@@ -183,6 +192,7 @@ class EngineMetadata(BaseModel):
     taint: str = "ast"  # "ast" | "lite"
     version: str = "0.1.0"
     elapsed_ms: float = 0.0
+    parser: str = "lexer-only"
 
 
 # Alias for specification naming
@@ -198,3 +208,5 @@ class AnalysisResult(BaseModel):
     tokens: list[TokenInfo] = Field(default_factory=list)
     summary: AnalysisSummary = Field(default_factory=AnalysisSummary)
     engine: EngineMetadata = Field(default_factory=EngineMetadata)
+    trace: list[dict[str, Any]] = Field(default_factory=list)
+    agent_meta: dict[str, Any] = Field(default_factory=dict)

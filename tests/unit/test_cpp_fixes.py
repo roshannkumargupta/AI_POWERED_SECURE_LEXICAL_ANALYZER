@@ -18,7 +18,9 @@ def test_strcpy_to_snprintf_fix_and_verification():
         "}\n"
     )
     analyzer = Analyzer()
-    res = analyzer.analyze(source, language="cpp", filename="test.c", options={"fixes": True, "ml": False})
+    res = analyzer.analyze(
+        source, language="cpp", filename="test.c", options={"fixes": True, "ml": False}
+    )
     findings = [f for f in res.findings if f.rule_id == "APS-CP-MEM-001"]
     assert len(findings) == 1
     assert len(findings[0].fixes) >= 1
@@ -29,15 +31,12 @@ def test_strcpy_to_snprintf_fix_and_verification():
 
 def test_gets_to_fgets_fix_and_verification():
     source = (
-        "#include <stdio.h>\n\n"
-        "int main() {\n"
-        "    char buf[64];\n"
-        "    gets(buf);\n"
-        "    return 0;\n"
-        "}\n"
+        "#include <stdio.h>\n\nint main() {\n    char buf[64];\n    gets(buf);\n    return 0;\n}\n"
     )
     analyzer = Analyzer()
-    res = analyzer.analyze(source, language="cpp", filename="test.c", options={"fixes": True, "ml": False})
+    res = analyzer.analyze(
+        source, language="cpp", filename="test.c", options={"fixes": True, "ml": False}
+    )
     findings = [f for f in res.findings if f.rule_id == "APS-CP-MEM-001"]
     assert len(findings) == 1
     assert len(findings[0].fixes) >= 1
@@ -51,12 +50,14 @@ def test_sprintf_to_snprintf_fix_and_verification():
         "#include <stdio.h>\n\n"
         "int main(int argc, char *argv[]) {\n"
         "    char buf[64];\n"
-        "    sprintf(buf, \"%s\", argv[1]);\n"
+        '    sprintf(buf, "%s", argv[1]);\n'
         "    return 0;\n"
         "}\n"
     )
     analyzer = Analyzer()
-    res = analyzer.analyze(source, language="cpp", filename="test.c", options={"fixes": True, "ml": False})
+    res = analyzer.analyze(
+        source, language="cpp", filename="test.c", options={"fixes": True, "ml": False}
+    )
     findings = [f for f in res.findings if f.rule_id == "APS-CP-MEM-001"]
     assert len(findings) == 1
     assert len(findings[0].fixes) >= 1
@@ -76,7 +77,9 @@ def test_printf_format_string_fix_and_verification():
         "}\n"
     )
     analyzer = Analyzer()
-    res = analyzer.analyze(source, language="cpp", filename="test.c", options={"fixes": True, "ml": False})
+    res = analyzer.analyze(
+        source, language="cpp", filename="test.c", options={"fixes": True, "ml": False}
+    )
     findings = [f for f in res.findings if f.rule_id == "APS-CP-FMT-001"]
     assert len(findings) == 1
     assert len(findings[0].fixes) >= 1
@@ -90,12 +93,14 @@ def test_scanf_field_width_fix_and_verification():
         "#include <stdio.h>\n\n"
         "int main() {\n"
         "    char buf[32];\n"
-        "    scanf(\"%s\", buf);\n"
+        '    scanf("%s", buf);\n'
         "    return 0;\n"
         "}\n"
     )
     analyzer = Analyzer()
-    res = analyzer.analyze(source, language="cpp", filename="test.c", options={"fixes": True, "ml": False})
+    res = analyzer.analyze(
+        source, language="cpp", filename="test.c", options={"fixes": True, "ml": False}
+    )
     findings = [f for f in res.findings if f.rule_id == "APS-CP-MEM-003"]
     assert len(findings) == 1
     assert len(findings[0].fixes) >= 1
@@ -114,7 +119,9 @@ def test_system_manual_advice():
         "}\n"
     )
     analyzer = Analyzer()
-    res = analyzer.analyze(source, language="cpp", filename="test.c", options={"fixes": True, "ml": False})
+    res = analyzer.analyze(
+        source, language="cpp", filename="test.c", options={"fixes": True, "ml": False}
+    )
     findings = [f for f in res.findings if f.rule_id == "APS-CP-INJ-001"]
     assert len(findings) == 1
     assert len(findings[0].fixes) >= 1
@@ -124,14 +131,11 @@ def test_system_manual_advice():
 
 
 def test_rand_manual_advice():
-    source = (
-        "#include <stdlib.h>\n\n"
-        "int gen_token() {\n"
-        "    return rand();\n"
-        "}\n"
-    )
+    source = "#include <stdlib.h>\n\nint gen_token() {\n    return rand();\n}\n"
     analyzer = Analyzer()
-    res = analyzer.analyze(source, language="cpp", filename="test.c", options={"fixes": True, "ml": False})
+    res = analyzer.analyze(
+        source, language="cpp", filename="test.c", options={"fixes": True, "ml": False}
+    )
     findings = [f for f in res.findings if f.rule_id == "APS-CP-CRY-001"]
     assert len(findings) == 1
     assert len(findings[0].fixes) >= 1

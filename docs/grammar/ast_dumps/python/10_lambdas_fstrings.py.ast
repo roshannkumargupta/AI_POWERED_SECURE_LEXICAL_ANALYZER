@@ -1,0 +1,38 @@
+Module(
+  body=[
+    Assign(
+      targets=[
+        Name(id='add', ctx=Store())],
+      value=Lambda(
+        args=arguments(
+          posonlyargs=[],
+          args=[
+            arg(arg='a'),
+            arg(arg='b')],
+          kwonlyargs=[],
+          kw_defaults=[],
+          defaults=[]),
+        body=BinOp(
+          left=Name(id='a', ctx=Load()),
+          op=Add(),
+          right=Name(id='b', ctx=Load())))),
+    Assign(
+      targets=[
+        Name(id='result', ctx=Store())],
+      value=Call(
+        func=Name(id='add', ctx=Load()),
+        args=[
+          Constant(value=10),
+          Constant(value=20)],
+        keywords=[])),
+    Assign(
+      targets=[
+        Name(id='msg', ctx=Store())],
+      value=JoinedStr(
+        values=[
+          Constant(value='The result is '),
+          FormattedValue(
+            value=Name(id='result', ctx=Load()),
+            conversion=-1),
+          Constant(value='!')]))],
+  type_ignores=[])

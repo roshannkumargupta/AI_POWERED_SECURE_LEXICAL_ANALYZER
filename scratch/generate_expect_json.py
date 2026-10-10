@@ -7,7 +7,9 @@ from pathlib import Path
 
 from apsla.pipeline import Analyzer
 
-REPO_ROOT = Path(r"c:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide")
+REPO_ROOT = Path(
+    r"c:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide"
+)
 FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures" / "cpp"
 
 analyzer = Analyzer()

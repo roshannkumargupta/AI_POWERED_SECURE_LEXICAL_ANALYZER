@@ -76,13 +76,19 @@ class JSCodeInjectionRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
 
         # 2. Syntactic inspection for eval(...) or new Function(...)
-        eval_pattern = re.compile(r"\b(?:eval|new\s+Function|Function)\s*\(\s*([^;)]+)\s*\)", re.MULTILINE)
+        eval_pattern = re.compile(
+            r"\b(?:eval|new\s+Function|Function)\s*\(\s*([^;)]+)\s*\)", re.MULTILINE
+        )
         for m in eval_pattern.finditer(source):
             if _is_inside_comment_or_string(m.start(), tokens):
                 continue
@@ -102,7 +108,9 @@ class JSCodeInjectionRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message=f"Dynamic code evaluation via {m.group(0).split('(')[0].strip()}() detected.",
                         evidence={"call": m.group(0), "taint_confirmed": False},
                     )
@@ -124,7 +132,9 @@ class JSCodeInjectionRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message="String-based timer evaluation behaves like eval() and executes dynamic code.",
                         evidence={"timer_call": m.group(0), "taint_confirmed": False},
                     )
@@ -144,7 +154,9 @@ class JSCommandInjectionRule(Rule):
     cwe = "CWE-78"
     severity = Severity.CRITICAL
     category = "injection"
-    description = "Executing OS commands with dynamic string concatenation allows arbitrary shell execution."
+    description = (
+        "Executing OS commands with dynamic string concatenation allows arbitrary shell execution."
+    )
     explanation = (
         "Invoking child_process.exec(), execSync(), or spawn() with shell: true using concatenated strings "
         "or tainted parameters permits command injection. Attackers can append shell metacharacters (&, |, ;) "
@@ -164,7 +176,11 @@ class JSCommandInjectionRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -179,9 +195,17 @@ class JSCommandInjectionRule(Rule):
                 continue
             arg = m.group(1).strip()
             # If string concatenation or template literal with interpolation is used
-            is_dynamic = ("+" in arg and not re.fullmatch(r'["\'][^"\']*["\']\s*\+\s*["\'][^"\']*["\']', arg)) or (
-                "`" in arg and "${" in arg
-            ) or (re.search(r"\b[A-Za-z0-9_]+\b", arg) and not re.fullmatch(r'["\'][^"\']*["\']', arg))
+            is_dynamic = (
+                (
+                    "+" in arg
+                    and not re.fullmatch(r'["\'][^"\']*["\']\s*\+\s*["\'][^"\']*["\']', arg)
+                )
+                or ("`" in arg and "${" in arg)
+                or (
+                    re.search(r"\b[A-Za-z0-9_]+\b", arg)
+                    and not re.fullmatch(r'["\'][^"\']*["\']', arg)
+                )
+            )
 
             if is_dynamic:
                 start_u16 = context.offset_map.py_to_utf16(m.start())
@@ -192,7 +216,9 @@ class JSCommandInjectionRule(Rule):
                 if not any(f.range.start_line == line for f in findings):
                     findings.append(
                         self.create_finding(
-                            rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                            rng=Range(
+                                start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                            ),
                             message="OS command execution with dynamic argument enables command injection.",
                             evidence={"exec_call": m.group(0), "taint_confirmed": False},
                         )
@@ -214,7 +240,9 @@ class JSCommandInjectionRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message="child_process.spawn invoked with shell: true enables command injection.",
                         evidence={"spawn_call": m.group(0), "taint_confirmed": False},
                     )
@@ -254,7 +282,11 @@ class JSDOMXSSRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -283,14 +315,18 @@ class JSDOMXSSRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message=f"Unsanitized assignment to {m.group(1)}.{m.group(0).split('=')[0].split('.')[-1].strip()} enables DOM XSS.",
                         evidence={"sink": m.group(0), "taint_confirmed": False},
                     )
                 )
 
         # 3. document.write / document.writeln with dynamic data
-        doc_write_pattern = re.compile(r"\bdocument\.(?:write|writeln)\s*\(\s*([^;)]+)\s*\)", re.MULTILINE)
+        doc_write_pattern = re.compile(
+            r"\bdocument\.(?:write|writeln)\s*\(\s*([^;)]+)\s*\)", re.MULTILINE
+        )
         for m in doc_write_pattern.finditer(source):
             if _is_inside_comment_or_string(m.start(), tokens):
                 continue
@@ -308,7 +344,9 @@ class JSDOMXSSRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message="document.write() with dynamic content enables DOM Cross-Site Scripting.",
                         evidence={"write_call": m.group(0), "taint_confirmed": False},
                     )
@@ -400,7 +438,11 @@ class JSOpenRedirectRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -432,7 +474,9 @@ class JSOpenRedirectRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message="Dynamic URL redirection via location assignment enables open redirect attacks.",
                         evidence={"assignment": m.group(0), "taint_confirmed": False},
                     )
@@ -454,7 +498,9 @@ class JSOpenRedirectRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message="Inline event attribute assigned via setAttribute enables script execution.",
                         evidence={"call": m.group(0), "taint_confirmed": False},
                     )
@@ -494,7 +540,11 @@ class JSSQLInjectionRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -509,14 +559,20 @@ class JSSQLInjectionRule(Rule):
                 continue
             arg = m.group(1).strip()
             # If parameterized placeholders are used (?, $1) and arguments array follows, safe!
-            full_call = source[m.start() : source.find(")", m.start()) + 1] if ")" in source[m.start():] else ""
+            full_call = (
+                source[m.start() : source.find(")", m.start()) + 1]
+                if ")" in source[m.start() :]
+                else ""
+            )
             if ("?" in arg or "$1" in arg) and ("[" in full_call or "," in full_call):
                 continue
 
             # Template literal check: `SELECT ... ${var}`
             has_template_injection = "`" in arg and "${" in arg
             # String concatenation check: "SELECT ... " + var
-            has_concat_injection = "+" in arg and not re.fullmatch(r'["\'][^"\']*["\']\s*\+\s*["\'][^"\']*["\']', arg)
+            has_concat_injection = "+" in arg and not re.fullmatch(
+                r'["\'][^"\']*["\']\s*\+\s*["\'][^"\']*["\']', arg
+            )
 
             if has_template_injection or has_concat_injection:
                 start_u16 = context.offset_map.py_to_utf16(m.start())
@@ -527,7 +583,9 @@ class JSSQLInjectionRule(Rule):
                 if not any(f.range.start_line == line for f in findings):
                     findings.append(
                         self.create_finding(
-                            rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                            rng=Range(
+                                start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                            ),
                             message="SQL query built with string concatenation or template literal enables SQL injection.",
                             evidence={"query_call": m.group(0), "taint_confirmed": False},
                         )
@@ -567,7 +625,11 @@ class JSPathTraversalRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -586,7 +648,9 @@ class JSPathTraversalRule(Rule):
             if re.fullmatch(r'["\'][^"\']*["\']', arg):
                 continue
 
-            has_concat = "+" in arg and not re.fullmatch(r'["\'][^"\']*["\']\s*\+\s*["\'][^"\']*["\']', arg)
+            has_concat = "+" in arg and not re.fullmatch(
+                r'["\'][^"\']*["\']\s*\+\s*["\'][^"\']*["\']', arg
+            )
             has_template = "`" in arg and "${" in arg
 
             if has_concat or has_template:
@@ -598,7 +662,9 @@ class JSPathTraversalRule(Rule):
                 if not any(f.range.start_line == line for f in findings):
                     findings.append(
                         self.create_finding(
-                            rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                            rng=Range(
+                                start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                            ),
                             message="File system operation with dynamic path parameter enables directory traversal.",
                             evidence={"fs_call": m.group(0), "taint_confirmed": False},
                         )
@@ -638,7 +704,11 @@ class JSSSRFRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -653,10 +723,16 @@ class JSSSRFRule(Rule):
                 continue
             arg = m.group(1).strip()
             # If pure string constant or whitelisted function, skip
-            if re.fullmatch(r'["\'][^"\']*["\']', arg) or "isAllowedDomain" in arg or "ALLOWED_HOSTS" in source:
+            if (
+                re.fullmatch(r'["\'][^"\']*["\']', arg)
+                or "isAllowedDomain" in arg
+                or "ALLOWED_HOSTS" in source
+            ):
                 continue
 
-            has_concat = "+" in arg and not re.fullmatch(r'["\'][^"\']*["\']\s*\+\s*["\'][^"\']*["\']', arg)
+            has_concat = "+" in arg and not re.fullmatch(
+                r'["\'][^"\']*["\']\s*\+\s*["\'][^"\']*["\']', arg
+            )
             has_template = "`" in arg and "${" in arg
             is_var = re.fullmatch(r"[A-Za-z0-9_$.]+", arg) is not None
 
@@ -669,7 +745,9 @@ class JSSSRFRule(Rule):
                 if not any(f.range.start_line == line for f in findings):
                     findings.append(
                         self.create_finding(
-                            rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                            rng=Range(
+                                start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                            ),
                             message="Backend HTTP request using dynamic URL parameter enables SSRF.",
                             evidence={"http_call": m.group(0), "taint_confirmed": False},
                         )
@@ -713,7 +791,17 @@ class JSInsecureRandomnessRule(Rule):
                 line_end = len(source)
             line_str = source[line_start:line_end].lower()
 
-            sec_keywords = ("token", "session", "key", "secret", "auth", "password", "id", "nonce", "salt")
+            sec_keywords = (
+                "token",
+                "session",
+                "key",
+                "secret",
+                "auth",
+                "password",
+                "id",
+                "nonce",
+                "salt",
+            )
             if any(kw in line_str for kw in sec_keywords):
                 start_u16 = context.offset_map.py_to_utf16(m.start())
                 end_u16 = context.offset_map.py_to_utf16(m.end())
@@ -722,7 +810,9 @@ class JSInsecureRandomnessRule(Rule):
 
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message="Math.random() used to generate security-sensitive tokens or identifiers.",
                         evidence={"matched": m.group(0), "context_line": line_str.strip()},
                     )
@@ -812,7 +902,10 @@ class JSHardcodedSecretsRule(Rule):
             secret_val = m.group(2)
 
             # Skip obvious placeholders
-            if any(ph in secret_val.lower() for ph in ("your_", "placeholder", "xxx", "todo", "sample", "test")):
+            if any(
+                ph in secret_val.lower()
+                for ph in ("your_", "placeholder", "xxx", "todo", "sample", "test")
+            ):
                 continue
             # Entropy check
             if len(secret_val) >= 8 and _shannon_entropy(secret_val) >= 3.0:
@@ -823,7 +916,9 @@ class JSHardcodedSecretsRule(Rule):
 
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message=f"Hard-coded secret detected in variable '{var_name}'.",
                         evidence={"variable": var_name, "entropy": _shannon_entropy(secret_val)},
                     )
@@ -843,7 +938,9 @@ class JSInsecureJWTRule(Rule):
     cwe = "CWE-347"
     severity = Severity.CRITICAL
     category = "secrets"
-    description = "Allowing 'none' algorithm or decoding tokens without verification bypasses authentication."
+    description = (
+        "Allowing 'none' algorithm or decoding tokens without verification bypasses authentication."
+    )
     explanation = (
         "Configuring jwt.verify() to accept the 'none' algorithm or using jwt.decode() directly for authorization "
         "decisions allows attackers to forge arbitrary tokens with forged administrative claims without knowing "
@@ -886,7 +983,9 @@ class JSInsecureJWTRule(Rule):
                 continue
             var_name = m.group(1)
             # If the decoded variable is later checked for role/admin/user, flag it
-            if re.search(rf"\b{re.escape(var_name)}\.(?:role|admin|user|auth|permissions)\b", source):
+            if re.search(
+                rf"\b{re.escape(var_name)}\.(?:role|admin|user|auth|permissions)\b", source
+            ):
                 start_u16 = context.offset_map.py_to_utf16(m.start())
                 end_u16 = context.offset_map.py_to_utf16(m.end())
                 line, col = context.offset_map.utf16_to_pos(start_u16)
@@ -894,7 +993,9 @@ class JSInsecureJWTRule(Rule):
 
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message=f"Unverified jwt.decode() result '{var_name}' used in authorization logic.",
                         evidence={"variable": var_name, "call": m.group(0)},
                     )
@@ -934,7 +1035,11 @@ class JSPrototypePollutionRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -958,7 +1063,9 @@ class JSPrototypePollutionRule(Rule):
                 if not any(f.range.start_line == line for f in findings):
                     findings.append(
                         self.create_finding(
-                            rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                            rng=Range(
+                                start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                            ),
                             message="Object merge with untrusted input enables prototype pollution.",
                             evidence={"call": m.group(0), "taint_confirmed": False},
                         )
@@ -978,7 +1085,9 @@ class JSReDoSRule(Rule):
     cwe = "CWE-1333"
     severity = Severity.MEDIUM
     category = "injection"
-    description = "Constructing regular expressions from user inputs risks catastrophic backtracking."
+    description = (
+        "Constructing regular expressions from user inputs risks catastrophic backtracking."
+    )
     explanation = (
         "Instantiating new RegExp() with unescaped user inputs enables attackers to supply evil regex patterns "
         "causing catastrophic exponential backtracking (ReDoS), exhausting server CPU and starving concurrent requests. "
@@ -998,7 +1107,11 @@ class JSReDoSRule(Rule):
                     self.create_finding(
                         rng=tr.range,
                         message=tr.message,
-                        evidence={"taint_confirmed": True, "source": tr.source_text, "sink": tr.sink_text},
+                        evidence={
+                            "taint_confirmed": True,
+                            "source": tr.source_text,
+                            "sink": tr.sink_text,
+                        },
                         taint_path=tr.path,
                     )
                 )
@@ -1024,7 +1137,9 @@ class JSReDoSRule(Rule):
             if not any(f.range.start_line == line for f in findings):
                 findings.append(
                     self.create_finding(
-                        rng=Range(start_line=line, start_col=col, end_line=end_line, end_col=end_col),
+                        rng=Range(
+                            start_line=line, start_col=col, end_line=end_line, end_col=end_col
+                        ),
                         message="Dynamic regular expression constructed from variable input risks ReDoS.",
                         evidence={"call": m.group(0), "taint_confirmed": False},
                     )
@@ -1078,7 +1193,9 @@ class JSObfuscationRule(Rule):
             )
 
         # Check Function("return this")() pattern
-        fn_pattern = re.compile(r"Function\s*\(\s*[\"']return\s+this[\"']\s*\)\s*\(\s*\)", re.MULTILINE)
+        fn_pattern = re.compile(
+            r"Function\s*\(\s*[\"']return\s+this[\"']\s*\)\s*\(\s*\)", re.MULTILINE
+        )
         for m in fn_pattern.finditer(source):
             if _is_inside_comment_or_string(m.start(), tokens):
                 continue

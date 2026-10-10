@@ -26,7 +26,11 @@ def compute_health_score(findings: list[Finding]) -> int:
         if not f.suppressed:
             counts[f.severity] = counts.get(f.severity, 0) + 1
 
-    return calculate_health_score(counts)
+    security_counts: dict[Severity, int] = {s: 0 for s in Severity}
+    for f in findings:
+        if not f.suppressed and f.kind == "security":
+            security_counts[f.severity] += 1
+    return calculate_health_score(security_counts)
 
 
 def calculate_health_score(counts: dict[Severity, int]) -> int:
@@ -75,4 +79,6 @@ def create_analysis_summary(
         tokens_total=len(token_list),
         tokens_malicious=tokens_malicious,
         tokens_suspicious=tokens_suspicious,
+        lexical_errors=sum(1 for f in findings if not f.suppressed and f.kind == "lexical"),
+        syntax_errors=sum(1 for f in findings if not f.suppressed and f.kind == "syntax"),
     )

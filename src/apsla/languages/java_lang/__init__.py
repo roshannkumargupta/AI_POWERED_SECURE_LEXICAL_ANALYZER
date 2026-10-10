@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Final
+from typing import Any, Final
 
 from apsla.languages.base import (
     FixGenerator,
@@ -43,9 +43,16 @@ class JavaPlugin(LanguagePlugin):
         """Return the taint tracking profile for Java."""
         return JAVA_TAINT_PROFILE
 
+    def parse_structure(self, source: str) -> Any:
+        """Parse Java source into a lightweight StructTree."""
+        from apsla.languages.java_lang.parser import parse_java_structure
+
+        return parse_java_structure(source)
+
     def analyze_taint(self, source: str, tokens: list[Token]) -> list[TaintResult]:
         """Execute statement-level taint-lite data flow analysis."""
-        engine = TaintLiteEngine(source, tokens, JAVA_TAINT_PROFILE)
+        tree = self.parse_structure(source)
+        engine = TaintLiteEngine(source, tokens, JAVA_TAINT_PROFILE, struct_tree=tree)
         return engine.analyze()
 
     def fix_generators(self) -> dict[str, FixGenerator]:
@@ -65,7 +72,7 @@ class JavaPlugin(LanguagePlugin):
 
         Verifies:
           1. Lexer produces zero ERROR tokens.
-          2. Delimiters (parentheses, braces, brackets) are balanced.
+          2. Structure parser produces zero ERROR nodes.
           3. Optional tree-sitter-java validation if installed.
         """
         tokens = self.lex(source)
@@ -75,29 +82,14 @@ class JavaPlugin(LanguagePlugin):
             if t.kind == "ERROR":
                 return False, f"Lexical error: '{t.text}' at line {t.line}, col {t.col}"
 
-        # 2. Balanced delimiters check
-        delim_pairs = {")": "(", "}": "{", "]": "["}
-        stack: list[tuple[str, int, int]] = []
-
-        for t in tokens:
-            if t.kind in ("COMMENT", "STRING", "CHAR"):
-                continue
-            if t.text in ("(", "{", "["):
-                stack.append((t.text, t.line, t.col))
-            elif t.text in (")", "}", "]"):
-                expected_open = delim_pairs[t.text]
-                if not stack:
-                    return False, f"Unmatched closing delimiter '{t.text}' at line {t.line}"
-                open_ch, open_line, _ = stack.pop()
-                if open_ch != expected_open:
-                    return (
-                        False,
-                        f"Mismatched delimiter: opened '{open_ch}' at line {open_line}, closed '{t.text}' at line {t.line}",
-                    )
-
-        if stack:
-            unclosed_ch, unclosed_line, _ = stack[-1]
-            return False, f"Unclosed delimiter '{unclosed_ch}' from line {unclosed_line}"
+        # 2. Structural parsing check (no ERROR nodes)
+        tree = self.parse_structure(source)
+        if tree.errors:
+            first_err = tree.errors[0]
+            return (
+                False,
+                f"Syntax error: {first_err.message} at line {first_err.range.start_line}, col {first_err.range.start_col}",
+            )
 
         # 3. Optional tree-sitter parse check (if installed)
         try:
@@ -106,12 +98,11 @@ class JavaPlugin(LanguagePlugin):
 
             language = Language(tsjava.language())
             parser = Parser(language)
-            tree = parser.parse(source.encode("utf-8"))
-            if tree.root_node.has_error:
-                return False, "Tree-sitter Java syntax error detected in source."
+            ts_tree = parser.parse(source.encode("utf-8"))
+            if ts_tree.root_node.has_error:
+                return False, "Syntax error detected by tree-sitter-java"
         except (ImportError, Exception):
             pass
-
         return True, None
 
     def dangerous_apis(self) -> dict[str, str]:

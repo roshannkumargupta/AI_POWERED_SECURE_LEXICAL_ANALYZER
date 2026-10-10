@@ -1,0 +1,46 @@
+Module(
+  body=[
+    FunctionDef(
+      name='handle_command',
+      args=arguments(
+        posonlyargs=[],
+        args=[
+          arg(arg='cmd')],
+        kwonlyargs=[],
+        kw_defaults=[],
+        defaults=[]),
+      body=[
+        Match(
+          subject=Name(id='cmd', ctx=Load()),
+          cases=[
+            match_case(
+              pattern=MatchSequence(
+                patterns=[
+                  MatchValue(
+                    value=Constant(value='quit'))]),
+              body=[
+                Expr(
+                  value=Call(
+                    func=Attribute(
+                      value=Name(id='sys', ctx=Load()),
+                      attr='exit',
+                      ctx=Load()),
+                    args=[],
+                    keywords=[]))]),
+            match_case(
+              pattern=MatchSequence(
+                patterns=[
+                  MatchValue(
+                    value=Constant(value='get')),
+                  MatchAs(name='item')]),
+              body=[
+                Return(
+                  value=Name(id='item', ctx=Load()))]),
+            match_case(
+              pattern=MatchAs(),
+              body=[
+                Return(
+                  value=Constant(value=None))])])],
+      decorator_list=[],
+      type_params=[])],
+  type_ignores=[])

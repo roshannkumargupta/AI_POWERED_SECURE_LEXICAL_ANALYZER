@@ -1,0 +1,73 @@
+Module(
+  body=[
+    ClassDef(
+      name='UserAccount',
+      bases=[],
+      keywords=[],
+      body=[
+        FunctionDef(
+          name='__init__',
+          args=arguments(
+            posonlyargs=[],
+            args=[
+              arg(arg='self'),
+              arg(
+                arg='username',
+                annotation=Name(id='str', ctx=Load())),
+              arg(
+                arg='email',
+                annotation=Name(id='str', ctx=Load()))],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[]),
+          body=[
+            Assign(
+              targets=[
+                Attribute(
+                  value=Name(id='self', ctx=Load()),
+                  attr='username',
+                  ctx=Store())],
+              value=Name(id='username', ctx=Load())),
+            Assign(
+              targets=[
+                Attribute(
+                  value=Name(id='self', ctx=Load()),
+                  attr='email',
+                  ctx=Store())],
+              value=Name(id='email', ctx=Load()))],
+          decorator_list=[],
+          returns=Constant(value=None),
+          type_params=[]),
+        FunctionDef(
+          name='display',
+          args=arguments(
+            posonlyargs=[],
+            args=[
+              arg(arg='self')],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[]),
+          body=[
+            Return(
+              value=JoinedStr(
+                values=[
+                  FormattedValue(
+                    value=Attribute(
+                      value=Name(id='self', ctx=Load()),
+                      attr='username',
+                      ctx=Load()),
+                    conversion=-1),
+                  Constant(value=' <'),
+                  FormattedValue(
+                    value=Attribute(
+                      value=Name(id='self', ctx=Load()),
+                      attr='email',
+                      ctx=Load()),
+                    conversion=-1),
+                  Constant(value='>')]))],
+          decorator_list=[],
+          returns=Name(id='str', ctx=Load()),
+          type_params=[])],
+      decorator_list=[],
+      type_params=[])],
+  type_ignores=[])

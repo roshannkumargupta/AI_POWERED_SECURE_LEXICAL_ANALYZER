@@ -1,0 +1,1 @@
+(translation_unit (preproc_include path: (system_lib_string)) (preproc_def name: (identifier) value: (preproc_arg)) (preproc_ifdef name: (identifier) (preproc_function_def name: (identifier) parameters: (preproc_params (identifier)) value: (preproc_arg)) alternative: (preproc_else (preproc_function_def name: (identifier) parameters: (preproc_params (identifier))))))

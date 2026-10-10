@@ -1,0 +1,36 @@
+Module(
+  body=[
+    Try(
+      body=[
+        Assign(
+          targets=[
+            Name(id='val', ctx=Store())],
+          value=Call(
+            func=Name(id='int', ctx=Load()),
+            args=[
+              Constant(value='abc')],
+            keywords=[]))],
+      handlers=[
+        ExceptHandler(
+          type=Name(id='ValueError', ctx=Load()),
+          name='e',
+          body=[
+            Expr(
+              value=Call(
+                func=Name(id='print', ctx=Load()),
+                args=[
+                  JoinedStr(
+                    values=[
+                      Constant(value='Error: '),
+                      FormattedValue(
+                        value=Name(id='e', ctx=Load()),
+                        conversion=-1)])],
+                keywords=[]))])],
+      orelse=[],
+      finalbody=[
+        Expr(
+          value=Call(
+            func=Name(id='cleanup', ctx=Load()),
+            args=[],
+            keywords=[]))])],
+  type_ignores=[])

@@ -1,0 +1,1 @@
+(program (class_declaration (modifiers) name: (identifier) body: (class_body (field_declaration type: (type_identifier) declarator: (variable_declarator name: (identifier) value: (string_literal (multiline_string_fragment)))))))

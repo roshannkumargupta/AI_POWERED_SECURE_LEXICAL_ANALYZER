@@ -9,7 +9,7 @@ The SecureLex IDE backend exposes an HTTP REST API powered by **FastAPI** and **
 ### Key Architectural Characteristics
 - **Base Prefix:** All API endpoints are mounted under `/api`.
 - **Content Type:** `application/json` exclusively for all requests and responses.
-- **Port & Binding:** Default bind on `http://127.0.0.1:8000`.
+- **Port & Binding:** `python scripts/dev.py` binds to `http://127.0.0.1:8010` by default (`APSLA_API_PORT` overrides it). The `apsla serve` CLI keeps its own default port of `8000`.
 - **CORS Allowlist:** Strictly restricted to frontend origins `http://localhost:5173` and `http://127.0.0.1:5173`.
 - **Payload Limits:** Maximum source payload of **512 KB**; payloads exceeding this limit receive `HTTP 413 Content Too Large`.
 - **Execution Timeouts:** Asynchronous timeout enforced at **10.0 seconds** per analysis request; requests exceeding this limit receive `HTTP 504 Gateway Timeout`.

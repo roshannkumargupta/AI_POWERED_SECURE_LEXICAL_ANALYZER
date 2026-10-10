@@ -118,6 +118,12 @@ def test_analyze_flask_fixture(client: TestClient):
 
     inj_finding = next((f for f in findings if f["rule_id"] == "APS-PY-INJ-002"), None)
     assert inj_finding is not None
+    assert inj_finding["kind"] == "security"
+    assert inj_finding["attack"] == ["T1059"]
+    assert inj_finding["evidence"]["confidence_breakdown"]["fused"] == inj_finding["confidence"]
+    assert data["engine"]["parser"] == "python-ast"
+    assert data["summary"]["lexical_errors"] == 0
+    assert data["summary"]["syntax_errors"] == 0
 
     # Taint path check
     assert len(inj_finding["taint_path"]) >= 2
@@ -131,6 +137,24 @@ def test_analyze_flask_fixture(client: TestClient):
     assert fix["verification"]["verified"] is True
     assert fix["verification"]["syntax_ok"] is True
     assert fix["verification"]["finding_gone"] is True
+
+
+def test_analyze_api_round_trip_includes_lexical_and_syntax_kinds(client: TestClient):
+    """Ensure additive UI-5 diagnostics survive real HTTP serialization."""
+    source = 'value = "unclosed\n'
+    response = client.post(
+        "/api/analyze",
+        json={"source": source, "language": "python", "options": {"ml": False, "fixes": False}},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["engine"]["parser"] == "python-ast"
+    assert any(
+        f["kind"] == "lexical" and f["rule_id"] == "APS-PY-LEX-001" for f in data["findings"]
+    )
+    assert any(f["kind"] == "syntax" and f["rule_id"] == "APS-PY-SYN-001" for f in data["findings"])
+    assert data["summary"]["lexical_errors"] == 1
+    assert data["summary"]["syntax_errors"] == 1
 
 
 def test_analyze_auto_detect_language(client: TestClient):

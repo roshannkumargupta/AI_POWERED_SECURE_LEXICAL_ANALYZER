@@ -1,0 +1,212 @@
+{
+  "ext_01_user_report_open.c": {
+    "label": "MALICIOUS",
+    "note": "Unbounded sprintf constructing file path with potential buffer overflow and traversal",
+    "length": 160
+  },
+  "ext_02_safe_path_resolve.c": {
+    "label": "SAFE",
+    "note": "Bounded snprintf and directory prefix validation",
+    "length": 267
+  },
+  "ext_03_payment_gateway_hash.c": {
+    "label": "MALICIOUS",
+    "note": "Weak MD5 hash algorithm used for transaction validation",
+    "length": 246
+  },
+  "ext_04_token_generator_urandom.c": {
+    "label": "SAFE",
+    "note": "Reading random bytes from /dev/urandom for cryptographic token",
+    "length": 225
+  },
+  "ext_05_backup_db_system.c": {
+    "label": "MALICIOUS",
+    "note": "system() command injection via dynamic table parameter",
+    "length": 192
+  },
+  "ext_06_docker_exec_fork.c": {
+    "label": "SAFE",
+    "note": "fork and execve with argument vector avoiding shell expansion",
+    "length": 284
+  },
+  "ext_07_strcpy_packet_copy.c": {
+    "label": "MALICIOUS",
+    "note": "Unbounded strcpy buffer overflow copying network packet data",
+    "length": 127
+  },
+  "ext_08_safe_snprintf_copy.c": {
+    "label": "SAFE",
+    "note": "snprintf bounded buffer copy ensuring null termination",
+    "length": 158
+  },
+  "ext_09_printf_format_string.c": {
+    "label": "MALICIOUS",
+    "note": "Format string vulnerability passing user buffer directly to printf",
+    "length": 89
+  },
+  "ext_10_safe_printf_format.c": {
+    "label": "SAFE",
+    "note": "printf with explicit format specifier string",
+    "length": 102
+  },
+  "ext_11_gets_user_input.c": {
+    "label": "MALICIOUS",
+    "note": "Dangerous gets function leading to stack buffer overflow",
+    "length": 87
+  },
+  "ext_12_safe_fgets_input.c": {
+    "label": "SAFE",
+    "note": "Bounded fgets reading user input with size limit",
+    "length": 164
+  },
+  "ext_13_tmpnam_race_condition.c": {
+    "label": "MALICIOUS",
+    "note": "Insecure tmpnam race condition vulnerability",
+    "length": 121
+  },
+  "ext_14_safe_mkstemp.c": {
+    "label": "SAFE",
+    "note": "Secure atomic temporary file creation via mkstemp",
+    "length": 149
+  },
+  "ext_15_hardcoded_admin_pass.c": {
+    "label": "MALICIOUS",
+    "note": "Hardcoded administrator password string literal",
+    "length": 186
+  },
+  "ext_16_getenv_secret.c": {
+    "label": "SAFE",
+    "note": "Administrator password retrieved from environment",
+    "length": 199
+  },
+  "ext_17_strcat_buffer_overflow.c": {
+    "label": "MALICIOUS",
+    "note": "Unbounded strcat buffer overflow concatenating user argument",
+    "length": 105
+  },
+  "ext_18_safe_strncat_copy.c": {
+    "label": "SAFE",
+    "note": "Bounded strncat accounting for existing buffer length",
+    "length": 228
+  },
+  "ext_19_bidi_override_auth.c": {
+    "label": "MALICIOUS",
+    "note": "Trojan Source bidirectional control characters spoofing security logic",
+    "length": 123
+  },
+  "ext_20_cyrillic_homoglyph_id.c": {
+    "label": "MALICIOUS",
+    "note": "Cyrillic homoglyph shadowing legitimate administrative variable",
+    "length": 106
+  },
+  "ext_21_zero_width_auth.c": {
+    "label": "MALICIOUS",
+    "note": "Zero-width spaces embedded in cryptographic secret literal",
+    "length": 47
+  },
+  "ext_22_popen_user_command.c": {
+    "label": "MALICIOUS",
+    "note": "popen command execution with user-controlled string",
+    "length": 158
+  },
+  "ext_23_base64_payload_run.c": {
+    "label": "MALICIOUS",
+    "note": "Base64 payload decoded and executed via system",
+    "length": 191
+  },
+  "ext_24_syslog_format_string.c": {
+    "label": "MALICIOUS",
+    "note": "syslog format string vulnerability with direct message argument",
+    "length": 100
+  },
+  "ext_25_safe_syslog_format.c": {
+    "label": "SAFE",
+    "note": "syslog with constant format specifier",
+    "length": 111
+  },
+  "ext_26_rand_session_cookie.c": {
+    "label": "SUSPICIOUS",
+    "note": "Insecure rand() function used for session cookie identifier",
+    "length": 71
+  },
+  "ext_27_safe_getrandom_cookie.c": {
+    "label": "SAFE",
+    "note": "Cryptographically secure random generation via getentropy or /dev/urandom",
+    "length": 194
+  },
+  "ext_28_unchecked_malloc_size.c": {
+    "label": "SUSPICIOUS",
+    "note": "malloc with unchecked user input size potential integer overflow",
+    "length": 116
+  },
+  "ext_29_safe_calloc_checked.c": {
+    "label": "SAFE",
+    "note": "calloc with automatic multiplication overflow protection",
+    "length": 120
+  },
+  "ext_30_sprintf_buffer_overflow.c": {
+    "label": "MALICIOUS",
+    "note": "sprintf buffer overflow into fixed stack buffer",
+    "length": 137
+  },
+  "ext_31_safe_snprintf_buffer.c": {
+    "label": "SAFE",
+    "note": "snprintf with explicit output buffer capacity bounds",
+    "length": 166
+  },
+  "ext_32_hardcoded_api_key.cpp": {
+    "label": "MALICIOUS",
+    "note": "Hardcoded API secret token in C++ string constant",
+    "length": 130
+  },
+  "ext_33_safe_config_api_key.cpp": {
+    "label": "SAFE",
+    "note": "API key read safely from configuration file or environment variable",
+    "length": 195
+  },
+  "ext_34_double_free_pointer.c": {
+    "label": "MALICIOUS",
+    "note": "Double free memory corruption vulnerability",
+    "length": 143
+  },
+  "ext_35_raii_unique_ptr.cpp": {
+    "label": "SAFE",
+    "note": "Modern C++ std::unique_ptr RAII memory management avoiding double free",
+    "length": 164
+  },
+  "ext_36_popen_grep_filter.c": {
+    "label": "MALICIOUS",
+    "note": "popen executing grep with unquoted user pattern",
+    "length": 166
+  },
+  "ext_37_safe_file_stream.cpp": {
+    "label": "SAFE",
+    "note": "std::ifstream reading file safely without child processes",
+    "length": 373
+  },
+  "ext_38_tempnam_insecure.c": {
+    "label": "MALICIOUS",
+    "note": "Deprecated tempnam function vulnerable to symlink race condition",
+    "length": 81
+  },
+  "ext_39_safe_std_string_concat.cpp": {
+    "label": "SAFE",
+    "note": "Safe C++ std::string concatenation avoiding buffer overflows",
+    "length": 115
+  },
+  "ext_40_raw_crypto_sha1.c": {
+    "label": "MALICIOUS",
+    "note": "Deprecated SHA-1 hashing algorithm for security token verification",
+    "length": 211
+  },
+  "ext_41_safe_sha256_openssl.c": {
+    "label": "SAFE",
+    "note": "Modern SHA-256 cryptographic hash function",
+    "length": 215
+  },
+  "ext_42_cpp_json_telemetry.cpp": {
+    "label": "SAFE",
+    "note": "Safe C++ struct telemetry record construction",
+    "length": 205
+  }
+}

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from typing import Any
 
 from apsla.languages.base import TaintProfile, TaintResult
 from apsla.lexing.common import OffsetMap
@@ -62,11 +63,13 @@ class TaintLiteEngine:
         tokens: list[Token],
         profile: TaintProfile,
         offset_map: OffsetMap | None = None,
+        struct_tree: Any | None = None,
     ) -> None:
         self.source = source
         self.tokens = tokens
         self.profile = profile
         self.offset_map = offset_map or OffsetMap(source)
+        self.struct_tree = struct_tree
 
         # Precompile lookup patterns for fast matching
         self._sources = profile.sources
@@ -80,12 +83,26 @@ class TaintLiteEngine:
 
         # Scope stack: list of dict[var_name -> TaintState]
         scope_stack: list[dict[str, TaintState]] = [{}]
+        current_fn_range: Range | None = None
 
         for stmt in statements:
             # Handle block delimiter braces in statement
             stmt_text = stmt.text.strip()
             if not stmt_text:
                 continue
+
+            # Scope isolation using StructTree function boundaries if available
+            if self.struct_tree and getattr(self.struct_tree, "functions", None):
+                fn = self.struct_tree.find_function_at(stmt.start_line, stmt.start_col)
+                fn_range = fn.range if fn else None
+                if fn_range != current_fn_range:
+                    current_fn_range = fn_range
+                    if fn_range is not None:
+                        # Enter new function: isolate locals while keeping process globals (like argv)
+                        global_scope = {
+                            k: v for k, v in scope_stack[0].items() if k in ("argv", "argc")
+                        }
+                        scope_stack = [global_scope, {}]
 
             # Scope entry/exit based on block start and end
             if stmt.tokens and stmt.tokens[0].text == "}" and stmt.tokens[0].kind != "TEMPLATE":
@@ -199,9 +216,20 @@ class TaintLiteEngine:
                 tainted_var, rule_id, title, cwe, sev = sink_match
                 t_state = current_scope.get(tainted_var)
                 if t_state and not t_state.sanitized:
+                    sink_range = stmt.range
+                    if self.struct_tree and getattr(self.struct_tree, "calls", None):
+                        for c in self.struct_tree.calls:
+                            if c.range.start_line == stmt.range.start_line:
+                                for arg_range, arg_text in zip(c.args, c.arg_texts):
+                                    if re.search(rf"\b{re.escape(tainted_var)}\b", arg_text):
+                                        sink_range = arg_range
+                                        break
+                                if sink_range != stmt.range:
+                                    break
+
                     sink_step = create_taint_step(
                         kind=TaintStepKind.SINK,
-                        range=stmt.range,
+                        range=sink_range,
                         text=stmt_text,
                         note=f"Tainted data consumed by security-sensitive sink ({title})",
                     )
@@ -320,9 +348,7 @@ class TaintLiteEngine:
                 first = current[0]
                 last = current[-1]
                 raw_text = self.source[
-                    self.offset_map.utf16_to_py(first.start) : self.offset_map.utf16_to_py(
-                        last.end
-                    )
+                    self.offset_map.utf16_to_py(first.start) : self.offset_map.utf16_to_py(last.end)
                 ]
                 statements.append(
                     Statement(
@@ -438,9 +464,7 @@ class TaintLiteEngine:
             return m_buf1.group(1)
 
         # C buffer reads with buffer as second argument: read(fd, buf, ...), recv(sock, buf, ...)
-        m_buf2 = re.search(
-            r"\b(?:read|recv|recvfrom)\s*\(\s*[^,]+,\s*&?([A-Za-z0-9_]+)", stmt.text
-        )
+        m_buf2 = re.search(r"\b(?:read|recv|recvfrom)\s*\(\s*[^,]+,\s*&?([A-Za-z0-9_]+)", stmt.text)
         if m_buf2:
             return m_buf2.group(1)
 
@@ -450,9 +474,7 @@ class TaintLiteEngine:
             return m_getline.group(1)
 
         # scanf("%s", buf) or scanf("%d", &x)
-        m_scanf = re.search(
-            r"\b(?:scanf|fscanf|sscanf)\s*\([^,]+,\s*&?([A-Za-z0-9_]+)", stmt.text
-        )
+        m_scanf = re.search(r"\b(?:scanf|fscanf|sscanf)\s*\([^,]+,\s*&?([A-Za-z0-9_]+)", stmt.text)
         if m_scanf:
             return m_scanf.group(1)
 
@@ -748,13 +770,19 @@ class TaintLiteEngine:
 
                         # JS Command Injection safety: execFile or spawn with argument array and no shell:true is safe
                         if rule_id == "APS-JS-INJ-002":
-                            if "execFile" in text or ("spawn(" in text and "shell: true" not in text):
+                            if "execFile" in text or (
+                                "spawn(" in text and "shell: true" not in text
+                            ):
                                 if "[" in text and "shell: true" not in text and "+" not in text:
                                     continue
 
                         # JS XSS safety: DOMPurify.sanitize or escapeHtml is safe
                         if rule_id in ("APS-JS-XSS-001", "APS-JS-XSS-002"):
-                            if "DOMPurify.sanitize" in text or "escapeHtml" in text or "textContent" in text:
+                            if (
+                                "DOMPurify.sanitize" in text
+                                or "escapeHtml" in text
+                                or "textContent" in text
+                            ):
                                 continue
 
                         # JS Path Traversal safety: path.basename is safe
@@ -763,14 +791,23 @@ class TaintLiteEngine:
                                 continue
 
                         # JS setTimeout / setInterval: safe if first arg is arrow fn or function callback
-                        if rule_id == "APS-JS-INJ-001" and ("setTimeout" in text or "setInterval" in text):
-                            if re.search(r"set(?:Timeout|Interval)\s*\(\s*(?:\(\s*\)\s*=>|function\b|[A-Za-z0-9_]+\s*,)", text):
-                                if "+" not in text and not re.search(rf"[`\"'].*\b{re.escape(var_name)}\b.*[`\"']", text):
+                        if rule_id == "APS-JS-INJ-001" and (
+                            "setTimeout" in text or "setInterval" in text
+                        ):
+                            if re.search(
+                                r"set(?:Timeout|Interval)\s*\(\s*(?:\(\s*\)\s*=>|function\b|[A-Za-z0-9_]+\s*,)",
+                                text,
+                            ):
+                                if "+" not in text and not re.search(
+                                    rf"[`\"'].*\b{re.escape(var_name)}\b.*[`\"']", text
+                                ):
                                     continue
 
                         # C/C++ format string: safe if format argument is a string literal starting with '"'
                         if rule_id == "APS-CP-FMT-001":
-                            fn_m = re.search(r"\b(printf|fprintf|syslog|snprintf|vsnprintf)\b", text)
+                            fn_m = re.search(
+                                r"\b(printf|fprintf|syslog|snprintf|vsnprintf)\b", text
+                            )
                             fn_name = fn_m.group(1) if fn_m else "printf"
                             fmt_idx = 0
                             if fn_name in ("fprintf", "syslog"):

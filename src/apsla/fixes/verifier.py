@@ -83,7 +83,7 @@ def verify_fix(
     finding: Finding,
     language: str = "python",
     existing_finding_keys: set[tuple[str, int]] | None = None,
-    timeout_seconds: float = 2.0,
+    timeout_seconds: float = 5.0,
 ) -> Fix:
     """Verify an automated fix against a sandboxed document copy.
 
@@ -97,7 +97,7 @@ def verify_fix(
         finding: Target finding being remediated.
         language: Language identifier (default: "python").
         existing_finding_keys: Known (rule_id, line) pairs in the unpatched document.
-        timeout_seconds: Maximum time allowed for verification (default: 2.0s).
+        timeout_seconds: Maximum time allowed for verification (default: 5.0s).
 
     Returns:
         Updated Fix with verified VerificationResult.
@@ -146,7 +146,7 @@ def verify_fix(
             finding_gone=False,
             new_findings=[],
             verified=False,
-            notes="Verification timed out (>2.0s).",
+            notes=f"Verification timed out (>{timeout_seconds}s).",
         )
         return fix.model_copy(update={"verification": res, "confidence": "manual", "edits": []})
     except Exception as exc:

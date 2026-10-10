@@ -14,80 +14,76 @@ ADV.mkdir(parents=True, exist_ok=True)
 
 vulnerable_fixtures = {
     "code_injection_eval.js": (
-        "function runDynamic(userInput) {\n"
-        "    eval(userInput);\n"
-        "}\n",
-        [{"rule_id": "APS-JS-INJ-001", "line": 2}]
+        "function runDynamic(userInput) {\n    eval(userInput);\n}\n",
+        [{"rule_id": "APS-JS-INJ-001", "line": 2}],
     ),
     "code_injection_settimeout.js": (
         "function scheduleTask(taskName) {\n"
         '    setTimeout("executeTask(" + taskName + ")", 1000);\n'
         "}\n",
-        [{"rule_id": "APS-JS-INJ-001", "line": 2}]
+        [{"rule_id": "APS-JS-INJ-001", "line": 2}],
     ),
     "code_injection_function.js": (
         "function makeHandler(codeStr) {\n"
         "    const fn = new Function('req', 'res', codeStr);\n"
         "    return fn;\n"
         "}\n",
-        [{"rule_id": "APS-JS-INJ-001", "line": 2}]
+        [{"rule_id": "APS-JS-INJ-001", "line": 2}],
     ),
     "cmd_injection_exec.js": (
         "const { exec } = require('child_process');\n"
         "function pingHost(host) {\n"
         '    exec("ping -c 1 " + host);\n'
         "}\n",
-        [{"rule_id": "APS-JS-INJ-002", "line": 3}]
+        [{"rule_id": "APS-JS-INJ-002", "line": 3}],
     ),
     "cmd_injection_spawn_shell.js": (
         "const { spawn } = require('child_process');\n"
         "function runShell(command) {\n"
         "    spawn(command, { shell: true });\n"
         "}\n",
-        [{"rule_id": "APS-JS-INJ-002", "line": 3}]
+        [{"rule_id": "APS-JS-INJ-002", "line": 3}],
     ),
     "dom_xss.js": (
         "const hash = location.hash.slice(1);\n"
         "const output = document.getElementById('output');\n"
         'output.innerHTML = "Welcome " + hash;\n',
-        [{"rule_id": "APS-JS-XSS-001", "line": 3}]
+        [{"rule_id": "APS-JS-XSS-001", "line": 3}],
     ),
     "dom_xss_doc_write.js": (
         "const name = new URLSearchParams(location.search).get('name');\n"
         'document.write("Hello " + name);\n',
-        [{"rule_id": "APS-JS-XSS-001", "line": 2}]
+        [{"rule_id": "APS-JS-XSS-001", "line": 2}],
     ),
     "dom_xss_outer_html.js": (
         "function updateWidget(userBio) {\n"
         "    const card = document.getElementById('card');\n"
         '    card.outerHTML = "<div class=\'card\'>" + userBio + "</div>";\n'
         "}\n",
-        [{"rule_id": "APS-JS-XSS-001", "line": 3}]
+        [{"rule_id": "APS-JS-XSS-001", "line": 3}],
     ),
     "react_xss_dangerously_set_inner_html.js": (
         "function UserCard({ bio }) {\n"
         "    return <div dangerouslySetInnerHTML={{ __html: bio }} />;\n"
         "}\n",
-        [{"rule_id": "APS-JS-XSS-002", "line": 2}]
+        [{"rule_id": "APS-JS-XSS-002", "line": 2}],
     ),
     "open_redirect_location.js": (
         "function redirectUser() {\n"
         "    const target = location.search.slice(1);\n"
         "    location.href = target;\n"
         "}\n",
-        [{"rule_id": "APS-JS-NET-001", "line": 3}]
+        [{"rule_id": "APS-JS-NET-001", "line": 3}],
     ),
     "open_redirect_set_attribute.js": (
         "function bindEvent(elem, handlerCode) {\n"
         '    elem.setAttribute("onclick", handlerCode);\n'
         "}\n",
-        [{"rule_id": "APS-JS-NET-001", "line": 2}]
+        [{"rule_id": "APS-JS-NET-001", "line": 2}],
     ),
     "sqli_concat.js": (
-        "function getUser(id) {\n"
-        '    db.query("SELECT * FROM users WHERE id = " + id);\n'
-        "}\n",
-        [{"rule_id": "APS-JS-INJ-003", "line": 2}]
+        'function getUser(id) {\n    db.query("SELECT * FROM users WHERE id = " + id);\n}\n',
+        [{"rule_id": "APS-JS-INJ-003", "line": 2}],
     ),
     "sqli_template_literal.js": (
         "async function findItem(req) {\n"
@@ -95,7 +91,7 @@ vulnerable_fixtures = {
         "    const query = `SELECT * FROM items WHERE id = ${id}`;\n"
         "    await db.query(query);\n"
         "}\n",
-        [{"rule_id": "APS-JS-INJ-003", "line": 4}]
+        [{"rule_id": "APS-JS-INJ-003", "line": 4}],
     ),
     "path_traversal_read_file.js": (
         "const fs = require('fs');\n"
@@ -103,14 +99,14 @@ vulnerable_fixtures = {
         "    const file = req.params.file;\n"
         "    fs.readFile('/data/' + file, 'utf8', (err, data) => res.send(data));\n"
         "}\n",
-        [{"rule_id": "APS-JS-IO-001", "line": 4}]
+        [{"rule_id": "APS-JS-IO-001", "line": 4}],
     ),
     "path_traversal_send_file.js": (
         "function serveUpload(req, res) {\n"
         "    const filename = req.query.name;\n"
         "    res.sendFile('/uploads/' + filename);\n"
         "}\n",
-        [{"rule_id": "APS-JS-IO-001", "line": 3}]
+        [{"rule_id": "APS-JS-IO-001", "line": 3}],
     ),
     "ssrf_fetch.js": (
         "async function proxyFetch(req, res) {\n"
@@ -118,7 +114,7 @@ vulnerable_fixtures = {
         "    const resp = await fetch(url);\n"
         "    res.send(await resp.text());\n"
         "}\n",
-        [{"rule_id": "APS-JS-NET-002", "line": 3}]
+        [{"rule_id": "APS-JS-NET-002", "line": 3}],
     ),
     "ssrf_axios.js": (
         "const axios = require('axios');\n"
@@ -126,50 +122,50 @@ vulnerable_fixtures = {
         "    const target = req.query.target;\n"
         '    axios.get("http://" + target);\n'
         "}\n",
-        [{"rule_id": "APS-JS-NET-002", "line": 4}]
+        [{"rule_id": "APS-JS-NET-002", "line": 4}],
     ),
     "insecure_random_token.js": (
         "function generateSessionToken() {\n"
         "    const sessionToken = Math.random().toString(36).substring(2);\n"
         "    return sessionToken;\n"
         "}\n",
-        [{"rule_id": "APS-JS-CRY-001", "line": 2}]
+        [{"rule_id": "APS-JS-CRY-001", "line": 2}],
     ),
     "crypto_md5.js": (
         "const crypto = require('crypto');\n"
         "function hashPassword(password) {\n"
         '    return crypto.createHash("md5").update(password).digest("hex");\n'
         "}\n",
-        [{"rule_id": "APS-JS-CRY-002", "line": 3}]
+        [{"rule_id": "APS-JS-CRY-002", "line": 3}],
     ),
     "crypto_sha1.js": (
         "const crypto = require('crypto');\n"
         "function hashData(data) {\n"
         '    return crypto.createHash("sha1").update(data).digest("hex");\n'
         "}\n",
-        [{"rule_id": "APS-JS-CRY-002", "line": 3}]
+        [{"rule_id": "APS-JS-CRY-002", "line": 3}],
     ),
     "hardcoded_api_key.js": (
         'const API_KEY = "AKIA1234567890ABCDEF12";\n',
-        [{"rule_id": "APS-JS-SEC-001", "line": 1}]
+        [{"rule_id": "APS-JS-SEC-001", "line": 1}],
     ),
     "hardcoded_jwt_secret.js": (
         'const jwtSecret = "super_duper_secret_key_998877";\n',
-        [{"rule_id": "APS-JS-SEC-001", "line": 1}]
+        [{"rule_id": "APS-JS-SEC-001", "line": 1}],
     ),
     "jwt_none_algorithm.js": (
         "const jwt = require('jsonwebtoken');\n"
         "function verifyToken(token) {\n"
         "    return jwt.verify(token, 'secret', { algorithms: ['none'] });\n"
         "}\n",
-        [{"rule_id": "APS-JS-SEC-002", "line": 3}]
+        [{"rule_id": "APS-JS-SEC-002", "line": 3}],
     ),
     "prototype_pollution_assign.js": (
         "function updateConfig(req, res) {\n"
         "    const config = {};\n"
         "    Object.assign(config, req.body);\n"
         "}\n",
-        [{"rule_id": "APS-JS-INJ-004", "line": 3}]
+        [{"rule_id": "APS-JS-INJ-004", "line": 3}],
     ),
     "redos_dynamic_regex.js": (
         "function matchUser(req) {\n"
@@ -177,37 +173,29 @@ vulnerable_fixtures = {
         "    const re = new RegExp(pattern);\n"
         '    return re.test("sample");\n'
         "}\n",
-        [{"rule_id": "APS-JS-INJ-005", "line": 3}]
+        [{"rule_id": "APS-JS-INJ-005", "line": 3}],
     ),
     "obfuscation_eval_atob.js": (
-        "function execPayload() {\n"
-        '    eval(atob("YWxlcnQoMSk="));\n'
-        "}\n",
-        [{"rule_id": "APS-JS-OBF-001", "line": 2}]
+        'function execPayload() {\n    eval(atob("YWxlcnQoMSk="));\n}\n',
+        [{"rule_id": "APS-JS-OBF-001", "line": 2}],
     ),
     "disabled_tls_env.js": (
         'process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";\n',
-        [{"rule_id": "APS-JS-NET-003", "line": 1}]
+        [{"rule_id": "APS-JS-NET-003", "line": 1}],
     ),
     "disabled_tls_reject_unauthorized.js": (
         "const https = require('https');\n"
         "const agent = new https.Agent({\n"
         "    rejectUnauthorized: false\n"
         "});\n",
-        [{"rule_id": "APS-JS-NET-003", "line": 3}]
+        [{"rule_id": "APS-JS-NET-003", "line": 3}],
     ),
 }
 
 safe_fixtures = {
-    "safe_eval_json_parse.js": (
-        "function parseConfig(raw) {\n"
-        "    return JSON.parse(raw);\n"
-        "}\n"
-    ),
+    "safe_eval_json_parse.js": ("function parseConfig(raw) {\n    return JSON.parse(raw);\n}\n"),
     "safe_timer_callback.js": (
-        "function schedule(item) {\n"
-        "    setTimeout(() => alert(item), 1000);\n"
-        "}\n"
+        "function schedule(item) {\n    setTimeout(() => alert(item), 1000);\n}\n"
     ),
     "safe_cmd_exec_file.js": (
         "const { execFile } = require('child_process');\n"
@@ -238,20 +226,13 @@ safe_fixtures = {
         "}\n"
     ),
     "safe_open_redirect_whitelist.js": (
-        "function redirect() {\n"
-        "    const target = '/dashboard';\n"
-        "    location.href = target;\n"
-        "}\n"
+        "function redirect() {\n    const target = '/dashboard';\n    location.href = target;\n}\n"
     ),
     "safe_sqli_parameterized.js": (
-        "function getUser(id) {\n"
-        '    db.query("SELECT * FROM users WHERE id = ?", [id]);\n'
-        "}\n"
+        'function getUser(id) {\n    db.query("SELECT * FROM users WHERE id = ?", [id]);\n}\n'
     ),
     "safe_sqli_pg_parameterized.js": (
-        "function getItem(id) {\n"
-        '    pool.query("SELECT * FROM items WHERE id = $1", [id]);\n'
-        "}\n"
+        'function getItem(id) {\n    pool.query("SELECT * FROM items WHERE id = $1", [id]);\n}\n'
     ),
     "safe_path_basename.js": (
         "const fs = require('fs');\n"
@@ -262,9 +243,7 @@ safe_fixtures = {
         "}\n"
     ),
     "safe_ssrf_whitelisted.js": (
-        "function fetchInternal(endpoint) {\n"
-        '    fetch("https://api.internal.corp/status");\n'
-        "}\n"
+        'function fetchInternal(endpoint) {\n    fetch("https://api.internal.corp/status");\n}\n'
     ),
     "safe_crypto_random_uuid.js": (
         "const crypto = require('crypto');\n"
@@ -279,9 +258,7 @@ safe_fixtures = {
         "}\n"
     ),
     "safe_math_random_dice.js": (
-        "function rollDice() {\n"
-        "    return Math.floor(Math.random() * 6) + 1;\n"
-        "}\n"
+        "function rollDice() {\n    return Math.floor(Math.random() * 6) + 1;\n}\n"
     ),
     "safe_crypto_sha256.js": (
         "const crypto = require('crypto');\n"
@@ -295,12 +272,8 @@ safe_fixtures = {
         '    return crypto.createHash("sha512").update(data).digest("hex");\n'
         "}\n"
     ),
-    "safe_secret_env.js": (
-        "const API_KEY = process.env.API_KEY || '';\n"
-    ),
-    "safe_secret_placeholder.js": (
-        'const apiKey = "YOUR_API_KEY_HERE";\n'
-    ),
+    "safe_secret_env.js": ("const API_KEY = process.env.API_KEY || '';\n"),
+    "safe_secret_placeholder.js": ('const apiKey = "YOUR_API_KEY_HERE";\n'),
     "safe_jwt_hs256.js": (
         "const jwt = require('jsonwebtoken');\n"
         "function verifyToken(token, secret) {\n"
@@ -356,9 +329,7 @@ adversarial_fixtures = {
         "console.log(result);\n"
     ),
     "adv_division_trap_regex.js": (
-        "function checkCode(code) {\n"
-        "    return /^[A-Z0-9]+$/i.test(code);\n"
-        "}\n"
+        "function checkCode(code) {\n    return /^[A-Z0-9]+$/i.test(code);\n}\n"
     ),
     "adv_template_literal_constants.js": (
         "async function fetchRoles() {\n"
@@ -390,11 +361,7 @@ adversarial_fixtures = {
     ),
 }
 
-expect_data = {
-    "vulnerable": {},
-    "safe": {},
-    "adversarial": {}
-}
+expect_data = {"vulnerable": {}, "safe": {}, "adversarial": {}}
 
 for name, (code, exp) in vulnerable_fixtures.items():
     (VULN / name).write_text(code, encoding="utf-8")
@@ -409,4 +376,6 @@ for name, code in adversarial_fixtures.items():
     expect_data["adversarial"][name] = []
 
 (BASE / "expect.json").write_text(json.dumps(expect_data, indent=2), encoding="utf-8")
-print(f"Generated {len(vulnerable_fixtures)} vulnerable, {len(safe_fixtures)} safe, {len(adversarial_fixtures)} adversarial fixtures.")
+print(
+    f"Generated {len(vulnerable_fixtures)} vulnerable, {len(safe_fixtures)} safe, {len(adversarial_fixtures)} adversarial fixtures."
+)

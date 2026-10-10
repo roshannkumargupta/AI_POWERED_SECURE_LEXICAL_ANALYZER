@@ -26,6 +26,20 @@ SEVERITY_CAPS: Final[dict[Severity, int]] = {
 
 BASE_HEALTH_SCORE: Final[int] = 100
 
+# ── Exploitability Weights (Phase 12 Prioritisation) ─────────────
+# priority = severity_weight x confidence x exploitability
+EXPLOITABILITY_TAINT_CONFIRMED: Final[float] = 1.0
+EXPLOITABILITY_DANGEROUS_SINK: Final[float] = 0.7
+EXPLOITABILITY_WEAK_CRYPTO_CONFIG: Final[float] = 0.5
+EXPLOITABILITY_INFO: Final[float] = 0.3
+
+EXPLOITABILITY_WEIGHTS: Final[dict[str, float]] = {
+    "taint_confirmed": EXPLOITABILITY_TAINT_CONFIRMED,
+    "dangerous_sink": EXPLOITABILITY_DANGEROUS_SINK,
+    "weak_crypto_config": EXPLOITABILITY_WEAK_CRYPTO_CONFIG,
+    "info": EXPLOITABILITY_INFO,
+}
+
 # ── Fusion Engine Weights & Boosts ────────────────────────────────
 # When ML is enabled: confidence = RULE_WEIGHT * rule_conf + ML_WEIGHT * ml_p
 RULE_WEIGHT: Final[float] = 0.7

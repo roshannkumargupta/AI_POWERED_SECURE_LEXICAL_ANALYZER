@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 from apsla.languages.base import (
     FixGenerator,
@@ -51,9 +51,16 @@ class JavaScriptPlugin(LanguagePlugin):
         """Return the taint tracking profile for JavaScript."""
         return JS_TAINT_PROFILE
 
+    def parse_structure(self, source: str) -> Any:
+        """Parse JavaScript source into a lightweight StructTree."""
+        from apsla.languages.javascript_lang.parser import parse_javascript_structure
+
+        return parse_javascript_structure(source)
+
     def analyze_taint(self, source: str, tokens: list[Token]) -> list[TaintResult]:
         """Execute statement-level taint-lite data flow analysis."""
-        engine = TaintLiteEngine(source, tokens, JS_TAINT_PROFILE)
+        tree = self.parse_structure(source)
+        engine = TaintLiteEngine(source, tokens, JS_TAINT_PROFILE, struct_tree=tree)
         return engine.analyze()
 
     def fix_generators(self) -> dict[str, FixGenerator]:
@@ -73,7 +80,7 @@ class JavaScriptPlugin(LanguagePlugin):
 
         Verifies:
           1. Lexer produces zero ERROR tokens.
-          2. Delimiters (parentheses, braces, brackets) are balanced.
+          2. Structure parser produces zero ERROR nodes.
           3. Optional tree-sitter-javascript validation if installed.
           4. Optional 'node --check' validation if node is available and not JSX.
         """
@@ -84,29 +91,14 @@ class JavaScriptPlugin(LanguagePlugin):
             if t.kind == "ERROR":
                 return False, f"Lexical error: '{t.text}' at line {t.line}, col {t.col}"
 
-        # 2. Balanced delimiters check
-        delim_pairs = {")": "(", "}": "{", "]": "["}
-        stack: list[tuple[str, int, int]] = []
-
-        for t in tokens:
-            if t.kind in ("COMMENT", "STRING", "REGEX"):
-                continue
-            if t.text in ("(", "{", "["):
-                stack.append((t.text, t.line, t.col))
-            elif t.text in (")", "}", "]"):
-                expected_open = delim_pairs[t.text]
-                if not stack:
-                    return False, f"Unmatched closing delimiter '{t.text}' at line {t.line}"
-                open_ch, open_line, _ = stack.pop()
-                if open_ch != expected_open:
-                    return (
-                        False,
-                        f"Mismatched delimiter: opened '{open_ch}' at line {open_line}, closed '{t.text}' at line {t.line}",
-                    )
-
-        if stack:
-            unclosed_ch, unclosed_line, _ = stack[-1]
-            return False, f"Unclosed delimiter '{unclosed_ch}' from line {unclosed_line}"
+        # 2. Structural parsing check (no ERROR nodes)
+        tree = self.parse_structure(source)
+        if tree.errors:
+            first_err = tree.errors[0]
+            return (
+                False,
+                f"Syntax error: {first_err.message} at line {first_err.range.start_line}, col {first_err.range.start_col}",
+            )
 
         # 3. Optional tree-sitter-javascript parse check (if installed)
         try:
@@ -120,33 +112,6 @@ class JavaScriptPlugin(LanguagePlugin):
                 return False, "Tree-sitter JavaScript syntax error detected in source."
         except (ImportError, Exception):
             pass
-
-        # 4. Optional node --check validation on temp file (skip silently when node is missing or on JSX)
-        has_jsx = "</" in source or bool(re.search(r"<[A-Za-z0-9_]+(?:\s+[^>]*?)?\/?>", source))
-        if not has_jsx and shutil.which("node"):
-            try:
-                with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as tmp:
-                    tmp.write(source)
-                    tmp_path = tmp.name
-                try:
-                    res = subprocess.run(
-                        ["node", "--check", tmp_path],
-                        capture_output=True,
-                        text=True,
-                        timeout=2,
-                    )
-                    if res.returncode != 0:
-                        err_msg = res.stderr.strip() or "Node.js syntax error"
-                        # Skip ESM module declaration warnings on standalone files
-                        if (
-                            "Cannot use import statement outside a module" not in err_msg
-                            and "Unexpected token 'export'" not in err_msg
-                        ):
-                            return False, f"Node.js syntax error: {err_msg}"
-                finally:
-                    Path(tmp_path).unlink(missing_ok=True)
-            except Exception:
-                pass
 
         return True, None
 

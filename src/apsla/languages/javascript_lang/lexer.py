@@ -295,7 +295,9 @@ class JavaScriptLexer(LexerBase):
                 continue
 
             # Identifiers, keywords, and private identifiers (#field)
-            if self._is_js_identifier_start(ch) or (ch == "#" and self._is_js_identifier_start(self.peek(1))):
+            if self._is_js_identifier_start(ch) or (
+                ch == "#" and self._is_js_identifier_start(self.peek(1))
+            ):
                 self._lex_identifier(tokens)
                 continue
 

@@ -41,7 +41,7 @@ def _load_suppressed_signatures() -> tuple[
         fname = record.get("filename", "")
         line_val = record.get("line")
         line_no = int(line_val) if line_val is not None else 0
-        fp = record.get("finding_fingerprint", "")
+        fp = record.get("fingerprint") or record.get("finding_fingerprint", "")
         if fp:
             fingerprints.add(fp)
             parts = fp.split("-")
@@ -155,8 +155,14 @@ def fuse_findings(
 
         # 4. Noisy Rule Suppression / Downgrade
         # If rule triggers without taint confirmation and ml_p < 0.15 (when ML is ON)
+        # Note: Lexical Unicode security rules (APS-ALL-UNI-*) are non-taint defenses and never suppressed/downgraded.
         notes = finding.explanation
-        if is_ml_active and not taint_confirmed and ml_p < NOISY_RULE_ML_THRESHOLD:
+        if (
+            is_ml_active
+            and not taint_confirmed
+            and not finding.rule_id.startswith("APS-ALL-UNI-")
+            and ml_p < NOISY_RULE_ML_THRESHOLD
+        ):
             s_idx = SEVERITY_ORDER.index(sev)
             sev = SEVERITY_ORDER[max(0, s_idx - 1)]
             notes = f"{notes} (downgraded: model sees this as usual code)"
@@ -178,6 +184,16 @@ def fuse_findings(
         evidence["ml_score"] = round(ml_p, 4)
         evidence["ml_mode"] = ml_mode
         evidence["taint_confirmed"] = bool(taint_confirmed)
+        evidence["confidence_breakdown"] = {
+            "rule_score": round(rule_conf, 4),
+            "ml_score": round(ml_p, 4) if is_ml_active else None,
+            "ml_mode": "on" if is_ml_active else "off",
+            "rule_weight": RULE_WEIGHT if is_ml_active else 1.0,
+            "ml_weight": ML_WEIGHT if is_ml_active else 0.0,
+            "taint_bonus": TAINT_CONFIDENCE_BONUS if taint_confirmed else 0.0,
+            "taint_confirmed": bool(taint_confirmed),
+            "fused": round(conf, 4),
+        }
 
         updated_sources = list(finding.sources)
         if is_ml_active and "ml" not in updated_sources:
@@ -191,6 +207,7 @@ def fuse_findings(
                 "evidence": evidence,
                 "sources": updated_sources,
                 "suppressed": is_suppressed,
+                "attack": _indicative_attack(finding),
             }
         )
         fused_findings.append(fused)
@@ -198,6 +215,7 @@ def fuse_findings(
     # 5. ML-Only Anomaly Rule (APS-ALL-ML-001)
     if is_ml_active:
         ml_only_count = 0
+        anomaly_thresh = max(0.5, ml_threshold_malicious)
         for i, tok in enumerate(tokens):
             if ml_only_count >= ML_ONLY_FINDINGS_CAP:
                 break
@@ -207,7 +225,7 @@ def fuse_findings(
                 continue
 
             p_safe, p_susp, p_mal = ml_probabilities[i]
-            if p_mal >= ml_threshold_malicious:
+            if p_mal >= anomaly_thresh:
                 tok_rng = tok.to_range()
                 finding_id = f"ML-{tok_rng.start_line}-{tok_rng.start_col}"
                 evidence_dict: dict[str, Any] = {
@@ -216,6 +234,16 @@ def fuse_findings(
                     "p_malicious": round(float(p_mal), 4),
                     "p_suspicious": round(float(p_susp), 4),
                     "p_safe": round(float(p_safe), 4),
+                    "confidence_breakdown": {
+                        "rule_score": None,
+                        "ml_score": round(float(p_mal), 4),
+                        "ml_mode": "on",
+                        "rule_weight": 0.0,
+                        "ml_weight": 1.0,
+                        "taint_bonus": 0.0,
+                        "taint_confirmed": False,
+                        "fused": round(float(p_mal), 4),
+                    },
                 }
 
                 ml_finding = Finding(
@@ -241,6 +269,7 @@ def fuse_findings(
                         or finding_id in suppressed_fps
                         or ("APS-ALL-ML-001", tok_rng.start_line) in suppressed_rule_lines
                     ),
+                    attack=None,
                 )
                 fused_findings.append(ml_finding)
                 ml_only_count += 1
@@ -252,3 +281,14 @@ def fuse_findings(
 
     fused_findings.sort(key=sort_key)
     return fused_findings
+
+
+def _indicative_attack(finding: Finding) -> list[str] | None:
+    """Return sparse ATT&CK tags (indicative mapping, verify manually)."""
+    if finding.rule_id.startswith("APS-ALL-UNI-"):
+        return ["T1036"]
+    if finding.cwe in {"CWE-78", "CWE-94", "CWE-95"}:
+        return ["T1059"]
+    if finding.cwe == "CWE-798":
+        return ["T1552"]
+    return None

@@ -7,6 +7,11 @@ exclude = [
     "dist",
     "tests/fixtures",
     "data",
+    "src/apsla/samples/python",
+    "src/apsla/samples/pending",
+    ".pytest-s1",
+    ".pytest-s1-full",
+    "web",
 ]
 
 [lint]

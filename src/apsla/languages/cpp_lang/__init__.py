@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 from apsla.languages.base import (
     FixGenerator,
@@ -56,9 +56,16 @@ class CppPlugin(LanguagePlugin):
         """Return the taint tracking profile for C/C++."""
         return CPP_TAINT_PROFILE
 
+    def parse_structure(self, source: str) -> Any:
+        """Parse C/C++ source into a lightweight StructTree."""
+        from apsla.languages.cpp_lang.parser import parse_cpp_structure
+
+        return parse_cpp_structure(source)
+
     def analyze_taint(self, source: str, tokens: list[Token]) -> list[TaintResult]:
         """Execute statement-level taint-lite data flow analysis."""
-        engine = TaintLiteEngine(source, tokens, CPP_TAINT_PROFILE)
+        tree = self.parse_structure(source)
+        engine = TaintLiteEngine(source, tokens, CPP_TAINT_PROFILE, struct_tree=tree)
         return engine.analyze()
 
     def fix_generators(self) -> dict[str, FixGenerator]:
@@ -78,7 +85,7 @@ class CppPlugin(LanguagePlugin):
 
         Verifies:
           1. Lexer produces zero ERROR tokens.
-          2. Delimiters (parentheses, braces, brackets) are balanced.
+          2. Structure parser produces zero ERROR nodes.
           3. Preprocessor directives #if/#ifdef/#ifndef and #endif are balanced.
           4. Optional tree-sitter-cpp validation if installed.
           5. Optional 'g++ -fsyntax-only' or 'gcc -fsyntax-only' if compiler is available.
@@ -90,41 +97,28 @@ class CppPlugin(LanguagePlugin):
             if t.kind == "ERROR":
                 return False, f"Lexical error: '{t.text}' at line {t.line}, col {t.col}"
 
-        # 2. Balanced delimiters check
-        delim_pairs = {")": "(", "}": "{", "]": "["}
-        stack: list[tuple[str, int, int]] = []
-
-        for t in tokens:
-            if t.kind in ("COMMENT", "STRING", "RAW_STRING", "CHAR", "PREPROCESSOR"):
-                continue
-            if t.text in ("(", "{", "["):
-                stack.append((t.text, t.line, t.col))
-            elif t.text in (")", "}", "]"):
-                expected_open = delim_pairs[t.text]
-                if not stack:
-                    return False, f"Unmatched closing delimiter '{t.text}' at line {t.line}"
-                open_ch, open_line, _ = stack.pop()
-                if open_ch != expected_open:
-                    return (
-                        False,
-                        f"Mismatched delimiter: opened '{open_ch}' at line {open_line}, "
-                        f"closed '{t.text}' at line {t.line}",
-                    )
-
-        if stack:
-            open_ch, open_line, open_col = stack[-1]
-            return False, f"Unclosed delimiter '{open_ch}' opened at line {open_line}, col {open_col}"
+        # 2. Structural parsing check (no ERROR nodes)
+        tree = self.parse_structure(source)
+        if tree.errors:
+            first_err = tree.errors[0]
+            return (
+                False,
+                f"Syntax error: {first_err.message} at line {first_err.range.start_line}, col {first_err.range.start_col}",
+            )
 
         # 3. Preprocessor #if/#endif balance check
         if_depth = 0
+        has_conditional_directives = False
         for t in tokens:
             if t.kind == "PREPROCESSOR":
                 # Check for #if, #ifdef, #ifndef vs #endif
                 text = t.text.strip()
                 if re.match(r"#\s*(?:if|ifdef|ifndef)\b", text):
                     if_depth += 1
+                    has_conditional_directives = True
                 elif re.match(r"#\s*endif\b", text):
                     if_depth -= 1
+                    has_conditional_directives = True
                     if if_depth < 0:
                         return False, f"Unmatched #endif at line {t.line}"
 
@@ -132,40 +126,16 @@ class CppPlugin(LanguagePlugin):
             return False, f"Unmatched preprocessor conditional (#if/#endif depth is {if_depth})"
 
         # 4. Optional tree-sitter-cpp validation
-        try:
-            import tree_sitter_cpp as tscpp
-            from tree_sitter import Language, Parser
-
-            cpp_lang = Language(tscpp.language())
-            parser = Parser(cpp_lang)
-            tree = parser.parse(source.encode("utf-8"))
-            if tree.root_node.has_error:
-                return False, "tree-sitter parse error detected in C/C++ source"
-        except (ImportError, Exception):
-            pass
-
-        # 5. Optional compiler syntax-only check (skip silently if compiler not found)
-        compiler = shutil.which("g++") or shutil.which("gcc")
-        if compiler:
+        if not has_conditional_directives:
             try:
-                with tempfile.NamedTemporaryFile(suffix=".cpp", mode="w", encoding="utf-8", delete=False) as tf:
-                    tf.write(source)
-                    temp_path = tf.name
-                try:
-                    res = subprocess.run(
-                        [compiler, "-fsyntax-only", "-x", "c++", temp_path],
-                        capture_output=True,
-                        text=True,
-                        timeout=3.0,
-                    )
-                    # Note: missing headers or unknown libraries are expected in snippets,
-                    # so only report syntax errors if obvious
-                    if res.returncode != 0:
-                        err_out = res.stderr.lower()
-                        if "syntax error" in err_out or "expected" in err_out:
-                            return False, f"Compiler syntax check error: {res.stderr.strip()[:200]}"
-                finally:
-                    Path(temp_path).unlink(missing_ok=True)
+                import tree_sitter_cpp as tscpp
+                from tree_sitter import Language, Parser
+
+                cpp_lang = Language(tscpp.language())
+                parser = Parser(cpp_lang)
+                tree = parser.parse(source.encode("utf-8"))
+                if tree.root_node.has_error:
+                    return False, "tree-sitter parse error detected in C/C++ source"
             except Exception:
                 pass
 

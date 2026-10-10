@@ -10,7 +10,7 @@ def test_valid_cpp_syntax():
     source = (
         "#include <iostream>\n"
         "int main() {\n"
-        "    std::cout << \"Hello, world!\" << std::endl;\n"
+        '    std::cout << "Hello, world!" << std::endl;\n'
         "    return 0;\n"
         "}\n"
     )
@@ -37,11 +37,7 @@ def test_unclosed_opening_paren():
 
 def test_unmatched_preprocessor_if():
     plugin = get_plugin("cpp")
-    source = (
-        "#ifdef DEBUG\n"
-        "int x = 1;\n"
-        "// Missing #endif\n"
-    )
+    source = "#ifdef DEBUG\nint x = 1;\n// Missing #endif\n"
     ok, err = plugin.syntax_check(source)
     assert ok is False
     assert "preprocessor" in (err or "").lower()
@@ -53,7 +49,7 @@ def test_balanced_preprocessor_conditionals():
         "#ifndef HEADER_H\n"
         "#define HEADER_H\n"
         "#ifdef __cplusplus\n"
-        "extern \"C\" {\n"
+        'extern "C" {\n'
         "#endif\n"
         "void func();\n"
         "#ifdef __cplusplus\n"

@@ -1,0 +1,548 @@
+{
+  "language": "cpp",
+  "filename": "demo.cpp",
+  "findings": [
+    {
+      "id": "APS-CP-INJ-001-3-36-f3fd4c",
+      "rule_id": "APS-CP-INJ-001",
+      "title": "Command Injection via Shell / Process Execution",
+      "cwe": "CWE-78",
+      "severity": "critical",
+      "label": "MALICIOUS",
+      "confidence": 0.9647,
+      "range": {
+        "start_line": 3,
+        "start_col": 36,
+        "end_line": 3,
+        "end_col": 56
+      },
+      "message": "Command execution via system() with dynamic command string.",
+      "explanation": "Invoking system() or popen() with concatenated, formatted, or tainted strings executes commands within the system command interpreter. Attackers can append shell metacharacters (; & | `) to execute arbitrary operating system commands.",
+      "evidence": {
+        "call": "system(input.c_str()",
+        "cmd": "input.c_str(",
+        "rule_score": 0.95,
+        "ml_score": 0.9991,
+        "ml_mode": "on",
+        "taint_confirmed": false,
+        "confidence_breakdown": {
+          "rule_score": 0.95,
+          "ml_score": 0.9991,
+          "ml_mode": "on",
+          "rule_weight": 0.7,
+          "ml_weight": 0.3,
+          "taint_bonus": 0.0,
+          "taint_confirmed": false,
+          "fused": 0.9647
+        }
+      },
+      "taint_path": [],
+      "fixes": [
+        {
+          "id": "fix-APS-CP-INJ-001-3-36-f3fd4c-0",
+          "finding_id": "APS-CP-INJ-001-3-36-f3fd4c",
+          "title": "Replace system() with execv() argument array",
+          "description": "Manual remediation required: replace system() with execv() or posix_spawn() passing discrete argument vectors.",
+          "confidence": "manual",
+          "kind": "rule",
+          "edits": [],
+          "verification": {
+            "syntax_ok": true,
+            "finding_gone": false,
+            "new_findings": [],
+            "verified": false,
+            "notes": "Manual refactor: pass arguments as an argv array rather than concatenating into a shell command."
+          }
+        }
+      ],
+      "sources": [
+        "rule",
+        "ml"
+      ],
+      "suppressed": false,
+      "kind": "security",
+      "attack": [
+        "T1059"
+      ]
+    },
+    {
+      "id": "ML-3-57",
+      "rule_id": "APS-ALL-ML-001",
+      "title": "Machine Learning Anomaly Detected",
+      "cwe": "CWE-20",
+      "severity": "low",
+      "label": "SUSPICIOUS",
+      "confidence": 0.9996,
+      "range": {
+        "start_line": 3,
+        "start_col": 57,
+        "end_line": 3,
+        "end_col": 58
+      },
+      "message": "Token ';' flagged as anomalous by security ML model",
+      "explanation": "The security classifier detected high anomaly probability (1.00) over this token window without a matching AST rule pattern.",
+      "evidence": {
+        "ml_score": 0.9996,
+        "ml_mode": "on",
+        "p_malicious": 0.9996,
+        "p_suspicious": 0.0002,
+        "p_safe": 0.0002,
+        "confidence_breakdown": {
+          "rule_score": null,
+          "ml_score": 0.9996,
+          "ml_mode": "on",
+          "rule_weight": 0.0,
+          "ml_weight": 1.0,
+          "taint_bonus": 0.0,
+          "taint_confirmed": false,
+          "fused": 0.9996
+        }
+      },
+      "taint_path": [],
+      "fixes": [],
+      "sources": [
+        "ml"
+      ],
+      "suppressed": false,
+      "kind": "security",
+      "attack": null
+    },
+    {
+      "id": "ML-3-56",
+      "rule_id": "APS-ALL-ML-001",
+      "title": "Machine Learning Anomaly Detected",
+      "cwe": "CWE-20",
+      "severity": "low",
+      "label": "SUSPICIOUS",
+      "confidence": 0.9972,
+      "range": {
+        "start_line": 3,
+        "start_col": 56,
+        "end_line": 3,
+        "end_col": 57
+      },
+      "message": "Token ')' flagged as anomalous by security ML model",
+      "explanation": "The security classifier detected high anomaly probability (1.00) over this token window without a matching AST rule pattern.",
+      "evidence": {
+        "ml_score": 0.9972,
+        "ml_mode": "on",
+        "p_malicious": 0.9972,
+        "p_suspicious": 0.0027,
+        "p_safe": 0.0001,
+        "confidence_breakdown": {
+          "rule_score": null,
+          "ml_score": 0.9972,
+          "ml_mode": "on",
+          "rule_weight": 0.0,
+          "ml_weight": 1.0,
+          "taint_bonus": 0.0,
+          "taint_confirmed": false,
+          "fused": 0.9972
+        }
+      },
+      "taint_path": [],
+      "fixes": [],
+      "sources": [
+        "ml"
+      ],
+      "suppressed": false,
+      "kind": "security",
+      "attack": null
+    }
+  ],
+  "tokens": [
+    {
+      "token": "#include <cstdlib>",
+      "token_type": "PREPROCESSOR",
+      "range": {
+        "start_line": 1,
+        "start_col": 1,
+        "end_line": 1,
+        "end_col": 19
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "\n",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 1,
+        "start_col": 19,
+        "end_line": 2,
+        "end_col": 1
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "#include <string>",
+      "token_type": "PREPROCESSOR",
+      "range": {
+        "start_line": 2,
+        "start_col": 1,
+        "end_line": 2,
+        "end_col": 18
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "\n",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 2,
+        "start_col": 18,
+        "end_line": 3,
+        "end_col": 1
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "void",
+      "token_type": "KEYWORD",
+      "range": {
+        "start_line": 3,
+        "start_col": 1,
+        "end_line": 3,
+        "end_col": 5
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 3,
+        "start_col": 5,
+        "end_line": 3,
+        "end_col": 6
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "run",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 3,
+        "start_col": 6,
+        "end_line": 3,
+        "end_col": 9
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "(",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 9,
+        "end_line": 3,
+        "end_col": 10
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "std",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 3,
+        "start_col": 10,
+        "end_line": 3,
+        "end_col": 13
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "::",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 13,
+        "end_line": 3,
+        "end_col": 15
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "string",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 3,
+        "start_col": 15,
+        "end_line": 3,
+        "end_col": 21
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 3,
+        "start_col": 21,
+        "end_line": 3,
+        "end_col": 22
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "input",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 3,
+        "start_col": 22,
+        "end_line": 3,
+        "end_col": 27
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": ")",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 27,
+        "end_line": 3,
+        "end_col": 28
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 3,
+        "start_col": 28,
+        "end_line": 3,
+        "end_col": 29
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "{",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 29,
+        "end_line": 3,
+        "end_col": 30
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 3,
+        "start_col": 30,
+        "end_line": 3,
+        "end_col": 31
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "std",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 3,
+        "start_col": 31,
+        "end_line": 3,
+        "end_col": 34
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "::",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 34,
+        "end_line": 3,
+        "end_col": 36
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "system",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 3,
+        "start_col": 36,
+        "end_line": 3,
+        "end_col": 42
+      },
+      "label": "MALICIOUS",
+      "score": 0.9647
+    },
+    {
+      "token": "(",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 42,
+        "end_line": 3,
+        "end_col": 43
+      },
+      "label": "MALICIOUS",
+      "score": 0.9647
+    },
+    {
+      "token": "input",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 3,
+        "start_col": 43,
+        "end_line": 3,
+        "end_col": 48
+      },
+      "label": "MALICIOUS",
+      "score": 0.9647
+    },
+    {
+      "token": ".",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 48,
+        "end_line": 3,
+        "end_col": 49
+      },
+      "label": "MALICIOUS",
+      "score": 0.9647
+    },
+    {
+      "token": "c_str",
+      "token_type": "IDENTIFIER",
+      "range": {
+        "start_line": 3,
+        "start_col": 49,
+        "end_line": 3,
+        "end_col": 54
+      },
+      "label": "MALICIOUS",
+      "score": 0.9647
+    },
+    {
+      "token": "(",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 54,
+        "end_line": 3,
+        "end_col": 55
+      },
+      "label": "MALICIOUS",
+      "score": 0.9647
+    },
+    {
+      "token": ")",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 55,
+        "end_line": 3,
+        "end_col": 56
+      },
+      "label": "MALICIOUS",
+      "score": 0.9647
+    },
+    {
+      "token": ")",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 56,
+        "end_line": 3,
+        "end_col": 57
+      },
+      "label": "SUSPICIOUS",
+      "score": 0.9972
+    },
+    {
+      "token": ";",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 57,
+        "end_line": 3,
+        "end_col": 58
+      },
+      "label": "SUSPICIOUS",
+      "score": 0.9996
+    },
+    {
+      "token": " ",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 3,
+        "start_col": 58,
+        "end_line": 3,
+        "end_col": 59
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "}",
+      "token_type": "OPERATOR",
+      "range": {
+        "start_line": 3,
+        "start_col": 59,
+        "end_line": 3,
+        "end_col": 60
+      },
+      "label": "SAFE",
+      "score": 0.0
+    },
+    {
+      "token": "\n",
+      "token_type": "WHITESPACE",
+      "range": {
+        "start_line": 3,
+        "start_col": 60,
+        "end_line": 4,
+        "end_col": 1
+      },
+      "label": "SAFE",
+      "score": 0.0
+    }
+  ],
+  "summary": {
+    "critical": 1,
+    "high": 0,
+    "medium": 0,
+    "low": 2,
+    "info": 0,
+    "score": 71,
+    "tokens_total": 31,
+    "tokens_malicious": 7,
+    "tokens_suspicious": 2,
+    "lexical_errors": 0,
+    "syntax_errors": 0
+  },
+  "engine": {
+    "ml_mode": "on",
+    "ml_model_id": "separate_cpp_hist_gradient_boosting_20261002_195407",
+    "taint": "none",
+    "version": "0.1.0",
+    "elapsed_ms": 99.709,
+    "parser": "lexer-only"
+  }
+}
