@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any
 
 from apsla.languages.base import (
     FixGenerator,

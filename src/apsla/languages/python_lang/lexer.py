@@ -518,12 +518,14 @@ class PythonLexer(LexerBase):
             has_digits = True
 
         # Decimal point: e.g. 123.456 or .456
-        if self.peek() == "." and (self.peek(1).isdigit() or has_digits):
-            # Guard against ellipsis '...' or attribute access like '1.something'
-            if self.peek_slice(3) != "...":
-                self.advance()  # consume .
-                while not self.is_eof and (self.peek().isdigit() or self.peek() == "_"):
-                    self.advance()
+        if (
+            self.peek() == "."
+            and (self.peek(1).isdigit() or has_digits)
+            and self.peek_slice(3) != "..."
+        ):
+            self.advance()  # consume .
+            while not self.is_eof and (self.peek().isdigit() or self.peek() == "_"):
+                self.advance()
 
         # Exponent: e.g. 1e10, 2.5E-3
         if self.peek().lower() == "e":

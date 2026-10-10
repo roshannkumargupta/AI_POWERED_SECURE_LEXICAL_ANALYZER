@@ -230,7 +230,7 @@ def generate_command_injection_fix(ctx: FixContext) -> list[Fix]:
         rest = m_concat.group(5)
 
         flags = [f'"{f}"' for f in flag_str.split() if f]
-        arg_array = ", ".join(flags + [var_name])
+        arg_array = ", ".join([*flags, var_name])
 
         new_call = f'{prefix}execFile("{binary}", [{arg_array}]'
         if rest:

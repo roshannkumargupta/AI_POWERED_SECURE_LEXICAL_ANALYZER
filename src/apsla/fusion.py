@@ -137,10 +137,7 @@ def fuse_findings(
 
         # 2. Confidence Calculation
         rule_conf = finding.confidence
-        if is_ml_active:
-            conf = RULE_WEIGHT * rule_conf + ML_WEIGHT * ml_p
-        else:
-            conf = rule_conf
+        conf = RULE_WEIGHT * rule_conf + ML_WEIGHT * ml_p if is_ml_active else rule_conf
 
         # 3. Taint Confirmation Boost
         taint_confirmed = "taint" in finding.sources or finding.evidence.get(

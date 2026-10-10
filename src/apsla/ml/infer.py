@@ -55,9 +55,7 @@ class MLInferenceEngine:
             return True
         if cand_lang == "all" and lang in SUPPORTED_LANGUAGES:
             return True
-        if not cand_lang and not supp and lang == "python":
-            return True
-        return False
+        return bool(not cand_lang and not supp and lang == "python")
 
     def _find_active_artifact_dir(self) -> Path | None:
         if self.model_id:
@@ -254,7 +252,6 @@ class MLInferenceEngine:
         windows_3d, windows_flat, _, _ = build_token_windows(tokens, features)
 
         lang_ids = np.full((n_tokens,), fill_value=lang_id, dtype=np.int64)
-        probs = active_wrapper.predict_proba(
+        return active_wrapper.predict_proba(
             windows_3d, windows_flat, lang_ids=lang_ids, temperature=temperature
         )
-        return probs

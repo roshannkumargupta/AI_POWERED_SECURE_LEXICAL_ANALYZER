@@ -269,19 +269,19 @@ def evaluate_external_benchmarks(
                 }
             )
 
-        def _calc_scores(y_pred: list[int]) -> dict[str, float]:
+        def _calc_scores(y_pred: list[int], y_true: list[int]) -> dict[str, float]:
             return {
                 "precision": round(
-                    float(precision_score(y_true_binary, y_pred, zero_division=0)), 4
+                    float(precision_score(y_true, y_pred, zero_division=0)), 4
                 ),
-                "recall": round(float(recall_score(y_true_binary, y_pred, zero_division=0)), 4),
-                "f1": round(float(f1_score(y_true_binary, y_pred, zero_division=0)), 4),
+                "recall": round(float(recall_score(y_true, y_pred, zero_division=0)), 4),
+                "f1": round(float(f1_score(y_true, y_pred, zero_division=0)), 4),
             }
 
-        ml_scores = _calc_scores(y_pred_ml_binary)
-        rule_scores = _calc_scores(y_pred_rule_binary)
-        taint_scores = _calc_scores(y_pred_taint_binary)
-        hybrid_scores = _calc_scores(y_pred_hybrid_binary)
+        ml_scores = _calc_scores(y_pred_ml_binary, y_true_binary)
+        rule_scores = _calc_scores(y_pred_rule_binary, y_true_binary)
+        taint_scores = _calc_scores(y_pred_taint_binary, y_true_binary)
+        hybrid_scores = _calc_scores(y_pred_hybrid_binary, y_true_binary)
 
         logger.info(
             "External Benchmark [%s] (Total=%d): ML F1=%.4f | Rule F1=%.4f | Taint F1=%.4f | Hybrid F1=%.4f",

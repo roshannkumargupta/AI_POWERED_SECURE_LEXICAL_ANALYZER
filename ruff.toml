@@ -38,6 +38,7 @@ ignore = [
     "B008",    # do not perform function calls in argument defaults (FastAPI Depends/Query/Path)
     "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`
     "SIM105",  # Use `contextlib.suppress(...)` instead of `try-except-pass`
+    "PLC0415", # Allow lazy imports where circular references or heavy dependencies exist
 ]
 
 [lint.per-file-ignores]
@@ -45,6 +46,16 @@ ignore = [
     "RUF001",  # Ambiguous unicode characters (intentional in confusable tables)
     "RUF002",  # Ambiguous docstring unicode
     "RUF003",  # Ambiguous comment unicode
+]
+"src/apsla/rules/**" = [
+    "RUF001",  # Ambiguous unicode in homoglyph explanations (APS-ALL-UNI-006)
+    "RUF002",
+    "RUF003",
+]
+"src/apsla/server/samples.py" = [
+    "RUF001",  # Ambiguous unicode in bundled security sample definitions
+    "RUF002",
+    "RUF003",
 ]
 "tests/**" = [
     "B018",    # Useless expression

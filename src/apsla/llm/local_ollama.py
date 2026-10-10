@@ -23,8 +23,8 @@ def _load_env_file() -> None:
     root_env = Path(__file__).resolve().parents[3] / ".env"
     if root_env.is_file():
         try:
-            for line in root_env.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
+            for raw_line in root_env.read_text(encoding="utf-8").splitlines():
+                line = raw_line.strip()
                 if not line or line.startswith("#") or "=" not in line:
                     continue
                 k, v = line.split("=", 1)
@@ -80,11 +80,7 @@ def validate_schema(data: Any, schema: dict[str, Any]) -> bool:
                 return False
         # Validate properties
         props = schema.get("properties", {})
-        for k, v in data.items():
-            if k in props:
-                if not validate_schema(v, props[k]):
-                    return False
-        return True
+        return all(not (k in props and not validate_schema(v, props[k])) for k, v in data.items())
 
     if expected_type == "array":
         if not isinstance(data, list):
@@ -99,29 +95,20 @@ def validate_schema(data: Any, schema: dict[str, Any]) -> bool:
     if expected_type == "string":
         if not isinstance(data, str):
             return False
-        if "enum" in schema and data not in schema["enum"]:
-            return False
-        return True
+        return not ("enum" in schema and data not in schema["enum"])
 
     if expected_type == "integer":
         if not isinstance(data, int) or isinstance(data, bool):
             return False
-        if "enum" in schema and data not in schema["enum"]:
-            return False
-        return True
+        return not ("enum" in schema and data not in schema["enum"])
 
     if expected_type == "number":
-        if not isinstance(data, (int, float)) or isinstance(data, bool):
-            return False
-        return True
+        return not (not isinstance(data, (int, float)) or isinstance(data, bool))
 
     if expected_type == "boolean":
         return isinstance(data, bool)
 
-    if "enum" in schema and data not in schema["enum"]:
-        return False
-
-    return True
+    return not ("enum" in schema and data not in schema["enum"])
 
 
 class LocalLLM:
@@ -169,7 +156,7 @@ class LocalLLM:
         }
 
         # Up to 2 attempts (1 initial + 1 retry)
-        for attempt in range(2):
+        for _attempt in range(2):
             self.call_count += 1
             try:
                 with httpx.Client(

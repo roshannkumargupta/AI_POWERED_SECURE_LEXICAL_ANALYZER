@@ -50,9 +50,8 @@ def test_tools_file_does_not_import_dangerous_modules():
         if isinstance(node, ast.Import):
             for alias in node.names:
                 imported_names.add(alias.name)
-        elif isinstance(node, ast.ImportFrom):
-            if node.module:
-                imported_names.add(node.module)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imported_names.add(node.module)
 
     for forbidden in FORBIDDEN_IMPORTS:
         assert forbidden not in imported_names, (
@@ -61,6 +60,9 @@ def test_tools_file_does_not_import_dangerous_modules():
 
     # Also verify no calls to os.system or subprocess
     for node in ast.walk(tree):
-        if isinstance(node, ast.Call):
-            if isinstance(node.func, ast.Attribute) and node.func.attr in FORBIDDEN_CALLS:
-                pytest.fail(f"tools.py invokes forbidden OS call '{node.func.attr}'")
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr in FORBIDDEN_CALLS
+        ):
+            pytest.fail(f"tools.py invokes forbidden OS call '{node.func.attr}'")

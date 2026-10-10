@@ -46,6 +46,6 @@ class FixAgent(BaseAgent):
         return AgentObservation(
             stage=self.stage,
             facts=facts,
-            allowed_tools=sorted(list(self.allowed_tools)),
+            allowed_tools=sorted(self.allowed_tools),
             context_snippet=snippet,
         )

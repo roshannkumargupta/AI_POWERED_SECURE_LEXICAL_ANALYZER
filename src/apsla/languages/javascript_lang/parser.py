@@ -400,9 +400,13 @@ class JavaScriptStructParser:
                     brace_depth -= 1
                 elif curr.kind != "TEMPLATE":
                     break
-            elif curr.text == ";":
-                if paren_depth == 0 and bracket_depth == 0 and brace_depth == 0:
-                    break
+            elif (
+                curr.text == ";"
+                and paren_depth == 0
+                and bracket_depth == 0
+                and brace_depth == 0
+            ):
+                break
             # Check for newline ASI (if next token is on subsequent line and not an operator)
             if (
                 paren_depth == 0

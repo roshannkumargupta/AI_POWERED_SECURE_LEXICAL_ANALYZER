@@ -142,7 +142,7 @@ def main() -> None:
         re.compile(r"\.swp$"),
     ]
     tracked_junk = []
-    for p, mode, rel in tracked_entries:
+    for _p, _mode, rel in tracked_entries:
         rel_posix = rel.replace("\\", "/")
         for pat in junk_patterns:
             if pat.search(rel_posix):
@@ -152,7 +152,7 @@ def main() -> None:
     # 2. Duplicate files by SHA-256 hash (excluding legacy/)
     print("Checking duplicate files...")
     hashes: dict[str, list[str]] = {}
-    for p, mode, rel in tracked_entries:
+    for p, _mode, rel in tracked_entries:
         rel_posix = rel.replace("\\", "/")
         if rel_posix.startswith("legacy/"):
             continue
@@ -166,7 +166,7 @@ def main() -> None:
     # 3. Empty files and empty directories
     print("Checking empty files and empty directories...")
     empty_files = []
-    for p, mode, rel in tracked_entries:
+    for p, _mode, rel in tracked_entries:
         try:
             if p.stat().st_size == 0:
                 empty_files.append(rel.replace("\\", "/"))
@@ -186,7 +186,7 @@ def main() -> None:
     # 4. Files over 1 MB
     print("Checking large files...")
     large_files = []
-    for p, mode, rel in tracked_entries:
+    for p, _mode, rel in tracked_entries:
         try:
             sz = p.stat().st_size
             if sz > 1024 * 1024:
@@ -238,7 +238,7 @@ def main() -> None:
             "Generic Hardcoded Secret",
         ),
     ]
-    for p, mode, rel in tracked_entries:
+    for p, _mode, rel in tracked_entries:
         rel_posix = rel.replace("\\", "/")
         if (
             rel_posix.startswith("legacy/")

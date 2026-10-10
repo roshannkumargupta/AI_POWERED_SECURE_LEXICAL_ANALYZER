@@ -19,8 +19,8 @@ def get_tracked_files() -> list[Path]:
     """Get all git-tracked files."""
     res = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True)
     files = []
-    for line in res.stdout.splitlines():
-        line = line.strip()
+    for raw_line in res.stdout.splitlines():
+        line = raw_line.strip()
         if line:
             p = ROOT / line
             if p.is_file():
@@ -311,7 +311,11 @@ def count_tsc_errors() -> int:
     """Run npx tsc --noEmit in web/ and return error count."""
     try:
         res = subprocess.run(
-            ["npx.cmd", "tsc", "--noEmit"], cwd=ROOT / "web", capture_output=True, text=True
+            ["npx.cmd", "tsc", "--noEmit"],
+            cwd=ROOT / "web",
+            capture_output=True,
+            text=True,
+            check=False,
         )
         if res.returncode == 0:
             return 0
@@ -335,6 +339,7 @@ def count_strict_ruff_violations() -> int:
             cwd=ROOT,
             capture_output=True,
             text=True,
+            check=False,
         )
         violations = [
             entry for entry in res.stdout.splitlines() if re.search(r":[0-9]+:[0-9]+:", entry)

@@ -29,18 +29,16 @@ def main_callback() -> None:
 def _configure_windows_encoding() -> None:
     """Safely configure Windows stdout/stderr UTF-8 encoding inside command runtime."""
     if sys.platform == "win32":
-        if hasattr(sys.stdout, "reconfigure") and sys.stdout.encoding:
-            if sys.stdout.encoding.lower() != "utf-8":
-                try:
-                    sys.stdout.reconfigure(encoding="utf-8")
-                except Exception:
-                    pass
-        if hasattr(sys.stderr, "reconfigure") and sys.stderr.encoding:
-            if sys.stderr.encoding.lower() != "utf-8":
-                try:
-                    sys.stderr.reconfigure(encoding="utf-8")
-                except Exception:
-                    pass
+        if hasattr(sys.stdout, "reconfigure") and sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+            try:
+                sys.stdout.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+        if hasattr(sys.stderr, "reconfigure") and sys.stderr.encoding and sys.stderr.encoding.lower() != "utf-8":
+            try:
+                sys.stderr.reconfigure(encoding="utf-8")
+            except Exception:
+                pass
 
 
 @app.command(name="analyze")
@@ -222,7 +220,7 @@ def fix_command(
         source = file.read_text(encoding="utf-8")
     except Exception as exc:
         console.print(f"[bold red]Error reading file:[/bold red] {exc}")
-        raise typer.Exit(code=2)
+        raise typer.Exit(code=2) from exc
 
     from apsla.languages.registry import detect
 
@@ -271,7 +269,7 @@ def fix_command(
             )
         except Exception as exc:
             console.print(f"[bold red]Failed to write fixed file:[/bold red] {exc}\n")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from exc
     elif not apply and diff:
         console.print(
             "[italic dim]Run with --apply to write changes to disk (creates .bak backup).[/italic dim]\n"

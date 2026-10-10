@@ -274,10 +274,12 @@ class JavaBrokenHashRule(Rule):
             # Verify that MessageDigest token is not inside a comment
             is_comm = False
             for tok in tokens:
-                if tok.start <= context.offset_map.py_to_utf16(m.start()) < tok.end:
-                    if tok.kind in ("COMMENT", "STRING"):
-                        is_comm = True
-                        break
+                if (
+                    tok.start <= context.offset_map.py_to_utf16(m.start()) < tok.end
+                    and tok.kind in ("COMMENT", "STRING")
+                ):
+                    is_comm = True
+                    break
             if is_comm:
                 continue
 

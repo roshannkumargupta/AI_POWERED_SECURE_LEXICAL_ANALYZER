@@ -281,7 +281,7 @@ class OsSystemFixGenerator(FixGenerator):
         if "shlex.split" in replacement_args:
             import_edits.extend(ensure_import_python(context.source, "import shlex"))
 
-        all_edits = import_edits + [call_edit]
+        all_edits = [*import_edits, call_edit]
 
         return [
             Fix(
@@ -417,7 +417,7 @@ class EvalFixGenerator(FixGenerator):
                                 description="Replaces dangerous eval() with ast.literal_eval().",
                                 confidence="review",
                                 kind="rule",
-                                edits=import_edits + [call_edit],
+                                edits=[*import_edits, call_edit],
                                 verification=_create_initial_verification(),
                             )
                         ]
@@ -452,13 +452,12 @@ def _extract_sql_and_params(source: str, node: ast.AST, placeholder: str) -> tup
                 params.append(param_seg)
         cleaned_parts: list[str] = []
         for i, part in enumerate(parts):
-            if (
-                i > 0
-                and parts[i - 1] == placeholder
-                and (part.startswith("'") or part.startswith('"'))
-            ):
-                part = part[1:]
-            cleaned_parts.append(part)
+            cur_part = (
+                part[1:]
+                if (i > 0 and parts[i - 1] == placeholder and part.startswith(("'", '"')))
+                else part
+            )
+            cleaned_parts.append(cur_part)
         return "".join(cleaned_parts).strip(), params
 
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
@@ -481,13 +480,12 @@ def _extract_sql_and_params(source: str, node: ast.AST, placeholder: str) -> tup
                 params.append(seg)
         cleaned_parts = []
         for i, part in enumerate(parts):
-            if (
-                i > 0
-                and parts[i - 1] == placeholder
-                and (part.startswith("'") or part.startswith('"'))
-            ):
-                part = part[1:]
-            cleaned_parts.append(part)
+            cur_part = (
+                part[1:]
+                if (i > 0 and parts[i - 1] == placeholder and part.startswith(("'", '"')))
+                else part
+            )
+            cleaned_parts.append(cur_part)
         return "".join(cleaned_parts).strip(), params
 
     return "SELECT ...", params
@@ -679,44 +677,43 @@ class HashlibFixGenerator(FixGenerator):
             if (
                 isinstance(node, ast.Call)
                 and getattr(node, "lineno", 0) == finding.range.start_line
-            ):
-                if isinstance(node.func, ast.Attribute) and node.func.attr in ("md5", "sha1"):
-                    # Check if compared to a literal hash in the line/statement
-                    line_start = context.offset_map.pos_to_py(node.lineno, 1)
-                    line_end = (
-                        context.offset_map.pos_to_py(node.lineno + 1, 1)
-                        if node.lineno < context.offset_map.line_count
-                        else context.offset_map.py_len
-                    )
-                    line_text = context.source[line_start:line_end]
-                    has_literal_hash = bool(
-                        re.search(r'==\s*["\'][a-fA-F0-9]{32,40}["\']', line_text)
-                    )
+            ) and isinstance(node.func, ast.Attribute) and node.func.attr in ("md5", "sha1"):
+                # Check if compared to a literal hash in the line/statement
+                line_start = context.offset_map.pos_to_py(node.lineno, 1)
+                line_end = (
+                    context.offset_map.pos_to_py(node.lineno + 1, 1)
+                    if node.lineno < context.offset_map.line_count
+                    else context.offset_map.py_len
+                )
+                line_text = context.source[line_start:line_end]
+                has_literal_hash = bool(
+                    re.search(r'==\s*["\'][a-fA-F0-9]{32,40}["\']', line_text)
+                )
 
-                    attr_start = context.offset_map.pos_to_py(
-                        node.func.lineno, node.func.col_offset + 1
-                    )
-                    attr_end = context.offset_map.pos_to_py(
-                        node.func.end_lineno, node.func.end_col_offset + 1
-                    )
-                    func_seg = ast.get_source_segment(context.source, node.func) or ""
-                    new_func = func_seg.replace("md5", "sha256").replace("sha1", "sha256")
-                    attr_range = context.offset_map.span_to_range(attr_start, attr_end)
-                    edit = Edit(range=attr_range, new_text=new_func)
+                attr_start = context.offset_map.pos_to_py(
+                    node.func.lineno, node.func.col_offset + 1
+                )
+                attr_end = context.offset_map.pos_to_py(
+                    node.func.end_lineno, node.func.end_col_offset + 1
+                )
+                func_seg = ast.get_source_segment(context.source, node.func) or ""
+                new_func = func_seg.replace("md5", "sha256").replace("sha1", "sha256")
+                attr_range = context.offset_map.span_to_range(attr_start, attr_end)
+                edit = Edit(range=attr_range, new_text=new_func)
 
-                    confidence = "review" if has_literal_hash else "safe"
-                    return [
-                        Fix(
-                            id=f"fix-{finding.id}-1",
-                            finding_id=finding.id,
-                            title="Upgrade weak cryptographic hash to SHA-256",
-                            description="Replaces broken MD5/SHA-1 hash with secure SHA-256.",
-                            confidence=confidence,
-                            kind="rule",
-                            edits=[edit],
-                            verification=_create_initial_verification(),
-                        )
-                    ]
+                confidence = "review" if has_literal_hash else "safe"
+                return [
+                    Fix(
+                        id=f"fix-{finding.id}-1",
+                        finding_id=finding.id,
+                        title="Upgrade weak cryptographic hash to SHA-256",
+                        description="Replaces broken MD5/SHA-1 hash with secure SHA-256.",
+                        confidence=confidence,
+                        kind="rule",
+                        edits=[edit],
+                        verification=_create_initial_verification(),
+                    )
+                ]
         return []
 
 
@@ -756,7 +753,7 @@ class RandomModuleFixGenerator(FixGenerator):
                             description="Replaces pseudorandom generator with cryptographically strong secrets module.",
                             confidence="review",
                             kind="rule",
-                            edits=import_edits + [call_edit],
+                            edits=[*import_edits, call_edit],
                             verification=_create_initial_verification(),
                         )
                     ]
@@ -804,7 +801,7 @@ class HardcodedSecretFixGenerator(FixGenerator):
                     description=f"Replaces hardcoded credential literal with os.environ.get('{var_name}', '').",
                     confidence="review",
                     kind="rule",
-                    edits=import_edits + [edit],
+                    edits=[*import_edits, edit],
                     verification=_create_initial_verification(),
                 )
             ]
@@ -889,7 +886,7 @@ class PathTraversalFixGenerator(FixGenerator):
                             description="Wraps path parameter in os.path.basename() to prevent directory traversal.",
                             confidence="review",
                             kind="rule",
-                            edits=import_edits + [edit],
+                            edits=[*import_edits, edit],
                             verification=_create_initial_verification(),
                         )
                     ]
@@ -935,7 +932,7 @@ class XssEscapeFixGenerator(FixGenerator):
                             description="Escapes HTML metacharacters to prevent Cross-Site Scripting (XSS).",
                             confidence="review",
                             kind="rule",
-                            edits=import_edits + [edit],
+                            edits=[*import_edits, edit],
                             verification=_create_initial_verification(),
                         )
                     ]

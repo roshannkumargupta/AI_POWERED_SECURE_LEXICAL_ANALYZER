@@ -234,7 +234,7 @@ class PythonTaintAnalyzer:
                 env[target.id] = TaintValue(
                     is_tainted=True,
                     categories=set(val.categories),
-                    path=val.path + [prop_step],
+                    path=[*val.path, prop_step],
                     sanitized=val.sanitized,
                 )
             else:
@@ -309,7 +309,7 @@ class PythonTaintAnalyzer:
                 return TaintValue(
                     is_tainted=True,
                     categories=set(first.categories),
-                    path=first.path + [prop_step],
+                    path=[*first.path, prop_step],
                 )
             if sanitized_parts:
                 return TaintValue(is_tainted=False, sanitized=True, path=sanitized_parts[0].path)
@@ -338,7 +338,7 @@ class PythonTaintAnalyzer:
                 return TaintValue(
                     is_tainted=True,
                     categories=set(v_val.categories),
-                    path=v_val.path + [prop_step],
+                    path=[*v_val.path, prop_step],
                 )
             return TaintValue(is_tainted=False)
 
@@ -387,7 +387,7 @@ class PythonTaintAnalyzer:
                         return TaintValue(
                             is_tainted=True,
                             categories=set(a_val.categories),
-                            path=a_val.path + [prop_step],
+                            path=[*a_val.path, prop_step],
                         )
 
             if call_name.endswith(".join") and expr.args:
@@ -398,7 +398,7 @@ class PythonTaintAnalyzer:
             # 5. Check intra-file function summary
             if call_name in self.function_summaries and expr.args:
                 summary = self.function_summaries[call_name]
-                for (param_name, returns_taint), arg_expr in zip(summary.items(), expr.args):
+                for (_param_name, returns_taint), arg_expr in zip(summary.items(), expr.args, strict=False):
                     if returns_taint:
                         arg_val = self._evaluate_expression(
                             arg_expr, env, record_sinks=record_sinks
@@ -414,7 +414,7 @@ class PythonTaintAnalyzer:
                             return TaintValue(
                                 is_tainted=True,
                                 categories=set(arg_val.categories),
-                                path=arg_val.path + [prop_step],
+                                path=[*arg_val.path, prop_step],
                             )
 
             return TaintValue(is_tainted=False)
@@ -557,7 +557,7 @@ class PythonTaintAnalyzer:
             return TaintValue(
                 is_tainted=False,
                 sanitized=True,
-                path=arg_val.path + [san_step] if arg_val.path else [san_step],
+                path=[*arg_val.path, san_step] if arg_val.path else [san_step],
             )
 
         return None
@@ -612,7 +612,7 @@ class PythonTaintAnalyzer:
                     TaintFlow(
                         rule_id=rule_id,
                         sink_range=rng,
-                        path=arg_val.path + [sink_step],
+                        path=[*arg_val.path, sink_step],
                         sanitized=False,
                         message=f"Command injection confirmed: untrusted data flows into {call_name}()",
                     )
@@ -632,7 +632,7 @@ class PythonTaintAnalyzer:
                     TaintFlow(
                         rule_id="APS-PY-INJ-001",
                         sink_range=rng,
-                        path=arg_val.path + [sink_step],
+                        path=[*arg_val.path, sink_step],
                         sanitized=False,
                         message=f"Arbitrary code execution confirmed: untrusted data reaches {call_name}()",
                     )
@@ -665,7 +665,7 @@ class PythonTaintAnalyzer:
                     TaintFlow(
                         rule_id="APS-PY-INJ-004",
                         sink_range=rng,
-                        path=arg_val.path + [sink_step],
+                        path=[*arg_val.path, sink_step],
                         sanitized=False,
                         message="SQL injection confirmed: dynamic untrusted query executed without parameterization",
                     )
@@ -695,7 +695,7 @@ class PythonTaintAnalyzer:
                     TaintFlow(
                         rule_id="APS-PY-IO-001",
                         sink_range=rng,
-                        path=arg_val.path + [sink_step],
+                        path=[*arg_val.path, sink_step],
                         sanitized=False,
                         message=f"Path traversal confirmed: user input flows into {call_name}() without sanitization",
                     )
@@ -725,7 +725,7 @@ class PythonTaintAnalyzer:
                     TaintFlow(
                         rule_id="APS-PY-XSS-001",
                         sink_range=rng,
-                        path=arg_val.path + [sink_step],
+                        path=[*arg_val.path, sink_step],
                         sanitized=False,
                         message=f"Cross-site scripting / SSTI confirmed: user data flows into {call_name}()",
                     )
@@ -746,7 +746,7 @@ class PythonTaintAnalyzer:
                     TaintFlow(
                         rule_id=rule_id,
                         sink_range=rng,
-                        path=arg_val.path + [sink_step],
+                        path=[*arg_val.path, sink_step],
                         sanitized=False,
                         message=f"Insecure deserialization confirmed: untrusted data flows into {call_name}()",
                     )
@@ -774,7 +774,7 @@ class PythonTaintAnalyzer:
         return TaintValue(
             is_tainted=True,
             categories=set(val1.categories) | set(val2.categories),
-            path=source_val.path + [prop_step],
+            path=[*source_val.path, prop_step],
             sanitized=val1.sanitized or val2.sanitized,
         )
 

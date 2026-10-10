@@ -377,10 +377,9 @@ async def submit_feedback(req: FeedbackRequest) -> FeedbackResponse:
 @api_router.get("/samples", response_model=None)
 async def list_samples(language: str | None = None, meta: bool = False) -> list[dict[str, object]]:
     """Retrieve pre-bundled interactive code samples."""
-    records = [
+    return [
         sample.model_dump(exclude={"code"} if meta else None) for sample in get_samples(language)
     ]
-    return records
 
 
 @api_router.get("/samples/{sample_id}", response_model=SampleItem)

@@ -206,7 +206,7 @@ class SqlInjectionRule(Rule):
         for node in ast.walk(context.ast_tree):
             if isinstance(node, ast.Call):
                 name = _get_call_name(node)
-                if (name.endswith(".execute") or name.endswith(".executemany")) and node.args:
+                if (name.endswith((".execute", ".executemany"))) and node.args:
                     query_arg = node.args[0]
                     is_dynamic_sql = _is_built_string(query_arg) or (
                         isinstance(query_arg, ast.Name) and query_arg.id in dynamic_vars

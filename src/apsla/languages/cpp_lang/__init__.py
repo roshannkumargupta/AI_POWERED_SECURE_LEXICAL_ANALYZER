@@ -3,11 +3,7 @@
 from __future__ import annotations
 
 import re
-import shutil
-import subprocess
-import tempfile
-from pathlib import Path
-from typing import Any, Final
+from typing import Any
 
 from apsla.languages.base import (
     FixGenerator,
@@ -18,10 +14,7 @@ from apsla.languages.base import (
 )
 from apsla.languages.cpp_lang.fixes import register_cpp_fix_generators
 from apsla.languages.cpp_lang.lexer import ALL_CPP_KEYWORDS, CppLexer
-from apsla.languages.cpp_lang.profile import (
-    CPP_DANGEROUS_APIS,
-    CPP_TAINT_PROFILE,
-)
+from apsla.languages.cpp_lang.profile import CPP_TAINT_PROFILE
 from apsla.languages.cpp_lang.rules import ALL_CPP_RULES
 from apsla.lexing.token import Token
 from apsla.taint.lite import TaintLiteEngine

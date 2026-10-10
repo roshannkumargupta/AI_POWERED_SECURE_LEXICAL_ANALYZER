@@ -133,7 +133,7 @@ def verify() -> tuple[list[dict[str, object]], int]:
                 if meta.fix_expected != "none" and meta.fix_expected not in confidences:
                     confidence_report.append(f"expected:{meta.fix_expected}")
             if ml_on is ml_modes[-1]:
-                new_source, applied, _, _, _, _ = fix_all(source, meta.language, meta.file)
+                new_source, _applied, _, _, _, _ = fix_all(source, meta.language, meta.file)
                 twice, _, _, _, _, _ = fix_all(new_source, meta.language, meta.file)
                 if twice != new_source:
                     problems.append("fix-all is not idempotent")

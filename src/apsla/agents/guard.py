@@ -103,9 +103,7 @@ def validate_identifier_arg(val: Any) -> bool:
         return True
     if "\x00" in val:
         return False
-    if ".." in val or "/" in val or "\\" in val:
-        return False
-    return True
+    return not (".." in val or "/" in val or "\\" in val)
 
 
 def validate_decision(
@@ -125,14 +123,12 @@ def validate_decision(
 
     # 2. Check for path traversal in arguments
     for k, v in args.items():
-        if k.endswith("_id") or "id" in k.lower():
-            if not validate_identifier_arg(v):
-                return False, f"Argument '{k}' contains forbidden path traversal characters"
+        if (k.endswith("_id") or "id" in k.lower()) and not validate_identifier_arg(v):
+            return False, f"Argument '{k}' contains forbidden path traversal characters"
 
     # 3. Check schema if tool schema exists
     schema = tool_schemas.get(action)
-    if schema:
-        if not validate_schema(args, schema):
-            return False, f"Arguments {args} do not match schema for tool '{action}'"
+    if schema and not validate_schema(args, schema):
+        return False, f"Arguments {args} do not match schema for tool '{action}'"
 
     return True, None

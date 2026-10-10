@@ -57,7 +57,7 @@ def generate_unbounded_copy_fix(ctx: FixContext) -> list[Fix]:
             new_text=f"fgets({buf}, sizeof({buf}), stdin)",
         )
         import_edits = ensure_import_cpp(source, "stdio.h", filename=getattr(ctx, "filename", ""))
-        all_edits = import_edits + [call_edit]
+        all_edits = [*import_edits, call_edit]
         return [
             Fix(
                 id=f"fix-{finding.id}-0",
@@ -91,7 +91,7 @@ def generate_unbounded_copy_fix(ctx: FixContext) -> list[Fix]:
             import_edits = ensure_import_cpp(
                 source, "stdio.h", filename=getattr(ctx, "filename", "")
             )
-            all_edits = import_edits + [call_edit]
+            all_edits = [*import_edits, call_edit]
             return [
                 Fix(
                     id=f"fix-{finding.id}-0",
@@ -135,7 +135,7 @@ def generate_unbounded_copy_fix(ctx: FixContext) -> list[Fix]:
             new_text=f"snprintf({buf}, sizeof({buf}), {rest})",
         )
         import_edits = ensure_import_cpp(source, "stdio.h", filename=getattr(ctx, "filename", ""))
-        all_edits = import_edits + [call_edit]
+        all_edits = [*import_edits, call_edit]
         return [
             Fix(
                 id=f"fix-{finding.id}-0",

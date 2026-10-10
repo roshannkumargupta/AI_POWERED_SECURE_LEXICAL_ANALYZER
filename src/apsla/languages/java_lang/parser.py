@@ -233,24 +233,24 @@ class JavaStructParser:
             module_parts.append(t.text)
             end_tok = t
 
-        if not self._match(";"):
-            if not self.errors or self.errors[-1].unexpected_token != self._peek().text:
-                self.errors.append(
-                    ErrorNode(
-                        message="Expected ';' after import",
-                        range=self._token_range(end_tok, end_tok),
-                        unexpected_token=end_tok.text,
-                    )
+        if not self._match(";") and (
+            not self.errors or self.errors[-1].unexpected_token != self._peek().text
+        ):
+            self.errors.append(
+                ErrorNode(
+                    message="Expected ';' after import",
+                    range=self._token_range(end_tok, end_tok),
+                    unexpected_token=end_tok.text,
                 )
+            )
 
         module_name = "".join(module_parts)
-        imp = ImportNode(
+        return ImportNode(
             module=module_name,
             range=self._token_range(start_tok, end_tok),
             names=["static"] if is_static else [],
             is_include=False,
         )
-        return imp
 
     def _parse_type_declaration_or_statement(self) -> StructNode | None:
         # Collect modifiers and annotations

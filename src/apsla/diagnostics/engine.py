@@ -1065,19 +1065,20 @@ def analyze_syntax_diagnostics(
     # -------------------------------------------------------------------------
     if language == "java":
         # 1. Illegal break outside loop or switch: break;
-        if re.search(r"^\s*break\s*;", source, re.MULTILINE):
-            if not any(k in source for k in ("while", "for", "switch", "do")):
-                m = re.search(r"\bbreak\s*;", source)
-                start_p, end_p = m.span()
-                rng = _offset_to_range(source, start_p, end_p)
-                fix_edit = Edit(range=rng, new_text="while (true) { break; }")
-                fix = _make_fix(
-                    "syn",
-                    "Wrap break in loop",
-                    "Wraps 'break;' statement inside a loop.",
-                    [fix_edit],
-                )
-                return [
+        if re.search(r"^\s*break\s*;", source, re.MULTILINE) and not any(
+            k in source for k in ("while", "for", "switch", "do")
+        ):
+            m = re.search(r"\bbreak\s*;", source)
+            start_p, end_p = m.span()
+            rng = _offset_to_range(source, start_p, end_p)
+            fix_edit = Edit(range=rng, new_text="while (true) { break; }")
+            fix = _make_fix(
+                "syn",
+                "Wrap break in loop",
+                "Wraps 'break;' statement inside a loop.",
+                [fix_edit],
+            )
+            return [
                     make_syntax_finding(
                         "001",
                         "Illegal break outside loop or switch",
@@ -1305,17 +1306,18 @@ def analyze_syntax_diagnostics(
     # -------------------------------------------------------------------------
     if language == "javascript":
         # 1. Illegal top-level return in a normal script: return 5;
-        if re.search(r"^\s*return\b", source, re.MULTILINE):
-            if not re.search(r"\bfunction\b", source):
-                rng = Range(start_line=1, start_col=1, end_line=1, end_col=len(source) + 1)
-                fix_edit = Edit(range=rng, new_text=f"function main() {{ {source} }}")
-                fix = _make_fix(
-                    "syn",
-                    "Wrap in function",
-                    "Wraps top-level return inside a function declaration.",
-                    [fix_edit],
-                )
-                return [
+        if re.search(r"^\s*return\b", source, re.MULTILINE) and not re.search(
+            r"\bfunction\b", source
+        ):
+            rng = Range(start_line=1, start_col=1, end_line=1, end_col=len(source) + 1)
+            fix_edit = Edit(range=rng, new_text=f"function main() {{ {source} }}")
+            fix = _make_fix(
+                "syn",
+                "Wrap in function",
+                "Wraps top-level return inside a function declaration.",
+                [fix_edit],
+            )
+            return [
                     make_syntax_finding(
                         "001",
                         "Illegal top-level return in a normal script",
@@ -1526,28 +1528,29 @@ def analyze_syntax_diagnostics(
     # -------------------------------------------------------------------------
     if language == "cpp":
         # 1. Illegal break outside loop or switch: int main(){ break; return 0; }
-        if re.search(r"\bbreak\s*;", source):
-            if not any(k in source for k in ("while", "for", "switch", "do")):
-                m = re.search(r"\bbreak\s*;", source)
-                start_p, end_p = m.span()
-                rng = _offset_to_range(source, start_p, end_p)
-                fix_edit = Edit(range=rng, new_text="while (true) { break; }")
-                fix = _make_fix(
-                    "syn",
-                    "Wrap break in loop",
-                    "Wraps break statement inside a while loop.",
-                    [fix_edit],
+        if re.search(r"\bbreak\s*;", source) and not any(
+            k in source for k in ("while", "for", "switch", "do")
+        ):
+            m = re.search(r"\bbreak\s*;", source)
+            start_p, end_p = m.span()
+            rng = _offset_to_range(source, start_p, end_p)
+            fix_edit = Edit(range=rng, new_text="while (true) { break; }")
+            fix = _make_fix(
+                "syn",
+                "Wrap break in loop",
+                "Wraps break statement inside a while loop.",
+                [fix_edit],
+            )
+            return [
+                make_syntax_finding(
+                    "001",
+                    "Illegal break outside loop or switch",
+                    "Illegal break outside loop or switch: 'break' can only be used in loops or switch blocks.",
+                    "A break statement must be enclosed within a loop or switch statement.",
+                    rng,
+                    fix,
                 )
-                return [
-                    make_syntax_finding(
-                        "001",
-                        "Illegal break outside loop or switch",
-                        "Illegal break outside loop or switch: 'break' can only be used in loops or switch blocks.",
-                        "A break statement must be enclosed within a loop or switch statement.",
-                        rng,
-                        fix,
-                    )
-                ]
+            ]
 
         # 2. Missing variable name: int main(){ int = 10; return 0; }
         m = re.search(r"\b(int|double|float|long|bool|char|auto)\s*=\s*", source)

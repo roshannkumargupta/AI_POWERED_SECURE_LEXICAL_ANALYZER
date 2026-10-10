@@ -316,9 +316,7 @@ def _check_hex(text: str) -> bool:
     clean = text.strip("'\"` \t\r\n")
     if clean.startswith(("0x", "0X")):
         clean = clean[2:]
-    if len(clean) >= 8 and len(clean) % 2 == 0 and re.fullmatch(r"[0-9a-fA-F]+", clean):
-        return True
-    return False
+    return bool(len(clean) >= 8 and len(clean) % 2 == 0 and re.fullmatch(r"[0-9a-fA-F]+", clean))
 
 
 def _check_decoded_payload_danger(text: str) -> bool:

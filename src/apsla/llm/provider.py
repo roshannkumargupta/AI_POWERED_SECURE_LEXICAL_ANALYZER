@@ -21,8 +21,8 @@ def _load_env_file() -> None:
     root_env = Path(__file__).resolve().parents[3] / ".env"
     if root_env.is_file():
         try:
-            for line in root_env.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
+            for raw_line in root_env.read_text(encoding="utf-8").splitlines():
+                line = raw_line.strip()
                 if not line or line.startswith("#") or "=" not in line:
                     continue
                 k, v = line.split("=", 1)

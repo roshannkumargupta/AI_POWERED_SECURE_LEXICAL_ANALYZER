@@ -51,7 +51,7 @@ def test_keywords_and_unicode_identifiers():
     assert tokens[1].text == "calculate_π"
 
     # über_größe
-    uber_token = [t for t in tokens if "über" in t.text][0]
+    uber_token = next(t for t in tokens if "über" in t.text)
     assert uber_token.kind == "IDENTIFIER"
     assert uber_token.text == "über_größe"
 

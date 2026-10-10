@@ -440,12 +440,9 @@ class CppLexer(LexerBase):
         ch = self.peek()
         if ch == "R" and self.peek(1) == '"':
             return True
-        if ch in ("L", "u", "U"):
-            if self.peek(1) == "R" and self.peek(2) == '"':
-                return True
-        if ch == "u" and self.peek(1) == "8" and self.peek(2) == "R" and self.peek(3) == '"':
+        if ch in ("L", "u", "U") and self.peek(1) == "R" and self.peek(2) == '"':
             return True
-        return False
+        return bool(ch == "u" and self.peek(1) == "8" and self.peek(2) == "R" and self.peek(3) == '"')
 
     def _lex_raw_string(self, tokens: list[Token]) -> None:
         """Lex a C++11 raw string literal R"delimiter(content)delimiter".
@@ -495,13 +492,9 @@ class CppLexer(LexerBase):
     def _looks_like_prefixed_literal(self) -> bool:
         """Check if cursor points to a prefixed string or char literal."""
         ch = self.peek()
-        if ch in ("L", "u", "U"):
-            if self.peek(1) in ('"', "'"):
-                return True
-        if ch == "u" and self.peek(1) == "8":
-            if self.peek(2) in ('"', "'"):
-                return True
-        return False
+        if ch in ("L", "u", "U") and self.peek(1) in ('"', "'"):
+            return True
+        return bool(ch == "u" and self.peek(1) == "8" and self.peek(2) in ('"', "'"))
 
     def _lex_prefixed_literal(self, tokens: list[Token]) -> None:
         """Lex string or char literal with prefix L, u8, u, or U."""

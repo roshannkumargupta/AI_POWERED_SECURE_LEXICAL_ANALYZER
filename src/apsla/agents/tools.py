@@ -67,7 +67,7 @@ class AnalysisSession:
 
     def get_next_unverified_candidate(self) -> dict[str, Any] | None:
         """Find the next fix candidate that hasn't been verified or rejected yet."""
-        for finding_id, cands in self.fix_candidates.items():
+        for _finding_id, cands in self.fix_candidates.items():
             for c in cands:
                 cid = c.get("id")
                 if cid and cid not in self.verified_fixes and cid not in self.copies:
@@ -411,7 +411,7 @@ def tool_ml_score(session: AnalysisSession) -> dict[str, Any]:
         for f in session.findings:
             # Find tokens overlapping with finding range
             overlap_scores: list[float] = []
-            for t, p in zip(session.tokens, probs):
+            for t, p in zip(session.tokens, probs, strict=False):
                 if f.range.start_line <= t.line <= f.range.end_line:
                     overlap_scores.append(p)
             if overlap_scores:

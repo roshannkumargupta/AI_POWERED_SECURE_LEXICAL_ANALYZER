@@ -92,8 +92,8 @@ def load_all_feedback(filepath: Path | None = None) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     try:
         with open(target_file, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
+            for raw_line in f:
+                line = raw_line.strip()
                 if line:
                     records.append(json.loads(line))
     except Exception as exc:

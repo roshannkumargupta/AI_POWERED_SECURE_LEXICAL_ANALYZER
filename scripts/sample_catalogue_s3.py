@@ -15,11 +15,13 @@ def catalogue_s3() -> list[tuple[dict[str, Any], str]]:
         title: str,
         topic: str,
         code: str,
-        rules: list[tuple[str, int]] = [],
+        rules: list[tuple[str, int]] | None = None,
         *,
         chars: list[str] | None = None,
         demo: int | None = None,
     ) -> None:
+        if rules is None:
+            rules = []
         expected: dict[str, Any] = {
             "findings": [{"rule_id": rule, "line": line} for rule, line in rules],
             "min_findings": len(rules),

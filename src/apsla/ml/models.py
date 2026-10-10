@@ -93,8 +93,7 @@ class WindowedBiLSTM(nn.Module):
         center_repr = lstm_out[:, center_idx, :]  # (B, 128)
 
         # 5. MLP 128->64->3
-        logits = self.mlp(center_repr)  # (B, 3)
-        return logits
+        return self.mlp(center_repr)  # (B, 3)
 
 
 # ── Model Wrapper ─────────────────────────────────────────────────────────────
@@ -189,7 +188,7 @@ class UnifiedModelWrapper:
             if lang_ids is None:
                 lang_ids = np.zeros(N, dtype=np.int64)
 
-            for epoch in range(epochs):
+            for _epoch in range(epochs):
                 np.random.shuffle(indices)
                 for start_idx in range(0, N, batch_size):
                     batch_idx = indices[start_idx : start_idx + batch_size]
@@ -235,7 +234,7 @@ class UnifiedModelWrapper:
         if lang_ids is None:
             lang_ids = np.zeros(N, dtype=np.int64)
 
-        for epoch in range(epochs):
+        for _epoch in range(epochs):
             np.random.shuffle(indices)
             for start_idx in range(0, N, batch_size):
                 batch_idx = indices[start_idx : start_idx + batch_size]
