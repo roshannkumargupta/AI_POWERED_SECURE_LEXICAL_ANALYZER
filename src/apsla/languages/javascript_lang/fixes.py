@@ -671,46 +671,64 @@ def generate_disabled_tls_fix(ctx: FixContext) -> list[Fix]:
 
 
 class JSDOMXSSFixGenerator(FixGenerator):
+    """Generates remediation patches replacing innerHTML with textContent."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_dom_xss_fix(context)
 
 
 class JSReactXSSFixGenerator(FixGenerator):
+    """Generates remediation patches removing dangerouslySetInnerHTML in React."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_react_xss_fix(context)
 
 
 class JSCodeInjectionFixGenerator(FixGenerator):
+    """Generates remediation patches replacing eval() and new Function() with JSON.parse()."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_eval_fix(context)
 
 
 class JSCommandInjectionFixGenerator(FixGenerator):
+    """Generates remediation patches replacing child_process.exec with execFile."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_command_injection_fix(context)
 
 
 class JSSQLInjectionFixGenerator(FixGenerator):
+    """Generates remediation patches converting SQL string concatenation to parameterization."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_sqli_fix(context)
 
 
 class JSRandomFixGenerator(FixGenerator):
+    """Generates remediation patches upgrading Math.random() to crypto.randomBytes()."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_random_fix(context)
 
 
 class JSWeakHashFixGenerator(FixGenerator):
+    """Generates remediation patches upgrading crypto.createHash('md5') to sha256."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_weak_hash_fix(context)
 
 
 class JSHardcodedSecretFixGenerator(FixGenerator):
+    """Generates remediation patches replacing hardcoded credentials with process.env lookups."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_hardcoded_secret_fix(context)
 
 
 class JSDisabledTLSFixGenerator(FixGenerator):
+    """Generates remediation patches removing rejectUnauthorized: false in TLS configurations."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_disabled_tls_fix(context)
 

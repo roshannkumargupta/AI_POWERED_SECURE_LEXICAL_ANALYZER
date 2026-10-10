@@ -319,26 +319,36 @@ def generate_random_fix(ctx: FixContext) -> list[Fix]:
 
 
 class CppUnboundedCopyFixGenerator(FixGenerator):
+    """Generates remediation patches for unbounded C buffer copies (strcpy, gets)."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_unbounded_copy_fix(context)
 
 
 class CppFormatStringFixGenerator(FixGenerator):
+    """Generates remediation patches for non-literal format strings (printf, syslog)."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_format_string_fix(context)
 
 
 class CppScanfFixGenerator(FixGenerator):
+    """Generates remediation patches for unbounded scanf %s buffer reads."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_scanf_fix(context)
 
 
 class CppCommandInjectionFixGenerator(FixGenerator):
+    """Generates remediation patches for system/popen command execution calls."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_command_injection_fix(context)
 
 
 class CppRandomFixGenerator(FixGenerator):
+    """Generates remediation patches upgrading rand() to std::random_device."""
+
     def generate(self, context: FixContext) -> list[Fix]:
         return generate_random_fix(context)
 
