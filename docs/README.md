@@ -46,6 +46,7 @@ Detailed phase explanations are located in the [`explained/`](explained/) direct
 | **Phase 12–15** | Prioritization, Fix Engine, Agentic Loop | [Phase 12](explained/phase12.md), [Phase 15](explained/phase15.md) |
 | **UI 1–9** | Desktop UI, Monaco Integration, Themes, Guards | [UI 1–9 Explanations](explained/) |
 | **Samples** | Benchmark Catalogue | [Samples Matrix](explained/samples.md), [Phase S1](explained/phaseS1.md) |
+| **Cleanup** | Hygiene, Quality & Architecture (CLEAN-1 & 2) | [Cleanup Retrospective](explained/cleanup.md) |
 
 ---
 
@@ -53,6 +54,7 @@ Detailed phase explanations are located in the [`explained/`](explained/) direct
 
 Registers and evidence generated during repository hygiene (CLEAN-1 & CLEAN-2):
 
+- **[Final Cleanup Report](../reports/cleanup/final_report.md)**: Quantitative before/after metrics, gate results, and contract audit.
 - **[Repository Inventory](cleanup/inventory.md)**: Depth-3 folder tree and component purpose index.
 - **[Dead Code Candidates](cleanup/dead_code_candidates.md)**: Audit of unreferenced symbols and justification for dynamic preservation.
 - **[Architectural Decisions](cleanup/needs_decision.md)**: Decisions on retained components, datasets, and dependencies.
