@@ -7,7 +7,8 @@ import {
   findingGroup,
   foundBy,
 } from '../model/adapt';
-import { Check, Copy } from 'lucide-react';
+import { extractEditText } from '../utils/diff';
+import { ExplanationActionBar } from './ExplanationActionBar';
 
 type Props = {
   analysis: AnalysisResult | null;
@@ -75,25 +76,7 @@ export const ExplanationPanel: React.FC<Props> = ({
     finding?.kind === 'lexical' || finding?.kind === 'syntax' ? finding.rule_id : finding?.cwe;
   const group = finding ? titleCase(findingGroup(finding)) : '';
 
-  const oldText =
-    fix?.edits
-      ?.map((edit) => {
-        const lines = source.split('\n');
-        const startLine = Math.max(0, edit.range.start_line - 1);
-        const endLine = Math.max(startLine, edit.range.end_line - 1);
-        if (startLine === endLine) {
-          return (lines[startLine] || '').slice(
-            edit.range.start_col - 1,
-            Math.max(edit.range.start_col - 1, edit.range.end_col - 1)
-          );
-        }
-        return [
-          lines[startLine]?.slice(edit.range.start_col - 1),
-          ...lines.slice(startLine + 1, endLine),
-          lines[endLine]?.slice(0, edit.range.end_col - 1),
-        ].join('\n');
-      })
-      .join('\n') || '';
+  const oldText = extractEditText(source, fix?.edits);
 
   const adviceText =
     finding?.explanation ||
@@ -241,75 +224,17 @@ export const ExplanationPanel: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Pinned Action Bar at the bottom — ALWAYS VISIBLE at all viewports */}
-      <footer
-        className="ui6-explain-actions"
-        style={{
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderTop: '1px solid var(--border)',
-          paddingTop: '6px',
-          marginTop: '6px',
-          gap: '8px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {hasEdit && fix && (
-            <button
-              className="ui6-apply-fix"
-              disabled={isStale}
-              title={
-                isStale
-                  ? 'Analyse again first'
-                  : isVerifiedSafe
-                    ? 'Apply verified fix'
-                    : 'Apply review fix'
-              }
-              onClick={() => onApplyFix(fix, finding!)}
-              style={{
-                cursor: isStale ? 'not-allowed' : 'pointer',
-                opacity: isStale ? 0.5 : 1,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-              }}
-            >
-              Apply fix
-            </button>
-          )}
-
-          <button
-            type="button"
-            className="ui6-switch"
-            onClick={handleCopyAdvice}
-            title="Copy advice text to clipboard"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '3px 8px',
-              borderRadius: 3,
-            }}
-          >
-            {copiedAdvice ? <Check size={11} color="var(--text-success)" /> : <Copy size={11} />}
-            <span>{copiedAdvice ? 'Copied' : 'Copy advice'}</span>
-          </button>
-        </div>
-
-        {finding && (
-          <button
-            type="button"
-            className="ui6-switch"
-            onClick={() => onFalsePositive(finding)}
-            title="Report this finding as a false positive"
-            style={{ padding: '3px 8px', borderRadius: 3 }}
-          >
-            Mark as false positive
-          </button>
-        )}
-      </footer>
+      <ExplanationActionBar
+        hasEdit={hasEdit}
+        fix={fix}
+        finding={finding || undefined}
+        isStale={isStale}
+        isVerifiedSafe={isVerifiedSafe}
+        copiedAdvice={copiedAdvice}
+        onApplyFix={onApplyFix}
+        onCopyAdvice={handleCopyAdvice}
+        onFalsePositive={onFalsePositive}
+      />
     </section>
   );
 };

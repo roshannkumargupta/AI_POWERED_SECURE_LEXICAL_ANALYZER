@@ -1,15 +1,13 @@
 import React from 'react';
-import {
-  AlertOctagon,
-  ShieldAlert,
-  AlertTriangle,
-  Info,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Finding, Severity } from '../api/client';
-import { findingCategory } from '../utils/findingCategory';
+import { ProblemRow } from './ProblemRow';
+import {
+  filterFindings,
+  sortFindings,
+  getTopPriorityFindingIds,
+  ProblemsSortBy,
+} from '../model/problemsSelection';
 
 interface ProblemsPanelProps {
   findings: Finding[];
@@ -30,99 +28,39 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
   onNextFinding,
   onPrevFinding,
 }) => {
-  const [sortBy, setSortBy] = React.useState<'priority' | 'severity' | 'location' | 'confidence'>(
-    'priority'
-  );
+  const [sortBy, setSortBy] = React.useState<ProblemsSortBy>('priority');
   const [grouped, setGrouped] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
-  const activeFindings = findings.filter((f) => !f.suppressed);
 
-  const top3Ids = React.useMemo(() => {
-    const sortedByPriority = [...activeFindings].sort(
-      (a, b) => (b.priority ?? 0) - (a.priority ?? 0) || (b.confidence ?? 0) - (a.confidence ?? 0)
-    );
-    return new Set(sortedByPriority.slice(0, 3).map((f) => f.id));
-  }, [activeFindings]);
-
-  const filteredFindings =
-    filter === 'all' ? activeFindings : activeFindings.filter((f) => f.severity === filter);
-  const severityOrder: Record<Severity, number> = {
-    critical: 0,
-    high: 1,
-    medium: 2,
-    low: 3,
-    info: 4,
-  };
-  const sortedFindings = [...filteredFindings].sort((a, b) => {
-    if (sortBy === 'priority') {
-      const pDiff = (b.priority ?? 0) - (a.priority ?? 0);
-      if (Math.abs(pDiff) > 0.0001) return pDiff;
-      return (
-        severityOrder[a.severity] - severityOrder[b.severity] ||
-        a.range.start_line - b.range.start_line
-      );
-    }
-    if (sortBy === 'location') {
-      return a.range.start_line - b.range.start_line || a.range.start_col - b.range.start_col;
-    }
-    if (sortBy === 'confidence') {
-      return b.confidence - a.confidence;
-    }
-    return severityOrder[a.severity] - severityOrder[b.severity];
-  });
-  const shownFindings = grouped
-    ? [...sortedFindings].sort((a, b) => findingCategory(a).localeCompare(findingCategory(b)))
-    : sortedFindings;
-
-  const getSeverityIcon = (sev: Severity) => {
-    switch (sev) {
-      case 'critical':
-        return <AlertOctagon size={14} color="var(--critical)" />;
-      case 'high':
-        return <ShieldAlert size={14} color="var(--high)" />;
-      case 'medium':
-        return <AlertTriangle size={14} color="var(--medium)" />;
-      case 'low':
-        return <Info size={14} color="var(--low)" />;
-      case 'info':
-      default:
-        return <CheckCircle2 size={14} color="var(--info)" />;
-    }
-  };
-
-  const getSeverityColor = (sev: Severity) => {
-    switch (sev) {
-      case 'critical':
-        return 'var(--critical)';
-      case 'high':
-        return 'var(--high)';
-      case 'medium':
-        return 'var(--medium)';
-      case 'low':
-        return 'var(--low)';
-      case 'info':
-      default:
-        return 'var(--info)';
-    }
-  };
+  const activeFindings = React.useMemo(() => findings.filter((f) => !f.suppressed), [findings]);
+  const top3Ids = React.useMemo(
+    () => getTopPriorityFindingIds(activeFindings, 3),
+    [activeFindings]
+  );
+  const filteredFindings = React.useMemo(
+    () => filterFindings(findings, filter),
+    [findings, filter]
+  );
+  const shownFindings = React.useMemo(
+    () => sortFindings(filteredFindings, sortBy, grouped),
+    [filteredFindings, sortBy, grouped]
+  );
 
   return (
     <div style={containerStyle}>
-      {/* Problems Toolbar */}
       <div style={toolbarStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             style={titleStyle}
-            onClick={() => setCollapsed((value) => !value)}
-            aria-expanded={!collapsed}
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label="Toggle problems list"
           >
-            PROBLEMS {activeFindings.length}
+            Problems ({activeFindings.length})
           </button>
         </div>
 
-        {/* Severity Filter Pills */}
         <div style={filterGroupStyle}>
-          {(['all', 'critical', 'high', 'medium', 'low'] as const).map((sev) => {
+          {(['all', 'critical', 'high', 'medium', 'low', 'info'] as const).map((sev) => {
             const isActive = filter === sev;
             const count =
               sev === 'all'
@@ -146,10 +84,11 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
             );
           })}
         </div>
+
         <select
           aria-label="Sort problems"
           value={sortBy}
-          onChange={(event) => setSortBy(event.target.value as typeof sortBy)}
+          onChange={(event) => setSortBy(event.target.value as ProblemsSortBy)}
           style={{
             background: 'var(--panel)',
             color: 'var(--text-secondary)',
@@ -162,6 +101,7 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
           <option value="location">Location</option>
           <option value="confidence">Confidence</option>
         </select>
+
         <label style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>
           <input
             type="checkbox"
@@ -171,7 +111,6 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
           Group
         </label>
 
-        {/* Next / Previous Shortcuts */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <button
             style={navBtnStyle}
@@ -192,7 +131,6 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
         </div>
       </div>
 
-      {/* Problems Table / List */}
       {!collapsed && (
         <div style={tableContainerStyle}>
           {filteredFindings.length === 0 ? (
@@ -214,78 +152,16 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {shownFindings.map((finding) => {
-                  const isSelected = finding.id === selectedFindingId;
-                  const sevColor = getSeverityColor(finding.severity);
-
-                  return (
-                    <tr
-                      key={finding.id}
-                      style={{
-                        ...trStyle,
-                        backgroundColor: 'transparent',
-                        borderLeft: isSelected ? `3px solid ${sevColor}` : '3px solid transparent',
-                      }}
-                      onClick={() => onSelectFinding(finding.id)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter') onSelectFinding(finding.id);
-                      }}
-                      tabIndex={0}
-                    >
-                      <td style={tdStyle}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          {getSeverityIcon(finding.severity)}
-                          <span
-                            style={{
-                              color: sevColor,
-                              fontWeight: 600,
-                              fontSize: '11px',
-                              textTransform: 'uppercase',
-                            }}
-                          >
-                            {finding.severity}
-                          </span>
-                        </div>
-                      </td>
-                      <td style={tdStyle}>
-                        <code style={ruleCodeStyle}>{finding.cwe || finding.rule_id}</code>
-                      </td>
-                      <td style={tdStyle}>
-                        <span style={messageStyle}>
-                          {grouped
-                            ? `${findingCategory(finding)} · ${finding.title}`
-                            : finding.title || finding.message}
-                        </span>
-                        {top3Ids.has(finding.id) && (
-                          <span
-                            data-qa="fix-first-badge"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '1px 6px',
-                              borderRadius: '4px',
-                              fontSize: '10px',
-                              fontWeight: 700,
-                              backgroundColor: 'var(--bg-warning)',
-                              color: 'var(--text-warning)',
-                              border: '1px solid var(--text-warning)',
-                              marginLeft: '8px',
-                              letterSpacing: '0.2px',
-                            }}
-                            title="Priority ranking: recommended to fix first"
-                          >
-                            Fix first
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ ...tdStyle, textAlign: 'right' }}>
-                        <span style={locStyle}>
-                          Ln {finding.range.start_line}:{finding.range.start_col}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {shownFindings.map((finding) => (
+                  <ProblemRow
+                    key={finding.id}
+                    finding={finding}
+                    isSelected={finding.id === selectedFindingId}
+                    isTopPriority={top3Ids.has(finding.id)}
+                    grouped={grouped}
+                    onSelect={onSelectFinding}
+                  />
+                ))}
               </tbody>
             </table>
           )}
@@ -377,38 +253,6 @@ const thStyle: React.CSSProperties = {
   color: 'var(--muted)',
   textTransform: 'uppercase',
   letterSpacing: '0.3px',
-};
-
-const trStyle: React.CSSProperties = {
-  borderBottom: '1px solid var(--border-subtle)',
-  cursor: 'pointer',
-  transition: 'background-color var(--transition-fast)',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '6px 12px',
-  whiteSpace: 'nowrap',
-};
-
-const ruleCodeStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-code)',
-  fontSize: '11px',
-  color: 'var(--accent)',
-};
-
-const messageStyle: React.CSSProperties = {
-  color: 'var(--text)',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  maxWidth: '500px',
-  display: 'inline-block',
-  verticalAlign: 'middle',
-};
-
-const locStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-code)',
-  fontSize: '11px',
-  color: 'var(--muted)',
 };
 
 const emptyStyle: React.CSSProperties = {
