@@ -1,0 +1,1118 @@
+{
+  "languages": [
+    {
+      "display_name": "Python",
+      "extensions": [
+        ".py",
+        ".pyw"
+      ],
+      "id": "python",
+      "monaco_id": "python"
+    },
+    {
+      "display_name": "Java",
+      "extensions": [
+        ".java"
+      ],
+      "id": "java",
+      "monaco_id": "java"
+    },
+    {
+      "display_name": "JavaScript",
+      "extensions": [
+        ".js",
+        ".mjs",
+        ".cjs",
+        ".jsx"
+      ],
+      "id": "javascript",
+      "monaco_id": "javascript"
+    },
+    {
+      "display_name": "C / C++",
+      "extensions": [
+        ".c",
+        ".cc",
+        ".cpp",
+        ".cxx",
+        ".h",
+        ".hpp"
+      ],
+      "id": "cpp",
+      "monaco_id": "cpp"
+    }
+  ],
+  "samples": [
+    {
+      "category": "vulnerable",
+      "filename": "cp-a01_read_memory_after_free.c",
+      "id": "cp-a01",
+      "language": "cpp",
+      "title": "Read Memory after free"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-a02_free_a_pointer_twice.c",
+      "id": "cp-a02",
+      "language": "cpp",
+      "title": "Free a Pointer Twice"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-a03_copy_data_across_functions.c",
+      "id": "cp-a03",
+      "language": "cpp",
+      "title": "Copy Data across Functions"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-a05_review_a_tcp_echo_buffer.c",
+      "id": "cp-a05",
+      "language": "cpp",
+      "title": "Review a TCP Echo Buffer"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-a06_compare_checked_and_unchecke.c",
+      "id": "cp-a06",
+      "language": "cpp",
+      "title": "Compare Checked and Unchecked Copies"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-b01_read_a_line_with_gets.c",
+      "id": "cp-b01",
+      "language": "cpp",
+      "title": "Read a Line with gets"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-b02_copy_a_name_with_strcpy.c",
+      "id": "cp-b02",
+      "language": "cpp",
+      "title": "Copy a Name with strcpy"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-b03_format_into_a_fixed_buffer.c",
+      "id": "cp-b03",
+      "language": "cpp",
+      "title": "Format into a Fixed Buffer"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-b04_scan_a_name_without_width.c",
+      "id": "cp-b04",
+      "language": "cpp",
+      "title": "Scan a Name without Width"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-b05_print_a_variable_format.c",
+      "id": "cp-b05",
+      "language": "cpp",
+      "title": "Print a Variable Format"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-b06_build_a_command_with_system.c",
+      "id": "cp-b06",
+      "language": "cpp",
+      "title": "Build a Command with system"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-b07_generate_a_predictable_token.c",
+      "id": "cp-b07",
+      "language": "cpp",
+      "title": "Generate a Predictable Token"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-b09_create_a_temporary_name.c",
+      "id": "cp-b09",
+      "language": "cpp",
+      "title": "Create a Temporary Name"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-i01_copy_an_argument_into_a_buff.c",
+      "id": "cp-i01",
+      "language": "cpp",
+      "title": "Copy an Argument into a Buffer"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-i02_format_an_argument.c",
+      "id": "cp-i02",
+      "language": "cpp",
+      "title": "Format an Argument"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-i03_build_a_command_from_environ.c",
+      "id": "cp-i03",
+      "language": "cpp",
+      "title": "Build a Command from Environment"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-i04_copy_a_tainted_length.c",
+      "id": "cp-i04",
+      "language": "cpp",
+      "title": "Copy a Tainted Length"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-i05_allocate_with_an_overflowing.c",
+      "id": "cp-i05",
+      "language": "cpp",
+      "title": "Allocate with an Overflowing Size"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-i08_allocate_a_stack_buffer_from.c",
+      "id": "cp-i08",
+      "language": "cpp",
+      "title": "Allocate a Stack Buffer from Input"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "cp-i09_ping_a_supplied_host.cpp",
+      "id": "cp-i09",
+      "language": "cpp",
+      "title": "Ping a Supplied Host"
+    },
+    {
+      "category": "lexer",
+      "filename": "cp-l01_exercise_c++_literals.cpp",
+      "id": "cp-l01",
+      "language": "cpp",
+      "title": "Exercise C++ Literals"
+    },
+    {
+      "category": "lexer",
+      "filename": "cp-l02_exercise_preprocessor_forms.cpp",
+      "id": "cp-l02",
+      "language": "cpp",
+      "title": "Exercise Preprocessor Forms"
+    },
+    {
+      "category": "lexer",
+      "filename": "cp-l03_exercise_c++20_syntax.cpp",
+      "id": "cp-l03",
+      "language": "cpp",
+      "title": "Exercise C++20 Syntax"
+    },
+    {
+      "category": "safe",
+      "filename": "cp-s01_read_input_with_bounds.c",
+      "id": "cp-s01",
+      "language": "cpp",
+      "title": "Read Input with Bounds"
+    },
+    {
+      "category": "safe",
+      "filename": "cp-s02_use_constant_format_strings.c",
+      "id": "cp-s02",
+      "language": "cpp",
+      "title": "Use Constant Format Strings"
+    },
+    {
+      "category": "safe",
+      "filename": "cp-s03_use_modern_c++_containers.cpp",
+      "id": "cp-s03",
+      "language": "cpp",
+      "title": "Use Modern C++ Containers"
+    },
+    {
+      "category": "safe",
+      "filename": "cp-s04_copy_after_a_length_check.c",
+      "id": "cp-s04",
+      "language": "cpp",
+      "title": "Copy after a Length Check"
+    },
+    {
+      "category": "safe",
+      "filename": "cp-s05_open_a_file_with_raii.cpp",
+      "id": "cp-s05",
+      "language": "cpp",
+      "title": "Open a File with RAII"
+    },
+    {
+      "category": "adversarial",
+      "filename": "cp-u01_review_a_bidi_comment.c",
+      "id": "cp-u01",
+      "language": "cpp",
+      "title": "Review a Bidi Comment"
+    },
+    {
+      "category": "adversarial",
+      "filename": "cp-u02_inspect_a_look-alike_identif.c",
+      "id": "cp-u02",
+      "language": "cpp",
+      "title": "Inspect a Look-Alike Identifier"
+    },
+    {
+      "category": "adversarial",
+      "filename": "trojan_source.c",
+      "id": "cpp-adv-trojan-source",
+      "language": "cpp",
+      "title": "Trojan Source Bidi Override in C"
+    },
+    {
+      "category": "safe",
+      "filename": "safe_snprintf.c",
+      "id": "cpp-safe-snprintf",
+      "language": "cpp",
+      "title": "Safe Bounded Buffer Copy with snprintf"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "command_injection.c",
+      "id": "cpp-vuln-cmd-injection",
+      "language": "cpp",
+      "title": "Command Injection via system() and getenv()"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "format_string.c",
+      "id": "cpp-vuln-format-string",
+      "language": "cpp",
+      "title": "Format String Vulnerability via printf(user_buf)"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "strcpy_argv.c",
+      "id": "cpp-vuln-strcpy-argv",
+      "language": "cpp",
+      "title": "Buffer Overflow via strcpy(argv[1])"
+    },
+    {
+      "category": "adversarial",
+      "filename": "trojan_auth.java",
+      "id": "java-adv-trojan-source",
+      "language": "java",
+      "title": "Trojan Source Bidi Override in Java"
+    },
+    {
+      "category": "safe",
+      "filename": "safe_prepared_stmt.java",
+      "id": "java-safe-prepared-statement",
+      "language": "java",
+      "title": "Safe PreparedStatement Parameterization"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "deser_handler.java",
+      "id": "java-vuln-deserialization",
+      "language": "java",
+      "title": "Insecure ObjectInputStream Deserialization"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "sqli_servlet.java",
+      "id": "java-vuln-sqli-servlet",
+      "language": "java",
+      "title": "SQL Injection via Servlet Parameter"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-a01_merge_untrusted_configuratio.js",
+      "id": "js-a01",
+      "language": "javascript",
+      "title": "Merge Untrusted Configuration"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-a02_evaluate_an_inert_encoded_no.js",
+      "id": "js-a02",
+      "language": "javascript",
+      "title": "Evaluate an Inert Encoded Notice"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-a03_evaluate_harmless_character_.js",
+      "id": "js-a03",
+      "language": "javascript",
+      "title": "Evaluate Harmless Character Codes"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-a04_express_security_review.js",
+      "id": "js-a04",
+      "language": "javascript",
+      "title": "Express Security Review"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-a06_destructure_a_requested_host.js",
+      "id": "js-a06",
+      "language": "javascript",
+      "title": "Destructure a Requested Host"
+    },
+    {
+      "category": "adversarial",
+      "filename": "trojan_source.js",
+      "id": "js-adv-trojan-source",
+      "language": "javascript",
+      "title": "Trojan Source Bidi Override in JavaScript"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-b01_evaluate_user_input.js",
+      "id": "js-b01",
+      "language": "javascript",
+      "title": "Evaluate User Input"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-b02_construct_a_function.js",
+      "id": "js-b02",
+      "language": "javascript",
+      "title": "Construct a Function"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-b04_dom_xss_from_url_hash.js",
+      "id": "js-b04",
+      "language": "javascript",
+      "title": "DOM XSS from URL Hash"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-b05_write_the_query_string.js",
+      "id": "js-b05",
+      "language": "javascript",
+      "title": "Write the Query String"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-b06_predictable_session_token.js",
+      "id": "js-b06",
+      "language": "javascript",
+      "title": "Predictable Session Token"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-b07_create_an_md5_digest.js",
+      "id": "js-b07",
+      "language": "javascript",
+      "title": "Create an MD5 Digest"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-b08_hard-coded_api_and_jwt_secre.js",
+      "id": "js-b08",
+      "language": "javascript",
+      "title": "Hard-Coded API and JWT Secrets"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-b09_disable_tls_verification.js",
+      "id": "js-b09",
+      "language": "javascript",
+      "title": "Disable TLS Verification"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-i01_express_command_injection.js",
+      "id": "js-i01",
+      "language": "javascript",
+      "title": "Express Command Injection"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-i02_express_sql_injection.js",
+      "id": "js-i02",
+      "language": "javascript",
+      "title": "Express SQL Injection"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-i03_read_a_requested_path.js",
+      "id": "js-i03",
+      "language": "javascript",
+      "title": "Read a Requested Path"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-i04_redirect_to_a_query_url.js",
+      "id": "js-i04",
+      "language": "javascript",
+      "title": "Redirect to a Query URL"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-i05_fetch_a_requested_url.js",
+      "id": "js-i05",
+      "language": "javascript",
+      "title": "Fetch a Requested URL"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-i06_render_raw_react_html.js",
+      "id": "js-i06",
+      "language": "javascript",
+      "title": "Render Raw React HTML"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-i07_use_an_unverified_jwt.js",
+      "id": "js-i07",
+      "language": "javascript",
+      "title": "Use an Unverified JWT"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-i08_build_a_user_regular_express.js",
+      "id": "js-i08",
+      "language": "javascript",
+      "title": "Build a User Regular Expression"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "js-i09_write_a_message_into_html.js",
+      "id": "js-i09",
+      "language": "javascript",
+      "title": "Write a Message into HTML"
+    },
+    {
+      "category": "lexer",
+      "filename": "js-l01_templates_and_slash_ambiguit.js",
+      "id": "js-l01",
+      "language": "javascript",
+      "title": "Templates and Slash Ambiguity"
+    },
+    {
+      "category": "lexer",
+      "filename": "js-l02_modern_javascript_syntax.js",
+      "id": "js-l02",
+      "language": "javascript",
+      "title": "Modern JavaScript Syntax"
+    },
+    {
+      "category": "safe",
+      "filename": "js-s01_pass_arguments_to_execfile.js",
+      "id": "js-s01",
+      "language": "javascript",
+      "title": "Pass Arguments to execFile"
+    },
+    {
+      "category": "safe",
+      "filename": "js-s02_use_safe_dom_apis.js",
+      "id": "js-s02",
+      "language": "javascript",
+      "title": "Use Safe DOM APIs"
+    },
+    {
+      "category": "safe",
+      "filename": "js-s03_bind_database_parameters.js",
+      "id": "js-s03",
+      "language": "javascript",
+      "title": "Bind Database Parameters"
+    },
+    {
+      "category": "safe",
+      "filename": "js-s04_reduce_a_path_to_its_basenam.js",
+      "id": "js-s04",
+      "language": "javascript",
+      "title": "Reduce a Path to its Basename"
+    },
+    {
+      "category": "safe",
+      "filename": "js-s05_use_modern_crypto_and_tls.js",
+      "id": "js-s05",
+      "language": "javascript",
+      "title": "Use Modern Crypto and TLS"
+    },
+    {
+      "category": "safe",
+      "filename": "js-s06_clean_modern_module.js",
+      "id": "js-s06",
+      "language": "javascript",
+      "title": "Clean Modern Module"
+    },
+    {
+      "category": "safe",
+      "filename": "safe_text_content.js",
+      "id": "js-safe-text-content",
+      "language": "javascript",
+      "title": "Safe DOM Rendering with textContent"
+    },
+    {
+      "category": "adversarial",
+      "filename": "js-u01_bidi-controlled_comment.js",
+      "id": "js-u01",
+      "language": "javascript",
+      "title": "Bidi-Controlled Comment"
+    },
+    {
+      "category": "adversarial",
+      "filename": "js-u02_cyrillic_eval_look-alike.js",
+      "id": "js-u02",
+      "language": "javascript",
+      "title": "Cyrillic Eval Look-Alike"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "dom_xss.js",
+      "id": "js-vuln-dom-xss",
+      "language": "javascript",
+      "title": "DOM Cross-Site Scripting via location.hash"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "express_cmd_injection.js",
+      "id": "js-vuln-express-cmd-injection",
+      "language": "javascript",
+      "title": "Express Command Injection via Web Parameter"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-a01_deserialize_a_network_stream.java",
+      "id": "jv-a01",
+      "language": "java",
+      "title": "Deserialize a Network Stream"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-a02_build_sql_in_a_helper.java",
+      "id": "jv-a02",
+      "language": "java",
+      "title": "Build SQL in a Helper"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-a03_validation_on_one_branch.java",
+      "id": "jv-a03",
+      "language": "java",
+      "title": "Validation on One Branch"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-a05_decode_an_xml_object.java",
+      "id": "jv-a05",
+      "language": "java",
+      "title": "Decode an XML Object"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-a06_trust-all_https_client.java",
+      "id": "jv-a06",
+      "language": "java",
+      "title": "Trust-All HTTPS Client"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-b01_sql_by_concatenation.java",
+      "id": "jv-b01",
+      "language": "java",
+      "title": "SQL by Concatenation"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-b02_runtime_command_from_host.java",
+      "id": "jv-b02",
+      "language": "java",
+      "title": "Runtime Command from Host"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-b03_md5_password_digest.java",
+      "id": "jv-b03",
+      "language": "java",
+      "title": "MD5 Password Digest"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-b04_sha-1_password_digest.java",
+      "id": "jv-b04",
+      "language": "java",
+      "title": "SHA-1 Password Digest"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-b05_des_encryption.java",
+      "id": "jv-b05",
+      "language": "java",
+      "title": "DES Encryption"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-b06_aes_ecb_encryption.java",
+      "id": "jv-b06",
+      "language": "java",
+      "title": "AES ECB Encryption"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-b07_predictable_random_token.java",
+      "id": "jv-b07",
+      "language": "java",
+      "title": "Predictable Random Token"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-b08_hard-coded_database_password.java",
+      "id": "jv-b08",
+      "language": "java",
+      "title": "Hard-Coded Database Password"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-b09_deserialize_a_local_file.java",
+      "id": "jv-b09",
+      "language": "java",
+      "title": "Deserialize a Local File"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-i01_servlet_sql_injection.java",
+      "id": "jv-i01",
+      "language": "java",
+      "title": "Servlet SQL Injection"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-i02_servlet_command_injection.java",
+      "id": "jv-i02",
+      "language": "java",
+      "title": "Servlet Command Injection"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-i04_read_a_requested_file.java",
+      "id": "jv-i04",
+      "language": "java",
+      "title": "Read a Requested File"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-i05_fetch_a_requested_url.java",
+      "id": "jv-i05",
+      "language": "java",
+      "title": "Fetch a Requested URL"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-i06_parse_request_xml.java",
+      "id": "jv-i06",
+      "language": "java",
+      "title": "Parse Request XML"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-i07_spring_native_query.java",
+      "id": "jv-i07",
+      "language": "java",
+      "title": "Spring Native Query"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-i08_reflect_a_requested_class.java",
+      "id": "jv-i08",
+      "language": "java",
+      "title": "Reflect a Requested Class"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-i09_evaluate_a_script_expression.java",
+      "id": "jv-i09",
+      "language": "java",
+      "title": "Evaluate a Script Expression"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "jv-i10_trust_every_tls_certificate.java",
+      "id": "jv-i10",
+      "language": "java",
+      "title": "Trust Every TLS Certificate"
+    },
+    {
+      "category": "lexer",
+      "filename": "jv-l01_java_lexer_showcase.java",
+      "id": "jv-l01",
+      "language": "java",
+      "title": "Java Lexer Showcase"
+    },
+    {
+      "category": "safe",
+      "filename": "jv-s01_use_a_preparedstatement.java",
+      "id": "jv-s01",
+      "language": "java",
+      "title": "Use a PreparedStatement"
+    },
+    {
+      "category": "safe",
+      "filename": "jv-s02_parse_an_integer_before_quer.java",
+      "id": "jv-s02",
+      "language": "java",
+      "title": "Parse an Integer Before Query"
+    },
+    {
+      "category": "safe",
+      "filename": "jv-s03_use_safe_crypto_and_process_.java",
+      "id": "jv-s03",
+      "language": "java",
+      "title": "Use Safe Crypto and Process APIs"
+    },
+    {
+      "category": "safe",
+      "filename": "jv-s04_disable_xml_external_entitie.java",
+      "id": "jv-s04",
+      "language": "java",
+      "title": "Disable XML External Entities"
+    },
+    {
+      "category": "safe",
+      "filename": "jv-s05_normalize_and_check_a_path.java",
+      "id": "jv-s05",
+      "language": "java",
+      "title": "Normalize and Check a Path"
+    },
+    {
+      "category": "safe",
+      "filename": "jv-s06_clean_service_class.java",
+      "id": "jv-s06",
+      "language": "java",
+      "title": "Clean Service Class"
+    },
+    {
+      "category": "adversarial",
+      "filename": "jv-u01_bidi-controlled_comment.java",
+      "id": "jv-u01",
+      "language": "java",
+      "title": "Bidi-Controlled Comment"
+    },
+    {
+      "category": "adversarial",
+      "filename": "jv-u03_mixed-script_identifier.java",
+      "id": "jv-u03",
+      "language": "java",
+      "title": "Mixed-Script Identifier"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-a02_select_a_diagnostic_target.py",
+      "id": "py-a02",
+      "language": "python",
+      "title": "Select a Diagnostic Target"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-a03_build_a_multi-stage_task.py",
+      "id": "py-a03",
+      "language": "python",
+      "title": "Build a Multi-Stage Task"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-a04_decode_a_harmless_message.py",
+      "id": "py-a04",
+      "language": "python",
+      "title": "Decode a Harmless Message"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-a05_unpack_a_harmless_notice.py",
+      "id": "py-a05",
+      "language": "python",
+      "title": "Unpack a Harmless Notice"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-a06_small_flask_service_review.py",
+      "id": "py-a06",
+      "language": "python",
+      "title": "Small Flask Service Review"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-a07_process_a_submitted_archive_.py",
+      "id": "py-a07",
+      "language": "python",
+      "title": "Process a Submitted Archive Name"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-a08_quote_the_wrong_value.py",
+      "id": "py-a08",
+      "language": "python",
+      "title": "Quote the Wrong Value"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-b01_evaluate_console_expression.py",
+      "id": "py-b01",
+      "language": "python",
+      "title": "Evaluate Console Expression"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-b02_execute_supplied_script.py",
+      "id": "py-b02",
+      "language": "python",
+      "title": "Execute Supplied Script"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-b03_ping_a_supplied_host.py",
+      "id": "py-b03",
+      "language": "python",
+      "title": "Ping a Supplied Host"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-b04_look_up_a_user.py",
+      "id": "py-b04",
+      "language": "python",
+      "title": "Look Up a User"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-b05_restore_a_socket_message.py",
+      "id": "py-b05",
+      "language": "python",
+      "title": "Restore a Socket Message"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-b06_read_a_yaml_configuration.py",
+      "id": "py-b06",
+      "language": "python",
+      "title": "Read a YAML Configuration"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-b07_create_a_password_digest.py",
+      "id": "py-b07",
+      "language": "python",
+      "title": "Create a Password Digest"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-b08_configure_service_credential.py",
+      "id": "py-b08",
+      "language": "python",
+      "title": "Configure Service Credentials"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-b09_fetch_a_status_page.py",
+      "id": "py-b09",
+      "language": "python",
+      "title": "Fetch a Status Page"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-b10_generate_a_session_code.py",
+      "id": "py-b10",
+      "language": "python",
+      "title": "Generate a Session Code"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-i01_flask_host_diagnostics.py",
+      "id": "py-i01",
+      "language": "python",
+      "title": "Flask Host Diagnostics"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-i02_flask_account_search.py",
+      "id": "py-i02",
+      "language": "python",
+      "title": "Flask Account Search"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-i03_run_a_host_check.py",
+      "id": "py-i03",
+      "language": "python",
+      "title": "Run a Host Check"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-i04_open_an_uploaded_report.py",
+      "id": "py-i04",
+      "language": "python",
+      "title": "Open an Uploaded Report"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-i05_render_a_greeting.py",
+      "id": "py-i05",
+      "language": "python",
+      "title": "Render a Greeting"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-i06_django_maintenance_view.py",
+      "id": "py-i06",
+      "language": "python",
+      "title": "Django Maintenance View"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-i07_load_a_requested_plugin.py",
+      "id": "py-i07",
+      "language": "python",
+      "title": "Load a Requested Plugin"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-i08_restore_a_submitted_session.py",
+      "id": "py-i08",
+      "language": "python",
+      "title": "Restore a Submitted Session"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-i09_issue_a_session_identifier.py",
+      "id": "py-i09",
+      "language": "python",
+      "title": "Issue a Session Identifier"
+    },
+    {
+      "category": "lexer",
+      "filename": "py-l01_exercise_python_lexer_forms.py",
+      "id": "py-l01",
+      "language": "python",
+      "title": "Exercise Python Lexer Forms"
+    },
+    {
+      "category": "safe",
+      "filename": "py-s01_run_a_fixed_argument_list.py",
+      "id": "py-s01",
+      "language": "python",
+      "title": "Run a Fixed Argument List"
+    },
+    {
+      "category": "safe",
+      "filename": "py-s02_quote_a_search_term.py",
+      "id": "py-s02",
+      "language": "python",
+      "title": "Quote a Search Term"
+    },
+    {
+      "category": "safe",
+      "filename": "py-s03_search_with_a_bound_paramete.py",
+      "id": "py-s03",
+      "language": "python",
+      "title": "Search with a Bound Parameter"
+    },
+    {
+      "category": "safe",
+      "filename": "py-s04_load_trusted_configuration.py",
+      "id": "py-s04",
+      "language": "python",
+      "title": "Load Trusted Configuration"
+    },
+    {
+      "category": "safe",
+      "filename": "py-s05_convert_a_port_to_an_integer.py",
+      "id": "py-s05",
+      "language": "python",
+      "title": "Convert a Port to an Integer"
+    },
+    {
+      "category": "safe",
+      "filename": "py-s06_security_terms_in_documentat.py",
+      "id": "py-s06",
+      "language": "python",
+      "title": "Security Terms in Documentation"
+    },
+    {
+      "category": "safe",
+      "filename": "py-s07_clean_service_module.py",
+      "id": "py-s07",
+      "language": "python",
+      "title": "Clean Service Module"
+    },
+    {
+      "category": "adversarial",
+      "filename": "py-u01_review_a_bidi-controlled_com.py",
+      "id": "py-u01",
+      "language": "python",
+      "title": "Review a Bidi-Controlled Comment"
+    },
+    {
+      "category": "adversarial",
+      "filename": "py-u02_find_an_invisible_name_chara.py",
+      "id": "py-u02",
+      "language": "python",
+      "title": "Find an Invisible Name Character"
+    },
+    {
+      "category": "adversarial",
+      "filename": "py-u03_inspect_hidden_tag_text.py",
+      "id": "py-u03",
+      "language": "python",
+      "title": "Inspect Hidden Tag Text"
+    },
+    {
+      "category": "adversarial",
+      "filename": "py-u04_inspect_a_disguised_exec_cal.py",
+      "id": "py-u04",
+      "language": "python",
+      "title": "Inspect a Disguised Exec Call"
+    },
+    {
+      "category": "adversarial",
+      "filename": "py-u05_inspect_a_fullwidth_eval_cal.py",
+      "id": "py-u05",
+      "language": "python",
+      "title": "Inspect a Fullwidth Eval Call"
+    },
+    {
+      "category": "adversarial",
+      "filename": "py-u06_review_a_mixed-script_name.py",
+      "id": "py-u06",
+      "language": "python",
+      "title": "Review a Mixed-Script Name"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-ui5-lexical_target_demo_-_lexical_error.py",
+      "id": "py-ui5-lexical",
+      "language": "python",
+      "title": "Target Demo - Lexical Error"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "py-ui5-security_target_demo_-_security.py",
+      "id": "py-ui5-security",
+      "language": "python",
+      "title": "Target Demo - Security"
+    },
+    {
+      "category": "adversarial",
+      "filename": "homoglyph_exec.py",
+      "id": "python-adv-cyrillic-homoglyph",
+      "language": "python",
+      "title": "Cyrillic Homoglyph Execution"
+    },
+    {
+      "category": "adversarial",
+      "filename": "trojan_auth.py",
+      "id": "python-adv-trojan-source",
+      "language": "python",
+      "title": "Trojan Source Bidi Override Attack"
+    },
+    {
+      "category": "safe",
+      "filename": "safe_ping.py",
+      "id": "python-safe-subprocess",
+      "language": "python",
+      "title": "Safe Parameterized Subprocess Execution"
+    },
+    {
+      "category": "vulnerable",
+      "filename": "vulnerable_ping.py",
+      "id": "python-vuln-cmd-injection",
+      "language": "python",
+      "title": "Command Injection via Web Parameter"
+    }
+  ]
+}

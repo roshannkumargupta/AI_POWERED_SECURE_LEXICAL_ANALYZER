@@ -1,0 +1,1915 @@
+{
+  "components": {
+    "schemas": {
+      "AgentStatusResponse": {
+        "description": "Status of the local agent and local model provider.",
+        "properties": {
+          "fallback_active": {
+            "title": "Fallback Active",
+            "type": "boolean"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "model_present": {
+            "title": "Model Present",
+            "type": "boolean"
+          },
+          "ollama_reachable": {
+            "title": "Ollama Reachable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mode",
+          "ollama_reachable",
+          "model",
+          "model_present",
+          "fallback_active"
+        ],
+        "title": "AgentStatusResponse",
+        "type": "object"
+      },
+      "AnalysisResult": {
+        "description": "Top-level container returned by Analyzer.analyze().",
+        "properties": {
+          "agent_meta": {
+            "additionalProperties": true,
+            "title": "Agent Meta",
+            "type": "object"
+          },
+          "engine": {
+            "$ref": "#/components/schemas/EngineMetadata"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/AnalysisSummary"
+          },
+          "tokens": {
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            },
+            "title": "Tokens",
+            "type": "array"
+          },
+          "trace": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Trace",
+            "type": "array"
+          }
+        },
+        "required": [
+          "language",
+          "filename"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      },
+      "AnalysisSummary": {
+        "description": "Summary counts and health score of an analysis run.",
+        "properties": {
+          "critical": {
+            "default": 0,
+            "title": "Critical",
+            "type": "integer"
+          },
+          "high": {
+            "default": 0,
+            "title": "High",
+            "type": "integer"
+          },
+          "info": {
+            "default": 0,
+            "title": "Info",
+            "type": "integer"
+          },
+          "lexical_errors": {
+            "default": 0,
+            "title": "Lexical Errors",
+            "type": "integer"
+          },
+          "low": {
+            "default": 0,
+            "title": "Low",
+            "type": "integer"
+          },
+          "medium": {
+            "default": 0,
+            "title": "Medium",
+            "type": "integer"
+          },
+          "score": {
+            "default": 100,
+            "title": "Score",
+            "type": "integer"
+          },
+          "syntax_errors": {
+            "default": 0,
+            "title": "Syntax Errors",
+            "type": "integer"
+          },
+          "tokens_malicious": {
+            "default": 0,
+            "title": "Tokens Malicious",
+            "type": "integer"
+          },
+          "tokens_suspicious": {
+            "default": 0,
+            "title": "Tokens Suspicious",
+            "type": "integer"
+          },
+          "tokens_total": {
+            "default": 0,
+            "title": "Tokens Total",
+            "type": "integer"
+          }
+        },
+        "title": "AnalysisSummary",
+        "type": "object"
+      },
+      "AnalyzeOptions": {
+        "description": "Analysis configuration options.",
+        "properties": {
+          "agent": {
+            "default": "off",
+            "title": "Agent",
+            "type": "string"
+          },
+          "fixes": {
+            "default": true,
+            "title": "Fixes",
+            "type": "boolean"
+          },
+          "include_suppressed": {
+            "default": false,
+            "title": "Include Suppressed",
+            "type": "boolean"
+          },
+          "include_tokens": {
+            "default": true,
+            "title": "Include Tokens",
+            "type": "boolean"
+          },
+          "ml": {
+            "default": true,
+            "title": "Ml",
+            "type": "boolean"
+          }
+        },
+        "title": "AnalyzeOptions",
+        "type": "object"
+      },
+      "AnalyzeRequest": {
+        "description": "Payload for code security analysis.",
+        "properties": {
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "options": {
+            "$ref": "#/components/schemas/AnalyzeOptions"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "title": "AnalyzeRequest",
+        "type": "object"
+      },
+      "Edit": {
+        "description": "Atomic text edit replacing a Range with new text.",
+        "properties": {
+          "new_text": {
+            "title": "New Text",
+            "type": "string"
+          },
+          "range": {
+            "$ref": "#/components/schemas/Range"
+          }
+        },
+        "required": [
+          "range",
+          "new_text"
+        ],
+        "title": "Edit",
+        "type": "object"
+      },
+      "EngineMetadata": {
+        "description": "Metadata regarding engine execution and models used.",
+        "properties": {
+          "elapsed_ms": {
+            "default": 0.0,
+            "title": "Elapsed Ms",
+            "type": "number"
+          },
+          "ml_mode": {
+            "default": "off",
+            "title": "Ml Mode",
+            "type": "string"
+          },
+          "ml_model_id": {
+            "default": "none",
+            "title": "Ml Model Id",
+            "type": "string"
+          },
+          "parser": {
+            "default": "lexer-only",
+            "title": "Parser",
+            "type": "string"
+          },
+          "taint": {
+            "default": "ast",
+            "title": "Taint",
+            "type": "string"
+          },
+          "version": {
+            "default": "0.1.0",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "title": "EngineMetadata",
+        "type": "object"
+      },
+      "FeedbackRequest": {
+        "description": "Payload for reporting a false-positive finding.",
+        "properties": {
+          "filename": {
+            "default": "<editor>",
+            "title": "Filename",
+            "type": "string"
+          },
+          "finding_fingerprint": {
+            "default": "",
+            "title": "Finding Fingerprint",
+            "type": "string"
+          },
+          "fingerprint": {
+            "default": "",
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "language": {
+            "default": "python",
+            "title": "Language",
+            "type": "string"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "snippet": {
+            "default": "",
+            "title": "Snippet",
+            "type": "string"
+          },
+          "verdict": {
+            "default": "false_positive",
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id"
+        ],
+        "title": "FeedbackRequest",
+        "type": "object"
+      },
+      "FeedbackResponse": {
+        "description": "Response confirming persistence of feedback record.",
+        "properties": {
+          "saved": {
+            "default": true,
+            "title": "Saved",
+            "type": "boolean"
+          }
+        },
+        "title": "FeedbackResponse",
+        "type": "object"
+      },
+      "Finding": {
+        "description": "A detected security issue, malicious pattern, or anomaly.",
+        "properties": {
+          "attack": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attack"
+          },
+          "confidence": {
+            "default": 0.8,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "cwe": {
+            "default": "CWE-000",
+            "title": "Cwe",
+            "type": "string"
+          },
+          "detailed_explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detailed Explanation"
+          },
+          "evidence": {
+            "additionalProperties": true,
+            "title": "Evidence",
+            "type": "object"
+          },
+          "explanation": {
+            "default": "",
+            "title": "Explanation",
+            "type": "string"
+          },
+          "exploitability": {
+            "default": 0.5,
+            "title": "Exploitability",
+            "type": "number"
+          },
+          "fixes": {
+            "items": {
+              "$ref": "#/components/schemas/Fix"
+            },
+            "title": "Fixes",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "default": "security",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/Label",
+            "default": "MALICIOUS"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          },
+          "priority": {
+            "default": 0.0,
+            "title": "Priority",
+            "type": "number"
+          },
+          "range": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity",
+            "default": "medium"
+          },
+          "simple_explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Simple Explanation"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "suppressed": {
+            "default": false,
+            "title": "Suppressed",
+            "type": "boolean"
+          },
+          "suppression_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suppression Reason"
+          },
+          "taint_path": {
+            "items": {
+              "$ref": "#/components/schemas/TaintPathStep"
+            },
+            "title": "Taint Path",
+            "type": "array"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "rule_id",
+          "range"
+        ],
+        "title": "Finding",
+        "type": "object"
+      },
+      "Fix": {
+        "description": "Remediation proposal with verified atomic edits.",
+        "properties": {
+          "confidence": {
+            "default": "safe",
+            "title": "Confidence",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "edits": {
+            "items": {
+              "$ref": "#/components/schemas/Edit"
+            },
+            "title": "Edits",
+            "type": "array"
+          },
+          "finding_id": {
+            "title": "Finding Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "default": "rule",
+            "title": "Kind",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "verification": {
+            "$ref": "#/components/schemas/VerificationResult"
+          }
+        },
+        "required": [
+          "id",
+          "finding_id",
+          "title",
+          "description",
+          "verification"
+        ],
+        "title": "Fix",
+        "type": "object"
+      },
+      "FixAllRequest": {
+        "description": "Payload for multi-pass batch remediation.",
+        "properties": {
+          "allow_review": {
+            "default": false,
+            "title": "Allow Review",
+            "type": "boolean"
+          },
+          "filename": {
+            "default": "<editor>",
+            "title": "Filename",
+            "type": "string"
+          },
+          "language": {
+            "default": "python",
+            "title": "Language",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "title": "FixAllRequest",
+        "type": "object"
+      },
+      "FixAllResponse": {
+        "description": "Response returned from multi-pass batch remediation.",
+        "properties": {
+          "applied": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Applied",
+            "type": "array"
+          },
+          "diff": {
+            "title": "Diff",
+            "type": "string"
+          },
+          "new_source": {
+            "title": "New Source",
+            "type": "string"
+          },
+          "score_after": {
+            "title": "Score After",
+            "type": "integer"
+          },
+          "score_before": {
+            "title": "Score Before",
+            "type": "integer"
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/components/schemas/SkippedFixItem"
+            },
+            "title": "Skipped",
+            "type": "array"
+          }
+        },
+        "required": [
+          "new_source",
+          "applied",
+          "skipped",
+          "diff",
+          "score_before",
+          "score_after"
+        ],
+        "title": "FixAllResponse",
+        "type": "object"
+      },
+      "FixRequest": {
+        "description": "Payload to apply and verify a single specific fix.",
+        "properties": {
+          "filename": {
+            "default": "<editor>",
+            "title": "Filename",
+            "type": "string"
+          },
+          "finding_id": {
+            "title": "Finding Id",
+            "type": "string"
+          },
+          "fix_id": {
+            "title": "Fix Id",
+            "type": "string"
+          },
+          "language": {
+            "default": "python",
+            "title": "Language",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "finding_id",
+          "fix_id"
+        ],
+        "title": "FixRequest",
+        "type": "object"
+      },
+      "FixResponse": {
+        "description": "Response returned after single fix application.",
+        "properties": {
+          "diff": {
+            "title": "Diff",
+            "type": "string"
+          },
+          "new_result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalysisResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_source": {
+            "title": "New Source",
+            "type": "string"
+          },
+          "verification": {
+            "$ref": "#/components/schemas/VerificationResult"
+          }
+        },
+        "required": [
+          "new_source",
+          "diff",
+          "verification"
+        ],
+        "title": "FixResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "description": "System health and active telemetry status.",
+        "properties": {
+          "ml_mode": {
+            "title": "Ml Mode",
+            "type": "string"
+          },
+          "ml_model_id": {
+            "title": "Ml Model Id",
+            "type": "string"
+          },
+          "status": {
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "default": "0.1.0",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ml_mode",
+          "ml_model_id"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "LLMExplainRequest": {
+        "description": "Payload to request plain-English explanation.",
+        "properties": {
+          "finding_id": {
+            "title": "Finding Id",
+            "type": "string"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "finding_id",
+          "rule_id"
+        ],
+        "title": "LLMExplainRequest",
+        "type": "object"
+      },
+      "LLMExplainResponse": {
+        "description": "AI-generated plain English explanation.",
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "explanation"
+        ],
+        "title": "LLMExplainResponse",
+        "type": "object"
+      },
+      "LLMFixRequest": {
+        "description": "Payload to request an AI-suggested fix.",
+        "properties": {
+          "finding_id": {
+            "title": "Finding Id",
+            "type": "string"
+          },
+          "language": {
+            "default": "python",
+            "title": "Language",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "start_col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Col"
+          },
+          "start_line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Line"
+          }
+        },
+        "required": [
+          "source",
+          "finding_id",
+          "rule_id"
+        ],
+        "title": "LLMFixRequest",
+        "type": "object"
+      },
+      "LLMFixResponse": {
+        "description": "Fix response containing shadow-verified or advice-only proposals.",
+        "properties": {
+          "fixes": {
+            "items": {
+              "$ref": "#/components/schemas/Fix"
+            },
+            "title": "Fixes",
+            "type": "array"
+          },
+          "notes": {
+            "default": "",
+            "title": "Notes",
+            "type": "string"
+          }
+        },
+        "title": "LLMFixResponse",
+        "type": "object"
+      },
+      "LLMStatusResponse": {
+        "description": "Configuration status for optional LLM assistant.",
+        "properties": {
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "configured",
+          "provider"
+        ],
+        "title": "LLMStatusResponse",
+        "type": "object"
+      },
+      "Label": {
+        "description": "Classification label for findings and tokens.",
+        "enum": [
+          "MALICIOUS",
+          "SUSPICIOUS",
+          "SAFE"
+        ],
+        "title": "Label",
+        "type": "string"
+      },
+      "LanguageInfo": {
+        "description": "Metadata for registered programming language plugin.",
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "extensions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Extensions",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "monaco_id": {
+            "title": "Monaco Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "extensions",
+          "monaco_id"
+        ],
+        "title": "LanguageInfo",
+        "type": "object"
+      },
+      "MLInsightsRequest": {
+        "description": "Payload for per-token explainability inspection.",
+        "properties": {
+          "language": {
+            "default": "python",
+            "title": "Language",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "token_index": {
+            "title": "Token Index",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source",
+          "token_index"
+        ],
+        "title": "MLInsightsRequest",
+        "type": "object"
+      },
+      "MLInsightsResponse": {
+        "description": "Per-feature-group occlusion results for explainability.",
+        "properties": {
+          "feature_group_drops": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature Group Drops"
+          },
+          "ml_mode": {
+            "title": "Ml Mode",
+            "type": "string"
+          },
+          "predicted_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicted Label"
+          },
+          "probabilities": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probabilities"
+          },
+          "token_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token Index"
+          },
+          "token_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token Text"
+          }
+        },
+        "required": [
+          "ml_mode"
+        ],
+        "title": "MLInsightsResponse",
+        "type": "object"
+      },
+      "Range": {
+        "description": "1-based text coordinates, end-exclusive, UTF-16 code units.",
+        "properties": {
+          "end_col": {
+            "description": "1-based end column in UTF-16 code units (exclusive)",
+            "minimum": 1.0,
+            "title": "End Col",
+            "type": "integer"
+          },
+          "end_line": {
+            "description": "1-based end line number",
+            "minimum": 1.0,
+            "title": "End Line",
+            "type": "integer"
+          },
+          "start_col": {
+            "description": "1-based start column in UTF-16 code units",
+            "minimum": 1.0,
+            "title": "Start Col",
+            "type": "integer"
+          },
+          "start_line": {
+            "description": "1-based start line number",
+            "minimum": 1.0,
+            "title": "Start Line",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "start_line",
+          "start_col",
+          "end_line",
+          "end_col"
+        ],
+        "title": "Range",
+        "type": "object"
+      },
+      "SampleItem": {
+        "description": "Interactive code sample for testing and IDE demonstration.",
+        "properties": {
+          "approximate": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approximate"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "demo_order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Demo Order"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "expect": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expect"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "fix_expected": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fix Expected"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "senior": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Senior"
+          },
+          "special_chars": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Special Chars"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "category",
+          "language",
+          "filename",
+          "code",
+          "description"
+        ],
+        "title": "SampleItem",
+        "type": "object"
+      },
+      "Severity": {
+        "description": "Vulnerability severity levels.",
+        "enum": [
+          "critical",
+          "high",
+          "medium",
+          "low",
+          "info"
+        ],
+        "title": "Severity",
+        "type": "string"
+      },
+      "SkippedFixItem": {
+        "description": "Details of a skipped fix proposal.",
+        "properties": {
+          "fix_id": {
+            "title": "Fix Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fix_id",
+          "reason"
+        ],
+        "title": "SkippedFixItem",
+        "type": "object"
+      },
+      "TaintPathStep": {
+        "description": "Single step in a taint propagation path.",
+        "properties": {
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "range": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "step": {
+            "$ref": "#/components/schemas/TaintStepKind"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "step",
+          "range",
+          "text"
+        ],
+        "title": "TaintPathStep",
+        "type": "object"
+      },
+      "TaintStepKind": {
+        "description": "Kinds of steps in a taint path.",
+        "enum": [
+          "source",
+          "propagate",
+          "sink",
+          "sanitizer",
+          "sanitizer_missing"
+        ],
+        "title": "TaintStepKind",
+        "type": "string"
+      },
+      "TokenInfo": {
+        "description": "Token metadata reported in API responses.",
+        "properties": {
+          "label": {
+            "default": "SAFE",
+            "title": "Label",
+            "type": "string"
+          },
+          "range": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "score": {
+            "default": 0.0,
+            "title": "Score",
+            "type": "number"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          },
+          "token_type": {
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "token_type",
+          "range"
+        ],
+        "title": "TokenInfo",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VerificationResult": {
+        "description": "Result of fix safety and idempotency verification.",
+        "properties": {
+          "finding_gone": {
+            "title": "Finding Gone",
+            "type": "boolean"
+          },
+          "new_findings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "New Findings",
+            "type": "array"
+          },
+          "notes": {
+            "default": "",
+            "title": "Notes",
+            "type": "string"
+          },
+          "syntax_ok": {
+            "title": "Syntax Ok",
+            "type": "boolean"
+          },
+          "verified": {
+            "title": "Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "syntax_ok",
+          "finding_gone",
+          "verified"
+        ],
+        "title": "VerificationResult",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "High-performance code security analysis and verified automated repair HTTP service.",
+    "title": "SecureLex IDE API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/agent/analyze": {
+      "post": {
+        "description": "Run code analysis with agent layer enabled (defaults to rules if set to off).",
+        "operationId": "analyze_code_agent_api_agent_analyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze Code Agent"
+      }
+    },
+    "/api/agent/status": {
+      "get": {
+        "description": "Return local agent status and local model availability.",
+        "operationId": "get_agent_status_endpoint_api_agent_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Agent Status Endpoint"
+      }
+    },
+    "/api/analyze": {
+      "post": {
+        "description": "Run full hybrid static security analysis with pure caching and timeout.",
+        "operationId": "analyze_code_api_analyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze Code"
+      }
+    },
+    "/api/feedback": {
+      "post": {
+        "description": "Record user false-positive report to local append-only feedback storage.",
+        "operationId": "submit_feedback_api_feedback_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Feedback"
+      }
+    },
+    "/api/fix": {
+      "post": {
+        "description": "Apply and verify a specific fix proposal.",
+        "operationId": "apply_single_fix_api_fix_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FixRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FixResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply Single Fix"
+      }
+    },
+    "/api/fix-all": {
+      "post": {
+        "description": "Iteratively apply all safe and verified fixes up to 3 passes.",
+        "operationId": "apply_all_fixes_api_fix_all_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FixAllRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FixAllResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply All Fixes"
+      }
+    },
+    "/api/health": {
+      "get": {
+        "description": "Return service health status, active version, and ML engine telemetry.",
+        "operationId": "get_health_api_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Health"
+      }
+    },
+    "/api/languages": {
+      "get": {
+        "description": "List registered language plugins and editor syntax identifiers.",
+        "operationId": "get_languages_api_languages_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LanguageInfo"
+                  },
+                  "title": "Response Get Languages Api Languages Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Languages"
+      }
+    },
+    "/api/llm/explain": {
+      "post": {
+        "description": "Request plain-English explanation from configured LLM.",
+        "operationId": "request_llm_explain_api_llm_explain_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LLMExplainRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMExplainResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Llm Explain"
+      }
+    },
+    "/api/llm/fix": {
+      "post": {
+        "description": "Request and shadow-verify an AI-suggested remediation fix.",
+        "operationId": "request_llm_fix_api_llm_fix_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LLMFixRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMFixResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Llm Fix"
+      }
+    },
+    "/api/llm/status": {
+      "get": {
+        "description": "Check whether an LLM provider is configured in environment variables.",
+        "operationId": "get_llm_status_api_llm_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Llm Status"
+      }
+    },
+    "/api/ml/insights": {
+      "post": {
+        "description": "Compute per-feature-group occlusion explainability for a token window.",
+        "operationId": "get_ml_insights_api_ml_insights_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MLInsightsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MLInsightsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Ml Insights"
+      }
+    },
+    "/api/samples": {
+      "get": {
+        "description": "Retrieve pre-bundled interactive code samples.",
+        "operationId": "list_samples_api_samples_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "in": "query",
+            "name": "meta",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Meta",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Samples"
+      }
+    },
+    "/api/samples/{sample_id}": {
+      "get": {
+        "description": "Retrieve one shipped sample by ID.",
+        "operationId": "sample_detail_api_samples__sample_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sample_id",
+            "required": true,
+            "schema": {
+              "title": "Sample Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SampleItem"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sample Detail"
+      }
+    }
+  }
+}

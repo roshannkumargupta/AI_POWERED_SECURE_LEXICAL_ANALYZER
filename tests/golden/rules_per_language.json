@@ -1,0 +1,416 @@
+{
+  "cpp": [
+    {
+      "category": "",
+      "cwe": "CWE-338",
+      "id": "APS-CP-CRY-001",
+      "severity": "medium",
+      "title": "Cryptographically Weak Pseudorandom Number Generator (rand / srand)"
+    },
+    {
+      "category": "",
+      "cwe": "CWE-134",
+      "id": "APS-CP-FMT-001",
+      "severity": "critical",
+      "title": "Format String Vulnerability via Non-Literal Format"
+    },
+    {
+      "category": "",
+      "cwe": "CWE-78",
+      "id": "APS-CP-INJ-001",
+      "severity": "critical",
+      "title": "Command Injection via Shell / Process Execution"
+    },
+    {
+      "category": "",
+      "cwe": "CWE-22",
+      "id": "APS-CP-IO-001",
+      "severity": "high",
+      "title": "Path Traversal via Tainted File Path"
+    },
+    {
+      "category": "",
+      "cwe": "CWE-377",
+      "id": "APS-CP-IO-002",
+      "severity": "high",
+      "title": "Insecure Temporary File Creation via tmpnam() or mktemp()"
+    },
+    {
+      "category": "memory",
+      "cwe": "CWE-120",
+      "id": "APS-CP-MEM-001",
+      "severity": "high",
+      "title": "Buffer Overflow via Unbounded String Copy (strcpy / strcat / gets / sprintf)"
+    },
+    {
+      "category": "",
+      "cwe": "CWE-787",
+      "id": "APS-CP-MEM-002",
+      "severity": "high",
+      "title": "Out-of-Bounds Memory Write via Tainted Length or Wrong sizeof"
+    },
+    {
+      "category": "",
+      "cwe": "CWE-120",
+      "id": "APS-CP-MEM-003",
+      "severity": "high",
+      "title": "Buffer Overflow via Unbounded scanf '%s'"
+    },
+    {
+      "category": "",
+      "cwe": "CWE-190",
+      "id": "APS-CP-MEM-004",
+      "severity": "high",
+      "title": "Integer Overflow in Memory Allocation Size Arithmetic"
+    },
+    {
+      "category": "",
+      "cwe": "CWE-416",
+      "id": "APS-CP-MEM-005",
+      "severity": "high",
+      "title": "Use-After-Free of Deallocated Pointer"
+    },
+    {
+      "category": "",
+      "cwe": "CWE-415",
+      "id": "APS-CP-MEM-006",
+      "severity": "critical",
+      "title": "Double Free Memory Corruption"
+    },
+    {
+      "category": "",
+      "cwe": "CWE-770",
+      "id": "APS-CP-MEM-007",
+      "severity": "high",
+      "title": "Uncontrolled Stack Allocation via alloca()"
+    },
+    {
+      "category": "",
+      "cwe": "CWE-798",
+      "id": "APS-CP-SEC-001",
+      "severity": "high",
+      "title": "Hard-Coded Cryptographic Secret or Credential"
+    }
+  ],
+  "java": [
+    {
+      "category": "cryptography",
+      "cwe": "CWE-327",
+      "id": "APS-JV-CRY-001",
+      "severity": "high",
+      "title": "Broken Cryptographic Hash Algorithm (MD5 / SHA-1)"
+    },
+    {
+      "category": "cryptography",
+      "cwe": "CWE-327",
+      "id": "APS-JV-CRY-002",
+      "severity": "high",
+      "title": "Weak Cryptographic Cipher or Mode (DES / ECB)"
+    },
+    {
+      "category": "cryptography",
+      "cwe": "CWE-338",
+      "id": "APS-JV-CRY-003",
+      "severity": "medium",
+      "title": "Insecure Randomness for Security Tokens"
+    },
+    {
+      "category": "deserialization",
+      "cwe": "CWE-502",
+      "id": "APS-JV-DES-001",
+      "severity": "critical",
+      "title": "Insecure Java Object Deserialization"
+    },
+    {
+      "category": "injection",
+      "cwe": "CWE-78",
+      "id": "APS-JV-INJ-001",
+      "severity": "critical",
+      "title": "Command Injection via Runtime.exec / ProcessBuilder"
+    },
+    {
+      "category": "injection",
+      "cwe": "CWE-89",
+      "id": "APS-JV-INJ-002",
+      "severity": "critical",
+      "title": "SQL Injection via Dynamic Query Construction"
+    },
+    {
+      "category": "injection",
+      "cwe": "CWE-470",
+      "id": "APS-JV-INJ-003",
+      "severity": "medium",
+      "title": "Unsafe Reflection via Tainted Class Name"
+    },
+    {
+      "category": "injection",
+      "cwe": "CWE-94",
+      "id": "APS-JV-INJ-004",
+      "severity": "critical",
+      "title": "Code Injection via ScriptEngine.eval"
+    },
+    {
+      "category": "io",
+      "cwe": "CWE-22",
+      "id": "APS-JV-IO-001",
+      "severity": "high",
+      "title": "Path Traversal via Tainted File Path"
+    },
+    {
+      "category": "network",
+      "cwe": "CWE-918",
+      "id": "APS-JV-NET-001",
+      "severity": "high",
+      "title": "Server-Side Request Forgery (SSRF) via Tainted URL"
+    },
+    {
+      "category": "network",
+      "cwe": "CWE-295",
+      "id": "APS-JV-NET-002",
+      "severity": "high",
+      "title": "Insecure TLS Certificate Validation (TrustAll)"
+    },
+    {
+      "category": "secrets",
+      "cwe": "CWE-798",
+      "id": "APS-JV-SEC-001",
+      "severity": "high",
+      "title": "Hard-Coded Secret or Password in Source Code"
+    },
+    {
+      "category": "unicode",
+      "cwe": "CWE-1007",
+      "id": "APS-JV-UNI-001",
+      "severity": "critical",
+      "title": "Trojan Source / Dangerous Unicode Escape in Java Source"
+    },
+    {
+      "category": "xml",
+      "cwe": "CWE-611",
+      "id": "APS-JV-XML-001",
+      "severity": "high",
+      "title": "XML External Entity (XXE) Injection"
+    },
+    {
+      "category": "xss",
+      "cwe": "CWE-79",
+      "id": "APS-JV-XSS-001",
+      "severity": "high",
+      "title": "Reflected Cross-Site Scripting (XSS)"
+    }
+  ],
+  "javascript": [
+    {
+      "category": "crypto",
+      "cwe": "CWE-338",
+      "id": "APS-JS-CRY-001",
+      "severity": "medium",
+      "title": "Insecure Pseudo-Random Number Generation (Math.random)"
+    },
+    {
+      "category": "crypto",
+      "cwe": "CWE-327",
+      "id": "APS-JS-CRY-002",
+      "severity": "high",
+      "title": "Broken Cryptographic Hash Algorithm (MD5 / SHA1)"
+    },
+    {
+      "category": "injection",
+      "cwe": "CWE-95",
+      "id": "APS-JS-INJ-001",
+      "severity": "critical",
+      "title": "Code Injection via Dynamic Evaluation (eval / Function / setTimeout)"
+    },
+    {
+      "category": "injection",
+      "cwe": "CWE-78",
+      "id": "APS-JS-INJ-002",
+      "severity": "critical",
+      "title": "Command Injection via child_process Execution"
+    },
+    {
+      "category": "injection",
+      "cwe": "CWE-89",
+      "id": "APS-JS-INJ-003",
+      "severity": "critical",
+      "title": "SQL Injection via Concatenation or Template Literal"
+    },
+    {
+      "category": "injection",
+      "cwe": "CWE-1321",
+      "id": "APS-JS-INJ-004",
+      "severity": "high",
+      "title": "Prototype Pollution via Object Merge / Set"
+    },
+    {
+      "category": "injection",
+      "cwe": "CWE-1333",
+      "id": "APS-JS-INJ-005",
+      "severity": "medium",
+      "title": "Regular Expression Denial of Service (ReDoS)"
+    },
+    {
+      "category": "io",
+      "cwe": "CWE-22",
+      "id": "APS-JS-IO-001",
+      "severity": "high",
+      "title": "Path Traversal via File System API"
+    },
+    {
+      "category": "network",
+      "cwe": "CWE-601",
+      "id": "APS-JS-NET-001",
+      "severity": "medium",
+      "title": "Client-Side Open Redirect or Event Handler Injection"
+    },
+    {
+      "category": "network",
+      "cwe": "CWE-918",
+      "id": "APS-JS-NET-002",
+      "severity": "high",
+      "title": "Server-Side Request Forgery (SSRF) via HTTP Client"
+    },
+    {
+      "category": "network",
+      "cwe": "CWE-295",
+      "id": "APS-JS-NET-003",
+      "severity": "critical",
+      "title": "Disabled TLS Certificate Validation"
+    },
+    {
+      "category": "obfuscation",
+      "cwe": "CWE-506",
+      "id": "APS-JS-OBF-001",
+      "severity": "critical",
+      "title": "Obfuscated / Encoded Dynamic Execution"
+    },
+    {
+      "category": "secrets",
+      "cwe": "CWE-798",
+      "id": "APS-JS-SEC-001",
+      "severity": "high",
+      "title": "Hard-Coded Secret or API Key"
+    },
+    {
+      "category": "secrets",
+      "cwe": "CWE-347",
+      "id": "APS-JS-SEC-002",
+      "severity": "critical",
+      "title": "Insecure JWT Verification / Unverified Token Decoding"
+    },
+    {
+      "category": "xss",
+      "cwe": "CWE-79",
+      "id": "APS-JS-XSS-001",
+      "severity": "high",
+      "title": "DOM Cross-Site Scripting (XSS) via HTML Insertion"
+    },
+    {
+      "category": "xss",
+      "cwe": "CWE-79",
+      "id": "APS-JS-XSS-002",
+      "severity": "high",
+      "title": "React XSS via dangerouslySetInnerHTML"
+    }
+  ],
+  "python": [
+    {
+      "category": "WEAK_CRYPTO",
+      "cwe": "CWE-327",
+      "id": "APS-PY-CRY-001",
+      "severity": "medium",
+      "title": "Weak Cryptographic Hash Algorithm (MD5/SHA1)"
+    },
+    {
+      "category": "WEAK_CRYPTO",
+      "cwe": "CWE-338",
+      "id": "APS-PY-CRY-002",
+      "severity": "medium",
+      "title": "Insecure Randomness for Security Tokens"
+    },
+    {
+      "category": "DESERIALIZATION",
+      "cwe": "CWE-502",
+      "id": "APS-PY-DES-001",
+      "severity": "high",
+      "title": "Insecure Deserialization via pickle/marshal"
+    },
+    {
+      "category": "DESERIALIZATION",
+      "cwe": "CWE-502",
+      "id": "APS-PY-DES-002",
+      "severity": "high",
+      "title": "Insecure YAML Deserialization"
+    },
+    {
+      "category": "EVAL_INJECTION",
+      "cwe": "CWE-95",
+      "id": "APS-PY-INJ-001",
+      "severity": "high",
+      "title": "Arbitrary Code Execution via eval/exec"
+    },
+    {
+      "category": "COMMAND_INJECTION",
+      "cwe": "CWE-78",
+      "id": "APS-PY-INJ-002",
+      "severity": "high",
+      "title": "Command Injection via os.system/os.popen"
+    },
+    {
+      "category": "COMMAND_INJECTION",
+      "cwe": "CWE-78",
+      "id": "APS-PY-INJ-003",
+      "severity": "high",
+      "title": "Command Injection via subprocess with shell=True"
+    },
+    {
+      "category": "SQL_INJECTION",
+      "cwe": "CWE-89",
+      "id": "APS-PY-INJ-004",
+      "severity": "high",
+      "title": "SQL Injection via Dynamic Query Construction"
+    },
+    {
+      "category": "CODE_INJECTION",
+      "cwe": "CWE-94",
+      "id": "APS-PY-INJ-005",
+      "severity": "high",
+      "title": "Dynamic Module Import via __import__/importlib"
+    },
+    {
+      "category": "PATH_TRAVERSAL",
+      "cwe": "CWE-22",
+      "id": "APS-PY-IO-001",
+      "severity": "high",
+      "title": "Potential Path Traversal via open()/send_file()"
+    },
+    {
+      "category": "GENERIC",
+      "cwe": "CWE-295",
+      "id": "APS-PY-NET-001",
+      "severity": "medium",
+      "title": "Disabled SSL/TLS Certificate Verification"
+    },
+    {
+      "category": "MALICIOUS_CODE",
+      "cwe": "CWE-506",
+      "id": "APS-PY-OBF-001",
+      "severity": "critical",
+      "title": "Execution of Decoded / Obfuscated Payload"
+    },
+    {
+      "category": "HARDCODED_SECRET",
+      "cwe": "CWE-798",
+      "id": "APS-PY-SEC-001",
+      "severity": "high",
+      "title": "Hard-coded Secret / Password / API Key"
+    },
+    {
+      "category": "XSS",
+      "cwe": "CWE-79",
+      "id": "APS-PY-XSS-001",
+      "severity": "high",
+      "title": "Cross-Site Scripting / SSTI via Template String"
+    }
+  ]
+}

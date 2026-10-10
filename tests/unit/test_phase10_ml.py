@@ -137,10 +137,17 @@ def test_tiny_e2e_training_run_under_3_minutes() -> None:
     summary = train_pipeline(strategy="all", fast_mode=True, seed=42)
     elapsed = time.perf_counter() - start_time
 
-    assert elapsed < 180.0, f"Training run took {elapsed:.2f}s, exceeding 3-minute limit!"
-    assert "s1_separate" in summary
-    assert "s2_joint" in summary
-    assert "s3_transfer" in summary
+    try:
+        assert elapsed < 180.0, f"Training run took {elapsed:.2f}s, exceeding 3-minute limit!"
+        assert "s1_separate" in summary
+        assert "s2_joint" in summary
+        assert "s3_transfer" in summary
+    finally:
+        for art_id in summary.get("saved_artifacts", []):
+            art_dir = ARTIFACTS_DIR / art_id
+            if art_dir.exists():
+                shutil.rmtree(art_dir)
+
 
 
 def test_multilang_inference_prob_shapes() -> None:

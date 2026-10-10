@@ -1,9 +1,15 @@
 # Project State & Progress Tracking
 
-**Current Phase:** Phase 15 — Local Agentic Compiler Layer (Lexical, Syntax, Semantic, Triage, Fix, Verify, Explain)
-**Phase Tag:** `phase-15`
+**Current Phase:** Phase CLEAN-1 — Repository Hygiene, Safety Net & Golden Characterisation Tests
+**Phase Tag:** `clean-1`
 **Date:** October 10, 2026
-**Status:** Phase 15 implementation and verification are complete. Hand-written recursive descent structure parsers with panic-mode error recovery for Java, JavaScript, and C++ (`languages/*/parser.py`, producing `StructTree`), strict 14-tool execution registry (`agents/tools.py`), secure loopback-only local model provider (`llm/local_ollama.py`, `qwen2.5-coder:3b`), multi-layered prompt injection guard (`agents/guard.py`), dual-planner architecture (`RulesPlanner` deterministic baseline and `LLMPlanner` local model), 7 compiler stage agents plus `AgentOrchestrator`, timeline trace visualizer UI (`AgentTraceTab.tsx`), full fixture evaluations (`scripts/agent_eval.py`), and documentation (`docs/agentic_map.md`, `docs/threat_model.md`, `docs/limitations.md`, `reports/phase_15_evidence.md`, `docs/explained/phase15.md`) are verified and passing.
+**Status:** CLEAN-1 implementation, safety net, and golden characterisation baseline are fully established and verified. In-process golden characterisation test harness (`scripts/golden.py`) covers all 329 fixtures (ML on and off) and 162 samples (ML on and off), OpenAPI schema, CLI help, and rules per language with 0 diffs. Complete repository inventory (`docs/cleanup/inventory.md`), strict .gitignore, deleted files register, dead code candidates audit, and before/after metrics snapshots are committed. All 789 Pytest unit tests, 133 Vitest tests, and Vite production bundle are 100% green.
+
+## Phase CLEAN-1 Progress (October 10, 2026)
+- **Safety Net (Tag clean-0):** Baseline measurements recorded in `reports/cleanup/baseline.md`. Authored `scripts/golden.py` (`--record`, `--check`) recording normalized JSON characterisations of all fixtures, samples, lexical error cases, OpenAPI schemas, CLI `--help` strings, and language registries to `tests/golden/*.json`. Captured UI screenshots at 1536x1022 and 1280x720 in `reports/cleanup/screens_before/`. Computed initial metrics snapshot `reports/cleanup/metrics_before.json`.
+- **Repository Inventory & Hygiene:** Generated full repository tree purpose map in `docs/cleanup/inventory.md`. Completed comprehensive `.gitignore` covering Python, Node, Vite, test caches, OS files, and bulky reports while preserving `.md` and `.json` reports. Cleaned ephemeral test artifact outputs in `tests/unit/test_phase10_ml.py`.
+- **Registers & Evidence:** Created `docs/cleanup/dead_code_candidates.md`, `docs/cleanup/needs_decision.md`, `docs/cleanup/deleted_files.md`, and `docs/cleanup/skipped.md`. Produced final metrics snapshot `reports/cleanup/metrics_after_clean1.json` and evidence report `reports/cleanup/clean1_evidence.md`.
+
 
 ## Phase 15 Progress (October 10, 2026)
 - **Part A (Parser Gap & StructTree):** Hand-written recursive descent parsers with panic-mode error recovery implemented for Java, JavaScript, and C++ (`src/apsla/languages/*/parser.py`), returning typed `StructTree` nodes (`FileNode`, `ClassNode`, `FunctionNode`, `BlockNode`, `StatementNode`, `AssignmentNode`, `CallNode`, `ReturnNode`, `ImportNode`, `ErrorNode`) with UTF-16 coordinates. Replaced bracket-counting in `syntax_check()` with 'no ERROR nodes'. Connected exact call-argument ranges to taint-lite analysis. All 73 parser unit tests and 171 fixture tests pass without regression.
