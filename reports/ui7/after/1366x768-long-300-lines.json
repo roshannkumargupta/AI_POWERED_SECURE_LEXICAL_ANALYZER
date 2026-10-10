@@ -1,0 +1,42 @@
+{
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "colorScheme": "dark",
+  "counts": {
+    "lowContrast": 0,
+    "blackOnDark": 0,
+    "nativeControls": 0,
+    "scrollBugs": 0,
+    "scrollAreas": 2,
+    "pageScroll": 0
+  },
+  "lowContrast": [],
+  "blackOnDark": [],
+  "nativeControls": [],
+  "scrollBugs": [],
+  "scrollAreas": [
+    {
+      "element": "div.ui6-tabs [Open files]",
+      "overflow": "auto/auto",
+      "client": "303x14",
+      "scroll": "479x29",
+      "covered": false
+    },
+    {
+      "element": "div.ui6-table-scroll [Ln:ColLexemeTypeLexicalSecurity1:1value_0IDENTvalidinse]",
+      "overflow": "auto/auto",
+      "client": "456x88",
+      "scroll": "456x347",
+      "covered": false
+    }
+  ],
+  "pageScroll": {
+    "vertical": false,
+    "horizontal": false,
+    "document": "1366x768",
+    "viewport": "1366x768"
+  },
+  "verdict": "PASS"
+}

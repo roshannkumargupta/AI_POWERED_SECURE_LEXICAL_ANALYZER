@@ -18,13 +18,13 @@ export const ToastContainer: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
 
         if (toast.type === 'success') {
           icon = <CheckCircle2 size={16} color="var(--success)" />;
-          borderColor = 'rgba(61, 220, 151, 0.4)';
+          borderColor = 'color-mix(in srgb, var(--text-success) 40%, transparent)';
         } else if (toast.type === 'error') {
           icon = <AlertOctagon size={16} color="var(--critical)" />;
-          borderColor = 'rgba(255, 77, 109, 0.4)';
+          borderColor = 'color-mix(in srgb, var(--text-danger) 40%, transparent)';
         } else if (toast.type === 'warning') {
           icon = <AlertTriangle size={16} color="var(--medium)" />;
-          borderColor = 'rgba(245, 197, 66, 0.4)';
+          borderColor = 'color-mix(in srgb, var(--text-warning) 40%, transparent)';
         }
 
         return (
@@ -81,7 +81,7 @@ const toastItemStyle: React.CSSProperties = {
   backgroundColor: 'var(--panel)',
   border: '1px solid var(--border)',
   borderRadius: 'var(--radius)',
-  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+  boxShadow: 'var(--shadow-popover)',
   pointerEvents: 'auto',
   animation: 'slideIn 150ms ease-out',
 };
@@ -96,7 +96,7 @@ const actionButtonStyle: React.CSSProperties = {
   fontSize: '11px',
   fontWeight: 600,
   color: 'var(--accent)',
-  backgroundColor: 'rgba(79, 140, 255, 0.15)',
+  backgroundColor: 'var(--accent-wash)',
   padding: '4px 8px',
   borderRadius: 'var(--radius-sm)',
   cursor: 'pointer',

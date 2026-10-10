@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "node ../scripts/cdp_matrix_runner.mjs",
+    "qa:full": "node ../scripts/qa_full.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.0.21",

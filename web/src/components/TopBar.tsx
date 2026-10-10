@@ -1,87 +1,117 @@
 import React from 'react';
 import {
-  Shield,
+  ShieldCheck,
   Play,
   Wand2,
   Download,
   Loader2,
   ChevronDown,
+  Sun,
+  Moon,
 } from 'lucide-react';
-import { LanguageInfo, SampleItem } from '../api/client';
+import { LanguageInfo } from '../api/client';
+import type { ResolvedTheme } from '../theme/theme';
+
+type OpenFile = { id: string; name: string; dirty: boolean };
 
 interface TopBarProps {
   language: string;
+  detectedLanguage?: string;
   languages: LanguageInfo[];
   onChangeLanguage: (lang: string) => void;
   isAnalyzing: boolean;
   onAnalyze: () => void;
   onFixAll: () => void;
   onDownload: () => void;
-  samples: SampleItem[];
-  onSelectSample: (sample: SampleItem) => void;
-  healthScore: number | null;
+  onNewFile: () => void;
+  onOpenFile: () => void;
+  onCloseFile: () => void;
+  filename?: string;
+  safeFixCount?: number;
+  reviewFixCount?: number;
+  fileState?: 'not analysed' | 'analysing' | 'analysed' | 'stale' | 'error';
+  onOpenReviewFixes?: () => void;
+  backendAvailable?: boolean;
+  files?: OpenFile[];
+  activeFileId?: string | null;
+  onSwitchFile?: (id: string) => void;
+  onCloseFileById?: (id: string) => void;
+  themeResolved?: ResolvedTheme;
+  onThemeToggle?: () => void;
+  agentMode?: 'off' | 'rules' | 'local';
+  onChangeAgentMode?: (mode: 'off' | 'rules' | 'local') => void;
+  ollamaReachable?: boolean;
+  ollamaModel?: string;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
   language,
+  detectedLanguage,
   languages,
   onChangeLanguage,
   isAnalyzing,
   onAnalyze,
   onFixAll,
   onDownload,
-  samples,
-  onSelectSample,
-  healthScore,
+  onNewFile,
+  onOpenFile,
+  onCloseFile,
+  filename = '',
+  safeFixCount = 0,
+  reviewFixCount = 0,
+  fileState = 'not analysed',
+  onOpenReviewFixes,
+  backendAvailable = false,
+  files = [], activeFileId = null, onSwitchFile, onCloseFileById,
+  themeResolved = 'dark', onThemeToggle = () => {},
+  agentMode = 'off', onChangeAgentMode, ollamaReachable = false, ollamaModel = 'qwen2.5-coder:3b',
 }) => {
-  const [isSampleMenuOpen, setIsSampleMenuOpen] = React.useState(false);
-  const sampleMenuRef = React.useRef<HTMLDivElement | null>(null);
-
-  React.useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (sampleMenuRef.current && !sampleMenuRef.current.contains(e.target as Node)) {
-        setIsSampleMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const scoreColor =
-    healthScore === null
-      ? 'var(--muted)'
-      : healthScore >= 80
-      ? 'var(--success)'
-      : healthScore >= 50
-      ? 'var(--medium)'
-      : 'var(--critical)';
+  const [isFileMenuOpen, setIsFileMenuOpen] = React.useState(false);
+  const [isFileListOpen, setIsFileListOpen] = React.useState(false);
+  const [isMoreOpen, setIsMoreOpen] = React.useState(false);
+  const [themeAnnouncement, setThemeAnnouncement] = React.useState('');
+  const nextThemeLabel = themeResolved === 'dark' ? 'light' : 'dark';
 
   return (
-    <header style={containerStyle}>
+    <header data-qa="topbar" style={containerStyle}>
       {/* Brand Identity */}
       <div style={brandGroupStyle}>
         <div style={logoIconStyle}>
-          <Shield size={18} color="#FFFFFF" />
+          <ShieldCheck size={18} color="var(--text-primary)" strokeWidth={1.5} />
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
           <span style={brandTitleStyle}>SecureLex</span>
-          <span style={brandBadgeStyle}>IDE</span>
         </div>
       </div>
 
       {/* Middle Controls */}
       <div style={middleControlsStyle}>
+        <div style={{ position: 'relative' }}>
+          <button style={secondaryButtonStyle} onClick={() => setIsFileMenuOpen((open) => !open)} aria-label="File menu">File</button>
+          {isFileMenuOpen && <div style={dropdownMenuStyle}>
+            <button style={dropdownItemStyle} onClick={() => { onNewFile(); setIsFileMenuOpen(false); }}>New File <small>Ctrl+N</small></button>
+            <button style={dropdownItemStyle} onClick={() => { onOpenFile(); setIsFileMenuOpen(false); }}>Open File... <small>Ctrl+O</small></button>
+            <button style={dropdownItemStyle} onClick={() => { onCloseFile(); setIsFileMenuOpen(false); }}>Close File <small>Ctrl+W</small></button>
+          </div>}
+        </div>
+        <div style={{ position:'relative' }}><button aria-label="Open file list" aria-expanded={isFileListOpen} onClick={()=>setIsFileListOpen((open)=>!open)} title={filename || 'No file open'} style={{ color: 'var(--text-primary)', fontSize: 12, maxWidth: 220, height:26, display:'inline-flex',alignItems:'center',padding:'0 9px',border:'1px solid var(--border)',borderRadius:8,background:'var(--surface-2)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{filename || 'No file'} <ChevronDown size={12}/></button>
+          {isFileListOpen && <div style={dropdownMenuStyle} role="menu" aria-label="Open files">
+            {files.map((file)=><div key={file.id} style={{display:'flex',alignItems:'center'}}><button role="menuitem" aria-current={file.id===activeFileId?'true':undefined} style={{...dropdownItemStyle,flex:1}} onClick={()=>{onSwitchFile?.(file.id);setIsFileListOpen(false);}}>{file.name}{file.dirty?' •':''}</button><button aria-label={`Close ${file.name}`} onClick={()=>onCloseFileById?.(file.id)}>×</button></div>)}
+            <button role="menuitem" style={dropdownItemStyle} onClick={()=>{onNewFile();setIsFileListOpen(false);}}>New</button><button role="menuitem" style={dropdownItemStyle} onClick={()=>{onOpenFile();setIsFileListOpen(false);}}>Open</button>
+          </div>}
+        </div>
         {/* Language Selector */}
         <div style={selectorWrapperStyle}>
           <label htmlFor="lang-select" style={visuallyHiddenStyle}>Language</label>
           <select
+            data-qa="select-language"
             id="lang-select"
             value={language}
             onChange={(e) => onChangeLanguage(e.target.value)}
             style={selectStyle}
             aria-label="Select target programming language"
           >
-            <option value="auto">Auto-Detect</option>
+            <option value="auto">{detectedLanguage ? `Auto - ${detectedLanguage}` : 'Auto-detect'}</option>
             {languages.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.display_name}
@@ -91,53 +121,107 @@ export const TopBar: React.FC<TopBarProps> = ({
           <ChevronDown size={12} color="var(--muted)" style={selectArrowStyle} />
         </div>
 
-        {/* Samples Menu Dropdown */}
-        <div style={{ position: 'relative' }} ref={sampleMenuRef}>
+        {/* Agent Mode Toggle */}
+        <div
+          data-qa="agent-toggle-group"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            backgroundColor: 'var(--surface-2)',
+            borderRadius: 6,
+            padding: '2px',
+            border: '1px solid var(--border)',
+            gap: 2,
+          }}
+          role="group"
+          aria-label="Agent Mode Toggle"
+        >
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', padding: '0 4px', fontWeight: 600 }}>
+            Agent:
+          </span>
           <button
-            style={secondaryButtonStyle}
-            onClick={() => setIsSampleMenuOpen(!isSampleMenuOpen)}
-            aria-label="Open code samples menu"
+            data-qa="agent-toggle-off"
+            type="button"
+            onClick={() => onChangeAgentMode?.('off')}
+            style={{
+              fontSize: 11,
+              padding: '2px 7px',
+              borderRadius: 4,
+              border: 'none',
+              cursor: 'pointer',
+              backgroundColor: agentMode === 'off' ? 'var(--panel-2)' : 'transparent',
+              color: agentMode === 'off' ? 'var(--text-primary)' : 'var(--text-muted)',
+              fontWeight: agentMode === 'off' ? 600 : 400,
+            }}
           >
-            <span>Samples</span>
-            <ChevronDown size={12} />
+            Off
           </button>
-
-          {isSampleMenuOpen && (
-            <div style={dropdownMenuStyle}>
-              <div style={dropdownHeaderStyle}>Select Code Preset</div>
-              {samples.map((s) => (
-                <button
-                  key={s.id}
-                  style={dropdownItemStyle}
-                  onClick={() => {
-                    onSelectSample(s);
-                    setIsSampleMenuOpen(false);
-                  }}
-                >
-                  <span style={dropdownItemTitleStyle}>{s.title}</span>
-                  <span style={dropdownItemSubStyle}>{s.filename}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <button
+            data-qa="agent-toggle-rules"
+            type="button"
+            onClick={() => onChangeAgentMode?.('rules')}
+            style={{
+              fontSize: 11,
+              padding: '2px 7px',
+              borderRadius: 4,
+              border: 'none',
+              cursor: 'pointer',
+              backgroundColor: agentMode === 'rules' ? 'var(--panel-2)' : 'transparent',
+              color: agentMode === 'rules' ? 'var(--text-accent)' : 'var(--text-muted)',
+              fontWeight: agentMode === 'rules' ? 600 : 400,
+            }}
+          >
+            Rules
+          </button>
+          <button
+            data-qa="agent-toggle-local"
+            type="button"
+            disabled={!ollamaReachable}
+            title={ollamaReachable ? `Local AI (${ollamaModel})` : 'Ollama not running'}
+            onClick={() => {
+              if (ollamaReachable) onChangeAgentMode?.('local');
+            }}
+            style={{
+              fontSize: 11,
+              padding: '2px 7px',
+              borderRadius: 4,
+              border: 'none',
+              cursor: ollamaReachable ? 'pointer' : 'not-allowed',
+              opacity: ollamaReachable ? 1 : 0.5,
+              backgroundColor: agentMode === 'local' ? 'var(--panel-2)' : 'transparent',
+              color: agentMode === 'local' ? 'var(--text-success)' : 'var(--text-muted)',
+              fontWeight: agentMode === 'local' ? 600 : 400,
+            }}
+          >
+            Local AI
+          </button>
         </div>
+
       </div>
 
       {/* Right Action Buttons */}
       <div style={rightActionsStyle}>
-        {healthScore !== null && (
-          <div style={{ ...scoreBadgeStyle, borderColor: `${scoreColor}40`, color: scoreColor }}>
-            <span style={{ fontSize: '10px', color: 'var(--muted)' }}>SCORE</span>
-            <span style={{ fontWeight: 700, fontFamily: 'var(--font-code)' }}>{healthScore}</span>
-          </div>
-        )}
-
         {/* Analyze Button */}
         <button
-          style={primaryButtonStyle}
+          data-qa="btn-analyze"
+          style={{
+            ...primaryButtonStyle,
+            backgroundColor: fileState === 'stale' ? 'var(--surface-2)' : 'var(--panel-2)',
+            color: fileState === 'stale' ? 'var(--accent)' : 'var(--text-secondary)',
+            border: fileState === 'stale' ? '1px solid var(--accent)' : '1px solid var(--border)',
+            boxShadow: 'none',
+          }}
           onClick={onAnalyze}
           disabled={isAnalyzing}
-          title="Analyze Code (Ctrl+Enter)"
+          title={
+            fileState === 'not analysed'
+              ? 'Not analysed - press Analyze (Ctrl+Enter)'
+              : fileState === 'analysing'
+              ? 'Analysing...'
+              : fileState === 'stale'
+              ? 'Edited since last analysis - press Analyze (Ctrl+Enter)'
+              : 'Analyze Code (Ctrl+Enter)'
+          }
           aria-label="Analyze Code"
         >
           {isAnalyzing ? (
@@ -145,39 +229,89 @@ export const TopBar: React.FC<TopBarProps> = ({
           ) : (
             <Play size={14} fill="currentColor" />
           )}
-          <span>Analyze</span>
+          <span>{isAnalyzing ? 'Analysing...' : 'Analyze'}</span>
           <kbd style={kbdStyle}>Ctrl+↵</kbd>
         </button>
 
-        {/* Fix All Button */}
-        <button
-          style={fixAllButtonStyle}
-          onClick={onFixAll}
-          title="Apply All Safe & Verified Fixes Iteratively"
-          aria-label="Fix All Safe Issues"
-        >
-          <Wand2 size={14} />
-          <span>Fix all ✓</span>
-        </button>
+        {/* Fix All / Review Fixes Button */}
+        {safeFixCount > 0 ? (
+          <button
+            data-qa="btn-fixall"
+            style={{
+              ...fixAllButtonStyle,
+              backgroundColor: 'var(--accent)',
+              borderColor: 'var(--accent)',
+              color: 'var(--surface-1)',
+              cursor: 'pointer',
+            }}
+            onClick={onFixAll}
+            disabled={isAnalyzing || fileState === 'stale'}
+            title={fileState === 'stale' ? 'Analyse again first' : 'Apply all safe verified fixes'}
+            aria-label="Fix All Safe Issues"
+          >
+            <Wand2 size={14} />
+            <span>Fix all ({safeFixCount})</span>
+          </button>
+        ) : reviewFixCount > 0 ? (
+          <button
+            data-qa="btn-reviewfixes"
+            style={{
+              ...fixAllButtonStyle,
+              backgroundColor: 'transparent',
+              borderColor: 'var(--border)',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+            }}
+            onClick={onOpenReviewFixes}
+            disabled={isAnalyzing || fileState === 'stale'}
+            title={fileState === 'stale' ? 'Analyse again first' : 'Open Review fixes panel'}
+            aria-label="Review Fixes"
+          >
+            <Wand2 size={14} />
+            <span>Review fixes ({reviewFixCount})</span>
+          </button>
+        ) : (
+          <button
+            data-qa="btn-fixall"
+            style={{
+              ...fixAllButtonStyle,
+              backgroundColor: 'transparent',
+              borderColor: 'var(--border)',
+              color: 'var(--muted)',
+              cursor: 'not-allowed',
+            }}
+            disabled={true}
+            title="No verified fixes available"
+            aria-label="Fix All Safe Issues"
+          >
+            <Wand2 size={14} />
+            <span>Fix all (0)</span>
+          </button>
+        )}
 
-        {/* Download Button */}
-        <button
-          style={iconButtonStyle}
-          onClick={onDownload}
-          title="Download Source Code (Ctrl+S)"
-          aria-label="Download Source Code"
-        >
-          <Download size={15} />
-        </button>
+        <div style={{ position: 'relative' }}>
+          <button type="button" style={{ ...iconButtonStyle, width: 32, height: 32 }} aria-label={`Switch to ${nextThemeLabel} theme`} title={`Switch to ${nextThemeLabel} theme`} onClick={() => { onThemeToggle(); setThemeAnnouncement(`${nextThemeLabel[0].toUpperCase()}${nextThemeLabel.slice(1)} theme`); }}>
+            {themeResolved === 'dark' ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+          </button>
+          <span aria-live="polite" aria-atomic="true" style={visuallyHiddenStyle}>{themeAnnouncement}</span>
+        </div>
+        <div style={{ position: 'relative' }}>
+          <button style={iconButtonStyle} aria-label="More actions" title="More actions" onClick={() => setIsMoreOpen((open) => !open)}>···</button>
+          {isMoreOpen && <div style={{ ...dropdownMenuStyle, left: 'auto', right: 0, width: 220 }}>
+            <button style={dropdownItemStyle} onClick={() => { onDownload(); setIsMoreOpen(false); }}><span><Download size={13} /> Download <small>Ctrl+S</small></span></button>
+            <button style={dropdownItemStyle} onClick={() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true })); setIsMoreOpen(false); }}>Keyboard shortcuts <small>?</small></button>
+            <div style={{ padding: '7px 8px', color: 'var(--muted)', fontSize: 11 }}>Backend: {backendAvailable ? 'Connected' : 'Offline'}</div>
+          </div>}
+        </div>
       </div>
     </header>
   );
 };
 
 const containerStyle: React.CSSProperties = {
-  height: '48px',
-  minHeight: '48px',
-  maxHeight: '48px',
+  height: '49px',
+  minHeight: '49px',
+  maxHeight: '49px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -201,24 +335,14 @@ const logoIconStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  boxShadow: '0 2px 8px rgba(79, 140, 255, 0.4)',
+  boxShadow: 'none',
 };
 
 const brandTitleStyle: React.CSSProperties = {
-  fontSize: '15px',
-  fontWeight: 700,
+  fontSize: '14px',
+  fontWeight: 500,
   letterSpacing: '-0.3px',
   color: 'var(--text)',
-};
-
-const brandBadgeStyle: React.CSSProperties = {
-  fontSize: '10px',
-  fontWeight: 700,
-  padding: '1px 5px',
-  backgroundColor: 'var(--panel-2)',
-  color: 'var(--accent)',
-  borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--border)',
 };
 
 const middleControlsStyle: React.CSSProperties = {
@@ -250,7 +374,9 @@ const selectStyle: React.CSSProperties = {
   border: '1px solid var(--border)',
   borderRadius: 'var(--radius)',
   color: 'var(--text)',
-  padding: '5px 28px 5px 10px',
+  width:110,
+  height:26,
+  padding: '3px 24px 3px 8px',
   fontSize: '12px',
   fontWeight: 500,
   cursor: 'pointer',
@@ -281,23 +407,17 @@ const dropdownMenuStyle: React.CSSProperties = {
   position: 'absolute',
   top: 'calc(100% + 6px)',
   left: 0,
-  width: '240px',
+  width: '280px',
+  maxHeight: '360px',
+  overflowY: 'auto',
   backgroundColor: 'var(--panel)',
   border: '1px solid var(--border)',
   borderRadius: 'var(--radius)',
-  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+  boxShadow: 'var(--shadow-popover)',
   display: 'flex',
   flexDirection: 'column',
   padding: '6px',
   zIndex: 100,
-};
-
-const dropdownHeaderStyle: React.CSSProperties = {
-  fontSize: '10px',
-  fontWeight: 600,
-  color: 'var(--muted)',
-  textTransform: 'uppercase',
-  padding: '6px 8px',
 };
 
 const dropdownItemStyle: React.CSSProperties = {
@@ -311,33 +431,10 @@ const dropdownItemStyle: React.CSSProperties = {
   transition: 'background-color var(--transition-fast)',
 };
 
-const dropdownItemTitleStyle: React.CSSProperties = {
-  fontSize: '12px',
-  fontWeight: 600,
-  color: 'var(--text)',
-};
-
-const dropdownItemSubStyle: React.CSSProperties = {
-  fontSize: '10px',
-  color: 'var(--muted)',
-  fontFamily: 'var(--font-code)',
-};
-
 const rightActionsStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '10px',
-};
-
-const scoreBadgeStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '6px',
-  padding: '4px 10px',
-  backgroundColor: 'var(--panel-2)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  fontSize: '12px',
 };
 
 const primaryButtonStyle: React.CSSProperties = {
@@ -346,12 +443,12 @@ const primaryButtonStyle: React.CSSProperties = {
   gap: '6px',
   padding: '6px 14px',
   backgroundColor: 'var(--accent)',
-  color: '#FFFFFF',
+  color: 'var(--surface-1)',
   borderRadius: 'var(--radius)',
   fontSize: '12px',
   fontWeight: 600,
   cursor: 'pointer',
-  boxShadow: '0 2px 6px rgba(79, 140, 255, 0.3)',
+  boxShadow: '0 2px 6px var(--accent-wash)',
 };
 
 const fixAllButtonStyle: React.CSSProperties = {
@@ -359,8 +456,8 @@ const fixAllButtonStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: '6px',
   padding: '6px 14px',
-  backgroundColor: 'rgba(61, 220, 151, 0.15)',
-  border: '1px solid rgba(61, 220, 151, 0.4)',
+  backgroundColor: 'var(--success-wash)',
+  border: '1px solid var(--text-success)',
   color: 'var(--success)',
   borderRadius: 'var(--radius)',
   fontSize: '12px',
@@ -383,7 +480,7 @@ const iconButtonStyle: React.CSSProperties = {
 const kbdStyle: React.CSSProperties = {
   fontSize: '10px',
   opacity: 0.8,
-  backgroundColor: 'rgba(0, 0, 0, 0.25)',
+  backgroundColor: 'var(--surface-3)',
   padding: '1px 4px',
   borderRadius: '2px',
   marginLeft: '2px',

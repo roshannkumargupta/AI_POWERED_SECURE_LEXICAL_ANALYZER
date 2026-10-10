@@ -1,14 +1,19 @@
 import React from 'react';
-import { Shield, Sparkles, AlertOctagon, Terminal } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { SampleItem } from '../api/client';
 
 interface EmptyStateProps {
   samples: SampleItem[];
   onSelectSample: (sample: SampleItem) => void;
+  onNewFile: () => void;
+  onOpenFile: () => void;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ samples, onSelectSample }) => {
-  const threeSamples = samples.slice(0, 3);
+export const EmptyState: React.FC<EmptyStateProps> = ({ samples, onSelectSample, onNewFile, onOpenFile }) => {
+  const exampleLanguages = [
+    ['python', 'Python'], ['java', 'Java'], ['javascript', 'JavaScript'], ['cpp', 'C/C++'],
+  ];
+  const examples = exampleLanguages.map(([language, label]) => [label, samples.find((s) => s.language === language && s.category === 'vulnerable')]).filter((entry) => entry[1]) as Array<[string, SampleItem]>;
 
   return (
     <div style={containerStyle}>
@@ -16,45 +21,31 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ samples, onSelectSample 
         <Shield size={36} color="var(--accent)" />
       </div>
 
-      <h2 style={titleStyle}>Welcome to SecureLex IDE</h2>
-      <p style={subtitleStyle}>
-        Interactive static code security analysis fusing deterministic AST rules, taint flow tracking, and calibrated machine learning with verified automated fixes.
-      </p>
+      <h2 style={titleStyle}>SecureLex</h2>
+      <p style={subtitleStyle}>Open or paste code to check it for security problems.</p>
+
+      <div style={buttonsGroupStyle}>
+        <button style={sampleButtonStyle} onClick={onNewFile}>New file</button>
+        <button style={sampleButtonStyle} onClick={onOpenFile}>Open file</button>
+      </div>
 
       <div style={samplesBoxStyle}>
-        <span style={samplesBoxTitleStyle}>Load a security demonstration sample:</span>
-        <div style={buttonsGroupStyle}>
-          {threeSamples.map((sample) => (
+        <span style={samplesBoxTitleStyle}>Try an example:</span>
+        <div style={exampleLinksStyle}>
+          {examples.map(([label, sample]) => (
             <button
               key={sample.id}
-              style={sampleButtonStyle}
+              style={exampleLinkStyle}
               onClick={() => onSelectSample(sample)}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {sample.category === 'vulnerable' ? (
-                  <AlertOctagon size={16} color="var(--critical)" />
-                ) : sample.category === 'adversarial' ? (
-                  <Sparkles size={16} color="var(--high)" />
-                ) : (
-                  <Terminal size={16} color="var(--accent)" />
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <span style={sampleBtnTitleStyle}>{sample.title}</span>
-                  <span style={sampleBtnSubStyle}>{sample.filename}</span>
-                </div>
-              </div>
+              {label}
             </button>
           ))}
         </div>
       </div>
-
-      <span style={footerHintStyle}>
-        Or simply paste code directly into the Monaco editor or press <kbd style={kbdStyle}>Ctrl+Enter</kbd> to analyze.
-      </span>
     </div>
   );
 };
-
 const containerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -71,8 +62,8 @@ const iconCircleStyle: React.CSSProperties = {
   width: '72px',
   height: '72px',
   borderRadius: '50%',
-  backgroundColor: 'rgba(79, 140, 255, 0.1)',
-  border: '1px solid rgba(79, 140, 255, 0.25)',
+  backgroundColor: 'var(--accent-wash)',
+  border: '1px solid var(--border-accent)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -114,10 +105,13 @@ const samplesBoxTitleStyle: React.CSSProperties = {
 
 const buttonsGroupStyle: React.CSSProperties = {
   display: 'flex',
-  flexDirection: 'column',
+  flexDirection: 'row',
   gap: '8px',
   width: '100%',
 };
+
+const exampleLinksStyle: React.CSSProperties = { display: 'flex', gap: 12 };
+const exampleLinkStyle: React.CSSProperties = { color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 12, background: 'transparent', border: 0 };
 
 const sampleButtonStyle: React.CSSProperties = {
   display: 'flex',
@@ -130,31 +124,4 @@ const sampleButtonStyle: React.CSSProperties = {
   transition: 'all var(--transition-fast)',
   cursor: 'pointer',
   textAlign: 'left',
-};
-
-const sampleBtnTitleStyle: React.CSSProperties = {
-  fontSize: '13px',
-  fontWeight: 600,
-  color: 'var(--text)',
-};
-
-const sampleBtnSubStyle: React.CSSProperties = {
-  fontSize: '11px',
-  color: 'var(--muted)',
-  fontFamily: 'var(--font-code)',
-};
-
-const footerHintStyle: React.CSSProperties = {
-  fontSize: '12px',
-  color: 'var(--muted-dark)',
-};
-
-const kbdStyle: React.CSSProperties = {
-  padding: '2px 6px',
-  background: 'var(--panel-2)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius-sm)',
-  fontFamily: 'var(--font-code)',
-  fontSize: '11px',
-  color: 'var(--text)',
 };

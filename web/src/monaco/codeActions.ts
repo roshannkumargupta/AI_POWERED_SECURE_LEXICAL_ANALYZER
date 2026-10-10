@@ -126,6 +126,32 @@ export function createCodeActionProvider(
             });
           }
         }
+
+        // Code action: Suppress this finding as an undoable edit
+        const lang = model.getLanguageId();
+        const commentPrefix = lang === 'python' ? '#' : '//';
+        const startLine = finding.range.start_line;
+        const lineContent = model.getLineContent(startLine) || '';
+        const indent = lineContent.match(/^\s*/)?.[0] || '';
+        const suppressText = `${indent}${commentPrefix} securelex: ignore ${finding.rule_id}\n`;
+
+        actions.push({
+          title: `🛡️ Suppress this finding (${finding.rule_id})`,
+          kind: 'quickfix',
+          isPreferred: false,
+          edit: {
+            edits: [
+              {
+                resource: model.uri,
+                textEdit: {
+                  range: new monacoInstance.Range(startLine, 1, startLine, 1),
+                  text: suppressText,
+                },
+                versionId: model.getVersionId(),
+              },
+            ],
+          },
+        });
       }
 
       return {

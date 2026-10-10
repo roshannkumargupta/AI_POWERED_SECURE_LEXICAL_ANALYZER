@@ -1,0 +1,42 @@
+{
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "colorScheme": "dark",
+  "counts": {
+    "lowContrast": 0,
+    "blackOnDark": 0,
+    "nativeControls": 0,
+    "scrollBugs": 0,
+    "scrollAreas": 2,
+    "pageScroll": 0
+  },
+  "lowContrast": [],
+  "blackOnDark": [],
+  "nativeControls": [],
+  "scrollBugs": [],
+  "scrollAreas": [
+    {
+      "element": "div.ui6-tabs [Open files]",
+      "overflow": "auto/auto",
+      "client": "345x14",
+      "scroll": "1078x29",
+      "covered": false
+    },
+    {
+      "element": "div [Source to sink for os.system('ls ' + name), engine ast-]",
+      "overflow": "auto/auto",
+      "client": "548x228",
+      "scroll": "548x643",
+      "covered": false
+    }
+  ],
+  "pageScroll": {
+    "vertical": false,
+    "horizontal": false,
+    "document": "1920x1080",
+    "viewport": "1920x1080"
+  },
+  "verdict": "PASS"
+}

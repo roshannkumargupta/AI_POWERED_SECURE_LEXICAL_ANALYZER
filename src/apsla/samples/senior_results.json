@@ -1,0 +1,866 @@
+{
+  "py-b01": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "input; eval; (; expression; ); result",
+    "note": "senior tool run without its ML model"
+  },
+  "py-b02": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "input; exec; (; code; )",
+    "note": "senior tool run without its ML model"
+  },
+  "py-b03": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "input; system; host",
+    "note": "senior tool run without its ML model"
+  },
+  "py-b04": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "input; execute; \"SELECT * FROM users WHERE name='\"; name",
+    "note": "senior tool run without its ML model"
+  },
+  "py-b05": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "pickle; pickle",
+    "note": "senior tool run without its ML model"
+  },
+  "py-b06": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-b07": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "input; password; digest",
+    "note": "senior tool run without its ML model"
+  },
+  "py-b08": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-b09": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-b10": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-i01": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-i02": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "f\"SELECT * FROM accounts WHERE name = '{name}'\"",
+    "note": "senior tool run without its ML model"
+  },
+  "py-i03": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "subprocess; input; subprocess",
+    "note": "senior tool run without its ML model"
+  },
+  "py-i04": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-i05": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-i06": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "subprocess; subprocess",
+    "note": "senior tool run without its ML model"
+  },
+  "py-i07": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-i08": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "pickle; pickle",
+    "note": "senior tool run without its ML model"
+  },
+  "py-i09": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-a01": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-a02": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-a03": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-a04": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "'cHJpbnQoJ3NhbXBsZSBvbmx5Jyk='; exec; (; base64; .",
+    "note": "senior tool run without its ML model"
+  },
+  "py-a05": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "'eJwrKMrMK9FQL07MLchJVcjPy6lU1wQAT0wHMQ=='; exec; (; zlib; .",
+    "note": "senior tool run without its ML model"
+  },
+  "py-a06": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "pickle; f\"SELECT * FROM users WHERE name='{name}'\"; pickle",
+    "note": "senior tool run without its ML model"
+  },
+  "py-a07": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "subprocess; subprocess",
+    "note": "senior tool run without its ML model"
+  },
+  "py-a08": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-s01": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "subprocess; subprocess",
+    "note": "senior tool run without its ML model"
+  },
+  "py-s02": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-s03": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "'SELECT * FROM users WHERE id = ?'",
+    "note": "senior tool run without its ML model"
+  },
+  "py-s04": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-s05": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "subprocess; subprocess",
+    "note": "senior tool run without its ML model"
+  },
+  "py-s06": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "\"\"\"Words eval, exec and os.system describe APIs, not calls.\"\"\"; # eval(user_text), exec(code), os.system(command); eval; (; ); \n",
+    "note": "senior tool run without its ML model"
+  },
+  "py-s07": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-u01": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-u02": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "account​name; account​name",
+    "note": "senior tool run without its ML model"
+  },
+  "py-u03": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "py-u04": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "input; ехес; payload",
+    "note": "senior tool run without its ML model"
+  },
+  "py-u05": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "input; expression",
+    "note": "senior tool run without its ML model"
+  },
+  "py-u06": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": true,
+    "detail": "usеr_name; usеr_name",
+    "note": "senior tool run without its ML model"
+  },
+  "py-l01": {
+    "tool": "Senior Project A rules + taint (ML disabled)",
+    "flagged": false,
+    "detail": "no rule/taint flag",
+    "note": "senior tool run without its ML model"
+  },
+  "jv-b01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "SQL Injection at [21]",
+    "note": "regex hotspot stage only"
+  },
+  "jv-b02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [20]",
+    "note": "regex hotspot stage only"
+  },
+  "jv-b03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-b04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-b05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-b06": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-b07": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-b08": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-b09": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-i01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "SQL Injection at [22]",
+    "note": "regex hotspot stage only"
+  },
+  "jv-i02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [22]",
+    "note": "regex hotspot stage only"
+  },
+  "jv-i03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-i04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-i05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-i06": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-i07": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "SQL Injection at [22]",
+    "note": "regex hotspot stage only"
+  },
+  "jv-i08": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-i09": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [20]",
+    "note": "regex hotspot stage only"
+  },
+  "jv-i10": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-a01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-a02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "SQL Injection at [22]",
+    "note": "regex hotspot stage only"
+  },
+  "jv-a03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "SQL Injection at [22]",
+    "note": "regex hotspot stage only"
+  },
+  "jv-a04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "SQL Injection at [21]",
+    "note": "regex hotspot stage only"
+  },
+  "jv-a05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-a06": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-s01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-s02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "SQL Injection at [14]",
+    "note": "regex hotspot stage only"
+  },
+  "jv-s03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-s04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-s05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-s06": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-u01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-u02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-u03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "jv-l01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "regex hotspot stage only"
+  },
+  "js-b01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [4]",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-b02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-b03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-b04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-b05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-b06": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-b07": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-b08": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-b09": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-i01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [6]",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-i02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-i03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-i04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-i05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-i06": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-i07": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-i08": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-i09": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-a01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-a02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [3]",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-a03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [3]",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-a04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [4]",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-a05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [5]",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-a06": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [4]",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-s01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-s02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-s03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-s04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-s05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-s06": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-u01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-u02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-l01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "js-l02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-b01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-b02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-b03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-b04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-b05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-b06": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [3]",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-b07": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-b08": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-b09": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-i01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-i02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-i03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [3]",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-i04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-i05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-i06": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-i07": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-i08": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-i09": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [4]",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-a01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-a02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-a03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-a04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": true,
+    "detail": "Command Injection at [11]",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-a05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-a06": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-s01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-s02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-s03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-s04": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-s05": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-u01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-u02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-l01": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-l02": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  },
+  "cp-l03": {
+    "tool": "Senior Project B StaticAnalyzer regex hotspot stage",
+    "flagged": false,
+    "detail": "no regex hotspot",
+    "note": "Java scanner, not designed for this language"
+  }
+}

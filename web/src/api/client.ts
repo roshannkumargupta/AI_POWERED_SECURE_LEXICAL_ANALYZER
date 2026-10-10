@@ -51,6 +51,13 @@ export interface Finding {
   fixes: Fix[];
   sources: string[];
   suppressed?: boolean;
+  suppression_reason?: string | null;
+  kind?: 'security' | 'lexical' | 'syntax';
+  attack?: string[] | null;
+  priority?: number;
+  exploitability?: number;
+  simple_explanation?: string | null;
+  detailed_explanation?: string | null;
 }
 
 export interface AnalysisSummary {
@@ -63,6 +70,8 @@ export interface AnalysisSummary {
   tokens_total: number;
   tokens_malicious: number;
   tokens_suspicious: number;
+  lexical_errors?: number;
+  syntax_errors?: number;
 }
 
 export interface EngineMetadata {
@@ -71,22 +80,51 @@ export interface EngineMetadata {
   taint: string;
   version: string;
   elapsed_ms: number;
+  parser?: string;
+}
+
+export interface AgentTraceStep {
+  step: number;
+  agent: string;
+  stage: string;
+  action: string;
+  args_summary: string;
+  reason: string;
+  observation_summary: string;
+  decision_source: 'llm' | 'rules';
+  ms: number;
+  accepted: boolean;
+  rejection_reason?: string;
+}
+
+export interface AgentStatus {
+  mode: 'off' | 'rules' | 'local';
+  ollama_reachable: boolean;
+  model: string;
+  model_present: boolean;
+  fallback_active: boolean;
+  message?: string;
 }
 
 export interface AnalysisResult {
   language: string;
   filename: string;
   findings: Finding[];
-  tokens: Array<{
-    text: string;
-    line: number;
-    col: number;
-    label: string;
-    confidence: number;
-    utf16_offset: number;
-  }>;
+  tokens: TokenInfo[];
   summary: AnalysisSummary;
   engine: EngineMetadata;
+  trace?: AgentTraceStep[];
+  agent_meta?: Record<string, any>;
+}
+
+export interface TokenInfo {
+  token: string;
+  token_type: string;
+  range: Range;
+  label: string;
+  score: number;
+  // Legacy aliases are accepted to keep older cached API payloads usable.
+  text?: string; line?: number; col?: number; confidence?: number; utf16_offset?: number;
 }
 
 export interface HealthResponse {
@@ -111,6 +149,14 @@ export interface SampleItem {
   filename: string;
   code: string;
   description: string;
+  kind?: string;
+  level?: string | null;
+  topic?: string | null;
+  summary?: string | null;
+  notes?: string[];
+  expect?: { findings?: Array<{ rule_id: string; line?: number }>; min_findings?: number };
+  demo_order?: number | null;
+  senior?: { tool: string; flagged: boolean | null; detail: string; note?: string };
 }
 
 export interface AnalyzeOptions {
@@ -118,6 +164,7 @@ export interface AnalyzeOptions {
   ml?: boolean;
   include_tokens?: boolean;
   include_suppressed?: boolean;
+  agent?: 'off' | 'rules' | 'local';
 }
 
 export interface AnalyzeRequest {
@@ -235,19 +282,52 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   }
 }
 
-export const api = {
-  getHealth: (signal?: AbortSignal) => request<HealthResponse>('/health', { signal }),
-  getLanguages: (signal?: AbortSignal) => request<LanguageInfo[]>('/languages', { signal }),
-  getSamples: (language?: string, signal?: AbortSignal) => {
-    const q = language ? `?language=${encodeURIComponent(language)}` : '';
-    return request<SampleItem[]>(`/samples${q}`, { signal });
-  },
+export interface LLMStatusResponse {
+  configured: boolean;
+  provider: string;
+}
+
+export interface LLMFixRequest {
+  source: string;
+  finding_id: string;
+  rule_id: string;
+  language?: string;
+  start_line?: number;
+  start_col?: number;
+}
+
+export interface LLMFixResponse {
+  fixes: Fix[];
+  notes?: string;
+}
+
+export interface LLMExplainRequest {
+  finding_id: string;
+  rule_id: string;
+  message?: string;
+}
+
+export interface LLMExplainResponse {
+  explanation: string;
+}
+
+export const apiClient = {
   analyze: (req: AnalyzeRequest, signal?: AbortSignal) =>
     request<AnalysisResult>('/analyze', {
       method: 'POST',
       body: JSON.stringify(req),
       signal,
     }),
+  getHealth: (signal?: AbortSignal) => request<HealthResponse>('/health', { signal }),
+  getLanguages: (signal?: AbortSignal) => request<LanguageInfo[]>('/languages', { signal }),
+  getSamples: (language?: string, meta?: boolean, signal?: AbortSignal) => {
+    const query = new URLSearchParams();
+    if (language) query.set('language', language);
+    if (meta) query.set('meta', '1');
+    const suffix = query.toString() ? `?${query.toString()}` : '';
+    return request<SampleItem[]>(`/samples${suffix}`, { signal });
+  },
+  getSample: (id: string, signal?: AbortSignal) => request<SampleItem>(`/samples/${id}`, { signal }),
   applyFix: (req: FixRequest, signal?: AbortSignal) =>
     request<FixResponse>('/fix', {
       method: 'POST',
@@ -272,4 +352,22 @@ export const api = {
       body: JSON.stringify(req),
       signal,
     }),
+  getLLMStatus: (signal?: AbortSignal) =>
+    request<LLMStatusResponse>('/llm/status', { signal }),
+  requestLLMFix: (req: LLMFixRequest, signal?: AbortSignal) =>
+    request<LLMFixResponse>('/llm/fix', {
+      method: 'POST',
+      body: JSON.stringify(req),
+      signal,
+    }),
+  requestLLMExplain: (req: LLMExplainRequest, signal?: AbortSignal) =>
+    request<LLMExplainResponse>('/llm/explain', {
+      method: 'POST',
+      body: JSON.stringify(req),
+      signal,
+    }),
+  getAgentStatus: (signal?: AbortSignal) =>
+    request<AgentStatus>('/agent/status', { signal }),
 };
+
+export const api = apiClient;

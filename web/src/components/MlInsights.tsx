@@ -6,18 +6,23 @@ interface MlInsightsProps {
   insights: MLInsightsResponse | null;
   isLoading: boolean;
   mlMode: 'on' | 'off';
+  modelId?: string;
+  selectedToken?: string;
+  lexicalError?: boolean;
+  mlReason?: string;
 }
 
-export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlMode }) => {
+export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlMode, modelId, selectedToken, lexicalError, mlReason }) => {
+  if (lexicalError) return <div className="ui5-empty">n/a - lexical errors do not use ML</div>;
   if (mlMode === 'off' || (insights && insights.ml_mode === 'off')) {
     return (
       <div style={noticeContainerStyle}>
         <div style={noticeHeaderStyle}>
           <AlertCircle size={20} color="var(--critical)" />
-          <span style={noticeTitleStyle}>ML Inference Mode: OFF</span>
+          <span style={noticeTitleStyle}>ML OFF</span>
         </div>
         <p style={noticeTextStyle}>
-          Neural model inference is currently offline. SecureLex IDE operates under strict zero-silent-fallback policy: deterministic AST rules, source-to-sink taint analysis, and multi-vector Unicode defenses remain 100% operational.
+          ML off - Rules and Taint remain active. Reason: {mlReason || 'the API did not provide an ML-off reason.'}
         </p>
       </div>
     );
@@ -34,7 +39,8 @@ export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlM
 
   if (!insights) {
     return (
-      <div style={emptyStyle}>
+      <div style={{...emptyStyle,alignItems:'stretch'}}>
+        <div className="ui6-ml-header">ML on - model {modelId || 'unknown'} - 9-token window - token: {selectedToken || 'unknown'}</div>
         <Brain size={24} color="var(--muted)" />
         <p style={{ marginTop: '8px', color: 'var(--muted)', fontSize: '13px' }}>
           Click any token or select a finding to inspect machine learning confidence probabilities and feature-group occlusion impacts.
@@ -57,6 +63,7 @@ export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlM
 
   return (
     <div style={containerStyle}>
+      <div className="ui6-ml-header">ML on - model {modelId || 'unknown'} - 9-token window - token: {selectedToken || insights.token_text || 'unknown'}</div>
       {/* Token Header */}
       <div style={tokenHeaderCardStyle}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -76,11 +83,11 @@ export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlM
 
         <div style={probRowStyle}>
           <div style={probLabelRowStyle}>
-            <span style={{ color: 'var(--critical)', fontWeight: 600 }}>MALICIOUS</span>
-            <span style={probValStyle}>{malPct}%</span>
+          <span style={{ color: 'var(--success)', fontWeight: 600 }}>SAFE</span>
+          <span style={probValStyle}>{safePct}%</span>
           </div>
           <div style={barTrackStyle}>
-            <div style={{ ...barFillStyle, width: `${malPct}%`, backgroundColor: 'var(--critical)' }} />
+            <div style={{ ...barFillStyle, width: `${safePct}%`, backgroundColor: 'var(--success)' }} />
           </div>
         </div>
 
@@ -96,11 +103,11 @@ export const MlInsights: React.FC<MlInsightsProps> = ({ insights, isLoading, mlM
 
         <div style={probRowStyle}>
           <div style={probLabelRowStyle}>
-            <span style={{ color: 'var(--success)', fontWeight: 600 }}>SAFE</span>
-            <span style={probValStyle}>{safePct}%</span>
+          <span style={{ color: 'var(--critical)', fontWeight: 600 }}>MALICIOUS</span>
+          <span style={probValStyle}>{malPct}%</span>
           </div>
           <div style={barTrackStyle}>
-            <div style={{ ...barFillStyle, width: `${safePct}%`, backgroundColor: 'var(--success)' }} />
+            <div style={{ ...barFillStyle, width: `${malPct}%`, backgroundColor: 'var(--critical)' }} />
           </div>
         </div>
       </div>
@@ -156,8 +163,8 @@ const containerStyle: React.CSSProperties = {
 
 const noticeContainerStyle: React.CSSProperties = {
   padding: '16px',
-  background: 'rgba(255, 77, 109, 0.08)',
-  border: '1px solid rgba(255, 77, 109, 0.3)',
+  background: 'var(--danger-wash)',
+  border: '1px solid var(--error-border)',
   borderRadius: 'var(--radius)',
   display: 'flex',
   flexDirection: 'column',

@@ -7,6 +7,8 @@ interface DiffViewProps {
   fix: Fix;
   finding: Finding;
   diff: string;
+  before?: string;
+  after?: string;
   onApply: () => void;
   onCancel: () => void;
 }
@@ -16,6 +18,8 @@ export const DiffView: React.FC<DiffViewProps> = ({
   fix,
   finding,
   diff,
+  before = '',
+  after = '',
   onApply,
   onCancel,
 }) => {
@@ -67,6 +71,15 @@ export const DiffView: React.FC<DiffViewProps> = ({
 
           {fix.description && <p style={descStyle}>{fix.description}</p>}
 
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, minHeight: 160 }}>
+            <div style={diffContainerStyle}><div style={diffHeaderStyle}>Before</div><pre style={diffPreStyle}>{before}</pre></div>
+            <div style={diffContainerStyle}><div style={diffHeaderStyle}>After</div><pre style={diffPreStyle}>{after}</pre></div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 11, color: 'var(--text-secondary)' }}>
+            <span>{fix.verification?.syntax_ok ? '✓' : '×'} Syntax valid</span>
+            <span>{fix.verification?.finding_gone ? '✓' : '×'} Original finding removed</span>
+            <span>{fix.verification?.new_findings?.length === 0 ? '✓' : '×'} No new findings</span>
+          </div>
           {/* Unified Diff Box */}
           <div style={diffContainerStyle}>
             <div style={diffHeaderStyle}>Unified Diff Representation</div>
@@ -75,13 +88,13 @@ export const DiffView: React.FC<DiffViewProps> = ({
                 let lineBg = 'transparent';
                 let lineFg = 'var(--text)';
                 if (line.startsWith('+') && !line.startsWith('+++')) {
-                  lineBg = 'rgba(61, 220, 151, 0.15)';
+                  lineBg = 'var(--diff-add-bg)';
                   lineFg = 'var(--success)';
                 } else if (line.startsWith('-') && !line.startsWith('---')) {
-                  lineBg = 'rgba(255, 77, 109, 0.15)';
+                  lineBg = 'var(--diff-del-bg)';
                   lineFg = 'var(--critical)';
                 } else if (line.startsWith('@@')) {
-                  lineBg = 'rgba(79, 140, 255, 0.1)';
+                  lineBg = 'var(--diff-context-bg)';
                   lineFg = 'var(--accent)';
                 }
 
@@ -123,7 +136,7 @@ const overlayStyle: React.CSSProperties = {
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: 'rgba(11, 15, 23, 0.8)',
+  backgroundColor: 'var(--scrim-strong)',
   backdropFilter: 'blur(3px)',
   display: 'flex',
   alignItems: 'center',
@@ -141,7 +154,7 @@ const modalStyle: React.CSSProperties = {
   borderRadius: 'var(--radius-lg)',
   display: 'flex',
   flexDirection: 'column',
-  boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
+  boxShadow: 'var(--shadow-modal)',
   overflow: 'hidden',
 };
 
@@ -167,10 +180,10 @@ const verifiedBadgeStyle: React.CSSProperties = {
   fontSize: '11px',
   fontWeight: 600,
   color: 'var(--success)',
-  backgroundColor: 'rgba(61, 220, 151, 0.15)',
+  backgroundColor: 'var(--success-wash)',
   padding: '2px 8px',
   borderRadius: 'var(--radius-full)',
-  border: '1px solid rgba(61, 220, 151, 0.3)',
+  border: '1px solid var(--text-success)',
 };
 
 const unverifiedBadgeStyle: React.CSSProperties = {
@@ -180,10 +193,10 @@ const unverifiedBadgeStyle: React.CSSProperties = {
   fontSize: '11px',
   fontWeight: 600,
   color: 'var(--medium)',
-  backgroundColor: 'rgba(245, 197, 66, 0.15)',
+  backgroundColor: 'var(--warning-wash)',
   padding: '2px 8px',
   borderRadius: 'var(--radius-full)',
-  border: '1px solid rgba(245, 197, 66, 0.3)',
+  border: '1px solid var(--text-warning)',
 };
 
 const closeButtonStyle: React.CSSProperties = {
@@ -291,7 +304,7 @@ const applyButtonStyle: React.CSSProperties = {
   padding: '6px 16px',
   borderRadius: 'var(--radius)',
   backgroundColor: 'var(--accent)',
-  color: '#FFFFFF',
+  color: 'var(--text-on-accent)',
   fontWeight: 600,
   fontSize: '12px',
 };

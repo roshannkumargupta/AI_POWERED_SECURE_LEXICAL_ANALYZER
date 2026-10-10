@@ -7,6 +7,7 @@ import {
   MLInsightsResponse,
   SampleItem,
   Severity,
+  AgentStatus,
 } from '../api/client';
 import { BUNDLED_SAMPLES } from '../samples';
 
@@ -39,7 +40,9 @@ export interface AppState {
   selectedTokenIndex: number | null;
   mlInsights: MLInsightsResponse | null;
   isLoadingInsights: boolean;
-  activeTab: 'finding' | 'summary' | 'ml';
+  activeTab: 'problems' | 'finding' | 'tokens' | 'taint' | 'summary' | 'ml' | 'trace';
+  agentMode: 'off' | 'rules' | 'local';
+  agentStatus: AgentStatus | null;
   problemsFilter: 'all' | Severity;
   cursorPosition: { line: number; col: number };
   toasts: ToastItem[];
@@ -56,12 +59,15 @@ export type Action =
   | { type: 'SET_FILENAME'; payload: string }
   | { type: 'SET_ANALYZING'; payload: boolean }
   | { type: 'SET_ANALYSIS'; payload: AnalysisResult }
+  | { type: 'CLEAR_ANALYSIS' }
   | { type: 'SET_BACKEND_AVAILABLE'; payload: boolean }
   | { type: 'SELECT_FINDING'; payload: string | null }
   | { type: 'SELECT_TOKEN_INDEX'; payload: number | null }
   | { type: 'SET_ML_INSIGHTS'; payload: MLInsightsResponse | null }
   | { type: 'SET_LOADING_INSIGHTS'; payload: boolean }
-  | { type: 'SET_ACTIVE_TAB'; payload: 'finding' | 'summary' | 'ml' }
+  | { type: 'SET_ACTIVE_TAB'; payload: 'problems' | 'finding' | 'tokens' | 'taint' | 'summary' | 'ml' | 'trace' }
+  | { type: 'SET_AGENT_MODE'; payload: 'off' | 'rules' | 'local' }
+  | { type: 'SET_AGENT_STATUS'; payload: AgentStatus | null }
   | { type: 'SET_PROBLEMS_FILTER'; payload: 'all' | Severity }
   | { type: 'SET_CURSOR_POSITION'; payload: { line: number; col: number } }
   | { type: 'ADD_TOAST'; payload: Omit<ToastItem, 'id'> & { id?: string } }
@@ -74,12 +80,10 @@ export type Action =
   | { type: 'SET_SAMPLES'; payload: SampleItem[] }
   | { type: 'HIDE_FINDING'; payload: string };
 
-const initialSample = BUNDLED_SAMPLES[0];
-
 export const initialState: AppState = {
-  source: initialSample.code,
-  language: initialSample.language,
-  filename: initialSample.filename,
+  source: '',
+  language: 'auto',
+  filename: '',
   analysis: null,
   isAnalyzing: false,
   isBackendAvailable: true,
@@ -87,13 +91,15 @@ export const initialState: AppState = {
   selectedTokenIndex: null,
   mlInsights: null,
   isLoadingInsights: false,
-  activeTab: 'summary',
+  activeTab: 'tokens',
+  agentMode: 'off',
+  agentStatus: null,
   problemsFilter: 'all',
   cursorPosition: { line: 1, col: 1 },
   toasts: [],
   diffModal: null,
   activeDataFlowFindingId: null,
-  isSidebarCollapsed: false,
+  isSidebarCollapsed: true,
   languages: [
     { id: 'python', display_name: 'Python 3', extensions: ['.py'], monaco_id: 'python' },
     { id: 'java', display_name: 'Java', extensions: ['.java'], monaco_id: 'java' },
@@ -127,11 +133,14 @@ export function appReducer(state: AppState, action: Action): AppState {
         selectedFindingId: stillSelected ? stillSelected.id : activeFindings[0]?.id || null,
         activeDataFlowFindingId:
           state.activeDataFlowFindingId &&
-          activeFindings.find((f) => f.id === state.activeDataFlowFindingId)
+            activeFindings.find((f) => f.id === state.activeDataFlowFindingId)
             ? state.activeDataFlowFindingId
             : null,
       };
     }
+
+    case 'CLEAR_ANALYSIS':
+      return { ...state, analysis: null, isAnalyzing: false, selectedFindingId: null, activeDataFlowFindingId: null, mlInsights: null };
 
     case 'SET_BACKEND_AVAILABLE':
       return { ...state, isBackendAvailable: action.payload };
@@ -140,7 +149,7 @@ export function appReducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         selectedFindingId: action.payload,
-        activeTab: action.payload ? 'finding' : state.activeTab,
+        activeTab: action.payload ? 'tokens' : state.activeTab,
       };
 
     case 'SELECT_TOKEN_INDEX':
@@ -158,6 +167,12 @@ export function appReducer(state: AppState, action: Action): AppState {
 
     case 'SET_ACTIVE_TAB':
       return { ...state, activeTab: action.payload };
+
+    case 'SET_AGENT_MODE':
+      return { ...state, agentMode: action.payload };
+
+    case 'SET_AGENT_STATUS':
+      return { ...state, agentStatus: action.payload };
 
     case 'SET_PROBLEMS_FILTER':
       return { ...state, problemsFilter: action.payload };
@@ -188,7 +203,7 @@ export function appReducer(state: AppState, action: Action): AppState {
         ...state,
         activeDataFlowFindingId: action.payload,
         selectedFindingId: action.payload || state.selectedFindingId,
-        activeTab: action.payload ? 'finding' : state.activeTab,
+        activeTab: action.payload ? 'taint' : state.activeTab,
       };
 
     case 'TOGGLE_SIDEBAR':

@@ -1,0 +1,27 @@
+{
+  "viewport": {
+    "width": 1536,
+    "height": 864
+  },
+  "colorScheme": "dark",
+  "counts": {
+    "lowContrast": 0,
+    "blackOnDark": 0,
+    "nativeControls": 0,
+    "scrollBugs": 0,
+    "scrollAreas": 0,
+    "pageScroll": 0
+  },
+  "lowContrast": [],
+  "blackOnDark": [],
+  "nativeControls": [],
+  "scrollBugs": [],
+  "scrollAreas": [],
+  "pageScroll": {
+    "vertical": false,
+    "horizontal": false,
+    "document": "1536x864",
+    "viewport": "1536x864"
+  },
+  "verdict": "PASS"
+}

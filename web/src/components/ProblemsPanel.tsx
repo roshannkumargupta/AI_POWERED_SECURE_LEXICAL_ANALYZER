@@ -9,6 +9,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { Finding, Severity } from '../api/client';
+import { findingCategory } from '../utils/findingCategory';
 
 interface ProblemsPanelProps {
   findings: Finding[];
@@ -29,12 +30,41 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
   onNextFinding,
   onPrevFinding,
 }) => {
+  const [sortBy, setSortBy] = React.useState<'priority' | 'severity' | 'location' | 'confidence'>('priority');
+  const [grouped, setGrouped] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(false);
   const activeFindings = findings.filter((f) => !f.suppressed);
+
+  const top3Ids = React.useMemo(() => {
+    const sortedByPriority = [...activeFindings].sort(
+      (a, b) => (b.priority ?? 0) - (a.priority ?? 0) || (b.confidence ?? 0) - (a.confidence ?? 0)
+    );
+    return new Set(sortedByPriority.slice(0, 3).map((f) => f.id));
+  }, [activeFindings]);
 
   const filteredFindings =
     filter === 'all'
       ? activeFindings
       : activeFindings.filter((f) => f.severity === filter);
+  const severityOrder: Record<Severity, number> = { critical: 0, high: 1, medium: 2, low: 3, info: 4 };
+  const sortedFindings = [...filteredFindings].sort((a, b) => {
+    if (sortBy === 'priority') {
+      const pDiff = (b.priority ?? 0) - (a.priority ?? 0);
+      if (Math.abs(pDiff) > 0.0001) return pDiff;
+      return (
+        severityOrder[a.severity] - severityOrder[b.severity] ||
+        a.range.start_line - b.range.start_line
+      );
+    }
+    if (sortBy === 'location') {
+      return a.range.start_line - b.range.start_line || a.range.start_col - b.range.start_col;
+    }
+    if (sortBy === 'confidence') {
+      return b.confidence - a.confidence;
+    }
+    return severityOrder[a.severity] - severityOrder[b.severity];
+  });
+  const shownFindings = grouped ? [...sortedFindings].sort((a, b) => findingCategory(a).localeCompare(findingCategory(b))) : sortedFindings;
 
   const getSeverityIcon = (sev: Severity) => {
     switch (sev) {
@@ -73,13 +103,12 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
       {/* Problems Toolbar */}
       <div style={toolbarStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={titleStyle}>Problems</span>
-          <span style={badgeCountStyle}>{activeFindings.length}</span>
+          <button style={titleStyle} onClick={() => setCollapsed((value) => !value)} aria-expanded={!collapsed}>PROBLEMS {activeFindings.length}</button>
         </div>
 
         {/* Severity Filter Pills */}
         <div style={filterGroupStyle}>
-          {(['all', 'critical', 'high', 'medium', 'low', 'info'] as const).map((sev) => {
+          {(['all', 'critical', 'high', 'medium', 'low'] as const).map((sev) => {
             const isActive = filter === sev;
             const count =
               sev === 'all'
@@ -98,11 +127,15 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
                 onClick={() => onSelectFilter(sev)}
                 aria-label={`Filter by ${sev}`}
               >
-                {sev.toUpperCase()} ({count})
+                  {sev === 'all' ? 'All' : sev[0].toUpperCase() + sev.slice(1)} {count}
               </button>
             );
           })}
         </div>
+        <select aria-label="Sort problems" value={sortBy} onChange={(event) => setSortBy(event.target.value as typeof sortBy)} style={{ background: 'var(--panel)', color: 'var(--text-secondary)', border: '1px solid var(--border)', fontSize: 10 }}>
+          <option value="priority">Priority</option><option value="severity">Severity</option><option value="location">Location</option><option value="confidence">Confidence</option>
+        </select>
+        <label style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}><input type="checkbox" checked={grouped} onChange={(event) => setGrouped(event.target.checked)} /> Group</label>
 
         {/* Next / Previous Shortcuts */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -126,11 +159,11 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
       </div>
 
       {/* Problems Table / List */}
-      <div style={tableContainerStyle}>
+      {!collapsed && <div style={tableContainerStyle}>
         {filteredFindings.length === 0 ? (
           <div style={emptyStyle}>
             {activeFindings.length === 0
-              ? 'No issues detected in current code.'
+              ? <span style={{ color: 'var(--success)' }}>No security issues found</span>
               : `No ${filter} severity issues found.`}
           </div>
         ) : (
@@ -138,13 +171,13 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
             <thead>
               <tr style={thRowStyle}>
                 <th style={{ ...thStyle, width: '110px' }}>Severity</th>
-                <th style={{ ...thStyle, width: '130px' }}>Rule ID</th>
+                <th style={{ ...thStyle, width: '130px' }}>CWE</th>
                 <th style={thStyle}>Message</th>
                 <th style={{ ...thStyle, width: '100px', textAlign: 'right' }}>Location</th>
               </tr>
             </thead>
             <tbody>
-              {filteredFindings.map((finding) => {
+              {shownFindings.map((finding) => {
                 const isSelected = finding.id === selectedFindingId;
                 const sevColor = getSeverityColor(finding.severity);
 
@@ -153,10 +186,12 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
                     key={finding.id}
                     style={{
                       ...trStyle,
-                      backgroundColor: isSelected ? 'var(--panel-3)' : 'transparent',
+                      backgroundColor: 'transparent',
                       borderLeft: isSelected ? `3px solid ${sevColor}` : '3px solid transparent',
                     }}
                     onClick={() => onSelectFinding(finding.id)}
+                    onKeyDown={(event) => { if (event.key === 'Enter') onSelectFinding(finding.id); }}
+                    tabIndex={0}
                   >
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -174,10 +209,31 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
                       </div>
                     </td>
                     <td style={tdStyle}>
-                      <code style={ruleCodeStyle}>{finding.rule_id}</code>
+                      <code style={ruleCodeStyle}>{finding.cwe || finding.rule_id}</code>
                     </td>
                     <td style={tdStyle}>
-                      <span style={messageStyle}>{finding.message}</span>
+                      <span style={messageStyle}>{grouped ? `${findingCategory(finding)} · ${finding.title}` : finding.title || finding.message}</span>
+                      {top3Ids.has(finding.id) && (
+                        <span
+                          data-qa="fix-first-badge"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            backgroundColor: 'var(--bg-warning)',
+                            color: 'var(--text-warning)',
+                            border: '1px solid var(--text-warning)',
+                            marginLeft: '8px',
+                            letterSpacing: '0.2px',
+                          }}
+                          title="Priority ranking: recommended to fix first"
+                        >
+                          Fix first
+                        </span>
+                      )}
                     </td>
                     <td style={{ ...tdStyle, textAlign: 'right' }}>
                       <span style={locStyle}>
@@ -190,7 +246,7 @@ export const ProblemsPanel: React.FC<ProblemsPanelProps> = ({
             </tbody>
           </table>
         )}
-      </div>
+      </div>}
     </div>
   );
 };
@@ -221,15 +277,7 @@ const titleStyle: React.CSSProperties = {
   color: 'var(--text-secondary)',
   textTransform: 'uppercase',
   letterSpacing: '0.4px',
-};
-
-const badgeCountStyle: React.CSSProperties = {
-  fontSize: '10px',
-  fontWeight: 600,
-  padding: '1px 5px',
-  borderRadius: 'var(--radius-full)',
-  backgroundColor: 'var(--panel-3)',
-  color: 'var(--text)',
+  background: 'transparent', border: 0, cursor: 'pointer',
 };
 
 const filterGroupStyle: React.CSSProperties = {

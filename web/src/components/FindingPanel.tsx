@@ -5,31 +5,54 @@ import {
   AlertTriangle,
   Info,
   CheckCircle2,
-  ExternalLink,
   ShieldCheck,
   Flag,
   Wand2,
   GitBranch,
+  Sparkles,
+  EyeOff,
 } from 'lucide-react';
-import { Finding, Fix, AnalysisSummary, MLInsightsResponse, TaintPathStep } from '../api/client';
-import { ScoreRing } from './ScoreRing';
+import { Finding, Fix, AnalysisSummary, EngineMetadata, MLInsightsResponse, TaintPathStep, SampleItem } from '../api/client';
 import { TaintPath } from './TaintPath';
 import { MlInsights } from './MlInsights';
+import { TokensPanel } from './TokensPanel';
+import { ProblemsPanel } from './ProblemsPanel';
+import type { AnalysisResult } from '../api/client';
+import { compareSample, DEMO_PATH } from '../utils/sampleDemo';
+import { AgentTraceTab } from './AgentTraceTab';
+
+type Tab = 'problems' | 'finding' | 'tokens' | 'taint' | 'summary' | 'ml' | 'trace';
 
 interface FindingPanelProps {
-  activeTab: 'finding' | 'summary' | 'ml';
-  onChangeTab: (tab: 'finding' | 'summary' | 'ml') => void;
+  activeTab: Tab;
+  onChangeTab: (tab: Tab) => void;
   selectedFinding: Finding | null;
   summary: AnalysisSummary | null;
+  findings?: Finding[];
+  engine?: EngineMetadata | null;
+  language?: string;
   mlInsights: MLInsightsResponse | null;
   isLoadingInsights: boolean;
   mlMode: 'on' | 'off';
+  agentMode?: 'off' | 'rules' | 'local';
+  agentModel?: string;
+  ollamaUrl?: string;
   onApplyFix: (fix: Fix, finding: Finding) => void;
   onOpenDiff: (fix: Fix, finding: Finding) => void;
   onJumpToStep: (step: TaintPathStep) => void;
   onToggleDataFlow: (findingId: string) => void;
   isDataFlowActive: boolean;
   onMarkFalsePositive: (finding: Finding) => void;
+  onSuppressFinding?: (finding: Finding) => void;
+  onAskAIFix?: (finding: Finding) => void;
+  isAskingAI?: boolean;
+  llmConfigured?: boolean;
+  llmProvider?: string;
+  sample?: SampleItem | null;
+  sampleEdited?: boolean;
+  onDemoStep?: (delta: number) => void;
+  analysis: AnalysisResult | null; selectedTokenIndex: number | null; tokenMap: 'off'|'security'|'full'; onTokenMap: (mode: 'off'|'security'|'full') => void; tokenCategory: string; onTokenCategory: (category: string) => void; onSelectToken: (index: number) => void; onLoadTokenML: (index: number) => void; onSelectFindingById: (id: string) => void;
+  showAllTokens?: boolean; tokenMainFilter?: 'All'|'Security'|'Lexical'|'Syntax'; tokenGroups?: string[];
 }
 
 export const FindingPanel: React.FC<FindingPanelProps> = ({
@@ -37,6 +60,9 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
   onChangeTab,
   selectedFinding,
   summary,
+  findings = [],
+  engine = null,
+  language = 'auto',
   mlInsights,
   isLoadingInsights,
   mlMode,
@@ -46,7 +72,17 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
   onToggleDataFlow,
   isDataFlowActive,
   onMarkFalsePositive,
+  onSuppressFinding,
+  onAskAIFix,
+  isAskingAI = false,
+  llmConfigured = false,
+  llmProvider = 'none',
+  sample = null, sampleEdited = false, onDemoStep,
+  analysis, selectedTokenIndex, tokenMap, onTokenMap, tokenCategory, onTokenCategory, onSelectToken, onLoadTokenML, onSelectFindingById, showAllTokens = false, tokenMainFilter = 'All', tokenGroups = [],
+  agentMode = 'off', agentModel = 'qwen2.5-coder:3b', ollamaUrl = 'http://127.0.0.1:11434',
 }) => {
+  const [explanationMode, setExplanationMode] = React.useState<'simple' | 'detailed'>('detailed');
+
   const getSeverityBadge = (finding: Finding) => {
     switch (finding.severity) {
       case 'critical':
@@ -89,45 +125,69 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
   };
 
   return (
-    <div style={containerStyle}>
+    <div data-qa="right-pane" style={containerStyle}>
       {/* Tabs Header */}
-      <div style={tabHeaderStyle}>
+      <div data-qa="tabs" role="tablist" aria-label="Analysis views" style={tabHeaderStyle}>
+        <button role="tab" aria-selected={activeTab === 'problems'} style={{ ...tabButtonStyle, borderBottom: activeTab === 'problems' ? '2px solid var(--text-accent)' : '2px solid transparent', color: activeTab === 'problems' ? 'var(--text-accent)' : 'var(--text-muted)' }} onClick={() => onChangeTab('problems')}>Problems</button>
+        <button role="tab" aria-selected={activeTab === 'finding'} style={{ ...tabButtonStyle, borderBottom: activeTab === 'finding' ? '2px solid var(--text-accent)' : '2px solid transparent', color: activeTab === 'finding' ? 'var(--text-accent)' : 'var(--text-muted)' }} onClick={() => onChangeTab('finding')}>Finding</button>
+        <button role="tab" aria-selected={activeTab === 'tokens'} style={{ ...tabButtonStyle, borderBottom: activeTab === 'tokens' ? '2px solid var(--text-accent)' : '2px solid transparent', color: activeTab === 'tokens' ? 'var(--text-accent)' : 'var(--text-muted)' }} onClick={() => onChangeTab('tokens')}>Tokens</button>
+        <button role="tab" aria-selected={activeTab === 'taint'} style={{ ...tabButtonStyle, borderBottom: activeTab === 'taint' ? '2px solid var(--text-accent)' : '2px solid transparent', color: activeTab === 'taint' ? 'var(--text-accent)' : 'var(--text-muted)' }} onClick={() => onChangeTab('taint')}>Taint path</button>
+        <button role="tab" aria-selected={activeTab === 'ml'} style={{ ...tabButtonStyle, borderBottom: activeTab === 'ml' ? '2px solid var(--text-accent)' : '2px solid transparent', color: activeTab === 'ml' ? 'var(--text-accent)' : 'var(--text-muted)' }} onClick={() => onChangeTab('ml')}>ML insights</button>
         <button
           style={{
             ...tabButtonStyle,
-            borderBottom: activeTab === 'finding' ? '2px solid var(--accent)' : '2px solid transparent',
-            color: activeTab === 'finding' ? 'var(--text)' : 'var(--muted)',
+            borderBottom: activeTab === 'summary' ? '2px solid var(--text-accent)' : '2px solid transparent',
+            color: activeTab === 'summary' ? 'var(--text-accent)' : 'var(--text-muted)',
           }}
-          onClick={() => onChangeTab('finding')}
-        >
-          Finding
-        </button>
-        <button
-          style={{
-            ...tabButtonStyle,
-            borderBottom: activeTab === 'summary' ? '2px solid var(--accent)' : '2px solid transparent',
-            color: activeTab === 'summary' ? 'var(--text)' : 'var(--muted)',
-          }}
-          onClick={() => onChangeTab('summary')}
+          role="tab" aria-selected={activeTab === 'summary'} onClick={() => onChangeTab('summary')}
         >
           Summary
         </button>
         <button
           style={{
             ...tabButtonStyle,
-            borderBottom: activeTab === 'ml' ? '2px solid var(--accent)' : '2px solid transparent',
-            color: activeTab === 'ml' ? 'var(--text)' : 'var(--muted)',
+            borderBottom: activeTab === 'trace' ? '2px solid var(--text-accent)' : '2px solid transparent',
+            color: activeTab === 'trace' ? 'var(--text-accent)' : 'var(--text-muted)',
           }}
-          onClick={() => onChangeTab('ml')}
+          role="tab" aria-selected={activeTab === 'trace'} onClick={() => onChangeTab('trace')}
         >
-          ML Insights
+          Agent trace
         </button>
       </div>
 
       {/* Tab Content */}
       <div style={tabContentStyle}>
+        {activeTab === 'problems' && (
+          <div style={{ height: '100%', minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
+            <ProblemsPanel
+              findings={findings}
+              selectedFindingId={selectedFinding?.id || null}
+              filter="all"
+              onSelectFilter={() => {}}
+              onSelectFinding={(id) => {
+                onSelectFindingById?.(id);
+                onChangeTab('finding');
+              }}
+              onNextFinding={() => {}}
+              onPrevFinding={() => {}}
+            />
+          </div>
+        )}
+
         {activeTab === 'finding' && (
-          selectedFinding ? (
+          <>
+          {sample?.demo_order && <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, padding: '6px 12px 0' }}><button disabled={DEMO_PATH.indexOf(sample.id) <= 0} onClick={() => onDemoStep?.(-1)}>Previous</button><button disabled={DEMO_PATH.indexOf(sample.id) >= DEMO_PATH.length - 1} onClick={() => onDemoStep?.(1)}>Next</button></div>}
+          {sample && <details style={{ margin: '8px 12px', color: 'var(--muted)', fontSize: 11 }}>
+            <summary style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>Demo notes</summary>
+            <div style={{ display: 'grid', gap: 6, padding: '8px 0' }}>
+              <div>{sample.summary || sample.description}</div>
+              <ul style={{ margin: 0, paddingLeft: 18 }}>{(sample.notes || []).slice(0, 4).map((note, i) => <li key={i}>{note}</li>)}</ul>
+              <div>Expected: {(sample.expect?.findings || []).length} findings - {(sample.expect?.findings || []).map((item) => item.rule_id).join(', ') || 'none'}</div>
+              {analysis && <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: sampleEdited ? 'var(--amber)' : compareSample(sample, findings, false) === 'Matches expected' ? 'var(--success)' : 'var(--amber)' }}>{!sampleEdited && compareSample(sample, findings, false) === 'Matches expected' && <CheckCircle2 size={12} />}{sampleEdited ? 'Edited - comparison paused' : compareSample(sample, findings, false)}</div>}
+              {sample.senior && <div>Senior project: {sample.senior.flagged === null ? sample.senior.detail : sample.senior.flagged ? `flagged ${sample.senior.detail}` : 'not flagged'} <small>senior tool run without its ML model{sample.senior.note ? ` · ${sample.senior.note}` : ''}</small></div>}
+            </div>
+          </details>}
+          {selectedFinding ? (
             <div style={findingContainerStyle}>
               {/* Finding Title & Badges */}
               <div style={findingHeaderStyle}>
@@ -136,61 +196,64 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
                   <code style={ruleCodeStyle}>{selectedFinding.rule_id}</code>
                 </div>
                 <h3 style={titleStyle}>{selectedFinding.title}</h3>
-                <span style={locationSubStyle}>
-                  Line {selectedFinding.range.start_line}, Col {selectedFinding.range.start_col}
-                </span>
+                <span style={locationSubStyle}>{selectedFinding.cwe} · {selectedFinding.message}</span>
               </div>
 
-              {/* Meta Grid */}
-              <div style={metaGridStyle}>
-                <div style={metaItemStyle}>
-                  <span style={metaLabelStyle}>CWE Taxonomy</span>
-                  <a
-                    href={`https://cwe.mitre.org/data/definitions/${selectedFinding.cwe.replace('CWE-', '')}.html`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={cweLinkStyle}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={sectionTitleStyle}>WHY IT WAS FLAGGED</span>
+                {(['rule', 'taint', 'ml', 'unicode'] as const).map((source) => {
+                  const active = selectedFinding.sources?.some((value) => value.toLowerCase().includes(source)) || (source === 'taint' && Boolean(selectedFinding.taint_path?.length));
+                  return <span key={source} style={{ color: active ? 'var(--text-secondary)' : 'var(--muted-dark)', fontSize: 11 }}>{active ? '✓' : '○'} {source[0].toUpperCase() + source.slice(1)}</span>;
+                })}
+              </div>
+              <details style={{ color: 'var(--muted)', fontSize: 11 }}>
+                <summary style={{ cursor: 'pointer', color: 'var(--text-secondary)' }}>Details</summary>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, padding: '8px 0' }}>
+                  <span>Rule: {selectedFinding.rule_id}</span><span>Confidence: {Math.round(selectedFinding.confidence * 100)}%</span>
+                  <span>Range: {selectedFinding.range.start_line}:{selectedFinding.range.start_col}</span><span>Detectors: {selectedFinding.sources?.join(', ') || '—'}</span>
+                </div>
+              </details>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
+                <span style={sectionTitleStyle}>EXPLANATION</span>
+                <div style={{ display: 'inline-flex', borderRadius: '4px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                  <button
+                    data-qa="simple-explanation-toggle"
+                    type="button"
+                    style={{
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      fontWeight: explanationMode === 'simple' ? 600 : 400,
+                      backgroundColor: explanationMode === 'simple' ? 'var(--accent)' : 'var(--panel-2)',
+                      color: explanationMode === 'simple' ? 'var(--text-on-accent)' : 'var(--text-secondary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setExplanationMode('simple')}
                   >
-                    <span>{selectedFinding.cwe}</span>
-                    <ExternalLink size={11} />
-                  </a>
-                </div>
-
-                <div style={metaItemStyle}>
-                  <span style={metaLabelStyle}>Calibrated Confidence</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={confValueStyle}>
-                      {Math.round(selectedFinding.confidence * 100)}%
-                    </span>
-                    <div style={confBarTrackStyle}>
-                      <div
-                        style={{
-                          ...confBarFillStyle,
-                          width: `${Math.round(selectedFinding.confidence * 100)}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ ...metaItemStyle, gridColumn: 'span 2' }}>
-                  <span style={metaLabelStyle}>Active Detectors ("Why?")</span>
-                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '2px' }}>
-                    {selectedFinding.sources?.map((src) => (
-                      <span key={src} style={detectorBadgeStyle}>
-                        {src}
-                      </span>
-                    ))}
-                  </div>
+                    Simple
+                  </button>
+                  <button
+                    data-qa="detailed-explanation-toggle"
+                    type="button"
+                    style={{
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      fontWeight: explanationMode === 'detailed' ? 600 : 400,
+                      backgroundColor: explanationMode === 'detailed' ? 'var(--accent)' : 'var(--panel-2)',
+                      color: explanationMode === 'detailed' ? 'var(--text-on-accent)' : 'var(--text-secondary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setExplanationMode('detailed')}
+                  >
+                    Detailed
+                  </button>
                 </div>
               </div>
-
-              {/* Explanation */}
-              <div style={sectionBoxStyle}>
-                <span style={sectionTitleStyle}>Explanation</span>
-                <p style={explanationTextStyle}>
-                  {selectedFinding.explanation || selectedFinding.message}
-                </p>
+              <div style={{ ...explanationTextStyle, whiteSpace: 'pre-wrap' }}>
+                {explanationMode === 'simple'
+                  ? selectedFinding.simple_explanation || selectedFinding.explanation?.split('\n\n')[0] || selectedFinding.message
+                  : selectedFinding.detailed_explanation || selectedFinding.explanation || selectedFinding.message}
               </div>
 
               {/* Data Flow Section (if taint path exists) */}
@@ -202,7 +265,7 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
                       style={{
                         ...flowToggleBtnStyle,
                         backgroundColor: isDataFlowActive ? 'var(--accent)' : 'var(--panel-2)',
-                        color: isDataFlowActive ? '#FFF' : 'var(--text-secondary)',
+                        color: isDataFlowActive ? 'var(--text-on-accent)' : 'var(--text-secondary)',
                       }}
                       onClick={() => onToggleDataFlow(selectedFinding.id)}
                     >
@@ -215,13 +278,41 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
               )}
 
               {/* Automated Fixes Section */}
-              {selectedFinding.fixes && selectedFinding.fixes.length > 0 && (
-                <div style={sectionBoxStyle}>
-                  <span style={sectionTitleStyle}>Automated Fix Proposals</span>
+              <div style={sectionBoxStyle}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={sectionTitleStyle}>
+                    {selectedFinding.fixes && selectedFinding.fixes.length > 0 ? 'Suggested Fixes' : 'Rule Advice'}
+                  </span>
+                  <button
+                    data-qa="ask-ai-fix-btn"
+                    disabled={!llmConfigured || isAskingAI}
+                    title={
+                      llmConfigured
+                        ? `Ask AI (${llmProvider}) for alternative fix`
+                        : 'No AI provider configured in .env (set ANTHROPIC_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY)'
+                    }
+                    style={{
+                      ...reviewFixBtnStyle,
+                      opacity: llmConfigured ? 1 : 0.55,
+                      cursor: llmConfigured ? 'pointer' : 'not-allowed',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                    onClick={() => onAskAIFix?.(selectedFinding)}
+                  >
+                    <Sparkles size={12} />
+                    {isAskingAI ? 'Asking AI...' : 'Ask AI for another fix'}
+                  </button>
+                </div>
+
+                {selectedFinding.fixes && selectedFinding.fixes.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
                     {selectedFinding.fixes.map((fix) => {
-                      const isVerified = fix.verification?.verified;
+                      const isVerified = Boolean(fix.verification?.verified);
                       const isSafe = fix.confidence === 'safe';
+                      const hasEdits = Boolean(fix.edits && fix.edits.length > 0);
+                      const isLLM = fix.kind === 'llm';
 
                       return (
                         <div key={fix.id} style={fixCardStyle}>
@@ -229,13 +320,29 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
                             <div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <span style={fixTitleStyle}>{fix.title}</span>
-                                {isVerified ? (
+                                {isLLM && (
+                                  <span
+                                    style={{
+                                      padding: '1px 5px',
+                                      borderRadius: '3px',
+                                      fontSize: '10px',
+                                      fontWeight: 600,
+                                      backgroundColor: 'var(--accent-subtle)',
+                                      color: 'var(--accent)',
+                                    }}
+                                  >
+                                    AI
+                                  </span>
+                                )}
+                                {isVerified && isSafe ? (
                                   <span style={verifiedBadgeStyle}>
                                     <ShieldCheck size={11} />
-                                    Verified
+                                    Verified after re-analysis
                                   </span>
+                                ) : isLLM && !isVerified ? (
+                                  <span style={unverifiedBadgeStyle}>Advice only (Unverified AI suggestion)</span>
                                 ) : (
-                                  <span style={unverifiedBadgeStyle}>Review</span>
+                                  <span style={unverifiedBadgeStyle}>Review needed</span>
                                 )}
                               </div>
                               <p style={fixDescStyle}>{fix.description}</p>
@@ -243,7 +350,7 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
                           </div>
 
                           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px', gap: '6px' }}>
-                            {fix.edits && fix.edits.length > 0 && (
+                            {hasEdits && (
                               <button
                                 style={reviewFixBtnStyle}
                                 onClick={() => onOpenDiff(fix, selectedFinding)}
@@ -253,13 +360,14 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
                               </button>
                             )}
 
-                            {isSafe && (
+                            {((isSafe && isVerified) || (fix.confidence === 'review' && hasEdits) || (isLLM && isVerified && hasEdits)) && (
                               <button
                                 style={applyFixBtnStyle}
                                 onClick={() => onApplyFix(fix, selectedFinding)}
+                                title={isSafe && isVerified ? 'Apply verified fix' : 'Apply fix'}
                               >
                                 <Wand2 size={12} />
-                                Apply Verified Fix
+                                {isVerified ? 'Apply Verified Fix' : 'Apply Fix'}
                               </button>
                             )}
                           </div>
@@ -267,19 +375,29 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
                       );
                     })}
                   </div>
-                </div>
-              )}
-
-              {/* False Positive Feedback */}
-              <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
-                <button
-                  style={feedbackBtnStyle}
-                  onClick={() => onMarkFalsePositive(selectedFinding)}
-                >
-                  <Flag size={13} />
-                  Mark as False Positive
-                </button>
+                ) : (
+                  <div style={{ marginTop: '6px', fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                    <p style={{ margin: '0 0 6px', fontStyle: 'italic' }}>No automatic rule fix for this issue.</p>
+                  </div>
+                )}
               </div>
+
+              <details style={{ marginTop: 'auto' }}>
+                <summary style={{ cursor: 'pointer', color: 'var(--muted)', fontSize: 11 }}>More actions</summary>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+                  <button
+                    data-qa="suppress-finding-btn"
+                    style={feedbackBtnStyle}
+                    onClick={() => onSuppressFinding?.(selectedFinding)}
+                    title="Insert inline suppression comment in code"
+                  >
+                    <EyeOff size={13} /> Suppress this finding
+                  </button>
+                  <button style={feedbackBtnStyle} onClick={() => onMarkFalsePositive(selectedFinding)}>
+                    <Flag size={13} /> Mark as False Positive
+                  </button>
+                </div>
+              </details>
             </div>
           ) : (
             <div style={noFindingStyle}>
@@ -288,33 +406,24 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
                 Select a problem from the bottom panel or click a code squiggle to view vulnerability analysis.
               </p>
             </div>
-          )
+          )}
+          </>
         )}
+
+        {activeTab === 'tokens' && <TokensPanel result={analysis} language={language} selectedIndex={selectedTokenIndex} selectedFindingId={selectedFinding?.id || null} mlMode={mlMode} ml={mlInsights} loadingML={isLoadingInsights} onSelectToken={onSelectToken} onSelectFinding={onSelectFindingById} onLoadML={onLoadTokenML} tokenMap={tokenMap} onTokenMap={onTokenMap} category={tokenCategory} onCategoryChange={onTokenCategory} showAll={showAllTokens} mainFilter={tokenMainFilter} groups={tokenGroups} />}
+
+        {activeTab === 'taint' && (selectedFinding?.taint_path?.length ? <TaintPath steps={selectedFinding.taint_path} engine={engine?.taint} isEditorActive={isDataFlowActive} onToggleEditor={() => onToggleDataFlow(selectedFinding.id)} onJumpToStep={onJumpToStep} /> : <div style={{ color:'var(--text-muted)', padding:12 }}>No data-flow path for this token.</div>)}
 
         {activeTab === 'summary' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <ScoreRing summary={summary} />
-            {summary && (
-              <div style={tokenSummaryBoxStyle}>
-                <span style={sectionTitleStyle}>Analysis Metadata</span>
-                <div style={summaryRowStyle}>
-                  <span style={summaryLabelStyle}>Scanned Tokens:</span>
-                  <span style={summaryValStyle}>{summary.tokens_total}</span>
-                </div>
-                <div style={summaryRowStyle}>
-                  <span style={summaryLabelStyle}>Malicious Tokens:</span>
-                  <span style={{ ...summaryValStyle, color: 'var(--critical)' }}>
-                    {summary.tokens_malicious}
-                  </span>
-                </div>
-                <div style={summaryRowStyle}>
-                  <span style={summaryLabelStyle}>Suspicious Tokens:</span>
-                  <span style={{ ...summaryValStyle, color: 'var(--medium)' }}>
-                    {summary.tokens_suspicious}
-                  </span>
-                </div>
+            {!summary ? <div className="ui5-empty">Open or paste code to analyse it.</div> : <>
+              <div className="ui6-summary-grid">
+                {[['Score',summary.score],['Critical',summary.critical],['High',summary.high],['Lexical',summary.lexical_errors ?? 0]].map(([label,value])=><div className="ui6-summary-tile" key={label}><span>{label}</span><strong>{value}</strong></div>)}
               </div>
-            )}
+              {(summary.medium>0||summary.low>0)&&<div className="ui6-summary-grid secondary">{summary.medium>0&&<div className="ui6-summary-tile"><span>Medium</span><strong>{summary.medium}</strong></div>}{summary.low>0&&<div className="ui6-summary-tile"><span>Low</span><strong>{summary.low}</strong></div>}</div>}
+              <p className="ui6-summary-note">Lexical errors are listed separately and do not change the score.</p>
+              <div className="ui6-summary-meta">{summary.tokens_total} tokens analysed · {engine?.elapsed_ms.toFixed(0) ?? '—'} ms · {language} · {engine?.parser || 'lexer-only'}</div>
+            </>}
           </div>
         )}
 
@@ -323,6 +432,20 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
             insights={mlInsights}
             isLoading={isLoadingInsights}
             mlMode={mlMode}
+            modelId={engine?.ml_model_id}
+            selectedToken={analysis?.tokens?.[selectedTokenIndex ?? -1]?.token ?? analysis?.tokens?.[selectedTokenIndex ?? -1]?.text ?? undefined}
+            lexicalError={Boolean(analysis && selectedTokenIndex !== null && analysis.findings.some((finding) => finding.kind === 'lexical' && (() => { const token=analysis.tokens[selectedTokenIndex]; return Boolean(token?.range && token.range.start_line <= finding.range.end_line && token.range.end_line >= finding.range.start_line && (token.range.start_line !== finding.range.end_line || token.range.start_col < finding.range.end_col) && (finding.range.start_line !== token.range.end_line || finding.range.start_col < token.range.end_col)); })()))}
+            mlReason={(engine as (EngineMetadata & { ml_reason?: string }) | null)?.ml_reason}
+          />
+        )}
+
+        {activeTab === 'trace' && (
+          <AgentTraceTab
+            trace={analysis?.trace || []}
+            agentMeta={analysis?.agent_meta}
+            agentMode={agentMode}
+            agentModel={agentModel}
+            ollamaUrl={ollamaUrl}
           />
         )}
       </div>
@@ -341,8 +464,8 @@ const containerStyle: React.CSSProperties = {
 
 const tabHeaderStyle: React.CSSProperties = {
   display: 'flex',
-  height: '36px',
-  minHeight: '36px',
+  height: '35px',
+  minHeight: '35px',
   borderBottom: '1px solid var(--border)',
   backgroundColor: 'var(--panel-2)',
   padding: '0 8px',
@@ -352,6 +475,7 @@ const tabButtonStyle: React.CSSProperties = {
   flex: 1,
   fontSize: '12px',
   fontWeight: 600,
+  padding: '7px 9px',
   cursor: 'pointer',
   transition: 'all var(--transition-fast)',
   display: 'flex',
@@ -412,72 +536,6 @@ const locationSubStyle: React.CSSProperties = {
   fontFamily: 'var(--font-code)',
 };
 
-const metaGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: '8px',
-  padding: '10px 12px',
-  backgroundColor: 'var(--panel-2)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-};
-
-const metaItemStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '2px',
-};
-
-const metaLabelStyle: React.CSSProperties = {
-  fontSize: '10px',
-  color: 'var(--muted)',
-  textTransform: 'uppercase',
-  fontWeight: 600,
-  letterSpacing: '0.3px',
-};
-
-const cweLinkStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '4px',
-  fontSize: '12px',
-  fontWeight: 600,
-  color: 'var(--accent)',
-  textDecoration: 'none',
-};
-
-const confValueStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-code)',
-  fontSize: '12px',
-  fontWeight: 600,
-  color: 'var(--text)',
-};
-
-const confBarTrackStyle: React.CSSProperties = {
-  flex: 1,
-  height: '5px',
-  backgroundColor: 'var(--panel-3)',
-  borderRadius: 'var(--radius-full)',
-  overflow: 'hidden',
-};
-
-const confBarFillStyle: React.CSSProperties = {
-  height: '100%',
-  backgroundColor: 'var(--accent)',
-  borderRadius: 'var(--radius-full)',
-};
-
-const detectorBadgeStyle: React.CSSProperties = {
-  fontSize: '10px',
-  fontWeight: 600,
-  fontFamily: 'var(--font-code)',
-  padding: '2px 6px',
-  borderRadius: 'var(--radius-sm)',
-  backgroundColor: 'var(--panel-3)',
-  color: 'var(--text-secondary)',
-  border: '1px solid var(--border)',
-};
-
 const sectionBoxStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -530,7 +588,7 @@ const verifiedBadgeStyle: React.CSSProperties = {
   fontSize: '10px',
   fontWeight: 600,
   color: 'var(--success)',
-  backgroundColor: 'rgba(61, 220, 151, 0.15)',
+  backgroundColor: 'var(--success-wash)',
   padding: '1px 6px',
   borderRadius: 'var(--radius-full)',
 };
@@ -542,7 +600,7 @@ const unverifiedBadgeStyle: React.CSSProperties = {
   fontSize: '10px',
   fontWeight: 600,
   color: 'var(--medium)',
-  backgroundColor: 'rgba(245, 197, 66, 0.15)',
+  backgroundColor: 'var(--warning-wash)',
   padding: '1px 6px',
   borderRadius: 'var(--radius-full)',
 };
@@ -562,7 +620,7 @@ const applyFixBtnStyle: React.CSSProperties = {
   fontWeight: 600,
   padding: '5px 12px',
   backgroundColor: 'var(--accent)',
-  color: '#FFFFFF',
+  color: 'var(--text-on-accent)',
   borderRadius: 'var(--radius-sm)',
   cursor: 'pointer',
 };
@@ -606,30 +664,4 @@ const noFindingStyle: React.CSSProperties = {
   height: '100%',
   padding: '32px 16px',
   textAlign: 'center',
-};
-
-const tokenSummaryBoxStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '8px',
-  padding: '12px',
-  backgroundColor: 'var(--panel-2)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-};
-
-const summaryRowStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  fontSize: '12px',
-};
-
-const summaryLabelStyle: React.CSSProperties = {
-  color: 'var(--muted)',
-};
-
-const summaryValStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-code)',
-  color: 'var(--text)',
-  fontWeight: 600,
 };

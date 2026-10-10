@@ -1,0 +1,88 @@
+{
+  "source": "prompt C3 fallback; not extracted from absent ref_metrics.json",
+  "viewport": "1536x1022",
+  "baseScale": 2,
+  "rows": [
+    {
+      "name": "topbar",
+      "dimension": "height",
+      "targetDu": 49,
+      "actualDu": 49,
+      "errorPercent": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "select",
+      "dimension": "width",
+      "targetDu": 110,
+      "actualDu": 110,
+      "errorPercent": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "select",
+      "dimension": "height",
+      "targetDu": 26,
+      "actualDu": 26,
+      "errorPercent": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "analyze",
+      "dimension": "height",
+      "targetDu": 32,
+      "actualDu": 31.6,
+      "errorPercent": 1.2,
+      "status": "PASS"
+    },
+    {
+      "name": "fixall",
+      "dimension": "height",
+      "targetDu": 32,
+      "actualDu": 31.6,
+      "errorPercent": 1.2,
+      "status": "PASS"
+    },
+    {
+      "name": "strip",
+      "dimension": "width",
+      "targetDu": 34,
+      "actualDu": 34,
+      "errorPercent": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "tabs",
+      "dimension": "height",
+      "targetDu": 35,
+      "actualDu": 35,
+      "errorPercent": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "legend",
+      "dimension": "height",
+      "targetDu": 24,
+      "actualDu": 24,
+      "errorPercent": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "filter",
+      "dimension": "height",
+      "targetDu": 31,
+      "actualDu": 31,
+      "errorPercent": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "status",
+      "dimension": "height",
+      "targetDu": 35,
+      "actualDu": 35,
+      "errorPercent": 0,
+      "status": "PASS"
+    }
+  ],
+  "verdict": "PASS"
+}

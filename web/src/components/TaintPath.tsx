@@ -5,13 +5,16 @@ import { TaintPathStep } from '../api/client';
 interface TaintPathProps {
   steps: TaintPathStep[];
   onJumpToStep: (step: TaintPathStep) => void;
+  engine?: string;
+  onToggleEditor?: () => void;
+  isEditorActive?: boolean;
 }
 
-export const TaintPath: React.FC<TaintPathProps> = ({ steps, onJumpToStep }) => {
+export const TaintPath: React.FC<TaintPathProps> = ({ steps, onJumpToStep, engine, onToggleEditor, isEditorActive }) => {
   if (!steps || steps.length === 0) {
     return (
       <div style={emptyStyle}>
-        <span>No data flow trace recorded for this finding.</span>
+        <span>No data-flow path for this token.</span>
       </div>
     );
   }
@@ -19,8 +22,8 @@ export const TaintPath: React.FC<TaintPathProps> = ({ steps, onJumpToStep }) => 
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <span style={titleStyle}>Source-to-Sink Data Flow Trace</span>
-        <span style={stepCountStyle}>{steps.length} steps</span>
+        <span style={titleStyle}>Source to sink for {steps.find((step) => step.step === 'sink')?.text || 'selected sink'}, engine {engine || 'unknown'}</span>
+        <span style={{display:'flex',alignItems:'center',gap:8}}>{onToggleEditor&&<label style={{fontSize:10,whiteSpace:'nowrap'}}><input type="checkbox" checked={Boolean(isEditorActive)} onChange={onToggleEditor}/> Show in editor</label>}<span style={stepCountStyle}>{steps.length} steps</span></span>
       </div>
 
       <div style={timelineStyle}>
@@ -39,7 +42,7 @@ export const TaintPath: React.FC<TaintPathProps> = ({ steps, onJumpToStep }) => 
             stepColor = 'var(--critical)';
             stepLabel = 'SINK';
           } else if (isMissingSanitizer) {
-            stepColor = 'var(--high)';
+          stepColor = 'var(--critical)';
             stepLabel = 'MISSING SANITIZER';
           }
 
@@ -49,9 +52,9 @@ export const TaintPath: React.FC<TaintPathProps> = ({ steps, onJumpToStep }) => 
                 style={{
                   ...stepCardStyle,
                   borderColor: isSource
-                    ? 'rgba(92, 200, 255, 0.4)'
+                    ? 'color-mix(in srgb, var(--flow-source) 40%, transparent)'
                     : isSink
-                    ? 'rgba(255, 77, 109, 0.4)'
+                    ? 'color-mix(in srgb, var(--flow-sink) 40%, transparent)'
                     : 'var(--border)',
                 }}
                 onClick={() => onJumpToStep(step)}
@@ -188,7 +191,7 @@ const numberBadgeStyle: React.CSSProperties = {
   justifyContent: 'center',
   fontSize: '10px',
   fontWeight: 700,
-  color: '#0B0F17',
+  color: 'var(--text-on-severity)',
 };
 
 const labelBadgeStyle: React.CSSProperties = {

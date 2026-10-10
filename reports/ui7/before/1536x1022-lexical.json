@@ -1,0 +1,297 @@
+{
+  "viewport": {
+    "width": 1536,
+    "height": 1022
+  },
+  "colorScheme": "normal",
+  "counts": {
+    "lowContrast": 10,
+    "blackOnDark": 0,
+    "nativeControls": 28,
+    "scrollBugs": 3,
+    "scrollAreas": 1,
+    "pageScroll": 0
+  },
+  "lowContrast": [
+    {
+      "element": "span.mtk1.sl-insecure [os]",
+      "color": "rgb(240, 239, 236)",
+      "background": "rgb(245, 197, 66)",
+      "ratio": 1.41,
+      "fontSize": "13px"
+    },
+    {
+      "element": "span.mtk1.sl-insecure [.]",
+      "color": "rgb(240, 239, 236)",
+      "background": "rgb(245, 197, 66)",
+      "ratio": 1.41,
+      "fontSize": "13px"
+    },
+    {
+      "element": "span.mtk1.sl-insecure [system]",
+      "color": "rgb(240, 239, 236)",
+      "background": "rgb(245, 197, 66)",
+      "ratio": 1.41,
+      "fontSize": "13px"
+    },
+    {
+      "element": "span.mtk1.bracket-highlighting-0 [(]",
+      "color": "rgb(255, 215, 0)",
+      "background": "rgb(245, 197, 66)",
+      "ratio": 1.16,
+      "fontSize": "13px"
+    },
+    {
+      "element": "span.mtk1.sl-insecure ['ls ']",
+      "color": "rgb(240, 239, 236)",
+      "background": "rgb(245, 197, 66)",
+      "ratio": 1.41,
+      "fontSize": "13px"
+    },
+    {
+      "element": "span.mtk1.sl-insecure [+]",
+      "color": "rgb(240, 239, 236)",
+      "background": "rgb(245, 197, 66)",
+      "ratio": 1.41,
+      "fontSize": "13px"
+    },
+    {
+      "element": "span.mtk1.sl-insecure [name]",
+      "color": "rgb(240, 239, 236)",
+      "background": "rgb(245, 197, 66)",
+      "ratio": 1.41,
+      "fontSize": "13px"
+    },
+    {
+      "element": "span.mtk1.bracket-highlighting-0 [)]",
+      "color": "rgb(255, 215, 0)",
+      "background": "rgb(245, 197, 66)",
+      "ratio": 1.16,
+      "fontSize": "13px"
+    },
+    {
+      "element": "span.mtk1.sl-insecure [pw]",
+      "color": "rgb(240, 239, 236)",
+      "background": "rgb(245, 197, 66)",
+      "ratio": 1.41,
+      "fontSize": "13px"
+    },
+    {
+      "element": "span.mtk1.sl-insecure ['admin123']",
+      "color": "rgb(240, 239, 236)",
+      "background": "rgb(245, 197, 66)",
+      "ratio": 1.41,
+      "fontSize": "13px"
+    }
+  ],
+  "blackOnDark": [],
+  "nativeControls": [
+    {
+      "element": "button [File menu]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Open file list]",
+      "color": "rgb(240, 239, 236)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "select#lang-select [Select target programming language]",
+      "color": "rgb(240, 239, 236)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Analyze Code]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Fix All Safe Issues]",
+      "color": "rgb(137, 135, 129)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [More actions]",
+      "color": "rgb(240, 239, 236)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Files]",
+      "color": "rgb(137, 135, 129)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Samples]",
+      "color": "rgb(137, 135, 129)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Help]",
+      "color": "rgb(137, 135, 129)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [py-ui5-security_target_demo_-_security.py]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Close py-ui5-security_target_demo_-_security.py]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [py-ui5-lexical_target_demo_-_lexical_error.py]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Close py-ui5-lexical_target_demo_-_lexical_error.py]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "textarea.inputarea.monaco-mouse-cursor-text [Editor content;Press Alt+F1 for Accessibility Options.]",
+      "color": "rgba(0, 0, 0, 0)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Tokens]",
+      "color": "rgb(137, 135, 129)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Taint path]",
+      "color": "rgb(137, 135, 129)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [ML insights]",
+      "color": "rgb(137, 135, 129)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Summary]",
+      "color": "rgb(109, 167, 236)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button.ui6-switch [1 of 2]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button [Mark as false positive]",
+      "color": "rgb(240, 239, 236)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button.ui6-chip [All]",
+      "color": "rgb(109, 167, 236)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button.ui6-chip [Security 10]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button.ui6-chip [Lexical 1]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button.ui6-chip [Syntax 1]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button.ui6-chip [Dangerous]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button.ui6-chip [Suspicious]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "button.ui6-chip [Malicious]",
+      "color": "rgb(195, 194, 183)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    },
+    {
+      "element": "input",
+      "color": "rgb(0, 0, 0)",
+      "colorScheme": "normal",
+      "rootColorScheme": "normal"
+    }
+  ],
+  "scrollBugs": [
+    {
+      "element": "label [Language]",
+      "issue": "content clipped by overflow:hidden",
+      "clientHeight": 1,
+      "scrollHeight": 20
+    },
+    {
+      "element": "div.ui6-tabs [Open files]",
+      "overflow": "auto/auto",
+      "client": "579x0",
+      "scroll": "579x29",
+      "covered": true,
+      "issue": "covered scroll area",
+      "hit": "div [1]"
+    },
+    {
+      "element": "textarea.inputarea.monaco-mouse-cursor-text [Editor content;Press Alt+F1 for Accessibility Options.]",
+      "issue": "content clipped by overflow:hidden",
+      "clientHeight": 1,
+      "scrollHeight": 144
+    }
+  ],
+  "scrollAreas": [
+    {
+      "element": "div.ui6-tabs [Open files]",
+      "overflow": "auto/auto",
+      "client": "579x0",
+      "scroll": "579x29",
+      "covered": true
+    }
+  ],
+  "pageScroll": {
+    "vertical": false,
+    "horizontal": false,
+    "document": "1536x1022",
+    "viewport": "1536x1022"
+  },
+  "verdict": "FAIL"
+}

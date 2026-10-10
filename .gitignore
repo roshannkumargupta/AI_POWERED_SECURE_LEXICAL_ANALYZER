@@ -38,6 +38,19 @@ src/apsla/ml/cache/
 !src/apsla/ml/artifacts/**/model.joblib
 !src/apsla/ml/artifacts/**/model.pt
 
+# Runtime logs
+*.err.log
+api-run.log
+web-run.log
+
+# Tool caches
+.ruff_cache/
+.hypothesis/
+.pytest-s1-full/
+.pytest-s2-run/
+.pytest-*/
+reports/.pytest-*/
+
 # OS files
 .DS_Store
 Thumbs.db

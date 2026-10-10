@@ -1,0 +1,4189 @@
+[
+  {
+    "id": "py-b01",
+    "language": "python",
+    "file": "python/py-b01_evaluate_console_expression.py",
+    "title": "Evaluate Console Expression",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Code Execution",
+    "summary": "Demonstrates code execution in a small, inert Python example.",
+    "notes": [
+      "Demonstrates code execution in a small, inert Python example.",
+      "An attacker could supply crafted input",
+      "SecureLex checks for APS-PY-INJ-001.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-001",
+          "line": 2
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-b02",
+    "language": "python",
+    "file": "python/py-b02_execute_supplied_script.py",
+    "title": "Execute Supplied Script",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Code Execution",
+    "summary": "Demonstrates code execution in a small, inert Python example.",
+    "notes": [
+      "Demonstrates code execution in a small, inert Python example.",
+      "An attacker could supply crafted input",
+      "SecureLex checks for APS-PY-INJ-001.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-001",
+          "line": 2
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-b03",
+    "language": "python",
+    "file": "python/py-b03_ping_a_supplied_host.py",
+    "title": "Ping a Supplied Host",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Python example.",
+      "An attacker could supply `127.0.0.1; echo demo` as the submitted host or task.",
+      "SecureLex checks for APS-PY-INJ-002.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-002",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-b04",
+    "language": "python",
+    "file": "python/py-b04_look_up_a_user.py",
+    "title": "Look Up a User",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "SQL Injection",
+    "summary": "Demonstrates sql injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates sql injection in a small, inert Python example.",
+      "An attacker could supply `' OR '1'='1` as the search value.",
+      "SecureLex checks for APS-PY-INJ-004.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-004",
+          "line": 4
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-b05",
+    "language": "python",
+    "file": "python/py-b05_restore_a_socket_message.py",
+    "title": "Restore a Socket Message",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Deserialization",
+    "summary": "Demonstrates deserialization in a small, inert Python example.",
+    "notes": [
+      "Demonstrates deserialization in a small, inert Python example.",
+      "An attacker could supply a crafted serialized object or YAML tag in the input stream.",
+      "SecureLex checks for APS-PY-DES-001.",
+      "The current engine requires a manual redesign for this operation."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-DES-001",
+          "line": 5
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "manual",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-b06",
+    "language": "python",
+    "file": "python/py-b06_read_a_yaml_configuration.py",
+    "title": "Read a YAML Configuration",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Deserialization",
+    "summary": "Demonstrates deserialization in a small, inert Python example.",
+    "notes": [
+      "Demonstrates deserialization in a small, inert Python example.",
+      "An attacker could supply a crafted serialized object or YAML tag in the input stream.",
+      "SecureLex checks for APS-PY-DES-002.",
+      "The proposed safe fix replaces the risky operation with a safer API."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-DES-002",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": 5
+  },
+  {
+    "id": "py-b07",
+    "language": "python",
+    "file": "python/py-b07_create_a_password_digest.py",
+    "title": "Create a Password Digest",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Weak Cryptography",
+    "summary": "Demonstrates weak cryptography in a small, inert Python example.",
+    "notes": [
+      "Demonstrates weak cryptography in a small, inert Python example.",
+      "An attacker could supply repeated guesses against a predictable session value.",
+      "SecureLex checks for APS-PY-CRY-001.",
+      "The proposed safe fix replaces the risky operation with a safer API."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-CRY-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-b08",
+    "language": "python",
+    "file": "python/py-b08_configure_service_credential.py",
+    "title": "Configure Service Credentials",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Hard-Coded Secret",
+    "summary": "Demonstrates hard-coded secret in a small, inert Python example.",
+    "notes": [
+      "Demonstrates hard-coded secret in a small, inert Python example.",
+      "An attacker could supply a source checkout exposed to someone outside the service team.",
+      "SecureLex checks for APS-PY-SEC-001, APS-PY-SEC-001.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-SEC-001",
+          "line": 1
+        },
+        {
+          "rule_id": "APS-PY-SEC-001",
+          "line": 2
+        }
+      ],
+      "min_findings": 2
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-b09",
+    "language": "python",
+    "file": "python/py-b09_fetch_a_status_page.py",
+    "title": "Fetch a Status Page",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "TLS Validation",
+    "summary": "Demonstrates tls validation in a small, inert Python example.",
+    "notes": [
+      "Demonstrates tls validation in a small, inert Python example.",
+      "An attacker could supply a proxy presenting an untrusted certificate for the requested host.",
+      "SecureLex checks for APS-PY-NET-001.",
+      "The proposed safe fix replaces the risky operation with a safer API."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-NET-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-b10",
+    "language": "python",
+    "file": "python/py-b10_generate_a_session_code.py",
+    "title": "Generate a Session Code",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Weak Cryptography",
+    "summary": "Demonstrates weak cryptography in a small, inert Python example.",
+    "notes": [
+      "Demonstrates weak cryptography in a small, inert Python example.",
+      "An attacker could supply repeated guesses against a predictable session value.",
+      "SecureLex checks for APS-PY-CRY-002.",
+      "The proposed safe fix replaces the risky operation with a safer API."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-CRY-002",
+          "line": 2
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-i01",
+    "language": "python",
+    "file": "python/py-i01_flask_host_diagnostics.py",
+    "title": "Flask Host Diagnostics",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Python example.",
+      "An attacker could supply `127.0.0.1; echo demo` as the submitted host or task.",
+      "SecureLex checks for APS-PY-INJ-002 and traces its data flow.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-002",
+          "line": 9
+        }
+      ],
+      "min_findings": 1,
+      "taint": true
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": 1
+  },
+  {
+    "id": "py-i02",
+    "language": "python",
+    "file": "python/py-i02_flask_account_search.py",
+    "title": "Flask Account Search",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "SQL Injection",
+    "summary": "Demonstrates sql injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates sql injection in a small, inert Python example.",
+      "An attacker could supply `' OR '1'='1` as the search value.",
+      "SecureLex checks for APS-PY-INJ-004.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-004",
+          "line": 10
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-i03",
+    "language": "python",
+    "file": "python/py-i03_run_a_host_check.py",
+    "title": "Run a Host Check",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Python example.",
+      "An attacker could supply `127.0.0.1; echo demo` as the submitted host or task.",
+      "SecureLex checks for APS-PY-INJ-003.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-003",
+          "line": 4
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-i04",
+    "language": "python",
+    "file": "python/py-i04_open_an_uploaded_report.py",
+    "title": "Open an Uploaded Report",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Path Traversal",
+    "summary": "Demonstrates path traversal in a small, inert Python example.",
+    "notes": [
+      "Demonstrates path traversal in a small, inert Python example.",
+      "An attacker could supply `../../notes.txt` as the requested file name.",
+      "SecureLex checks for APS-PY-IO-001 and traces its data flow.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-IO-001",
+          "line": 8
+        }
+      ],
+      "min_findings": 1,
+      "taint": true
+    },
+    "fix_expected": "review",
+    "approximate": true,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-i05",
+    "language": "python",
+    "file": "python/py-i05_render_a_greeting.py",
+    "title": "Render a Greeting",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Template Injection",
+    "summary": "Demonstrates template injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates template injection in a small, inert Python example.",
+      "An attacker could supply `{{ 8 * 8 }}` as the supplied display name.",
+      "SecureLex checks for APS-PY-XSS-001.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-XSS-001",
+          "line": 8
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-i06",
+    "language": "python",
+    "file": "python/py-i06_django_maintenance_view.py",
+    "title": "Django Maintenance View",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Python example.",
+      "An attacker could supply `127.0.0.1; echo demo` as the submitted host or task.",
+      "SecureLex checks for APS-PY-INJ-003.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-003",
+          "line": 5
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-i07",
+    "language": "python",
+    "file": "python/py-i07_load_a_requested_plugin.py",
+    "title": "Load a Requested Plugin",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Dynamic Import",
+    "summary": "Demonstrates dynamic import in a small, inert Python example.",
+    "notes": [
+      "Demonstrates dynamic import in a small, inert Python example.",
+      "An attacker could supply `os` as the requested module name.",
+      "SecureLex checks for APS-PY-INJ-005.",
+      "No automatic fix is expected; constrain the input and API explicitly."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-005",
+          "line": 8
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-i08",
+    "language": "python",
+    "file": "python/py-i08_restore_a_submitted_session.py",
+    "title": "Restore a Submitted Session",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Deserialization",
+    "summary": "Demonstrates deserialization in a small, inert Python example.",
+    "notes": [
+      "Demonstrates deserialization in a small, inert Python example.",
+      "An attacker could supply a crafted serialized object or YAML tag in the input stream.",
+      "SecureLex checks for APS-PY-DES-001.",
+      "The current engine requires a manual redesign for this operation."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-DES-001",
+          "line": 8
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "manual",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-i09",
+    "language": "python",
+    "file": "python/py-i09_issue_a_session_identifier.py",
+    "title": "Issue a Session Identifier",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Weak Cryptography",
+    "summary": "Demonstrates weak cryptography in a small, inert Python example.",
+    "notes": [
+      "Demonstrates weak cryptography in a small, inert Python example.",
+      "An attacker could supply repeated guesses against a predictable session value.",
+      "SecureLex checks for APS-PY-CRY-001, APS-PY-CRY-002.",
+      "The proposed safe fix replaces the risky operation with a safer API."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-CRY-001",
+          "line": 7
+        },
+        {
+          "rule_id": "APS-PY-CRY-002",
+          "line": 5
+        }
+      ],
+      "min_findings": 2
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-a01",
+    "language": "python",
+    "file": "pending/py-a01_dispatch_a_diagnostic_job.py",
+    "title": "Dispatch a Diagnostic Job",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Python example.",
+      "An attacker could supply `127.0.0.1; echo demo` as the submitted host or task.",
+      "SecureLex checks for APS-PY-INJ-002 and traces its data flow.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-002",
+          "line": 7
+        }
+      ],
+      "min_findings": 1,
+      "taint": true
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null,
+    "pending_reason": "Current Python taint analysis does not carry request-derived data through a helper function parameter into os.system; no expected finding or verified fix is produced."
+  },
+  {
+    "id": "py-a02",
+    "language": "python",
+    "file": "python/py-a02_select_a_diagnostic_target.py",
+    "title": "Select a Diagnostic Target",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Python example.",
+      "An attacker could supply `127.0.0.1; echo demo` as the submitted host or task.",
+      "SecureLex checks for APS-PY-INJ-002 and traces its data flow.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-002",
+          "line": 12
+        }
+      ],
+      "min_findings": 1,
+      "taint": true
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-a03",
+    "language": "python",
+    "file": "python/py-a03_build_a_multi-stage_task.py",
+    "title": "Build a Multi-Stage Task",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Python example.",
+      "An attacker could supply `127.0.0.1; echo demo` as the submitted host or task.",
+      "SecureLex checks for APS-PY-INJ-002 and traces its data flow.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-002",
+          "line": 12
+        }
+      ],
+      "min_findings": 1,
+      "taint": true
+    },
+    "fix_expected": "review",
+    "approximate": true,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-a04",
+    "language": "python",
+    "file": "python/py-a04_decode_a_harmless_message.py",
+    "title": "Decode a Harmless Message",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Obfuscation",
+    "summary": "Demonstrates obfuscation in a small, inert Python example.",
+    "notes": [
+      "Demonstrates obfuscation in a small, inert Python example.",
+      "An attacker could supply the shown encoded bytes decode only to a harmless print call.",
+      "SecureLex checks for APS-PY-OBF-001.",
+      "The current engine requires a manual redesign for this operation."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-OBF-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "manual",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": 13
+  },
+  {
+    "id": "py-a05",
+    "language": "python",
+    "file": "python/py-a05_unpack_a_harmless_notice.py",
+    "title": "Unpack a Harmless Notice",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Obfuscation",
+    "summary": "Demonstrates obfuscation in a small, inert Python example.",
+    "notes": [
+      "Demonstrates obfuscation in a small, inert Python example.",
+      "An attacker could supply the shown encoded bytes decode only to a harmless print call.",
+      "SecureLex checks for APS-PY-OBF-001.",
+      "The current engine requires a manual redesign for this operation."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-OBF-001",
+          "line": 5
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "manual",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-a06",
+    "language": "python",
+    "file": "python/py-a06_small_flask_service_review.py",
+    "title": "Small Flask Service Review",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Multiple Security Issues",
+    "summary": "Demonstrates multiple security issues in a small, inert Python example.",
+    "notes": [
+      "Demonstrates multiple security issues in a small, inert Python example.",
+      "An attacker could supply crafted request values at the example.invalid service routes.",
+      "SecureLex checks for APS-PY-SEC-001, APS-PY-INJ-004, APS-PY-INJ-002, APS-PY-DES-001, APS-PY-CRY-001, APS-PY-NET-001.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-SEC-001",
+          "line": 9
+        },
+        {
+          "rule_id": "APS-PY-INJ-004",
+          "line": 20
+        },
+        {
+          "rule_id": "APS-PY-INJ-002",
+          "line": 24
+        },
+        {
+          "rule_id": "APS-PY-DES-001",
+          "line": 29
+        },
+        {
+          "rule_id": "APS-PY-CRY-001",
+          "line": 35
+        },
+        {
+          "rule_id": "APS-PY-NET-001",
+          "line": 39
+        }
+      ],
+      "min_findings": 6
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": 6
+  },
+  {
+    "id": "py-a07",
+    "language": "python",
+    "file": "python/py-a07_process_a_submitted_archive_.py",
+    "title": "Process a Submitted Archive Name",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "File Processing",
+    "summary": "Demonstrates file processing in a small, inert Python example.",
+    "notes": [
+      "Demonstrates file processing in a small, inert Python example.",
+      "An attacker could supply `../../notes.txt` as the upload name, plus crafted local input.",
+      "SecureLex checks for APS-PY-IO-001, APS-PY-DES-002, APS-PY-INJ-003.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-IO-001",
+          "line": 8
+        },
+        {
+          "rule_id": "APS-PY-DES-002",
+          "line": 9
+        },
+        {
+          "rule_id": "APS-PY-INJ-003",
+          "line": 11
+        }
+      ],
+      "min_findings": 3
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-a08",
+    "language": "python",
+    "file": "python/py-a08_quote_the_wrong_value.py",
+    "title": "Quote the Wrong Value",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Python example.",
+      "An attacker could supply `127.0.0.1; echo demo` as the submitted host or task.",
+      "SecureLex checks for APS-PY-INJ-002.",
+      "Review the generated patch and preserve the route's intended behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-PY-INJ-002",
+          "line": 9
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-s01",
+    "language": "python",
+    "file": "python/py-s01_run_a_fixed_argument_list.py",
+    "title": "Run a Fixed Argument List",
+    "kind": "safe",
+    "level": null,
+    "topic": "Process Execution",
+    "summary": "Demonstrates process execution in a small, inert Python example.",
+    "notes": [
+      "Demonstrates process execution in a small, inert Python example.",
+      "The source uses ordinary Python structures in a security-relevant look-alike.",
+      "SecureLex should report no medium-or-higher finding for this example."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-s02",
+    "language": "python",
+    "file": "python/py-s02_quote_a_search_term.py",
+    "title": "Quote a Search Term",
+    "kind": "safe",
+    "level": null,
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Python example.",
+      "The source uses ordinary Python structures in a security-relevant look-alike.",
+      "SecureLex should report no medium-or-higher finding for this example."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": 2
+  },
+  {
+    "id": "py-s03",
+    "language": "python",
+    "file": "python/py-s03_search_with_a_bound_paramete.py",
+    "title": "Search with a Bound Parameter",
+    "kind": "safe",
+    "level": null,
+    "topic": "SQL Injection",
+    "summary": "Demonstrates sql injection in a small, inert Python example.",
+    "notes": [
+      "Demonstrates sql injection in a small, inert Python example.",
+      "The source uses ordinary Python structures in a security-relevant look-alike.",
+      "SecureLex should report no medium-or-higher finding for this example."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-s04",
+    "language": "python",
+    "file": "python/py-s04_load_trusted_configuration.py",
+    "title": "Load Trusted Configuration",
+    "kind": "safe",
+    "level": null,
+    "topic": "Secure Defaults",
+    "summary": "Demonstrates secure defaults in a small, inert Python example.",
+    "notes": [
+      "Demonstrates secure defaults in a small, inert Python example.",
+      "The source uses ordinary Python structures in a security-relevant look-alike.",
+      "SecureLex should report no medium-or-higher finding for this example."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-s05",
+    "language": "python",
+    "file": "python/py-s05_convert_a_port_to_an_integer.py",
+    "title": "Convert a Port to an Integer",
+    "kind": "safe",
+    "level": null,
+    "topic": "Input Validation",
+    "summary": "Demonstrates input validation in a small, inert Python example.",
+    "notes": [
+      "Demonstrates input validation in a small, inert Python example.",
+      "The source uses ordinary Python structures in a security-relevant look-alike.",
+      "SecureLex should report no medium-or-higher finding for this example."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-s06",
+    "language": "python",
+    "file": "python/py-s06_security_terms_in_documentat.py",
+    "title": "Security Terms in Documentation",
+    "kind": "safe",
+    "level": null,
+    "topic": "Lexer Context",
+    "summary": "Demonstrates lexer context in a small, inert Python example.",
+    "notes": [
+      "Demonstrates lexer context in a small, inert Python example.",
+      "The source uses ordinary Python structures in a security-relevant look-alike.",
+      "SecureLex should report no medium-or-higher finding for this example."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-s07",
+    "language": "python",
+    "file": "python/py-s07_clean_service_module.py",
+    "title": "Clean Service Module",
+    "kind": "safe",
+    "level": null,
+    "topic": "Application Structure",
+    "summary": "Demonstrates application structure in a small, inert Python example.",
+    "notes": [
+      "Demonstrates application structure in a small, inert Python example.",
+      "The source uses ordinary Python structures in a security-relevant look-alike.",
+      "SecureLex should report no medium-or-higher finding for this example."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-u01",
+    "language": "python",
+    "file": "python/py-u01_review_a_bidi-controlled_com.py",
+    "title": "Review a Bidi-Controlled Comment",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Unicode Bidi Controls",
+    "summary": "Demonstrates unicode bidi controls in a small, inert Python example.",
+    "notes": [
+      "Demonstrates unicode bidi controls in a small, inert Python example.",
+      "Recorded source contains U+202E, U+2066, U+2069, which can disguise characters or identifiers.",
+      "The expected Unicode checks include APS-ALL-UNI-001.",
+      "Inspect the code points and restore ordinary, readable source text."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-001",
+          "line": 1
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [
+      "U+202E",
+      "U+2066",
+      "U+2069"
+    ],
+    "demo_order": 4
+  },
+  {
+    "id": "py-u02",
+    "language": "python",
+    "file": "python/py-u02_find_an_invisible_name_chara.py",
+    "title": "Find an Invisible Name Character",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Invisible Identifier",
+    "summary": "Demonstrates invisible identifier in a small, inert Python example.",
+    "notes": [
+      "Demonstrates invisible identifier in a small, inert Python example.",
+      "Recorded source contains U+200B, which can disguise characters or identifiers.",
+      "The expected Unicode checks include APS-ALL-UNI-002.",
+      "Inspect the code points and restore ordinary, readable source text."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-002",
+          "line": 1
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [
+      "U+200B"
+    ],
+    "demo_order": null
+  },
+  {
+    "id": "py-u03",
+    "language": "python",
+    "file": "python/py-u03_inspect_hidden_tag_text.py",
+    "title": "Inspect Hidden Tag Text",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Unicode Tag Characters",
+    "summary": "Demonstrates unicode tag characters in a small, inert Python example.",
+    "notes": [
+      "Demonstrates unicode tag characters in a small, inert Python example.",
+      "Recorded source contains U+E0061, U+E0062, U+E0063, U+E0064, U+E0065, U+E007F, which can disguise characters or identifiers.",
+      "The expected Unicode checks include APS-ALL-UNI-003.",
+      "Inspect the code points and restore ordinary, readable source text."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-003",
+          "line": 1
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [
+      "U+E0061",
+      "U+E0062",
+      "U+E0063",
+      "U+E0064",
+      "U+E0065",
+      "U+E007F"
+    ],
+    "demo_order": null
+  },
+  {
+    "id": "py-u04",
+    "language": "python",
+    "file": "python/py-u04_inspect_a_disguised_exec_cal.py",
+    "title": "Inspect a Disguised Exec Call",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Confusable API Name",
+    "summary": "Demonstrates confusable api name in a small, inert Python example.",
+    "notes": [
+      "Demonstrates confusable api name in a small, inert Python example.",
+      "Recorded source contains U+0435, U+0445, U+0441, which can disguise characters or identifiers.",
+      "The expected Unicode checks include APS-ALL-UNI-006, APS-PY-INJ-001.",
+      "Inspect the code points and restore ordinary, readable source text."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-006",
+          "line": 2
+        },
+        {
+          "rule_id": "APS-PY-INJ-001",
+          "line": 2
+        }
+      ],
+      "min_findings": 2
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [
+      "U+0435",
+      "U+0445",
+      "U+0441"
+    ],
+    "demo_order": 3
+  },
+  {
+    "id": "py-u05",
+    "language": "python",
+    "file": "python/py-u05_inspect_a_fullwidth_eval_cal.py",
+    "title": "Inspect a Fullwidth Eval Call",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Confusable API Name",
+    "summary": "Demonstrates confusable api name in a small, inert Python example.",
+    "notes": [
+      "Demonstrates confusable api name in a small, inert Python example.",
+      "Recorded source contains U+FF45, U+FF56, U+FF41, U+FF4C, which can disguise characters or identifiers.",
+      "The expected Unicode checks include APS-ALL-UNI-006.",
+      "Inspect the code points and restore ordinary, readable source text."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-006",
+          "line": 2
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [
+      "U+FF45",
+      "U+FF56",
+      "U+FF41",
+      "U+FF4C"
+    ],
+    "demo_order": null
+  },
+  {
+    "id": "py-u06",
+    "language": "python",
+    "file": "python/py-u06_review_a_mixed-script_name.py",
+    "title": "Review a Mixed-Script Name",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Mixed-Script Identifier",
+    "summary": "Demonstrates mixed-script identifier in a small, inert Python example.",
+    "notes": [
+      "Demonstrates mixed-script identifier in a small, inert Python example.",
+      "Recorded source contains U+0435, which can disguise characters or identifiers.",
+      "The expected Unicode checks include APS-ALL-UNI-004.",
+      "Inspect the code points and restore ordinary, readable source text."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-004",
+          "line": 1
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [
+      "U+0435"
+    ],
+    "demo_order": null
+  },
+  {
+    "id": "py-l01",
+    "language": "python",
+    "file": "python/py-l01_exercise_python_lexer_forms.py",
+    "title": "Exercise Python Lexer Forms",
+    "kind": "lexer",
+    "level": null,
+    "topic": "Lexer Coverage",
+    "summary": "Demonstrates lexer coverage in a small, inert Python example.",
+    "notes": [
+      "Demonstrates lexer coverage in a small, inert Python example.",
+      "The source uses ordinary Python structures in a security-relevant look-alike.",
+      "SecureLex should report no medium-or-higher finding for this example."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "py-ui5-security",
+    "language": "python",
+    "file": "python/py-ui5-security_target_demo_-_security.py",
+    "title": "Target Demo - Security",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "UI-5 Security Demo",
+    "summary": "Demonstrates ui-5 security demo in a small, inert Python example.",
+    "notes": [
+      "Demonstrates ui-5 security demo in a small, inert Python example.",
+      "An attacker could supply crafted input",
+      "SecureLex checks for no medium-or-higher security rule.",
+      "No automatic fix is expected; constrain the input and API explicitly."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [
+      "U+0435",
+      "U+0445",
+      "U+0441"
+    ],
+    "demo_order": null
+  },
+  {
+    "id": "py-ui5-lexical",
+    "language": "python",
+    "file": "python/py-ui5-lexical_target_demo_-_lexical_error.py",
+    "title": "Target Demo - Lexical Error",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "UI-5 Lexical Demo",
+    "summary": "Demonstrates ui-5 lexical demo in a small, inert Python example.",
+    "notes": [
+      "Demonstrates ui-5 lexical demo in a small, inert Python example.",
+      "An attacker could supply crafted input",
+      "SecureLex checks for no medium-or-higher security rule.",
+      "No automatic fix is expected; constrain the input and API explicitly."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-b01",
+    "language": "java",
+    "file": "java/jv-b01_sql_by_concatenation.java",
+    "title": "SQL by Concatenation",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "SQL Injection",
+    "summary": "Demonstrates sql injection in a small, inert Java example.",
+    "notes": [
+      "Demonstrates sql injection in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-INJ-002",
+          "line": 21
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-b02",
+    "language": "java",
+    "file": "java/jv-b02_runtime_command_from_host.java",
+    "title": "Runtime Command from Host",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Java example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-INJ-001",
+          "line": 20
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-b03",
+    "language": "java",
+    "file": "java/jv-b03_md5_password_digest.java",
+    "title": "MD5 Password Digest",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Weak Cryptography",
+    "summary": "Demonstrates weak cryptography in a small, inert Java example.",
+    "notes": [
+      "Demonstrates weak cryptography in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-CRY-001",
+          "line": 19
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-b04",
+    "language": "java",
+    "file": "java/jv-b04_sha-1_password_digest.java",
+    "title": "SHA-1 Password Digest",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Weak Cryptography",
+    "summary": "Demonstrates weak cryptography in a small, inert Java example.",
+    "notes": [
+      "Demonstrates weak cryptography in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-CRY-001",
+          "line": 19
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-b05",
+    "language": "java",
+    "file": "java/jv-b05_des_encryption.java",
+    "title": "DES Encryption",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Weak Cryptography",
+    "summary": "Demonstrates weak cryptography in a small, inert Java example.",
+    "notes": [
+      "Demonstrates weak cryptography in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-CRY-002",
+          "line": 19
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "manual",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-b06",
+    "language": "java",
+    "file": "java/jv-b06_aes_ecb_encryption.java",
+    "title": "AES ECB Encryption",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Weak Cryptography",
+    "summary": "Demonstrates weak cryptography in a small, inert Java example.",
+    "notes": [
+      "Demonstrates weak cryptography in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-CRY-002",
+          "line": 19
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "manual",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-b07",
+    "language": "java",
+    "file": "java/jv-b07_predictable_random_token.java",
+    "title": "Predictable Random Token",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Weak Cryptography",
+    "summary": "Demonstrates weak cryptography in a small, inert Java example.",
+    "notes": [
+      "Demonstrates weak cryptography in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-CRY-003",
+          "line": 19
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-b08",
+    "language": "java",
+    "file": "java/jv-b08_hard-coded_database_password.java",
+    "title": "Hard-Coded Database Password",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Hard-Coded Secret",
+    "summary": "Demonstrates hard-coded secret in a small, inert Java example.",
+    "notes": [
+      "Demonstrates hard-coded secret in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-SEC-001",
+          "line": 19
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-b09",
+    "language": "java",
+    "file": "java/jv-b09_deserialize_a_local_file.java",
+    "title": "Deserialize a Local File",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Deserialization",
+    "summary": "Demonstrates deserialization in a small, inert Java example.",
+    "notes": [
+      "Demonstrates deserialization in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-DES-001",
+          "line": 19
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-i01",
+    "language": "java",
+    "file": "java/jv-i01_servlet_sql_injection.java",
+    "title": "Servlet SQL Injection",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "SQL Injection",
+    "summary": "Demonstrates sql injection in a small, inert Java example.",
+    "notes": [
+      "Demonstrates sql injection in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-INJ-002",
+          "line": 22
+        }
+      ],
+      "min_findings": 1,
+      "taint": true
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": 7
+  },
+  {
+    "id": "jv-i02",
+    "language": "java",
+    "file": "java/jv-i02_servlet_command_injection.java",
+    "title": "Servlet Command Injection",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Java example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-INJ-001",
+          "line": 22
+        }
+      ],
+      "min_findings": 1,
+      "taint": true
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-i03",
+    "language": "java",
+    "file": "pending/jv-i03_reflected_servlet_output.java",
+    "title": "Reflected Servlet Output",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Cross-Site Scripting",
+    "summary": "Demonstrates cross-site scripting in a small, inert Java example.",
+    "notes": [
+      "Demonstrates cross-site scripting in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-XSS-001",
+          "line": 19
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null,
+    "pending_reason": "Live Analyzer (ML off and on) emits no APS-JV-XSS-001 for servlet request data written to response.getWriter().println; sample is pending until the Java reflected-XSS detector recognizes this documented sink."
+  },
+  {
+    "id": "jv-i04",
+    "language": "java",
+    "file": "java/jv-i04_read_a_requested_file.java",
+    "title": "Read a Requested File",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Path Traversal",
+    "summary": "Demonstrates path traversal in a small, inert Java example.",
+    "notes": [
+      "Demonstrates path traversal in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-IO-001",
+          "line": 20
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-i05",
+    "language": "java",
+    "file": "java/jv-i05_fetch_a_requested_url.java",
+    "title": "Fetch a Requested URL",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Server-Side Request Forgery",
+    "summary": "Demonstrates server-side request forgery in a small, inert Java example.",
+    "notes": [
+      "Demonstrates server-side request forgery in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-NET-001",
+          "line": 20
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-i06",
+    "language": "java",
+    "file": "java/jv-i06_parse_request_xml.java",
+    "title": "Parse Request XML",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "XML External Entity",
+    "summary": "Demonstrates xml external entity in a small, inert Java example.",
+    "notes": [
+      "Demonstrates xml external entity in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-XML-001",
+          "line": 19
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": 8
+  },
+  {
+    "id": "jv-i07",
+    "language": "java",
+    "file": "java/jv-i07_spring_native_query.java",
+    "title": "Spring Native Query",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "SQL Injection",
+    "summary": "Demonstrates sql injection in a small, inert Java example.",
+    "notes": [
+      "Demonstrates sql injection in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-INJ-002",
+          "line": 22
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-i08",
+    "language": "java",
+    "file": "java/jv-i08_reflect_a_requested_class.java",
+    "title": "Reflect a Requested Class",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Unsafe Reflection",
+    "summary": "Demonstrates unsafe reflection in a small, inert Java example.",
+    "notes": [
+      "Demonstrates unsafe reflection in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-INJ-003",
+          "line": 20
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-i09",
+    "language": "java",
+    "file": "java/jv-i09_evaluate_a_script_expression.java",
+    "title": "Evaluate a Script Expression",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Dynamic Evaluation",
+    "summary": "Demonstrates dynamic evaluation in a small, inert Java example.",
+    "notes": [
+      "Demonstrates dynamic evaluation in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-INJ-004",
+          "line": 20
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-i10",
+    "language": "java",
+    "file": "java/jv-i10_trust_every_tls_certificate.java",
+    "title": "Trust Every TLS Certificate",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "TLS Validation",
+    "summary": "Demonstrates tls validation in a small, inert Java example.",
+    "notes": [
+      "Demonstrates tls validation in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-NET-002",
+          "line": 20
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-a01",
+    "language": "java",
+    "file": "java/jv-a01_deserialize_a_network_stream.java",
+    "title": "Deserialize a Network Stream",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Deserialization",
+    "summary": "Demonstrates deserialization in a small, inert Java example.",
+    "notes": [
+      "Demonstrates deserialization in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-DES-001",
+          "line": 19
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-a02",
+    "language": "java",
+    "file": "java/jv-a02_build_sql_in_a_helper.java",
+    "title": "Build SQL in a Helper",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "SQL Injection",
+    "summary": "Demonstrates sql injection in a small, inert Java example.",
+    "notes": [
+      "Demonstrates sql injection in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-INJ-002",
+          "line": 22
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "manual",
+    "approximate": true,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-a03",
+    "language": "java",
+    "file": "java/jv-a03_validation_on_one_branch.java",
+    "title": "Validation on One Branch",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "SQL Injection",
+    "summary": "Demonstrates sql injection in a small, inert Java example.",
+    "notes": [
+      "Demonstrates sql injection in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-INJ-002",
+          "line": 22
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": true,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-a04",
+    "language": "java",
+    "file": "pending/jv-a04_servlet_security_review.java",
+    "title": "Servlet Security Review",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Multiple Security Issues",
+    "summary": "Demonstrates multiple security issues in a small, inert Java example.",
+    "notes": [
+      "Demonstrates multiple security issues in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-INJ-002",
+          "line": 21
+        },
+        {
+          "rule_id": "APS-JV-XSS-001",
+          "line": 22
+        },
+        {
+          "rule_id": "APS-JV-IO-001",
+          "line": 24
+        },
+        {
+          "rule_id": "APS-JV-CRY-001",
+          "line": 25
+        },
+        {
+          "rule_id": "APS-JV-SEC-001",
+          "line": 26
+        },
+        {
+          "rule_id": "APS-JV-XML-001",
+          "line": 28
+        }
+      ],
+      "min_findings": 6
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null,
+    "pending_reason": "Live Analyzer detects five of the six specified flaws but emits no APS-JV-XSS-001 for the reflected response output; the required six-distinct-rule demo is therefore pending."
+  },
+  {
+    "id": "jv-a05",
+    "language": "java",
+    "file": "java/jv-a05_decode_an_xml_object.java",
+    "title": "Decode an XML Object",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Deserialization",
+    "summary": "Demonstrates deserialization in a small, inert Java example.",
+    "notes": [
+      "Demonstrates deserialization in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-DES-001",
+          "line": 19
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-a06",
+    "language": "java",
+    "file": "java/jv-a06_trust-all_https_client.java",
+    "title": "Trust-All HTTPS Client",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "TLS Validation",
+    "summary": "Demonstrates tls validation in a small, inert Java example.",
+    "notes": [
+      "Demonstrates tls validation in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JV-NET-002",
+          "line": 20
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-s01",
+    "language": "java",
+    "file": "java/jv-s01_use_a_preparedstatement.java",
+    "title": "Use a PreparedStatement",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe Java API",
+    "summary": "Demonstrates safe java api in a small, inert Java example.",
+    "notes": [
+      "Demonstrates safe java api in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-s02",
+    "language": "java",
+    "file": "java/jv-s02_parse_an_integer_before_quer.java",
+    "title": "Parse an Integer Before Query",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe Java API",
+    "summary": "Demonstrates safe java api in a small, inert Java example.",
+    "notes": [
+      "Demonstrates safe java api in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-s03",
+    "language": "java",
+    "file": "java/jv-s03_use_safe_crypto_and_process_.java",
+    "title": "Use Safe Crypto and Process APIs",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe Java API",
+    "summary": "Demonstrates safe java api in a small, inert Java example.",
+    "notes": [
+      "Demonstrates safe java api in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-s04",
+    "language": "java",
+    "file": "java/jv-s04_disable_xml_external_entitie.java",
+    "title": "Disable XML External Entities",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe Java API",
+    "summary": "Demonstrates safe java api in a small, inert Java example.",
+    "notes": [
+      "Demonstrates safe java api in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-s05",
+    "language": "java",
+    "file": "java/jv-s05_normalize_and_check_a_path.java",
+    "title": "Normalize and Check a Path",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe Java API",
+    "summary": "Demonstrates safe java api in a small, inert Java example.",
+    "notes": [
+      "Demonstrates safe java api in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-s06",
+    "language": "java",
+    "file": "java/jv-s06_clean_service_class.java",
+    "title": "Clean Service Class",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe Java API",
+    "summary": "Demonstrates safe java api in a small, inert Java example.",
+    "notes": [
+      "Demonstrates safe java api in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "jv-u01",
+    "language": "java",
+    "file": "java/jv-u01_bidi-controlled_comment.java",
+    "title": "Bidi-Controlled Comment",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Unicode Review",
+    "summary": "Demonstrates unicode review in a small, inert Java example.",
+    "notes": [
+      "Demonstrates unicode review in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-001",
+          "line": 5
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [
+      "U+202E"
+    ],
+    "demo_order": null
+  },
+  {
+    "id": "jv-u02",
+    "language": "java",
+    "file": "pending/jv-u02_escaped_bidi_character.java",
+    "title": "Escaped Bidi Character",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Unicode Review",
+    "summary": "Demonstrates unicode review in a small, inert Java example.",
+    "notes": [
+      "Demonstrates unicode review in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-001",
+          "line": 4
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [
+      "U+005C"
+    ],
+    "demo_order": null,
+    "pending_reason": "Live Analyzer reports APS-JV-UNI-001 for the Java Unicode escape, while this catalogue requires the shared APS-ALL-UNI-001 ID; current sample metadata cannot represent the decoded bidi code point as a literal source character."
+  },
+  {
+    "id": "jv-u03",
+    "language": "java",
+    "file": "java/jv-u03_mixed-script_identifier.java",
+    "title": "Mixed-Script Identifier",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Unicode Review",
+    "summary": "Demonstrates unicode review in a small, inert Java example.",
+    "notes": [
+      "Demonstrates unicode review in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-004",
+          "line": 5
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [
+      "U+0435"
+    ],
+    "demo_order": null
+  },
+  {
+    "id": "jv-l01",
+    "language": "java",
+    "file": "java/jv-l01_java_lexer_showcase.java",
+    "title": "Java Lexer Showcase",
+    "kind": "lexer",
+    "level": null,
+    "topic": "Lexer Coverage",
+    "summary": "Demonstrates lexer coverage in a small, inert Java example.",
+    "notes": [
+      "Demonstrates lexer coverage in a small, inert Java example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-b01",
+    "language": "javascript",
+    "file": "javascript/js-b01_evaluate_user_input.js",
+    "title": "Evaluate User Input",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Dynamic Evaluation",
+    "summary": "Demonstrates dynamic evaluation in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates dynamic evaluation in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-INJ-001",
+          "line": 4
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-b02",
+    "language": "javascript",
+    "file": "javascript/js-b02_construct_a_function.js",
+    "title": "Construct a Function",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Dynamic Evaluation",
+    "summary": "Demonstrates dynamic evaluation in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates dynamic evaluation in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-INJ-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-b03",
+    "language": "javascript",
+    "file": "pending/js-b03_schedule_a_string.js",
+    "title": "Schedule a String",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Dynamic Evaluation",
+    "summary": "Demonstrates dynamic evaluation in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates dynamic evaluation in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-INJ-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null,
+    "pending_reason": "Live Analyzer emits no APS-JS-INJ-001 for the specified constant-string setTimeout(\"doWork()\", 100) form; kept pending rather than changing the rule expectation."
+  },
+  {
+    "id": "js-b04",
+    "language": "javascript",
+    "file": "javascript/js-b04_dom_xss_from_url_hash.js",
+    "title": "DOM XSS from URL Hash",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Cross-Site Scripting",
+    "summary": "Demonstrates cross-site scripting in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates cross-site scripting in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-XSS-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": 9
+  },
+  {
+    "id": "js-b05",
+    "language": "javascript",
+    "file": "javascript/js-b05_write_the_query_string.js",
+    "title": "Write the Query String",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Cross-Site Scripting",
+    "summary": "Demonstrates cross-site scripting in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates cross-site scripting in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-XSS-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "manual",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-b06",
+    "language": "javascript",
+    "file": "javascript/js-b06_predictable_session_token.js",
+    "title": "Predictable Session Token",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Weak Cryptography",
+    "summary": "Demonstrates weak cryptography in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates weak cryptography in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-CRY-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-b07",
+    "language": "javascript",
+    "file": "javascript/js-b07_create_an_md5_digest.js",
+    "title": "Create an MD5 Digest",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Weak Cryptography",
+    "summary": "Demonstrates weak cryptography in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates weak cryptography in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-CRY-002",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-b08",
+    "language": "javascript",
+    "file": "javascript/js-b08_hard-coded_api_and_jwt_secre.js",
+    "title": "Hard-Coded API and JWT Secrets",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Hard-Coded Secret",
+    "summary": "Demonstrates hard-coded secret in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates hard-coded secret in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-SEC-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "manual",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-b09",
+    "language": "javascript",
+    "file": "javascript/js-b09_disable_tls_verification.js",
+    "title": "Disable TLS Verification",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "TLS Validation",
+    "summary": "Demonstrates tls validation in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates tls validation in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-NET-003",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "safe",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-i01",
+    "language": "javascript",
+    "file": "javascript/js-i01_express_command_injection.js",
+    "title": "Express Command Injection",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-INJ-002",
+          "line": 6
+        }
+      ],
+      "min_findings": 1,
+      "taint": true
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-i02",
+    "language": "javascript",
+    "file": "javascript/js-i02_express_sql_injection.js",
+    "title": "Express SQL Injection",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "SQL Injection",
+    "summary": "Demonstrates sql injection in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates sql injection in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-INJ-003",
+          "line": 5
+        }
+      ],
+      "min_findings": 1,
+      "taint": true
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-i03",
+    "language": "javascript",
+    "file": "javascript/js-i03_read_a_requested_path.js",
+    "title": "Read a Requested Path",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Path Traversal",
+    "summary": "Demonstrates path traversal in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates path traversal in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-IO-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-i04",
+    "language": "javascript",
+    "file": "javascript/js-i04_redirect_to_a_query_url.js",
+    "title": "Redirect to a Query URL",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Open Redirect",
+    "summary": "Demonstrates open redirect in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates open redirect in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-NET-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-i05",
+    "language": "javascript",
+    "file": "javascript/js-i05_fetch_a_requested_url.js",
+    "title": "Fetch a Requested URL",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Server-Side Request Forgery",
+    "summary": "Demonstrates server-side request forgery in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates server-side request forgery in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-NET-002",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-i06",
+    "language": "javascript",
+    "file": "javascript/js-i06_render_raw_react_html.js",
+    "title": "Render Raw React HTML",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Cross-Site Scripting",
+    "summary": "Demonstrates cross-site scripting in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates cross-site scripting in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-XSS-002",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-i07",
+    "language": "javascript",
+    "file": "javascript/js-i07_use_an_unverified_jwt.js",
+    "title": "Use an Unverified JWT",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "JWT Verification",
+    "summary": "Demonstrates jwt verification in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates jwt verification in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-SEC-002",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-i08",
+    "language": "javascript",
+    "file": "javascript/js-i08_build_a_user_regular_express.js",
+    "title": "Build a User Regular Expression",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Regular Expression DoS",
+    "summary": "Demonstrates regular expression dos in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates regular expression dos in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-INJ-005",
+          "line": 4
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-i09",
+    "language": "javascript",
+    "file": "javascript/js-i09_write_a_message_into_html.js",
+    "title": "Write a Message into HTML",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Cross-Site Scripting",
+    "summary": "Demonstrates cross-site scripting in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates cross-site scripting in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-XSS-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-a01",
+    "language": "javascript",
+    "file": "javascript/js-a01_merge_untrusted_configuratio.js",
+    "title": "Merge Untrusted Configuration",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Prototype Pollution",
+    "summary": "Demonstrates prototype pollution in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates prototype pollution in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-INJ-004",
+          "line": 4
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": 10
+  },
+  {
+    "id": "js-a02",
+    "language": "javascript",
+    "file": "javascript/js-a02_evaluate_an_inert_encoded_no.js",
+    "title": "Evaluate an Inert Encoded Notice",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Obfuscation",
+    "summary": "Demonstrates obfuscation in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates obfuscation in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-OBF-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-a03",
+    "language": "javascript",
+    "file": "javascript/js-a03_evaluate_harmless_character_.js",
+    "title": "Evaluate Harmless Character Codes",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Obfuscation",
+    "summary": "Demonstrates obfuscation in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates obfuscation in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-OBF-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-a04",
+    "language": "javascript",
+    "file": "javascript/js-a04_express_security_review.js",
+    "title": "Express Security Review",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Multiple Security Issues",
+    "summary": "Demonstrates multiple security issues in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates multiple security issues in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-INJ-002",
+          "line": 4
+        },
+        {
+          "rule_id": "APS-JS-INJ-003",
+          "line": 5
+        },
+        {
+          "rule_id": "APS-JS-IO-001",
+          "line": 6
+        },
+        {
+          "rule_id": "APS-JS-XSS-001",
+          "line": 7
+        },
+        {
+          "rule_id": "APS-JS-CRY-001",
+          "line": 8
+        },
+        {
+          "rule_id": "APS-JS-SEC-001",
+          "line": 9
+        }
+      ],
+      "min_findings": 6
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-a05",
+    "language": "javascript",
+    "file": "pending/js-a05_pass_host_through_a_helper.js",
+    "title": "Pass Host Through a Helper",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-INJ-002",
+          "line": 5
+        }
+      ],
+      "min_findings": 1,
+      "taint": true
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null,
+    "pending_reason": "Live Analyzer reports the exec sink but provides no 3-step taint path through the runCmd helper parameter; pending until interprocedural JavaScript taint can verify the requested helper flow."
+  },
+  {
+    "id": "js-a06",
+    "language": "javascript",
+    "file": "javascript/js-a06_destructure_a_requested_host.js",
+    "title": "Destructure a Requested Host",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Command Injection",
+    "summary": "Demonstrates command injection in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates command injection in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-JS-INJ-002",
+          "line": 4
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": true,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-s01",
+    "language": "javascript",
+    "file": "javascript/js-s01_pass_arguments_to_execfile.js",
+    "title": "Pass Arguments to execFile",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe JavaScript API",
+    "summary": "Demonstrates safe javascript api in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates safe javascript api in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-s02",
+    "language": "javascript",
+    "file": "javascript/js-s02_use_safe_dom_apis.js",
+    "title": "Use Safe DOM APIs",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe JavaScript API",
+    "summary": "Demonstrates safe javascript api in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates safe javascript api in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-s03",
+    "language": "javascript",
+    "file": "javascript/js-s03_bind_database_parameters.js",
+    "title": "Bind Database Parameters",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe JavaScript API",
+    "summary": "Demonstrates safe javascript api in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates safe javascript api in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-s04",
+    "language": "javascript",
+    "file": "javascript/js-s04_reduce_a_path_to_its_basenam.js",
+    "title": "Reduce a Path to its Basename",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe JavaScript API",
+    "summary": "Demonstrates safe javascript api in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates safe javascript api in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-s05",
+    "language": "javascript",
+    "file": "javascript/js-s05_use_modern_crypto_and_tls.js",
+    "title": "Use Modern Crypto and TLS",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe JavaScript API",
+    "summary": "Demonstrates safe javascript api in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates safe javascript api in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-s06",
+    "language": "javascript",
+    "file": "javascript/js-s06_clean_modern_module.js",
+    "title": "Clean Modern Module",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe JavaScript API",
+    "summary": "Demonstrates safe javascript api in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates safe javascript api in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-u01",
+    "language": "javascript",
+    "file": "javascript/js-u01_bidi-controlled_comment.js",
+    "title": "Bidi-Controlled Comment",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Unicode Review",
+    "summary": "Demonstrates unicode review in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates unicode review in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-001",
+          "line": 1
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [
+      "U+202E"
+    ],
+    "demo_order": null
+  },
+  {
+    "id": "js-u02",
+    "language": "javascript",
+    "file": "javascript/js-u02_cyrillic_eval_look-alike.js",
+    "title": "Cyrillic Eval Look-Alike",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Unicode Review",
+    "summary": "Demonstrates unicode review in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates unicode review in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-006",
+          "line": 1
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "review",
+    "approximate": false,
+    "special_chars": [
+      "U+0435"
+    ],
+    "demo_order": null
+  },
+  {
+    "id": "js-l01",
+    "language": "javascript",
+    "file": "javascript/js-l01_templates_and_slash_ambiguit.js",
+    "title": "Templates and Slash Ambiguity",
+    "kind": "lexer",
+    "level": null,
+    "topic": "Lexer Coverage",
+    "summary": "Demonstrates lexer coverage in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates lexer coverage in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "js-l02",
+    "language": "javascript",
+    "file": "javascript/js-l02_modern_javascript_syntax.js",
+    "title": "Modern JavaScript Syntax",
+    "kind": "lexer",
+    "level": null,
+    "topic": "Lexer Coverage",
+    "summary": "Demonstrates lexer coverage in a small, inert Javascript example.",
+    "notes": [
+      "Demonstrates lexer coverage in a small, inert Javascript example.",
+      "The source uses a fake host or local-only data and is never executed by the catalogue.",
+      "Review the marked API and the expected analyzer behavior."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-b01",
+    "language": "cpp",
+    "file": "cpp/cp-b01_read_a_line_with_gets.c",
+    "title": "Read a Line with gets",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Memory Safety",
+    "summary": "Memory Safety example for C/C++ sample review.",
+    "notes": [
+      "Memory Safety example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-b02",
+    "language": "cpp",
+    "file": "cpp/cp-b02_copy_a_name_with_strcpy.c",
+    "title": "Copy a Name with strcpy",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Memory Safety",
+    "summary": "Memory Safety example for C/C++ sample review.",
+    "notes": [
+      "Memory Safety example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-b03",
+    "language": "cpp",
+    "file": "cpp/cp-b03_format_into_a_fixed_buffer.c",
+    "title": "Format into a Fixed Buffer",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Memory Safety",
+    "summary": "Memory Safety example for C/C++ sample review.",
+    "notes": [
+      "Memory Safety example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-b04",
+    "language": "cpp",
+    "file": "cpp/cp-b04_scan_a_name_without_width.c",
+    "title": "Scan a Name without Width",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Memory Safety",
+    "summary": "Memory Safety example for C/C++ sample review.",
+    "notes": [
+      "Memory Safety example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-003.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-003",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-b05",
+    "language": "cpp",
+    "file": "cpp/cp-b05_print_a_variable_format.c",
+    "title": "Print a Variable Format",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Format String",
+    "summary": "Format String example for C/C++ sample review.",
+    "notes": [
+      "Format String example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-FMT-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-FMT-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-b06",
+    "language": "cpp",
+    "file": "cpp/cp-b06_build_a_command_with_system.c",
+    "title": "Build a Command with system",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Command Injection",
+    "summary": "Command Injection example for C/C++ sample review.",
+    "notes": [
+      "Command Injection example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-INJ-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-INJ-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-b07",
+    "language": "cpp",
+    "file": "cpp/cp-b07_generate_a_predictable_token.c",
+    "title": "Generate a Predictable Token",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Weak Cryptography",
+    "summary": "Weak Cryptography example for C/C++ sample review.",
+    "notes": [
+      "Weak Cryptography example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-CRY-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-CRY-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-b08",
+    "language": "cpp",
+    "file": "pending/cp-b08_compare_a_hard-coded_passwor.c",
+    "title": "Compare a Hard-Coded Password",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Hard-Coded Secret",
+    "summary": "Hard-Coded Secret example for C/C++ sample review.",
+    "notes": [
+      "Hard-Coded Secret example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-SEC-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-SEC-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null,
+    "pending_reason": "Live Analyzer emits no APS-CP-SEC-001 for the hard-coded C/C++ password comparison."
+  },
+  {
+    "id": "cp-b09",
+    "language": "cpp",
+    "file": "cpp/cp-b09_create_a_temporary_name.c",
+    "title": "Create a Temporary Name",
+    "kind": "vulnerable",
+    "level": "basic",
+    "topic": "Temporary File",
+    "summary": "Temporary File example for C/C++ sample review.",
+    "notes": [
+      "Temporary File example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-IO-002.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-IO-002",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-i01",
+    "language": "cpp",
+    "file": "cpp/cp-i01_copy_an_argument_into_a_buff.c",
+    "title": "Copy an Argument into a Buffer",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Tainted Memory Copy",
+    "summary": "Tainted Memory Copy example for C/C++ sample review.",
+    "notes": [
+      "Tainted Memory Copy example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": 11
+  },
+  {
+    "id": "cp-i02",
+    "language": "cpp",
+    "file": "cpp/cp-i02_format_an_argument.c",
+    "title": "Format an Argument",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Format String",
+    "summary": "Format String example for C/C++ sample review.",
+    "notes": [
+      "Format String example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-FMT-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-FMT-001",
+          "line": 2
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-i03",
+    "language": "cpp",
+    "file": "cpp/cp-i03_build_a_command_from_environ.c",
+    "title": "Build a Command from Environment",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Command Injection",
+    "summary": "Command Injection example for C/C++ sample review.",
+    "notes": [
+      "Command Injection example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-INJ-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-INJ-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-i04",
+    "language": "cpp",
+    "file": "cpp/cp-i04_copy_a_tainted_length.c",
+    "title": "Copy a Tainted Length",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Memory Safety",
+    "summary": "Memory Safety example for C/C++ sample review.",
+    "notes": [
+      "Memory Safety example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-002.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-002",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-i05",
+    "language": "cpp",
+    "file": "cpp/cp-i05_allocate_with_an_overflowing.c",
+    "title": "Allocate with an Overflowing Size",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Integer Overflow",
+    "summary": "Integer Overflow example for C/C++ sample review.",
+    "notes": [
+      "Integer Overflow example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-004.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-004",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-i06",
+    "language": "cpp",
+    "file": "pending/cp-i06_open_a_path_from_argv.c",
+    "title": "Open a Path from argv",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Path Handling",
+    "summary": "Path Handling example for C/C++ sample review.",
+    "notes": [
+      "Path Handling example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-IO-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-IO-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null,
+    "pending_reason": "Live Analyzer emits no APS-CP-IO-001 for fopen(argv[1], \"r\")."
+  },
+  {
+    "id": "cp-i07",
+    "language": "cpp",
+    "file": "pending/cp-i07_copy_using_pointer_sizeof.c",
+    "title": "Copy Using Pointer Sizeof",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Memory Safety",
+    "summary": "Memory Safety example for C/C++ sample review.",
+    "notes": [
+      "Memory Safety example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-002.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-002",
+          "line": 2
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null,
+    "pending_reason": "Live Analyzer emits no APS-CP-MEM-002 for strncpy with sizeof(pointer) in the helper parameter."
+  },
+  {
+    "id": "cp-i08",
+    "language": "cpp",
+    "file": "cpp/cp-i08_allocate_a_stack_buffer_from.c",
+    "title": "Allocate a Stack Buffer from Input",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Memory Safety",
+    "summary": "Memory Safety example for C/C++ sample review.",
+    "notes": [
+      "Memory Safety example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-007.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-007",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-i09",
+    "language": "cpp",
+    "file": "cpp/cp-i09_ping_a_supplied_host.cpp",
+    "title": "Ping a Supplied Host",
+    "kind": "vulnerable",
+    "level": "intermediate",
+    "topic": "Command Injection",
+    "summary": "Command Injection example for C/C++ sample review.",
+    "notes": [
+      "Command Injection example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-INJ-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-INJ-001",
+          "line": 4
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-a01",
+    "language": "cpp",
+    "file": "cpp/cp-a01_read_memory_after_free.c",
+    "title": "Read Memory after free",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Use After Free",
+    "summary": "Use After Free example for C/C++ sample review.",
+    "notes": [
+      "Use After Free example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-005.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-005",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-a02",
+    "language": "cpp",
+    "file": "cpp/cp-a02_free_a_pointer_twice.c",
+    "title": "Free a Pointer Twice",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Double Free",
+    "summary": "Double Free example for C/C++ sample review.",
+    "notes": [
+      "Double Free example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-006.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-006",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-a03",
+    "language": "cpp",
+    "file": "cpp/cp-a03_copy_data_across_functions.c",
+    "title": "Copy Data across Functions",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Interprocedural Memory Safety",
+    "summary": "Interprocedural Memory Safety example for C/C++ sample review.",
+    "notes": [
+      "Interprocedural Memory Safety example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-001",
+          "line": 4
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-a04",
+    "language": "cpp",
+    "file": "pending/cp-a04_review_a_small_utility.c",
+    "title": "Review a Small Utility",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Multiple Security Issues",
+    "summary": "Multiple Security Issues example for C/C++ sample review.",
+    "notes": [
+      "Multiple Security Issues example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-001, APS-CP-MEM-001, APS-CP-INJ-001, APS-CP-CRY-001, APS-CP-SEC-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-001",
+          "line": 9
+        },
+        {
+          "rule_id": "APS-CP-MEM-001",
+          "line": 10
+        },
+        {
+          "rule_id": "APS-CP-INJ-001",
+          "line": 11
+        },
+        {
+          "rule_id": "APS-CP-CRY-001",
+          "line": 13
+        },
+        {
+          "rule_id": "APS-CP-SEC-001",
+          "line": 14
+        }
+      ],
+      "min_findings": 5
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null,
+    "pending_reason": "Live Analyzer detects four of five specified flaws but emits no APS-CP-SEC-001 for the hard-coded password; the required five-distinct-rule Fix all demo is pending."
+  },
+  {
+    "id": "cp-a05",
+    "language": "cpp",
+    "file": "cpp/cp-a05_review_a_tcp_echo_buffer.c",
+    "title": "Review a TCP Echo Buffer",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Memory and Format Strings",
+    "summary": "Memory and Format Strings example for C/C++ sample review.",
+    "notes": [
+      "Memory and Format Strings example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-001, APS-CP-FMT-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-001",
+          "line": 4
+        },
+        {
+          "rule_id": "APS-CP-FMT-001",
+          "line": 4
+        }
+      ],
+      "min_findings": 2
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-a06",
+    "language": "cpp",
+    "file": "cpp/cp-a06_compare_checked_and_unchecke.c",
+    "title": "Compare Checked and Unchecked Copies",
+    "kind": "vulnerable",
+    "level": "advanced",
+    "topic": "Bounds Checking",
+    "summary": "Bounds Checking example for C/C++ sample review.",
+    "notes": [
+      "Bounds Checking example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-CP-MEM-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-CP-MEM-001",
+          "line": 3
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": 12
+  },
+  {
+    "id": "cp-s01",
+    "language": "cpp",
+    "file": "cpp/cp-s01_read_input_with_bounds.c",
+    "title": "Read Input with Bounds",
+    "kind": "safe",
+    "level": null,
+    "topic": "Bounded Input",
+    "summary": "Bounded Input example for C/C++ sample review.",
+    "notes": [
+      "Bounded Input example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for no medium-or-higher security rule.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-s02",
+    "language": "cpp",
+    "file": "cpp/cp-s02_use_constant_format_strings.c",
+    "title": "Use Constant Format Strings",
+    "kind": "safe",
+    "level": null,
+    "topic": "Format Safety",
+    "summary": "Format Safety example for C/C++ sample review.",
+    "notes": [
+      "Format Safety example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for no medium-or-higher security rule.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-s03",
+    "language": "cpp",
+    "file": "cpp/cp-s03_use_modern_c++_containers.cpp",
+    "title": "Use Modern C++ Containers",
+    "kind": "safe",
+    "level": null,
+    "topic": "Safe C++",
+    "summary": "Safe C++ example for C/C++ sample review.",
+    "notes": [
+      "Safe C++ example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for no medium-or-higher security rule.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-s04",
+    "language": "cpp",
+    "file": "cpp/cp-s04_copy_after_a_length_check.c",
+    "title": "Copy after a Length Check",
+    "kind": "safe",
+    "level": null,
+    "topic": "Bounded Copies",
+    "summary": "Bounded Copies example for C/C++ sample review.",
+    "notes": [
+      "Bounded Copies example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for no medium-or-higher security rule.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-s05",
+    "language": "cpp",
+    "file": "cpp/cp-s05_open_a_file_with_raii.cpp",
+    "title": "Open a File with RAII",
+    "kind": "safe",
+    "level": null,
+    "topic": "RAII File Handling",
+    "summary": "RAII File Handling example for C/C++ sample review.",
+    "notes": [
+      "RAII File Handling example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for no medium-or-higher security rule.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-u01",
+    "language": "cpp",
+    "file": "cpp/cp-u01_review_a_bidi_comment.c",
+    "title": "Review a Bidi Comment",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Trojan Source",
+    "summary": "Trojan Source example for C/C++ sample review.",
+    "notes": [
+      "Trojan Source example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-ALL-UNI-001.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-001",
+          "line": 2
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [
+      "U+202E",
+      "U+2066",
+      "U+2069"
+    ],
+    "demo_order": null
+  },
+  {
+    "id": "cp-u02",
+    "language": "cpp",
+    "file": "cpp/cp-u02_inspect_a_look-alike_identif.c",
+    "title": "Inspect a Look-Alike Identifier",
+    "kind": "unicode",
+    "level": null,
+    "topic": "Unicode Identifier",
+    "summary": "Unicode Identifier example for C/C++ sample review.",
+    "notes": [
+      "Unicode Identifier example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for APS-ALL-UNI-004.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [
+        {
+          "rule_id": "APS-ALL-UNI-004",
+          "line": 2
+        }
+      ],
+      "min_findings": 1
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [
+      "U+0430"
+    ],
+    "demo_order": null
+  },
+  {
+    "id": "cp-l01",
+    "language": "cpp",
+    "file": "cpp/cp-l01_exercise_c++_literals.cpp",
+    "title": "Exercise C++ Literals",
+    "kind": "lexer",
+    "level": null,
+    "topic": "Lexer Showcase",
+    "summary": "Lexer Showcase example for C/C++ sample review.",
+    "notes": [
+      "Lexer Showcase example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for no medium-or-higher security rule.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-l02",
+    "language": "cpp",
+    "file": "cpp/cp-l02_exercise_preprocessor_forms.cpp",
+    "title": "Exercise Preprocessor Forms",
+    "kind": "lexer",
+    "level": null,
+    "topic": "Lexer Showcase",
+    "summary": "Lexer Showcase example for C/C++ sample review.",
+    "notes": [
+      "Lexer Showcase example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for no medium-or-higher security rule.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  },
+  {
+    "id": "cp-l03",
+    "language": "cpp",
+    "file": "cpp/cp-l03_exercise_c++20_syntax.cpp",
+    "title": "Exercise C++20 Syntax",
+    "kind": "lexer",
+    "level": null,
+    "topic": "Lexer Showcase",
+    "summary": "Lexer Showcase example for C/C++ sample review.",
+    "notes": [
+      "Lexer Showcase example for C/C++ sample review.",
+      "Use inert example input only; no network or destructive payload is included.",
+      "SecureLex checks for no medium-or-higher security rule.",
+      "Review the highlighted source and compare it with the bounded or safer alternative."
+    ],
+    "expect": {
+      "findings": [],
+      "min_findings": 0,
+      "clean_below": "medium"
+    },
+    "fix_expected": "none",
+    "approximate": false,
+    "special_chars": [],
+    "demo_order": null
+  }
+]

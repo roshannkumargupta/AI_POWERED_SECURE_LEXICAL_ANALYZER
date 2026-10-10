@@ -8,12 +8,20 @@ import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 
-import { SECURELEX_THEME_NAME, securelexNightTheme } from '../theme/monacoTheme';
+import { buildMonacoTheme } from '../theme/monacoTheme';
+import { useTheme } from '../theme/theme';
 import { updateMonacoMarkers } from '../monaco/markers';
 import { createHoverProvider, setHoverActionHandlers } from '../monaco/hover';
 import { createCodeActionProvider, setCodeActionHandlers } from '../monaco/codeActions';
 import { DecorationManager } from '../monaco/decorations';
-import { Finding, Fix } from '../api/client';
+import { AnalysisResult, Finding, Fix } from '../api/client';
+import type { TokenInfo } from '../api/client';
+import {
+  setEditorPosition,
+  setEditorSelection,
+  revealEditorRange,
+} from '../editor/navigation';
+import { harness } from '../testHarness';
 
 // Configure Monaco Environment for Vite with locally bundled web workers (NO CDN)
 if (typeof window !== 'undefined') {
@@ -30,23 +38,30 @@ if (typeof window !== 'undefined') {
 
 loader.config({ monaco });
 
+export interface NavTarget {
+  type: 'token' | 'finding';
+  range: { start_line: number; start_col: number; end_line: number; end_col: number };
+  timestamp: number;
+}
+
 interface EditorPaneProps {
   source: string;
   language: string;
+  filename: string;
+  modelKey?: string | null;
   findings: Finding[];
-  tokens: Array<{
-    text: string;
-    line: number;
-    col: number;
-    label: string;
-    confidence: number;
-    utf16_offset: number;
-  }>;
+  tokens: TokenInfo[];
+  analysis: AnalysisResult | null;
+  selectedTokenIndex: number | null;
+  tokenMap: 'off' | 'security' | 'full';
+  tokenCategory: string;
   selectedFindingId: string | null;
   activeDataFlowFindingId: string | null;
+  navTarget?: NavTarget | null;
   onChangeSource: (val: string) => void;
   onCursorChange: (pos: { line: number; col: number }) => void;
-  onSelectToken: (tokenIndex: number) => void;
+  onSelectToken: (tokenIndex: number | null) => void;
+  onOpenTokens: () => void;
   onSelectFinding: (findingId: string) => void;
   onOpenDiff: (fix: Fix, finding: Finding) => void;
   onAnalyzeShortcut: () => void;
@@ -58,13 +73,21 @@ interface EditorPaneProps {
 export const EditorPane: React.FC<EditorPaneProps> = ({
   source,
   language,
+  filename,
+  modelKey,
   findings,
   tokens,
-  selectedFindingId,
+  analysis,
+  selectedTokenIndex,
+  tokenMap,
+  tokenCategory,
+  selectedFindingId: _selectedFindingId,
   activeDataFlowFindingId,
+  navTarget,
   onChangeSource,
   onCursorChange,
   onSelectToken,
+  onOpenTokens: _onOpenTokens,
   onSelectFinding,
   onOpenDiff,
   onAnalyzeShortcut,
@@ -72,10 +95,52 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
   onNextProblem,
   onPrevProblem,
 }) => {
+  const { resolved } = useTheme();
+  const themeName = `securelex-${resolved}`;
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const decorationManagerRef = useRef<DecorationManager | null>(null);
   const findingsRef = useRef<Finding[]>(findings);
+  const tokensRef = useRef(tokens);
+  const onSelectTokenRef = useRef(onSelectToken);
+  const prevModelKeyRef = useRef<string | null>(null);
+  const viewStatesRef = useRef<Map<string, monaco.editor.ICodeEditorViewState>>(new Map());
+
   findingsRef.current = findings;
+  tokensRef.current = tokens;
+  onSelectTokenRef.current = onSelectToken;
+
+  // Keep React-originated replacements (new/open sample, verified fix) in sync,
+  // while leaving ordinary keystrokes to Monaco so its cursor and undo stack survive.
+  useEffect(() => {
+    const editor = editorRef.current;
+    const model = editor?.getModel();
+    if (!editor || !model || model.getValue() === source) return;
+    const view = editor.saveViewState();
+    editor.executeEdits(
+      'securelex-external-change',
+      [{ range: model.getFullModelRange(), text: source }],
+      () => editor.getSelections()
+    );
+    if (view) editor.restoreViewState(view);
+  }, [source]);
+
+  // View state preservation when switching tabs/documents
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const currentKey = modelKey || filename || 'untitled';
+    if (prevModelKeyRef.current && prevModelKeyRef.current !== currentKey) {
+      const prevViewState = editor.saveViewState();
+      if (prevViewState) {
+        viewStatesRef.current.set(prevModelKeyRef.current, prevViewState);
+      }
+      const newViewState = viewStatesRef.current.get(currentKey);
+      if (newViewState) {
+        editor.restoreViewState(newViewState);
+      }
+    }
+    prevModelKeyRef.current = currentKey;
+  }, [modelKey, filename]);
 
   // Language mapping to Monaco IDs
   const getMonacoLanguage = (lang: string) => {
@@ -99,86 +164,98 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
 
   const handleEditorDidMount: OnMount = (editor, monacoInstance) => {
     editorRef.current = editor;
+    harness.setEditor(editor);
 
     // Define and apply theme
-    monacoInstance.editor.defineTheme(SECURELEX_THEME_NAME, securelexNightTheme);
-    monacoInstance.editor.setTheme(SECURELEX_THEME_NAME);
+    const styles = getComputedStyle(document.documentElement);
+    const themeTokens = Object.fromEntries(
+      Array.from(styles)
+        .filter((name) => name.startsWith('--'))
+        .map((name) => [name, styles.getPropertyValue(name)])
+    );
+    monacoInstance.editor.defineTheme('securelex-dark', buildMonacoTheme(themeTokens, 'dark'));
+    monacoInstance.editor.defineTheme('securelex-light', buildMonacoTheme(themeTokens, 'light'));
+    monacoInstance.editor.setTheme(themeName);
+    void document.fonts.ready.then(() => monacoInstance.editor.remeasureFonts());
 
     // Initialize decoration manager
     const decManager = new DecorationManager(editor, monacoInstance);
     decorationManagerRef.current = decManager;
 
-    // Register hover and code action providers
-    const currentLang = getMonacoLanguage(language);
-    monacoInstance.languages.registerHoverProvider(
-      currentLang,
-      createHoverProvider(() => findingsRef.current, monacoInstance)
-    );
+    // Register hover and code action providers for all supported languages
+    ['python', 'javascript', 'java', 'cpp'].forEach((lang) => {
+      monacoInstance.languages.registerHoverProvider(
+        lang,
+        createHoverProvider(() => findingsRef.current, monacoInstance)
+      );
 
-    monacoInstance.languages.registerCodeActionProvider(
-      currentLang,
-      createCodeActionProvider(() => findingsRef.current, monacoInstance)
-    );
+      monacoInstance.languages.registerCodeActionProvider(
+        lang,
+        createCodeActionProvider(() => findingsRef.current, monacoInstance)
+      );
+    });
 
-    // Register action callbacks
+    // Wire global action handlers for Monaco Hover widgets
     setHoverActionHandlers({
-      onQuickFix: (findingId) => {
-        onSelectFinding(findingId);
-        editor.trigger('hover', 'editor.action.quickFix', {});
-      },
-      onShowDataFlow: (findingId) => {
-        onSelectFinding(findingId);
-      },
+      onQuickFix: (findingId: string) => onSelectFinding(findingId),
+      onShowDataFlow: (findingId: string) => onSelectFinding(findingId),
     });
 
+    // Wire action handlers for Code Action Lightbulb Quick Fixes
     setCodeActionHandlers({
-      onOpenDiffView: (fix, finding) => onOpenDiff(fix, finding),
-      onShowManualAdvice: (_fix, finding) => onSelectFinding(finding.id),
+      onOpenDiffView: (fix: Fix, finding: Finding) => onOpenDiff(fix, finding),
     });
 
-    // Keyboard bindings
-    // Ctrl+Enter -> Analyze
+    // Keybindings inside Monaco
     editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter, () => {
       onAnalyzeShortcut();
     });
 
-    // Ctrl+S -> Download
     editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS, () => {
       onDownloadShortcut();
     });
 
-    // F8 -> Next Problem
     editor.addCommand(monacoInstance.KeyCode.F8, () => {
       onNextProblem();
     });
 
-    // Shift+F8 -> Previous Problem
     editor.addCommand(monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.F8, () => {
       onPrevProblem();
     });
 
-    // Cursor position listener
+    // Cursor tracking with 50ms debounced token table highlight sync
+    let cursorTimer: number | undefined;
+    let lastCursorToken: number = -1;
+
     editor.onDidChangeCursorPosition((e) => {
+      harness.recordCursorChange(e.position.lineNumber, e.position.column, 'monaco', e.reason);
       onCursorChange({ line: e.position.lineNumber, col: e.position.column });
+      window.clearTimeout(cursorTimer);
+      cursorTimer = window.setTimeout(() => {
+        const index = tokensRef.current.findIndex((t) => {
+          const r = t.range;
+          return (
+            r &&
+            (e.position.lineNumber > r.start_line ||
+              (e.position.lineNumber === r.start_line && e.position.column >= r.start_col)) &&
+            (e.position.lineNumber < r.end_line ||
+              (e.position.lineNumber === r.end_line && e.position.column < r.end_col))
+          );
+        });
+        if (index !== lastCursorToken) {
+          lastCursorToken = index;
+          onSelectTokenRef.current(index >= 0 ? index : null);
+        }
+      }, 50);
     });
 
-    // Mouse down listener to select token under cursor for ML Insights
-    editor.onMouseDown((e) => {
-      if (!e.target.position) return;
-      const { lineNumber, column } = e.target.position;
-
-      // Find token matching coordinates
-      if (tokens && tokens.length > 0) {
-        const foundIdx = tokens.findIndex((t) => {
-          if (t.line !== lineNumber) return false;
-          const endCol = t.col + t.text.length;
-          return column >= t.col && column <= endCol;
-        });
-
-        if (foundIdx !== -1) {
-          onSelectToken(foundIdx);
-        }
-      }
+    editor.onDidChangeCursorSelection((e) => {
+      harness.recordCursorChange(
+        e.selection.startLineNumber,
+        e.selection.startColumn,
+        'monaco',
+        e.reason
+      );
     });
 
     // Initial markers update
@@ -188,6 +265,18 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
       decManager.updateUnicodeDecorations(findingsRef.current);
     }
   };
+
+  useEffect(() => {
+    const styles = getComputedStyle(document.documentElement);
+    const themeTokens = Object.fromEntries(
+      Array.from(styles)
+        .filter((name) => name.startsWith('--'))
+        .map((name) => [name, styles.getPropertyValue(name)])
+    );
+    monaco.editor.defineTheme('securelex-dark', buildMonacoTheme(themeTokens, 'dark'));
+    monaco.editor.defineTheme('securelex-light', buildMonacoTheme(themeTokens, 'light'));
+    monaco.editor.setTheme(themeName);
+  }, [resolved, themeName]);
 
   // Synchronize markers whenever findings change
   useEffect(() => {
@@ -216,50 +305,67 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
     }
   }, [activeDataFlowFindingId, findings]);
 
-  // Jump to selected finding when selection changes
   useEffect(() => {
-    if (!editorRef.current || !selectedFindingId) return;
-    const finding = findings.find((f) => f.id === selectedFindingId);
-    if (finding) {
-      editorRef.current.revealRangeInCenter(
-        new monaco.Range(
-          finding.range.start_line,
-          finding.range.start_col,
-          finding.range.end_line,
-          finding.range.end_col
-        )
+    decorationManagerRef.current?.updateTokenMap(tokenMap, analysis, selectedTokenIndex, tokenCategory);
+  }, [tokenMap, analysis, selectedTokenIndex, tokenCategory]);
+
+  useEffect(() => {
+    decorationManagerRef.current?.updateSecurityDecorations(analysis, selectedTokenIndex);
+  }, [analysis, selectedTokenIndex]);
+
+  // Explicit user navigation ONLY (clicking row in token table or finding list, or F8)
+  useEffect(() => {
+    if (!editorRef.current || !navTarget) return;
+    const { range, type } = navTarget;
+    revealEditorRange(
+      editorRef.current,
+      new monaco.Range(range.start_line, range.start_col, range.end_line, range.end_col),
+      `user-nav-${type}`
+    );
+    if (type === 'token') {
+      setEditorSelection(
+        editorRef.current,
+        new monaco.Selection(range.start_line, range.start_col, range.end_line, range.end_col),
+        'user-nav-token'
       );
-      editorRef.current.setPosition({
-        lineNumber: finding.range.start_line,
-        column: finding.range.start_col,
-      });
+    } else {
+      setEditorPosition(
+        editorRef.current,
+        range.start_line,
+        range.start_col,
+        'user-nav-finding'
+      );
     }
-  }, [selectedFindingId, findings]);
+  }, [navTarget]);
 
   return (
     <div style={containerStyle}>
       <Editor
         height="100%"
         width="100%"
+        path={`inmemory://securelex/${encodeURIComponent(modelKey || filename || 'untitled')}`}
         language={getMonacoLanguage(language)}
-        value={source}
-        theme={SECURELEX_THEME_NAME}
+        defaultValue={source}
+        theme={themeName}
         onChange={(val) => onChangeSource(val || '')}
         onMount={handleEditorDidMount}
         options={{
-          minimap: { enabled: true },
+          readOnly: false,
+          domReadOnly: false,
+          minimap: { enabled: false },
           lineNumbers: 'on',
           glyphMargin: true,
-          bracketPairColorization: { enabled: true },
+          bracketPairColorization: { enabled: false },
           renderControlCharacters: true,
+          renderLineHighlight: 'none',
           unicodeHighlight: {
             ambiguousCharacters: true,
             invisibleCharacters: true,
             nonBasicASCII: false,
           },
           fontFamily: 'var(--font-code)',
-          fontSize: 14,
-          lineHeight: 22,
+          fontSize: 12,
+          lineHeight: 24,
           scrollBeyondLastLine: false,
           automaticLayout: true,
           cursorBlinking: 'smooth',
@@ -269,14 +375,28 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
           wordWrap: 'off',
         }}
       />
+      {!source && (
+        <div style={placeholderStyle}>
+          Type or paste code. The language is detected automatically.
+        </div>
+      )}
     </div>
   );
+};
+
+const placeholderStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 12,
+  left: 76,
+  color: 'var(--muted)',
+  opacity: 0.6,
+  fontFamily: 'var(--font-code)',
+  fontSize: 12,
+  pointerEvents: 'none',
 };
 
 const containerStyle: React.CSSProperties = {
   height: '100%',
   width: '100%',
   position: 'relative',
-  overflow: 'hidden',
-  backgroundColor: 'var(--bg)',
 };

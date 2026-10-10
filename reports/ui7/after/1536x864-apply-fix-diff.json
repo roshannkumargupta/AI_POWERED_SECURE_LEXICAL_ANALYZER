@@ -1,0 +1,49 @@
+{
+  "viewport": {
+    "width": 1536,
+    "height": 864
+  },
+  "colorScheme": "dark",
+  "counts": {
+    "lowContrast": 0,
+    "blackOnDark": 0,
+    "nativeControls": 0,
+    "scrollBugs": 0,
+    "scrollAreas": 3,
+    "pageScroll": 0
+  },
+  "lowContrast": [],
+  "blackOnDark": [],
+  "nativeControls": [],
+  "scrollBugs": [],
+  "scrollAreas": [
+    {
+      "element": "div.ui6-table-scroll [Ln:ColLexemeTypeLexicalSecurity1:24,OPERATORvalidinsecu]",
+      "overflow": "auto/auto",
+      "client": "456x93",
+      "scroll": "456x1200",
+      "covered": true
+    },
+    {
+      "element": "section.ui6-explanation [Explanation]",
+      "overflow": "auto/auto",
+      "client": "843x131",
+      "scroll": "843x147",
+      "covered": true
+    },
+    {
+      "element": "pre [db.execute(query, (name,))'SELECT * FROM users WHERE na]",
+      "overflow": "auto/auto",
+      "client": "336x34",
+      "scroll": "422x34",
+      "covered": false
+    }
+  ],
+  "pageScroll": {
+    "vertical": false,
+    "horizontal": false,
+    "document": "1536x864",
+    "viewport": "1536x864"
+  },
+  "verdict": "PASS"
+}

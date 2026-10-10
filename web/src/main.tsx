@@ -10,13 +10,16 @@ import '@fontsource/jetbrains-mono/600.css';
 import '@fontsource/jetbrains-mono/700.css';
 
 import './theme/tokens.css';
+import { ThemeProvider } from './theme/theme';
 import { AppProvider } from './state/store';
 import { App } from './App';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <AppProvider>
-      <App />
-    </AppProvider>
+    <ThemeProvider>
+      <AppProvider>
+        <App />
+      </AppProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );
