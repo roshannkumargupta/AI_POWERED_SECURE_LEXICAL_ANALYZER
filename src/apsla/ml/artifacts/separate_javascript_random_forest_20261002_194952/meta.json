@@ -1,0 +1,48 @@
+{
+  "model_id": "separate_javascript_random_forest_20261002_194952",
+  "model_type": "random_forest",
+  "feature_schema_hash": "313113ff1b1c3eaaef410590101e19a00c1721aa822f0c90e1034f7d06cc5b90",
+  "feature_dim": 45,
+  "use_lang_features": false,
+  "library_versions": {
+    "torch": "2.14.0+cpu",
+    "sklearn": "1.9.1",
+    "numpy": "2.5.3"
+  },
+  "created_at": "2026-10-02T19:49:52.857316+00:00",
+  "model_file_size_bytes": 1254289,
+  "strategy": "separate",
+  "supported_languages": [
+    "javascript"
+  ],
+  "language": "javascript",
+  "thresholds": {
+    "tau_malicious": 0.5
+  },
+  "temperature": 1.0,
+  "validation_macro_f1": 0.5411,
+  "candidate_metrics": {
+    "logistic_regression": {
+      "macro_f1": 0.4502,
+      "macro_precision": 0.444,
+      "macro_recall": 0.7383
+    },
+    "random_forest": {
+      "macro_f1": 0.5411,
+      "macro_precision": 0.5209,
+      "macro_recall": 0.827
+    },
+    "hist_gradient_boosting": {
+      "macro_f1": 0.489,
+      "macro_precision": 0.4738,
+      "macro_recall": 0.8052
+    },
+    "windowed_bilstm": {
+      "macro_f1": 0.3483,
+      "macro_precision": 0.4,
+      "macro_recall": 0.5515
+    }
+  },
+  "dataset_hash": "2b5bbfb9cc2bac485dfdc68531e66bc9566740adea29afbc206cd483a3b4c904",
+  "seed": 42
+}
