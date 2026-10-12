@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
 
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -20,6 +22,10 @@ import { initIDEWorkers } from './ide/lib/monacoWorkers';
 // Monaco reads this global while its editor module mounts. Install bundled workers
 // before React creates the Editor component so it never falls back to the CDN.
 initIDEWorkers();
+// Pass the bundled Monaco instance to the React wrapper. Without this, its
+// default AMD loader requests Monaco from a CDN and leaves the editor loading
+// forever in offline/production builds.
+loader.config({ monaco });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
