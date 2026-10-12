@@ -5,7 +5,6 @@ from pathlib import Path
 from apsla.languages.cpp_lang.lexer import CppLexer
 from apsla.models_v2 import token_type_for
 
-
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "ui-p3" / "default_cpp_tokens.json"
 PROTOTYPE = Path(__file__).parents[2] / "web" / "ui-reference" / "prototype.html"
 

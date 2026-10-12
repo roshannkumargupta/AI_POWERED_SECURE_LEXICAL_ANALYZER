@@ -72,6 +72,7 @@ from apsla.safety_lab import (
     execute_live,
     export_analysis,
     get_run,
+    list_scenarios,
     live_unavailable,
     render_export,
     save_run,
@@ -108,6 +109,7 @@ from apsla.server.schemas import (
     LLMStatusResponse,
     MLInsightsRequest,
     MLInsightsResponse,
+    SafetyScenarioResponse,
     SampleItem,
     SkippedFixItem,
     StageAnalysisResponse,
@@ -2101,6 +2103,11 @@ async def undo_fix_v2(req: UndoRequest) -> dict[str, object]:
     digest = source_sha256(source)
     PATCH_SESSION_CURRENT[_session_key(req.session_id)] = (digest, new_version)
     return {"source": source, "source_hash": digest, "source_version": new_version}
+
+
+@api_router.get("/agent-safety/scenarios")
+async def get_agent_safety_scenarios() -> list[SafetyScenarioResponse]:
+    return list_scenarios()
 
 
 @api_router.post("/agent-safety/run")

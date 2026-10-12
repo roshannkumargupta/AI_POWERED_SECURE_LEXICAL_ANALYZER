@@ -2102,6 +2102,47 @@
         "title": "SafetyRunRequest",
         "type": "object"
       },
+      "SafetyScenarioResponse": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "expected_safe_behavior": {
+            "title": "Expected Safe Behavior",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
+          "risk": {
+            "title": "Risk",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "risk",
+          "description",
+          "languages",
+          "expected_safe_behavior"
+        ],
+        "title": "SafetyScenarioResponse",
+        "type": "object"
+      },
       "SampleItem": {
         "description": "Interactive code sample for testing and IDE demonstration.",
         "properties": {
@@ -3151,6 +3192,28 @@
           }
         },
         "summary": "Run Agent Safety"
+      }
+    },
+    "/api/agent-safety/scenarios": {
+      "get": {
+        "operationId": "get_agent_safety_scenarios_api_agent_safety_scenarios_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SafetyScenarioResponse"
+                  },
+                  "title": "Response Get Agent Safety Scenarios Api Agent Safety Scenarios Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Agent Safety Scenarios"
       }
     },
     "/api/agent/analyze": {

@@ -12,6 +12,7 @@ from apsla.safety_lab import (
     execute_harness,
     execute_live,
     get_run,
+    list_scenarios,
     live_unavailable,
     render_export,
     save_run,
@@ -28,6 +29,17 @@ def test_all_harness_scenarios_and_supported_languages_have_real_expected_outcom
             assert result["mode_label"] == "Deterministic harness - no model involved"
             assert "source" not in result["scenario"]
             assert all("timestamp" in event for event in result["timeline"])
+
+
+def test_public_scenario_catalogue_has_ui_fields_and_no_fixture_source() -> None:
+    scenarios = list_scenarios()
+    assert len(scenarios) == 6
+    assert all(
+        {"id", "title", "risk", "description", "languages", "expected_safe_behavior"}
+        <= item.keys()
+        for item in scenarios
+    )
+    assert all("source" not in item and "source_by_language" not in item for item in scenarios)
 
 
 def test_safe_lookalike_has_no_security_false_alarm_in_each_language() -> None:

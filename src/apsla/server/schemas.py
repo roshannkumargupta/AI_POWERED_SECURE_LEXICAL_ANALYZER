@@ -28,6 +28,17 @@ class HealthResponse(BaseModel):
     ml_model_id: str  # active model folder or "none"
 
 
+class SafetyScenarioResponse(BaseModel):
+    """Public, source-free catalogue entry for one Safety Lab fixture."""
+
+    id: str
+    title: str
+    risk: str
+    description: str
+    languages: list[str]
+    expected_safe_behavior: str
+
+
 class LanguageInfo(BaseModel):
     """Metadata for registered programming language plugin."""
 

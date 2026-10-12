@@ -34,6 +34,16 @@ RUNS: dict[str, dict[str, Any]] = {}
 MAX_RUNS = 128
 
 
+def list_scenarios() -> list[dict[str, Any]]:
+    """Public scenario catalogue; fixture source text is intentionally omitted."""
+    return [
+        {key: scenario[key] for key in (
+            "id", "title", "risk", "description", "languages", "expected_safe_behavior"
+        )}
+        for scenario in SCENARIOS.values()
+    ]
+
+
 class SafetyRunRequest(BaseModel):
     scenario_id: str
     language: str
@@ -375,6 +385,8 @@ def execute_harness(scenario_id: str, language: str) -> dict[str, Any]:
         "timeline": timeline,
         "agent_behavior": {
             "response": "Deterministic harness - no model involved",
+            "prompt": "Deterministic harness evaluates this scenario fixture without a model.",
+            "payload": source,
             "trace_steps": len(trace),
             "agent_metadata": agent_meta,
             "proposed_changes": (
@@ -563,6 +575,8 @@ def execute_live(scenario_id: str, language: str, provider: Any) -> dict[str, An
         ],
         "agent_behavior": {
             "response": response["response"],
+            "prompt": prompt,
+            "payload": source,
             "candidate_analysis": candidate_analysis,
             "proposed_changes": (
                 [
@@ -614,6 +628,7 @@ def live_unavailable(scenario_id: str, language: str, reason: str) -> dict[str, 
         ],
         "agent_behavior": {
             "response": "Live agent test could not run (model unavailable)",
+            "payload": source,
             "requested_operations": [],
             "proposed_changes": [],
         },
