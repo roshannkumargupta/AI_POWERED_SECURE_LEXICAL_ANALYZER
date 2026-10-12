@@ -8,17 +8,22 @@ import '@fontsource/inter/700.css';
 import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/600.css';
 import '@fontsource/jetbrains-mono/700.css';
+import '@fontsource/material-symbols-outlined';
 
 import './theme/tokens.css';
+import './ide/tailwind.css';
 import { ThemeProvider } from './theme/theme';
 import { AppProvider } from './state/store';
 import { App } from './App';
+import { IDE } from './ide/IDE';
+
+const isNewIDE = new URLSearchParams(window.location.search).get('ui') === 'new';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider>
       <AppProvider>
-        <App />
+        {isNewIDE ? <IDE /> : <App />}
       </AppProvider>
     </ThemeProvider>
   </React.StrictMode>

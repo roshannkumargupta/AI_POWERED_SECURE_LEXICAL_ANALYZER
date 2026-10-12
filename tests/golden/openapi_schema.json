@@ -1,6 +1,315 @@
 {
   "components": {
     "schemas": {
+      "AIExplainRequest": {
+        "properties": {
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "patch": {
+            "anyOf": [
+              {
+                "maxLength": 131072,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patch"
+          },
+          "remote_consent": {
+            "default": false,
+            "title": "Remote Consent",
+            "type": "boolean"
+          },
+          "session_id": {
+            "maxLength": 128,
+            "minLength": 16,
+            "title": "Session Id",
+            "type": "string"
+          },
+          "source": {
+            "maxLength": 524288,
+            "title": "Source",
+            "type": "string"
+          },
+          "target": {
+            "enum": [
+              "token",
+              "diagnostic",
+              "finding",
+              "file",
+              "patch"
+            ],
+            "title": "Target",
+            "type": "string"
+          },
+          "target_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Id"
+          }
+        },
+        "required": [
+          "session_id",
+          "target",
+          "source",
+          "language"
+        ],
+        "title": "AIExplainRequest",
+        "type": "object"
+      },
+      "AIGenerateRequest": {
+        "properties": {
+          "language": {
+            "enum": [
+              "python",
+              "java",
+              "javascript",
+              "cpp"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "remote_consent": {
+            "default": false,
+            "title": "Remote Consent",
+            "type": "boolean"
+          },
+          "requirements": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Requirements",
+            "type": "array"
+          },
+          "session_id": {
+            "maxLength": 128,
+            "minLength": 16,
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "language",
+          "requirements"
+        ],
+        "title": "AIGenerateRequest",
+        "type": "object"
+      },
+      "AIPermissionRequest": {
+        "properties": {
+          "consent": {
+            "title": "Consent",
+            "type": "boolean"
+          },
+          "session_id": {
+            "maxLength": 128,
+            "minLength": 16,
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "consent"
+        ],
+        "title": "AIPermissionRequest",
+        "type": "object"
+      },
+      "ASTNodeV2": {
+        "properties": {
+          "child_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Child Ids",
+            "type": "array"
+          },
+          "field_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field Name"
+          },
+          "finding_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Finding Ids",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "range": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "text_preview": {
+            "title": "Text Preview",
+            "type": "string"
+          },
+          "token_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Token Ids",
+            "type": "array"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "range",
+          "text_preview"
+        ],
+        "title": "ASTNodeV2",
+        "type": "object"
+      },
+      "ASTViewV2": {
+        "properties": {
+          "depth_limit": {
+            "title": "Depth Limit",
+            "type": "integer"
+          },
+          "node_limit": {
+            "title": "Node Limit",
+            "type": "integer"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/ASTNodeV2"
+            },
+            "title": "Nodes",
+            "type": "array"
+          },
+          "root_id": {
+            "title": "Root Id",
+            "type": "string"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "root_id",
+          "nodes",
+          "truncated",
+          "node_limit",
+          "depth_limit"
+        ],
+        "title": "ASTViewV2",
+        "type": "object"
+      },
+      "AgentEventResponse": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "agent": {
+            "title": "Agent",
+            "type": "string"
+          },
+          "argument_summary": {
+            "title": "Argument Summary",
+            "type": "string"
+          },
+          "decision_source": {
+            "title": "Decision Source",
+            "type": "string"
+          },
+          "duration": {
+            "title": "Duration",
+            "type": "number"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "operation_id": {
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool"
+          }
+        },
+        "required": [
+          "id",
+          "timestamp",
+          "operation_id",
+          "agent",
+          "action",
+          "tool",
+          "argument_summary",
+          "decision_source",
+          "outcome",
+          "duration"
+        ],
+        "title": "AgentEventResponse",
+        "type": "object"
+      },
       "AgentStatusResponse": {
         "description": "Status of the local agent and local model provider.",
         "properties": {
@@ -38,6 +347,36 @@
           "fallback_active"
         ],
         "title": "AgentStatusResponse",
+        "type": "object"
+      },
+      "AnalysisDimension": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "issues",
+              "incomplete",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "AnalysisDimension",
         "type": "object"
       },
       "AnalysisResult": {
@@ -90,6 +429,125 @@
           "filename"
         ],
         "title": "AnalysisResult",
+        "type": "object"
+      },
+      "AnalysisResultV2": {
+        "properties": {
+          "analysis_id": {
+            "title": "Analysis Id",
+            "type": "string"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "lexical_status": {
+            "$ref": "#/components/schemas/AnalysisDimension"
+          },
+          "lexical_summary": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "title": "Lexical Summary",
+            "type": "object"
+          },
+          "omissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Omissions",
+            "type": "array"
+          },
+          "quality": {
+            "items": {
+              "$ref": "#/components/schemas/QualityObservationV2"
+            },
+            "title": "Quality",
+            "type": "array"
+          },
+          "security_findings": {
+            "items": {
+              "$ref": "#/components/schemas/SecurityFindingV2"
+            },
+            "title": "Security Findings",
+            "type": "array"
+          },
+          "semantic_diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/DiagnosticV2"
+            },
+            "title": "Semantic Diagnostics",
+            "type": "array"
+          },
+          "semantic_status": {
+            "$ref": "#/components/schemas/AnalysisDimension"
+          },
+          "source_hash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Hash",
+            "type": "string"
+          },
+          "source_version": {
+            "minimum": 0,
+            "title": "Source Version",
+            "type": "integer"
+          },
+          "syntax_diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/DiagnosticV2"
+            },
+            "title": "Syntax Diagnostics",
+            "type": "array"
+          },
+          "syntax_status": {
+            "$ref": "#/components/schemas/AnalysisDimension"
+          },
+          "taint_paths": {
+            "items": {
+              "$ref": "#/components/schemas/TaintPathV2"
+            },
+            "title": "Taint Paths",
+            "type": "array"
+          },
+          "timing": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Timing",
+            "type": "object"
+          },
+          "tokens": {
+            "items": {
+              "$ref": "#/components/schemas/TokenV2"
+            },
+            "title": "Tokens",
+            "type": "array"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolStatus"
+            },
+            "title": "Tools",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "analysis_id",
+          "source_hash",
+          "source_version",
+          "language"
+        ],
+        "title": "AnalysisResultV2",
         "type": "object"
       },
       "AnalysisSummary": {
@@ -181,6 +639,20 @@
             "default": true,
             "title": "Ml",
             "type": "boolean"
+          },
+          "stages": {
+            "items": {
+              "enum": [
+                "lexical",
+                "syntax",
+                "semantic",
+                "security",
+                "quality"
+              ],
+              "type": "string"
+            },
+            "title": "Stages",
+            "type": "array"
           }
         },
         "title": "AnalyzeOptions",
@@ -189,6 +661,27 @@
       "AnalyzeRequest": {
         "description": "Payload for code security analysis.",
         "properties": {
+          "api_version": {
+            "default": 1,
+            "maximum": 2.0,
+            "minimum": 1.0,
+            "title": "Api Version",
+            "type": "integer"
+          },
+          "ast_max_depth": {
+            "default": 8,
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Ast Max Depth",
+            "type": "integer"
+          },
+          "ast_max_nodes": {
+            "default": 500,
+            "maximum": 2000.0,
+            "minimum": 1.0,
+            "title": "Ast Max Nodes",
+            "type": "integer"
+          },
           "filename": {
             "anyOf": [
               {
@@ -199,6 +692,11 @@
               }
             ],
             "title": "Filename"
+          },
+          "include_ast": {
+            "default": false,
+            "title": "Include Ast",
+            "type": "boolean"
           },
           "language": {
             "anyOf": [
@@ -217,12 +715,202 @@
           "source": {
             "title": "Source",
             "type": "string"
+          },
+          "source_version": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Source Version",
+            "type": "integer"
           }
         },
         "required": [
           "source"
         ],
         "title": "AnalyzeRequest",
+        "type": "object"
+      },
+      "CapabilitiesLanguage": {
+        "properties": {
+          "extensions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Extensions",
+            "type": "array"
+          },
+          "formatter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formatter"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lexer": {
+            "additionalProperties": true,
+            "title": "Lexer",
+            "type": "object"
+          },
+          "monaco_id": {
+            "title": "Monaco Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parser": {
+            "additionalProperties": true,
+            "title": "Parser",
+            "type": "object"
+          },
+          "security_tools": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Security Tools",
+            "type": "array"
+          },
+          "semantic_tools": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Semantic Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "extensions",
+          "monaco_id",
+          "lexer",
+          "parser",
+          "semantic_tools",
+          "security_tools",
+          "formatter"
+        ],
+        "title": "CapabilitiesLanguage",
+        "type": "object"
+      },
+      "CapabilitiesResponse": {
+        "properties": {
+          "ai": {
+            "additionalProperties": true,
+            "title": "Ai",
+            "type": "object"
+          },
+          "features": {
+            "additionalProperties": true,
+            "title": "Features",
+            "type": "object"
+          },
+          "languages": {
+            "items": {
+              "$ref": "#/components/schemas/CapabilitiesLanguage"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
+          "limits": {
+            "additionalProperties": true,
+            "title": "Limits",
+            "type": "object"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolStatus"
+            },
+            "title": "Tools",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "languages",
+          "tools",
+          "ai",
+          "limits",
+          "features"
+        ],
+        "title": "CapabilitiesResponse",
+        "type": "object"
+      },
+      "DiagnosticV2": {
+        "properties": {
+          "category": {
+            "enum": [
+              "lexical",
+              "syntax",
+              "semantic",
+              "security",
+              "quality"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "certainty": {
+            "enum": [
+              "definitive",
+              "heuristic",
+              "incomplete"
+            ],
+            "title": "Certainty",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "produced_by": {
+            "title": "Produced By",
+            "type": "string"
+          },
+          "range": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "related_evidence": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Related Evidence",
+            "type": "array"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "language",
+          "range",
+          "category",
+          "severity",
+          "message",
+          "produced_by",
+          "certainty"
+        ],
+        "title": "DiagnosticV2",
         "type": "object"
       },
       "Edit": {
@@ -561,6 +1249,22 @@
             "title": "Allow Review",
             "type": "boolean"
           },
+          "approved": {
+            "default": false,
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "approved_diff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved Diff"
+          },
           "filename": {
             "default": "<editor>",
             "title": "Filename",
@@ -571,9 +1275,20 @@
             "title": "Language",
             "type": "string"
           },
+          "session_id": {
+            "default": "default",
+            "title": "Session Id",
+            "type": "string"
+          },
           "source": {
             "title": "Source",
             "type": "string"
+          },
+          "source_version": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Source Version",
+            "type": "integer"
           }
         },
         "required": [
@@ -591,6 +1306,11 @@
             },
             "title": "Applied",
             "type": "array"
+          },
+          "applied_to_source": {
+            "default": false,
+            "title": "Applied To Source",
+            "type": "boolean"
           },
           "diff": {
             "title": "Diff",
@@ -614,6 +1334,17 @@
             },
             "title": "Skipped",
             "type": "array"
+          },
+          "source_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Version"
           }
         },
         "required": [
@@ -1015,6 +1746,226 @@
         "title": "MLInsightsResponse",
         "type": "object"
       },
+      "PatchActionRequest": {
+        "properties": {
+          "approved": {
+            "default": false,
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "filename": {
+            "default": "<editor>",
+            "title": "Filename",
+            "type": "string"
+          },
+          "language": {
+            "default": "python",
+            "title": "Language",
+            "type": "string"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/PatchProposalV2"
+          },
+          "session_id": {
+            "default": "default",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "source": {
+            "maxLength": 524288,
+            "title": "Source",
+            "type": "string"
+          },
+          "source_version": {
+            "minimum": 0.0,
+            "title": "Source Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source",
+          "source_version",
+          "proposal"
+        ],
+        "title": "PatchActionRequest",
+        "type": "object"
+      },
+      "PatchProposalV2": {
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "diff": {
+            "default": "",
+            "title": "Diff",
+            "type": "string"
+          },
+          "edits": {
+            "items": {
+              "$ref": "#/components/schemas/Edit"
+            },
+            "title": "Edits",
+            "type": "array"
+          },
+          "expected_outcome": {
+            "default": "",
+            "title": "Expected Outcome",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "origin": {
+            "enum": [
+              "rule",
+              "ai"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "rationale": {
+            "default": "",
+            "title": "Rationale",
+            "type": "string"
+          },
+          "risks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Risks",
+            "type": "array"
+          },
+          "source_hash": {
+            "title": "Source Hash",
+            "type": "string"
+          },
+          "source_version": {
+            "minimum": 0.0,
+            "title": "Source Version",
+            "type": "integer"
+          },
+          "target_finding_id": {
+            "title": "Target Finding Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_hash",
+          "source_version",
+          "target_finding_id",
+          "origin",
+          "edits"
+        ],
+        "title": "PatchProposalV2",
+        "type": "object"
+      },
+      "PatchRequest": {
+        "properties": {
+          "filename": {
+            "default": "<editor>",
+            "title": "Filename",
+            "type": "string"
+          },
+          "language": {
+            "default": "python",
+            "title": "Language",
+            "type": "string"
+          },
+          "origin": {
+            "default": "rule",
+            "enum": [
+              "rule",
+              "ai"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "remote_consent": {
+            "default": false,
+            "title": "Remote Consent",
+            "type": "boolean"
+          },
+          "session_id": {
+            "default": "default",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "source": {
+            "maxLength": 524288,
+            "title": "Source",
+            "type": "string"
+          },
+          "source_version": {
+            "minimum": 0.0,
+            "title": "Source Version",
+            "type": "integer"
+          },
+          "target_finding_id": {
+            "title": "Target Finding Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "source_version",
+          "target_finding_id"
+        ],
+        "title": "PatchRequest",
+        "type": "object"
+      },
+      "QualityObservationV2": {
+        "properties": {
+          "evidence": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "measured": {
+            "title": "Measured",
+            "type": "boolean"
+          },
+          "range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Range"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "value": {
+            "title": "Value"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "measured"
+        ],
+        "title": "QualityObservationV2",
+        "type": "object"
+      },
       "Range": {
         "description": "1-based text coordinates, end-exclusive, UTF-16 code units.",
         "properties": {
@@ -1050,6 +2001,105 @@
           "end_col"
         ],
         "title": "Range",
+        "type": "object"
+      },
+      "ReportExportRequest": {
+        "properties": {
+          "filename": {
+            "default": "<editor>",
+            "title": "Filename",
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "json",
+              "markdown",
+              "html",
+              "csv"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "analysis",
+              "safety_run"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "language": {
+            "default": "python",
+            "title": "Language",
+            "type": "string"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 524288,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "source_version": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Source Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "format"
+        ],
+        "title": "ReportExportRequest",
+        "type": "object"
+      },
+      "SafetyRunRequest": {
+        "properties": {
+          "config": {
+            "additionalProperties": true,
+            "title": "Config",
+            "type": "object"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "HARNESS",
+              "LIVE"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "scenario_id": {
+            "title": "Scenario Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "language",
+          "mode"
+        ],
+        "title": "SafetyRunRequest",
         "type": "object"
       },
       "SampleItem": {
@@ -1236,6 +2286,215 @@
         "title": "SampleItem",
         "type": "object"
       },
+      "SecurityFindingV2": {
+        "properties": {
+          "attack": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attack"
+          },
+          "certainty": {
+            "default": "heuristic",
+            "enum": [
+              "definitive",
+              "heuristic",
+              "incomplete"
+            ],
+            "title": "Certainty",
+            "type": "string"
+          },
+          "confidence": {
+            "default": 0.8,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "cwe": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Cwe",
+            "type": "array"
+          },
+          "detailed_explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detailed Explanation"
+          },
+          "detectors_fired": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Detectors Fired",
+            "type": "array"
+          },
+          "evidence": {
+            "additionalProperties": true,
+            "title": "Evidence",
+            "type": "object"
+          },
+          "explanation": {
+            "default": "",
+            "title": "Explanation",
+            "type": "string"
+          },
+          "exploitability": {
+            "default": 0.5,
+            "title": "Exploitability",
+            "type": "number"
+          },
+          "fixes": {
+            "items": {
+              "$ref": "#/components/schemas/Fix"
+            },
+            "title": "Fixes",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "default": "security",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/Label",
+            "default": "MALICIOUS"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          },
+          "priority": {
+            "default": 0.0,
+            "title": "Priority",
+            "type": "number"
+          },
+          "range": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "remediation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remediation"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "safe_pattern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Safe Pattern"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity",
+            "default": "medium"
+          },
+          "simple_explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Simple Explanation"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "suppressed": {
+            "default": false,
+            "title": "Suppressed",
+            "type": "boolean"
+          },
+          "suppression_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suppression Reason"
+          },
+          "taint_path": {
+            "items": {
+              "$ref": "#/components/schemas/TaintPathStep"
+            },
+            "title": "Taint Path",
+            "type": "array"
+          },
+          "taint_path_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taint Path Id"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "tool_provenance": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tool Provenance",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "rule_id",
+          "range"
+        ],
+        "title": "SecurityFindingV2",
+        "type": "object"
+      },
       "Severity": {
         "description": "Vulnerability severity levels.",
         "enum": [
@@ -1267,6 +2526,134 @@
         "title": "SkippedFixItem",
         "type": "object"
       },
+      "StageAnalysisResponse": {
+        "properties": {
+          "analysis_id": {
+            "title": "Analysis Id",
+            "type": "string"
+          },
+          "ast": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ASTViewV2"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/DiagnosticV2"
+            },
+            "title": "Diagnostics",
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/SecurityFindingV2"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "findings_summary": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "title": "Findings Summary",
+            "type": "object"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "lexical_status": {
+            "$ref": "#/components/schemas/AnalysisDimension"
+          },
+          "lexical_summary": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "title": "Lexical Summary",
+            "type": "object"
+          },
+          "omissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Omissions",
+            "type": "array"
+          },
+          "quality": {
+            "items": {
+              "$ref": "#/components/schemas/QualityObservationV2"
+            },
+            "title": "Quality",
+            "type": "array"
+          },
+          "semantic_status": {
+            "$ref": "#/components/schemas/AnalysisDimension"
+          },
+          "source_hash": {
+            "title": "Source Hash",
+            "type": "string"
+          },
+          "source_version": {
+            "title": "Source Version",
+            "type": "integer"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "syntax_status": {
+            "$ref": "#/components/schemas/AnalysisDimension"
+          },
+          "taint_paths": {
+            "items": {
+              "$ref": "#/components/schemas/TaintPathV2"
+            },
+            "title": "Taint Paths",
+            "type": "array"
+          },
+          "tokens": {
+            "items": {
+              "$ref": "#/components/schemas/TokenV2"
+            },
+            "title": "Tokens",
+            "type": "array"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolStatus"
+            },
+            "title": "Tools",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "analysis_id",
+          "source_hash",
+          "source_version",
+          "language",
+          "stage"
+        ],
+        "title": "StageAnalysisResponse",
+        "type": "object"
+      },
       "TaintPathStep": {
         "description": "Single step in a taint propagation path.",
         "properties": {
@@ -1292,6 +2679,76 @@
           "text"
         ],
         "title": "TaintPathStep",
+        "type": "object"
+      },
+      "TaintPathStepV2": {
+        "properties": {
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "range": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "role": {
+            "enum": [
+              "source",
+              "propagation",
+              "sanitizer",
+              "sink"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "range",
+          "text",
+          "role"
+        ],
+        "title": "TaintPathStepV2",
+        "type": "object"
+      },
+      "TaintPathV2": {
+        "properties": {
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "limitation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limitation"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/TaintPathStepV2"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "steps",
+          "complete"
+        ],
+        "title": "TaintPathV2",
         "type": "object"
       },
       "TaintStepKind": {
@@ -1337,6 +2794,195 @@
           "range"
         ],
         "title": "TokenInfo",
+        "type": "object"
+      },
+      "TokenV2": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "diagnostic_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Diagnostic Ids",
+            "type": "array"
+          },
+          "end_column": {
+            "description": "UTF-16 code-unit column, one-based, exclusive",
+            "minimum": 1.0,
+            "title": "End Column",
+            "type": "integer"
+          },
+          "end_line": {
+            "minimum": 1.0,
+            "title": "End Line",
+            "type": "integer"
+          },
+          "end_offset": {
+            "description": "UTF-16 code-unit offset, zero-based, exclusive",
+            "minimum": 0.0,
+            "title": "End Offset",
+            "type": "integer"
+          },
+          "end_offset_codepoint": {
+            "description": "Python Unicode code-point offset, zero-based, exclusive",
+            "minimum": 0.0,
+            "title": "End Offset Codepoint",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "lexeme": {
+            "title": "Lexeme",
+            "type": "string"
+          },
+          "lexical_status": {
+            "enum": [
+              "valid",
+              "invalid",
+              "unknown"
+            ],
+            "title": "Lexical Status",
+            "type": "string"
+          },
+          "start_column": {
+            "description": "UTF-16 code-unit column, one-based",
+            "minimum": 1.0,
+            "title": "Start Column",
+            "type": "integer"
+          },
+          "start_line": {
+            "minimum": 1.0,
+            "title": "Start Line",
+            "type": "integer"
+          },
+          "start_offset": {
+            "description": "UTF-16 code-unit offset, zero-based",
+            "minimum": 0.0,
+            "title": "Start Offset",
+            "type": "integer"
+          },
+          "start_offset_codepoint": {
+            "description": "Python Unicode code-point offset, zero-based",
+            "minimum": 0.0,
+            "title": "Start Offset Codepoint",
+            "type": "integer"
+          },
+          "token_type": {
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "language",
+          "lexeme",
+          "token_type",
+          "category",
+          "start_offset",
+          "end_offset",
+          "start_offset_codepoint",
+          "end_offset_codepoint",
+          "start_line",
+          "start_column",
+          "end_line",
+          "end_column",
+          "lexical_status"
+        ],
+        "title": "TokenV2",
+        "type": "object"
+      },
+      "ToolStatus": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "executed": {
+            "default": false,
+            "title": "Executed",
+            "type": "boolean"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "failed",
+              "timeout",
+              "unavailable",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "available",
+          "status"
+        ],
+        "title": "ToolStatus",
+        "type": "object"
+      },
+      "UndoRequest": {
+        "properties": {
+          "session_id": {
+            "default": "default",
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "title": "UndoRequest",
         "type": "object"
       },
       "ValidationError": {
@@ -1424,6 +3070,89 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/agent-safety/results/{run_id}": {
+      "get": {
+        "operationId": "get_agent_safety_result_api_agent_safety_results__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Agent Safety Result Api Agent Safety Results  Run Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Agent Safety Result"
+      }
+    },
+    "/api/agent-safety/run": {
+      "post": {
+        "operationId": "run_agent_safety_api_agent_safety_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SafetyRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Run Agent Safety Api Agent Safety Run Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Agent Safety"
+      }
+    },
     "/api/agent/analyze": {
       "post": {
         "description": "Run code analysis with agent layer enabled (defaults to rules if set to off).",
@@ -1463,6 +3192,56 @@
         "summary": "Analyze Code Agent"
       }
     },
+    "/api/agent/events": {
+      "get": {
+        "operationId": "get_agent_events_api_agent_events_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "operation_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Operation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AgentEventResponse"
+                  },
+                  "title": "Response Get Agent Events Api Agent Events Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Agent Events"
+      }
+    },
     "/api/agent/status": {
       "get": {
         "description": "Return local agent status and local model availability.",
@@ -1482,15 +3261,15 @@
         "summary": "Get Agent Status Endpoint"
       }
     },
-    "/api/analyze": {
+    "/api/ai/consent": {
       "post": {
-        "description": "Run full hybrid static security analysis with pure caching and timeout.",
-        "operationId": "analyze_code_api_analyze_post",
+        "description": "Record or revoke remote source-processing consent for this server session.",
+        "operationId": "set_ai_consent_api_ai_consent_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AnalyzeRequest"
+                "$ref": "#/components/schemas/AIPermissionRequest"
               }
             }
           },
@@ -1501,7 +3280,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AnalysisResult"
+                  "additionalProperties": true,
+                  "title": "Response Set Ai Consent Api Ai Consent Post",
+                  "type": "object"
                 }
               }
             },
@@ -1518,7 +3299,408 @@
             "description": "Validation Error"
           }
         },
+        "summary": "Set Ai Consent"
+      }
+    },
+    "/api/ai/explain": {
+      "post": {
+        "description": "Explain a selected item from fresh deterministic evidence.",
+        "operationId": "ai_explain_api_ai_explain_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIExplainRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Ai Explain Api Ai Explain Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ai Explain"
+      }
+    },
+    "/api/ai/generate": {
+      "post": {
+        "description": "Generate a code draft, then run the deterministic analysis pipeline over it.",
+        "operationId": "ai_generate_api_ai_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIGenerateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Ai Generate Api Ai Generate Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ai Generate"
+      }
+    },
+    "/api/analyze": {
+      "post": {
+        "description": "api_version defaults to 1 and preserves the established response. Set api_version=2 and send source_version (incremented by the client on source edits) to receive AnalysisResultV2. The server echoes source_version and returns the SHA-256 source_hash.",
+        "operationId": "analyze_code_api_analyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "api_version=2 selects AnalysisResultV2; omitted or 1 preserves the legacy response.",
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/AnalysisResult"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AnalysisResultV2"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Legacy AnalysisResult by default; AnalysisResultV2 when api_version is 2."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
         "summary": "Analyze Code"
+      }
+    },
+    "/api/analyze/lexical": {
+      "post": {
+        "description": "source_version is required. The stage response reports unsupported or coupled work in omissions.",
+        "operationId": "analyze_lexical_api_analyze_lexical_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageAnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze Lexical"
+      }
+    },
+    "/api/analyze/quality": {
+      "post": {
+        "description": "source_version is required. The stage response reports unsupported or coupled work in omissions.",
+        "operationId": "analyze_quality_api_analyze_quality_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageAnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze Quality"
+      }
+    },
+    "/api/analyze/security": {
+      "post": {
+        "description": "source_version is required. The stage response reports unsupported or coupled work in omissions.",
+        "operationId": "analyze_security_api_analyze_security_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageAnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze Security"
+      }
+    },
+    "/api/analyze/syntax": {
+      "post": {
+        "description": "source_version is required. The stage response reports unsupported or coupled work in omissions.",
+        "operationId": "analyze_syntax_api_analyze_syntax_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StageAnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze Syntax"
+      }
+    },
+    "/api/ast/{analysis_id}/node/{node_id}": {
+      "get": {
+        "description": "Expand a previously returned AST node id on demand.",
+        "operationId": "get_ast_node_api_ast__analysis_id__node__node_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "title": "Analysis Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "node_id",
+            "required": true,
+            "schema": {
+              "title": "Node Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "depth",
+            "required": false,
+            "schema": {
+              "default": 3,
+              "title": "Depth",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_nodes",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Max Nodes",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ASTViewV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Ast Node"
+      }
+    },
+    "/api/capabilities": {
+      "get": {
+        "description": "Report installed tools, language adapters and current provider availability.",
+        "operationId": "get_capabilities_api_capabilities_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "session_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapabilitiesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Capabilities"
       }
     },
     "/api/feedback": {
@@ -1636,6 +3818,167 @@
           }
         },
         "summary": "Apply All Fixes"
+      }
+    },
+    "/api/fixes/apply": {
+      "post": {
+        "operationId": "apply_fix_v2_api_fixes_apply_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Apply Fix V2 Api Fixes Apply Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply Fix V2"
+      }
+    },
+    "/api/fixes/propose": {
+      "post": {
+        "description": "Create an unapplied, source-version-bound deterministic or AI proposal.",
+        "operationId": "propose_fix_v2_api_fixes_propose_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Propose Fix V2 Api Fixes Propose Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Propose Fix V2"
+      }
+    },
+    "/api/fixes/undo": {
+      "post": {
+        "operationId": "undo_fix_v2_api_fixes_undo_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UndoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Undo Fix V2 Api Fixes Undo Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Undo Fix V2"
+      }
+    },
+    "/api/fixes/verify": {
+      "post": {
+        "operationId": "verify_fix_v2_api_fixes_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Verify Fix V2 Api Fixes Verify Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Fix V2"
       }
     },
     "/api/health": {
@@ -1814,6 +4157,42 @@
           }
         },
         "summary": "Get Ml Insights"
+      }
+    },
+    "/api/reports/export": {
+      "post": {
+        "operationId": "export_report_api_reports_export_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Report"
       }
     },
     "/api/samples": {

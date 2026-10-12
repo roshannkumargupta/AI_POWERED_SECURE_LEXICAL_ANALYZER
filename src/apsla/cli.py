@@ -13,6 +13,7 @@ from rich.table import Table
 
 from apsla.models import Severity
 from apsla.pipeline import Analyzer
+from apsla.status_wording import NO_FINDINGS_DETECTED
 
 app = typer.Typer(
     name="apsla",
@@ -104,7 +105,7 @@ def analyze(
         console.print_json(result.model_dump_json(indent=2))
     else:
         table = Table(
-            title=f"APSLA Analysis: {file.name} (Health Score: {result.summary.score}/100)",
+            title=f"APSLA Analysis: {file.name}",
             header_style="bold cyan",
             show_lines=True,
         )
@@ -150,8 +151,8 @@ def analyze(
         else:
             console.print(
                 Panel(
-                    f"[bold green]No security findings detected in {file.name}. Health score: 100/100[/bold green]",
-                    title="Clean",
+                    f"[bold]{NO_FINDINGS_DETECTED}[/bold]",
+                    title="Checks run",
                 )
             )
 
@@ -233,7 +234,7 @@ def fix_command(
 
     allow_review = not all_safe
 
-    new_source, applied_ids, skipped_ids, diff, score_before, score_after = fix_all(
+    new_source, applied_ids, skipped_ids, diff, _score_before, _score_after = fix_all(
         source,
         language=target_lang,
         filename=file.name,
@@ -244,8 +245,6 @@ def fix_command(
     console.print(
         Panel(
             f"[bold cyan]APSLA Fix Proposer: {file.name}[/bold cyan]\n"
-            f"Health Score: [bold yellow]{score_before}/100[/bold yellow] -> "
-            f"[bold green]{score_after}/100[/bold green]\n"
             f"Applied Fixes: {len(applied_ids)} | Skipped / Manual: {len(skipped_ids)}",
             title="Remediation Summary",
         )

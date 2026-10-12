@@ -27,6 +27,8 @@ function applyTheme(mode: ThemeMode, resolved: ResolvedTheme) {
   root.classList.add('theme-switching');
   root.dataset.theme = resolved;
   root.dataset.themeMode = mode;
+  root.classList.toggle('dark', resolved === 'dark');
+  root.classList.toggle('theme-light', resolved === 'light');
   const meta = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]');
   if (meta) meta.content = resolved;
   requestAnimationFrame(() =>
@@ -73,6 +75,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       /* In-memory mode remains active. */
     }
   }, []);
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.altKey && event.key.toLowerCase() === 't') {
+        event.preventDefault();
+        setMode(resolved === 'dark' ? 'light' : 'dark');
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [resolved, setMode]);
   const toggleTheme = useCallback(
     () => setMode(resolved === 'dark' ? 'light' : 'dark'),
     [resolved, setMode]
@@ -89,3 +101,5 @@ export function useTheme() {
   if (!value) throw new Error('useTheme must be used within ThemeProvider');
   return value;
 }
+
+export const monacoThemeFor = (theme: ResolvedTheme) => `securelex-${theme}`;

@@ -47,3 +47,16 @@ class AgentObservation:
     facts: dict[str, Any]
     allowed_tools: list[str]
     context_snippet: str | None = None
+
+
+@dataclass
+class PatchProposal:
+    """Unapplied Fix Agent draft; edits remain review-only until approved elsewhere."""
+
+    target_finding_id: str
+    edits: list[dict[str, Any]] = field(default_factory=list)
+    diff: str = ""
+    rationale: str = ""
+    expected_outcome: str = ""
+    assumptions: list[str] = field(default_factory=list)
+    known_risks: list[str] = field(default_factory=list)

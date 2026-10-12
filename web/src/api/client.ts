@@ -198,6 +198,10 @@ export interface FixAllRequest {
   language?: string;
   filename?: string;
   allow_review?: boolean;
+  session_id?: string;
+  source_version?: number;
+  approved?: boolean;
+  approved_diff?: string;
 }
 
 export interface SkippedFixItem {
@@ -242,20 +246,57 @@ export interface MLInsightsResponse {
   error?: string | null;
 }
 
+export interface AnalysisDimensionV2 { status: 'ok' | 'issues' | 'incomplete' | 'unavailable'; reason?: string | null }
+export interface TokenV2 { id: string; language: string; lexeme: string; token_type: string; category: string; start_offset: number; end_offset: number; start_offset_codepoint: number; end_offset_codepoint: number; start_line: number; start_column: number; end_line: number; end_column: number; lexical_status: 'valid' | 'invalid' | 'unknown'; diagnostic_ids: string[] }
+export interface DiagnosticV2 { id: string; language: string; range: Range; category: 'lexical' | 'syntax' | 'semantic' | 'security' | 'quality'; severity: string; message: string; related_evidence: string[]; produced_by: string; certainty: 'definitive' | 'heuristic' | 'incomplete' }
+export interface TaintPathV2 { id: string; steps: Array<{ range: Range; text: string; role: 'source' | 'propagation' | 'sanitizer' | 'sink'; note: string }>; complete: boolean; limitation: string | null }
+export interface AnalysisResultV2 {
+  analysis_id: string; source_hash: string; source_version: number; language: string;
+  lexical_status: AnalysisDimensionV2; syntax_status: AnalysisDimensionV2; semantic_status: AnalysisDimensionV2;
+  tokens: TokenV2[]; lexical_summary: Record<string, Record<string, number>>; syntax_diagnostics: DiagnosticV2[];
+  semantic_diagnostics: DiagnosticV2[]; security_findings: Array<Omit<Finding, 'cwe'> & { cwe: string[]; taint_path_id: string | null; certainty: 'definitive' | 'heuristic' | 'incomplete'; remediation: string | null; tool_provenance: string[]; safe_pattern: string | null; detectors_fired: string[] }>;
+  taint_paths: TaintPathV2[]; quality: Array<{ id: string; kind: string; range: Range | null; value: unknown; evidence: string[]; measured: boolean }>;
+  tools: Array<{ name: string; kind: string; available: boolean; version: string | null; executed: boolean; duration_ms: number | null; status: 'ok' | 'failed' | 'timeout' | 'unavailable' | 'skipped'; reason: string | null }>;
+  timing: Record<string, number>; warnings: string[]; omissions: string[];
+}
+export type AnalysisStage = 'lexical' | 'syntax' | 'security' | 'quality';
+export interface AnalyzeV2Request { source: string; language?: string | null; filename?: string | null; api_version: 2; source_version: number; include_ast?: boolean; options: { include_tokens: boolean; stages: AnalysisStage[]; fixes?: boolean; ml?: boolean; include_suppressed?: boolean; agent?: 'off' | 'rules' | 'local' } }
+export interface APIErrorBody { code: string; message: string; status: number }
+export interface ASTNodeResponse { root_id: string; nodes: Array<{ id: string; type: string; field_name: string | null; range: Range; parent_id: string | null; child_ids: string[]; text_preview: string; token_ids: string[]; finding_ids: string[] }>; truncated: boolean; node_limit: number; depth_limit: number }
+export interface StageAnalysisResponse { analysis_id: string; source_hash: string; source_version: number; language: string; stage: string; lexical_status: AnalysisDimensionV2; syntax_status: AnalysisDimensionV2; semantic_status: AnalysisDimensionV2; ast: ASTNodeResponse | null; diagnostics: DiagnosticV2[]; findings: AnalysisResultV2['security_findings']; taint_paths: AnalysisResultV2['taint_paths']; tools: AnalysisResultV2['tools']; warnings: string[]; omissions: string[] }
+export interface PatchProposalRequest { source: string; source_version: number; language?: string; filename?: string; target_finding_id: string; session_id?: string; remote_consent?: boolean; origin?: 'rule' | 'ai' }
+export interface PatchProposal { id: string; source_hash: string; source_version: number; target_finding_id: string; origin: 'rule' | 'ai'; edits: Edit[]; diff: string; rationale: string; expected_outcome: string; assumptions: string[]; risks: string[]; created_at: string }
+export interface VerificationItem { id?: string; rule_id?: string; title?: string; message?: string; reason?: string; check?: string; [key: string]: unknown }
+export interface VerificationToolStatus { name: string; available: boolean; status: string; version?: string | null; reason?: string | null }
+export interface FixVerificationReport { resolved: VerificationItem[]; remaining: VerificationItem[]; introduced: VerificationItem[]; unverified: VerificationItem[]; outcome: 'Verified for specified checks' | 'Partially verified' | 'Verification failed' | 'Inconclusive'; tools: VerificationToolStatus[]; quality_delta: Record<string, number>; quality_evaluation?: Record<string, unknown> }
+export interface PatchActionRequest { source: string; source_version: number; language?: string; filename?: string; session_id?: string; proposal: PatchProposal; approved?: boolean }
+export interface UndoRequest { session_id?: string }
+export interface FixAllPreview { new_source: string; applied: string[]; skipped: SkippedFixItem[]; diff: string; score_before: number; score_after: number; source_version?: number; applied_to_source?: boolean }
+export interface SafetyRunRequest { scenario_id: string; language: string; mode: 'HARNESS' | 'LIVE'; config?: { session_id?: string; remote_consent?: boolean } }
+export interface ReportExportRequest { kind: 'analysis' | 'safety_run'; format: 'json' | 'markdown' | 'html' | 'csv'; source?: string | null; language?: string; filename?: string; source_version?: number; run_id?: string | null }
+export interface AIConsentRequest { session_id: string; consent: boolean }
+export interface AIExplainV2Request { session_id: string; remote_consent?: boolean; target: 'token' | 'diagnostic' | 'finding' | 'file' | 'patch'; source: string; language: string; target_id?: string | null; patch?: string | null }
+export interface AIGenerateRequest { session_id: string; remote_consent?: boolean; language: 'python' | 'java' | 'javascript' | 'cpp'; requirements: string[] }
+export interface AgentEvent { id: string; timestamp: string; operation_id: string; agent: string; action: string; tool: string | null; argument_summary: string; decision_source: string; outcome: string; duration: number; error?: string | null }
+export interface AIExplainV2Response { operation_id: string; explanation: string; provider: string; processing_location: string; provenance: Array<Record<string, unknown>>; limitations: string[]; grounded?: boolean; deterministic_fallback?: boolean }
+export interface AIGenerateResponse { operation_id: string; language: string; code: string; explanation: string; assumptions: string[]; requirements_checklist: Array<{ requirement: string; status: 'met' | 'unmet' | 'unverified'; evidence: string }>; analysis: AnalysisResultV2; executed: boolean; provider: string; processing_location: string; limitations: string[] }
+
 const API_BASE = '/api';
 
 export class ApiError extends Error {
-  status?: number;
+  code: string;
+  status: number;
   detail?: string;
-  constructor(message: string, status?: number, detail?: string) {
+  constructor(message: string, status = 0, detail?: string, code = 'request_error') {
     super(message);
     this.name = 'ApiError';
+    this.code = code;
     this.status = status;
     this.detail = detail;
   }
 }
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(endpoint: string, options: RequestInit = {}, responseKind: 'json' | 'blob' = 'json'): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
   const headers = {
     'Content-Type': 'application/json',
@@ -263,18 +304,21 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   };
 
   try {
-    const res = await fetch(url, { ...options, headers });
+    const res = await fetch(url, { credentials: 'include', ...options, headers });
     if (!res.ok) {
       let detail = res.statusText;
+      let code = 'http_error';
       try {
         const errorJson = await res.json();
-        detail = errorJson.detail || detail;
+        const body = errorJson.detail && typeof errorJson.detail === 'object' ? errorJson.detail : errorJson;
+        detail = body.message || body.detail || detail;
+        code = body.code || code;
       } catch {
         // use fallback
       }
-      throw new ApiError(detail || `Request failed with status ${res.status}`, res.status, detail);
+      throw new ApiError(detail || `Request failed with status ${res.status}`, res.status, detail, code);
     }
-    return (await res.json()) as T;
+    return (responseKind === 'blob' ? await res.blob() : await res.json()) as T;
   } catch (err: any) {
     if (err.name === 'AbortError') {
       throw err;
@@ -282,13 +326,27 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     if (err instanceof ApiError) {
       throw err;
     }
-    throw new ApiError(err.message || 'Network error or backend unreachable');
+    throw new ApiError(err.message || 'Network error or backend unreachable', 0, undefined, 'network_error');
   }
 }
 
 export interface LLMStatusResponse {
   configured: boolean;
   provider: string;
+}
+
+export interface AICapabilities {
+  ai: { provider: string; configured: boolean; reachable: boolean | null; model: string | null; processing_location: string; consent_required: boolean; remote_consented: boolean; model_present?: boolean; setup_message?: string | null };
+  features: { build_with_ai: boolean; fix_with_ai: boolean };
+  languages?: Array<{ id: string; name: string; extensions?: string[]; monaco_id?: string }>;
+  tools?: Array<{ name: string; available: boolean; status: string; version?: string | null; reason?: string | null }>;
+}
+export interface CapabilitiesResponse extends AICapabilities {
+  version: string;
+  languages: Array<{ id: string; name: string; extensions: string[]; monaco_id: string; lexer: Record<string, unknown>; parser: Record<string, unknown>; semantic_tools: string[]; security_tools: string[]; formatter: string | null }>;
+  tools: Array<{ name: string; kind: string; available: boolean; version: string | null; executed: boolean; duration_ms: number | null; status: string; reason: string | null }>;
+  limits: Record<string, unknown>;
+  features: { build_with_ai: boolean; fix_with_ai: boolean; [key: string]: unknown };
 }
 
 export interface LLMFixRequest {
@@ -316,6 +374,34 @@ export interface LLMExplainResponse {
 }
 
 export const apiClient = {
+  analyzeV2: (req: AnalyzeV2Request, signal?: AbortSignal) => request<AnalysisResultV2>('/analyze', { method: 'POST', body: JSON.stringify(req), signal }),
+  analyzeStageV2: (stage: 'lexical' | 'syntax', req: AnalyzeV2Request, signal?: AbortSignal) => request<StageAnalysisResponse>(`/analyze/${stage}`, { method: 'POST', body: JSON.stringify(req), signal }),
+  getASTNode: (analysisId: string, nodeId: string, signal?: AbortSignal, limits: { depth?: number; max_nodes?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (limits.depth !== undefined) query.set('depth', String(limits.depth));
+    if (limits.max_nodes !== undefined) query.set('max_nodes', String(limits.max_nodes));
+    const suffix = query.size ? `?${query}` : '';
+    return request<ASTNodeResponse>(`/ast/${encodeURIComponent(analysisId)}/node/${encodeURIComponent(nodeId)}${suffix}`, { signal });
+  },
+  proposeFix: (body: PatchProposalRequest, signal?: AbortSignal) => request<{ proposal: PatchProposal; applied: false }>('/fixes/propose', { method: 'POST', body: JSON.stringify(body), signal }),
+  verifyFix: (body: PatchActionRequest, signal?: AbortSignal) => request<{ proposal_id: string; report: FixVerificationReport; applied: false }>('/fixes/verify', { method: 'POST', body: JSON.stringify(body), signal }),
+  applyFixV2: (body: PatchActionRequest, signal?: AbortSignal) => request<{ applied: boolean; source?: string; source_hash?: string; source_version?: number; verification?: FixVerificationReport; report?: FixVerificationReport; reason?: string }>('/fixes/apply', { method: 'POST', body: JSON.stringify(body), signal }),
+  undoFix: (body: UndoRequest, signal?: AbortSignal) => request<{ source: string; source_hash: string; source_version: number }>('/fixes/undo', { method: 'POST', body: JSON.stringify(body), signal }),
+  runSafety: (body: SafetyRunRequest, signal?: AbortSignal) => request<{ run_id: string }>('/agent-safety/run', { method: 'POST', body: JSON.stringify(body), signal }),
+  getSafetyResult: <T = Record<string, unknown>>(runId: string, signal?: AbortSignal) => request<T>(`/agent-safety/results/${encodeURIComponent(runId)}`, { signal }),
+  exportReport: (body: ReportExportRequest, signal?: AbortSignal) => request<Blob>('/reports/export', { method: 'POST', body: JSON.stringify(body), signal }, 'blob'),
+  explainAI: (body: AIExplainV2Request, signal?: AbortSignal) => request<AIExplainV2Response>('/ai/explain', { method: 'POST', body: JSON.stringify(body), signal }),
+  generateAI: (body: AIGenerateRequest, signal?: AbortSignal) => request<AIGenerateResponse>('/ai/generate', { method: 'POST', body: JSON.stringify(body), signal }),
+  getCapabilities: (sessionId?: string, signal?: AbortSignal) =>
+    request<CapabilitiesResponse>(`/capabilities${sessionId ? `?session_id=${encodeURIComponent(sessionId)}` : ''}`, { signal }),
+  setRemoteConsent: (sessionId: string, consent: boolean, signal?: AbortSignal) =>
+    request<{ session_id: string; remote_consented: boolean }>('/ai/consent', {
+      method: 'POST', body: JSON.stringify({ session_id: sessionId, consent }), signal,
+    }),
+  getAgentEvents: async (operationId?: string, signal?: AbortSignal) => {
+    const query = operationId ? `?operation_id=${encodeURIComponent(operationId)}` : '';
+    return request<AgentEvent[]>(`/agent/events${query}`, { signal });
+  },
   analyze: (req: AnalyzeRequest, signal?: AbortSignal) =>
     request<AnalysisResult>('/analyze', {
       method: 'POST',
@@ -340,7 +426,7 @@ export const apiClient = {
       signal,
     }),
   applyFixAll: (req: FixAllRequest, signal?: AbortSignal) =>
-    request<FixAllResponse>('/fix-all', {
+    request<FixAllPreview>('/fix-all', {
       method: 'POST',
       body: JSON.stringify(req),
       signal,

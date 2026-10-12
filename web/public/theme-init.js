@@ -10,6 +10,8 @@
   const root = document.documentElement;
   root.dataset.theme = resolved;
   root.dataset.themeMode = mode;
+  root.classList.toggle('dark', resolved === 'dark');
+  root.classList.toggle('theme-light', resolved === 'light');
   const meta = document.querySelector('meta[name="color-scheme"]');
   if (meta) meta.content = resolved;
 })();

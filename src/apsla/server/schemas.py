@@ -2,9 +2,21 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel, Field, model_validator
 
 from apsla.models import AnalysisResult, Fix, VerificationResult
+from apsla.models_v2 import (
+    AnalysisDimension,
+    DiagnosticV2,
+    QualityObservationV2,
+    SecurityFindingV2,
+    TaintPathV2,
+    TokenV2,
+    ToolStatus,
+)
+from apsla.parsing_v2 import ASTViewV2
 
 
 class HealthResponse(BaseModel):
@@ -33,6 +45,9 @@ class AnalyzeOptions(BaseModel):
     include_tokens: bool = True
     include_suppressed: bool = False
     agent: str = "off"  # "off" | "rules" | "local"
+    stages: list[Literal["lexical", "syntax", "semantic", "security", "quality"]] = Field(
+        default_factory=lambda: ["lexical", "syntax", "semantic", "security", "quality"]
+    )
 
 
 class AgentStatusResponse(BaseModel):
@@ -53,6 +68,72 @@ class AnalyzeRequest(BaseModel):
     language: str | None = None
     filename: str | None = None
     options: AnalyzeOptions = Field(default_factory=AnalyzeOptions)
+    api_version: int = Field(default=1, ge=1, le=2)
+    source_version: int = Field(default=0, ge=0)
+    include_ast: bool = False
+    ast_max_depth: int = Field(default=8, ge=1, le=20)
+    ast_max_nodes: int = Field(default=500, ge=1, le=2000)
+
+    @model_validator(mode="after")
+    def require_v2_source_version(self) -> AnalyzeRequest:
+        if self.api_version == 2 and "source_version" not in self.model_fields_set:
+            raise ValueError("source_version is required when api_version is 2")
+        return self
+
+
+class CapabilitiesLanguage(BaseModel):
+    id: str
+    name: str
+    extensions: list[str]
+    monaco_id: str
+    lexer: dict[str, object]
+    parser: dict[str, object]
+    semantic_tools: list[str]
+    security_tools: list[str]
+    formatter: str | None
+
+
+class CapabilitiesResponse(BaseModel):
+    version: str
+    languages: list[CapabilitiesLanguage]
+    tools: list[ToolStatus]
+    ai: dict[str, object]
+    limits: dict[str, object]
+    features: dict[str, object]
+
+
+class StageAnalysisResponse(BaseModel):
+    analysis_id: str
+    source_hash: str
+    source_version: int
+    language: str
+    stage: str
+    lexical_status: AnalysisDimension = Field(
+        default_factory=lambda: AnalysisDimension(
+            status="unavailable", reason="Lexical stage not run."
+        )
+    )
+    syntax_status: AnalysisDimension = Field(
+        default_factory=lambda: AnalysisDimension(
+            status="unavailable", reason="Syntax stage not run."
+        )
+    )
+    semantic_status: AnalysisDimension = Field(
+        default_factory=lambda: AnalysisDimension(
+            status="unavailable", reason="Semantic stage not run."
+        )
+    )
+    tokens: list[TokenV2] = Field(default_factory=list)
+    lexical_summary: dict[str, dict[str, int]] = Field(default_factory=dict)
+    ast: ASTViewV2 | None = None
+    diagnostics: list[DiagnosticV2] = Field(default_factory=list)
+    findings: list[SecurityFindingV2] = Field(default_factory=list)
+    taint_paths: list[TaintPathV2] = Field(default_factory=list)
+    quality: list[QualityObservationV2] = Field(default_factory=list)
+    findings_summary: dict[str, dict[str, int]] = Field(default_factory=dict)
+    tools: list[ToolStatus] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    omissions: list[str] = Field(default_factory=list)
 
 
 class FixRequest(BaseModel):
@@ -81,6 +162,10 @@ class FixAllRequest(BaseModel):
     language: str = "python"
     filename: str = "<editor>"
     allow_review: bool = False
+    session_id: str = "default"
+    source_version: int = Field(default=0, ge=0)
+    approved: bool = False
+    approved_diff: str | None = None
 
 
 class SkippedFixItem(BaseModel):
@@ -99,6 +184,8 @@ class FixAllResponse(BaseModel):
     diff: str
     score_before: int
     score_after: int
+    source_version: int | None = None
+    applied_to_source: bool = False
 
 
 class FeedbackRequest(BaseModel):
@@ -201,4 +288,40 @@ class LLMExplainResponse(BaseModel):
     """AI-generated plain English explanation."""
 
     explanation: str
+    error: str | None = None
+
+
+class AIPermissionRequest(BaseModel):
+    session_id: str = Field(min_length=16, max_length=128)
+    consent: bool
+
+
+class AIExplainRequest(BaseModel):
+    session_id: str = Field(min_length=16, max_length=128)
+    remote_consent: bool = False
+    target: Literal["token", "diagnostic", "finding", "file", "patch"]
+    source: str = Field(max_length=512 * 1024)
+    language: str
+    target_id: str | None = None
+    patch: str | None = Field(default=None, max_length=128 * 1024)
+
+
+class AIGenerateRequest(BaseModel):
+    session_id: str = Field(min_length=16, max_length=128)
+    remote_consent: bool = False
+    language: Literal["python", "java", "javascript", "cpp"]
+    requirements: list[str] = Field(min_length=1, max_length=30)
+
+
+class AgentEventResponse(BaseModel):
+    id: str
+    timestamp: str
+    operation_id: str
+    agent: str
+    action: str
+    tool: str | None
+    argument_summary: str
+    decision_source: str
+    outcome: str
+    duration: float
     error: str | None = None

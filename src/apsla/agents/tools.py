@@ -11,6 +11,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+from apsla.agents.provider_v2 import ToolGateway
 from apsla.languages.registry import get_plugin
 from apsla.lexing.common import OffsetMap
 from apsla.lexing.token import Token
@@ -44,6 +45,7 @@ class AnalysisSession:
     triage_decisions: dict[str, str] = field(default_factory=dict)  # finding_id -> action
     finished: bool = False
     metrics: dict[str, Any] = field(default_factory=dict)
+    gateway: ToolGateway = field(default_factory=lambda: ToolGateway(budget=32))
 
     # Agent stage state tracking
     unicode_scan_data: dict[str, Any] | None = None
@@ -78,7 +80,13 @@ class AnalysisSession:
         """Execute a registered tool by name against this session."""
         if name not in TOOL_REGISTRY:
             raise KeyError(f"Tool '{name}' not found in registry")
-        res = TOOL_REGISTRY[name].execute(self, **kwargs)
+        operation = "validate" if name in {"apply_fix_to_copy", "verify_fix"} else "read"
+        res = self.gateway.call(
+            name,
+            operation,
+            kwargs,
+            lambda: TOOL_REGISTRY[name].execute(self, **kwargs),
+        )
 
         # Update stage flags
         if name == "unicode_scan":

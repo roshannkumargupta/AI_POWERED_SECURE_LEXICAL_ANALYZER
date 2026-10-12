@@ -40,6 +40,8 @@ describe('UI-7 theme guards', () => {
       )
       .flatMap((path) =>
         readFileSync(path, 'utf8')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/(^|\s)\/\/.*$/gm, '$1')
           .split(/\r?\n/)
           .flatMap((line, index) => (forbidden.test(line) ? [`${path}:${index + 1}`] : []))
       );

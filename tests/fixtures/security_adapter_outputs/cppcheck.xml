@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<results version="2"><errors><error id="bufferAccessOutOfBounds" severity="error" msg="Array index is out of bounds" cwe="120"><location file="input.cpp" line="3" column="5"/></error></errors></results>

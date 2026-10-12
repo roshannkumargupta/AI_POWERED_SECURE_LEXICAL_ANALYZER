@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from apsla.agents.base import BaseAgent
 from apsla.agents.guard import sanitize_code_snippet
-from apsla.agents.schemas import AgentObservation
+from apsla.agents.schemas import AgentObservation, PatchProposal
 
 if TYPE_CHECKING:
     from apsla.agents.tools import AnalysisSession
@@ -48,4 +48,31 @@ class FixAgent(BaseAgent):
             facts=facts,
             allowed_tools=sorted(self.allowed_tools),
             context_snippet=snippet,
+        )
+
+    @staticmethod
+    def proposal_from_candidate(
+        finding_id: str,
+        candidate: dict[str, object],
+        *,
+        rationale: str = "Deterministic fix candidate; review before applying.",
+        assumptions: list[str] | None = None,
+        known_risks: list[str] | None = None,
+    ) -> PatchProposal:
+        """Adapt an existing fix candidate to a structured, non-applied draft."""
+        raw_edits = candidate.get("edits", [])
+        edits = (
+            [item for item in raw_edits if isinstance(item, dict)]
+            if isinstance(raw_edits, list)
+            else []
+        )
+        raw_diff = candidate.get("diff", "")
+        return PatchProposal(
+            target_finding_id=finding_id,
+            edits=edits,
+            diff=raw_diff if isinstance(raw_diff, str) else "",
+            rationale=rationale,
+            expected_outcome=str(candidate.get("expected_outcome", candidate.get("title", ""))),
+            assumptions=list(assumptions or []),
+            known_risks=list(known_risks or []),
         )

@@ -1,0 +1,6 @@
+{
+  "source": "#include <iostream>\n\nint main() {\n    int a = 9;\n    int b = 19;\n    int sum = a + b;\n    std::cout << sum << '\\n';\n    return 0;\n}\n",
+  "prototype_claimed_token_count": 22,
+  "prototype_token_span_count_hand_count": 36,
+  "cpp_v2_non_trivia_token_count_hand_verified": 35
+}

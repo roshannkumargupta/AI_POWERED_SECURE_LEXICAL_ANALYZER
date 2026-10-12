@@ -9,7 +9,7 @@ import { createCodeActionProvider, setCodeActionHandlers } from '../monaco/codeA
 import { DecorationManager } from '../monaco/decorations';
 import { AnalysisResult, Finding, Fix } from '../api/client';
 import type { TokenInfo } from '../api/client';
-import { setEditorPosition, setEditorSelection, revealEditorRange } from '../editor/navigation';
+import { setEditorSelection, revealEditorRange } from '../editor/navigation';
 import { harness } from '../testHarness';
 import {
   initMonacoWorkers,
@@ -255,15 +255,11 @@ export const EditorPane: React.FC<EditorPaneProps> = ({
       new monaco.Range(range.start_line, range.start_col, range.end_line, range.end_col),
       `user-nav-${type}`
     );
-    if (type === 'token') {
-      setEditorSelection(
-        editorRef.current,
-        new monaco.Selection(range.start_line, range.start_col, range.end_line, range.end_col),
-        'user-nav-token'
-      );
-    } else {
-      setEditorPosition(editorRef.current, range.start_line, range.start_col, 'user-nav-finding');
-    }
+    setEditorSelection(
+      editorRef.current,
+      new monaco.Selection(range.start_line, range.start_col, range.end_line, range.end_col),
+      type === 'token' ? 'user-nav-token' : 'user-nav-diagnostic'
+    );
   }, [navTarget]);
 
   return (

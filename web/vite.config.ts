@@ -4,8 +4,19 @@ import react from '@vitejs/plugin-react';
 
 const apiPort = process.env.APSLA_API_PORT ?? '8010';
 
+function localMonacoLoader() {
+  return {
+    name: 'securelex-local-monaco-loader',
+    enforce: 'pre' as const,
+    transform(code: string, id: string) {
+      if (!id.includes('@monaco-editor/loader/lib/es/config/index.js')) return null;
+      return code.replace('https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs', '/monaco/vs');
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [localMonacoLoader(), react()],
   server: {
     port: 5173,
     proxy: {

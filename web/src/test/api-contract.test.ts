@@ -21,6 +21,7 @@ describe('B4 - API Contract with OpenAPI Schema', () => {
     expect(paths).toContain('/api/llm/status');
     expect(paths).toContain('/api/llm/fix');
     expect(paths).toContain('/api/llm/explain');
+    for (const path of ['/api/capabilities', '/api/ast/{analysis_id}/node/{node_id}', '/api/analyze/lexical', '/api/analyze/syntax', '/api/analyze/security', '/api/analyze/quality']) expect(paths).toContain(path);
 
     expect(typeof api.analyze).toBe('function');
     expect(typeof api.getHealth).toBe('function');
@@ -34,6 +35,40 @@ describe('B4 - API Contract with OpenAPI Schema', () => {
     expect(typeof api.getLLMStatus).toBe('function');
     expect(typeof api.requestLLMFix).toBe('function');
     expect(typeof api.requestLLMExplain).toBe('function');
+    expect(typeof api.analyzeV2).toBe('function');
+    expect(typeof api.getASTNode).toBe('function');
+    expect(typeof api.proposeFix).toBe('function');
+    expect(typeof api.verifyFix).toBe('function');
+    expect(typeof api.applyFixV2).toBe('function');
+    expect(typeof api.undoFix).toBe('function');
+    expect(typeof api.explainAI).toBe('function');
+    expect(typeof api.generateAI).toBe('function');
+    expect(typeof api.runSafety).toBe('function');
+    expect(typeof api.getSafetyResult).toBe('function');
+    expect(typeof api.exportReport).toBe('function');
+  });
+
+  it('matches the v2 analysis client contract to the checked-in golden schema', () => {
+    const requestProps = Object.keys(schema.components.schemas.AnalyzeRequest.properties);
+    const optionProps = Object.keys(schema.components.schemas.AnalyzeOptions.properties);
+    const responseProps = Object.keys(schema.components.schemas.AnalysisResultV2.properties);
+    const client = fs.readFileSync(path.resolve(__dirname, '../api/client.ts'), 'utf8');
+    for (const key of ['api_version', 'source_version', 'include_ast']) expect(requestProps).toContain(key);
+    for (const key of ['include_tokens', 'stages']) expect(optionProps).toContain(key);
+    for (const key of ['analysis_id', 'source_hash', 'source_version', 'lexical_status', 'syntax_status', 'semantic_status', 'tokens', 'security_findings', 'quality']) {
+      expect(responseProps).toContain(key);
+      expect(client).toContain(key);
+    }
+    expect(client).toContain("api_version: 2");
+    expect(client).toContain("'lexical' | 'syntax' | 'security' | 'quality'");
+  });
+
+  it('matches reviewed fix-all request fields to the backend golden schema', () => {
+    const properties = Object.keys(schema.components.schemas.FixAllRequest.properties);
+    for (const field of ['session_id', 'source_version', 'approved', 'approved_diff']) {
+      expect(properties).toContain(field);
+      expect(fs.readFileSync(path.resolve(__dirname, '../api/client.ts'), 'utf8')).toContain(field);
+    }
   });
 
   it('ensures AnalysisResult schema properties match frontend type definition', () => {

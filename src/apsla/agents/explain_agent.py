@@ -199,8 +199,6 @@ def verify_grounding(rewritten: str, finding: Finding, snippet: str) -> bool:
         if ident in COMMON_ENGLISH_WORDS:
             continue
         # If it's a code-like identifier, it must exist in the finding or snippet
-        if "_" in ident or ident in snippet.lower():
-            continue
         if ident not in grounding_corpus:
             return False
 

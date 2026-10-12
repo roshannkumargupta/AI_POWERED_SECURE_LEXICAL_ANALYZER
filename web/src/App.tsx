@@ -23,6 +23,7 @@ import { useAnalysis } from './hooks/useAnalysis';
 import { useFixActions } from './hooks/useFixActions';
 import { computeSafeFixCount, extractReviewFixItems } from './model/problemsSelection';
 import { buildPaletteCommands } from './model/paletteCommands';
+import type { AICapabilities } from './api/client';
 import {
   appRootStyle,
   backendWarningBannerStyle,
@@ -30,6 +31,7 @@ import {
   retryButtonStyle,
 } from './components/appStyles';
 import './ui5.css';
+import { SL28bWorkspace, View as SL28bView } from './components/SL28bWorkspace';
 
 export type { DocItem };
 
@@ -46,12 +48,22 @@ export const App: React.FC = () => {
   const directoryInputRef = useRef<HTMLInputElement>(null);
   const dirtyRef = useRef(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [sl28bView, setSl28bView] = useState<SL28bView>('workspace');
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [llmStatus, setLlmStatus] = useState<{ configured: boolean; provider: string }>({
     configured: false,
     provider: 'none',
   });
   const [isAskingAI, setIsAskingAI] = useState(false);
+  const [aiCapabilities, setAiCapabilities] = useState<AICapabilities | null>(null);
+  const [aiSessionId] = useState(() => {
+    try {
+      const key = 'securelex-ai-session';
+      let value = sessionStorage.getItem(key);
+      if (!value) { value = crypto.randomUUID(); sessionStorage.setItem(key, value); }
+      return value;
+    } catch { return crypto.randomUUID(); }
+  });
   const [tokenMap, setTokenMap] = useState<'off' | 'security' | 'full'>('off');
   const [tokenCategory, setTokenCategory] = useState('');
   const [tokenMainFilter, setTokenMainFilter] = useState<'All' | 'Security' | 'Lexical' | 'Syntax'>(
@@ -199,14 +211,28 @@ export const App: React.FC = () => {
           setLlmStatus(llm);
         }
       } catch {}
+      try {
+        setAiCapabilities(await api.getCapabilities(aiSessionId));
+      } catch {}
     } catch {
       dispatch({ type: 'SET_BACKEND_AVAILABLE', payload: false });
     }
-  }, [dispatch]);
+  }, [dispatch, aiSessionId]);
 
   useEffect(() => {
     checkBackendHealth();
   }, [checkBackendHealth]);
+
+  useEffect(() => {
+    const onWorkspaceShortcut = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || !event.shiftKey) return;
+      const key = event.key.toLowerCase();
+      const target: Record<string, SL28bView> = { e: 'explain', f: 'fix', a: 'ast', s: 'security', l: 'safety', b: 'build', r: 'export' };
+      if (target[key]) { event.preventDefault(); setSl28bView(target[key]); }
+    };
+    window.addEventListener('keydown', onWorkspaceShortcut);
+    return () => window.removeEventListener('keydown', onWorkspaceShortcut);
+  }, []);
 
   // Query Local Agent status on mount
   useEffect(() => {
@@ -281,6 +307,16 @@ export const App: React.FC = () => {
   };
 
   const selectedFinding = activeFindings.find((f) => f.id === state.selectedFindingId) || null;
+  const selectedToken = state.analysis && state.selectedTokenIndex !== null
+    ? deriveTokens(state.analysis)[state.selectedTokenIndex] || null : null;
+  const openCandidate = async (code: string, language: string, explanation: string) => {
+    const ext = language === 'cpp' ? 'cpp' : language === 'javascript' ? 'js' : language;
+    const name = `AI candidate.${ext}`;
+    const outcome = await handleOpenFileObject(new File([code], name, { type: 'text/plain' }));
+    if (outcome.error || outcome.unsupported) return;
+    dispatch({ type: 'ADD_TOAST', payload: { message: 'AI candidate opened as a new editable file; review its analysis before use.', type: 'info' } });
+    void explanation;
+  };
 
   const selectFindingAndToken = (id: string) => {
     dispatch({ type: 'SELECT_FINDING', payload: id });
@@ -415,6 +451,14 @@ export const App: React.FC = () => {
     languages: state.languages,
     onSetLanguage: (lang) => dispatch({ type: 'SET_LANGUAGE', payload: lang }),
     onOpenShortcuts: () => setShortcutsOpen(true),
+    onExplainToken: () => setSl28bView('explain'),
+    onProposeFix: () => setSl28bView('fix'),
+    onOpenSafetyLab: () => setSl28bView('safety'),
+    onExportReport: () => setSl28bView('export'),
+    onOpenAst: () => setSl28bView('ast'),
+    onShowSecurity: () => setSl28bView('security'),
+    onBuildWithAI: () => setSl28bView('build'),
+    onUndoFix: () => setSl28bView('fix'),
   });
 
   return (
@@ -456,6 +500,27 @@ export const App: React.FC = () => {
         ollamaReachable={state.agentStatus?.ollama_reachable ?? false}
         ollamaModel={state.agentStatus?.model || 'qwen2.5-coder:3b'}
       />
+
+      {aiCapabilities && (
+        <div data-qa="ai-processing-location" role="status" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 12px', fontSize: 11, color: 'var(--text-muted)', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
+          <span>AI provider: {aiCapabilities.ai.provider} · Processing: {aiCapabilities.ai.processing_location} · {aiCapabilities.ai.model || 'model not configured'} · {aiCapabilities.ai.reachable === false ? 'unavailable' : 'status reported by provider'}</span>
+          {aiCapabilities.ai.consent_required && (
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
+              <input
+                type="checkbox"
+                aria-label="Consent to send source code to the configured remote AI provider"
+                checked={aiCapabilities.ai.remote_consented}
+                onChange={async (event) => {
+                  const consent = event.currentTarget.checked;
+                  await api.setRemoteConsent(aiSessionId, consent);
+                  setAiCapabilities(await api.getCapabilities(aiSessionId));
+                }}
+              />
+              Allow source processing by remote provider for this session
+            </label>
+          )}
+        </div>
+      )}
 
       {/* Backend Offline Banner */}
       {!state.isBackendAvailable && (
@@ -507,7 +572,35 @@ export const App: React.FC = () => {
           }}
         />
 
-        <AppPanels
+        <nav aria-label="SecureLex analysis workspaces" style={{ display: 'flex', gap: 4, padding: '4px 8px', overflowX: 'auto', borderBottom: '1px solid var(--border)', background: 'var(--surface-2)' }}>
+          {([['workspace','Editor'],['problems','Problems'],['security','Security'],['ast','AST'],['explain','AI Explain'],['activity','Agent Activity'],['build','Build with AI'],['fix','Fix with AI'],['safety','Safety Lab'],['settings','Settings'],['export','Export']] as const).map(([view,label]) => <button key={view} type="button" aria-pressed={sl28bView===view} onClick={() => setSl28bView(view)} style={{ padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 4, background: sl28bView===view ? 'var(--surface-3)' : 'var(--surface-1)', color: 'var(--text-primary)' }}>{label}</button>)}
+        </nav>
+
+        {sl28bView !== 'workspace' && <SL28bWorkspace
+          view={sl28bView}
+          onView={setSl28bView}
+          source={state.source}
+          language={state.language === 'auto' ? (state.analysis?.language || 'python') : state.language}
+          filename={state.filename}
+          sourceVersion={activeDoc?.contentVersion ?? 0}
+          capabilities={(aiCapabilities || null) as any}
+          sessionId={aiSessionId}
+          selectedFinding={selectedFinding as any}
+          selectedToken={selectedToken as any}
+          findings={activeFindings as any}
+          onSelectFinding={(finding) => { dispatch({ type: 'SELECT_FINDING', payload: finding.id }); }}
+          onDataFlow={(id) => dispatch({ type: 'SET_DATA_FLOW', payload: id })}
+          theme={themeMode}
+          onThemeChange={setThemeMode}
+          onNavigate={(range) => setNavTarget({ type: 'finding', range: range as any, timestamp: Date.now() })}
+          onCandidate={(code, language, explanation) => { void openCandidate(code, language, explanation); }}
+          onSourceChange={(code) => {
+            dirtyRef.current = true;
+            dispatch({ type: 'SET_SOURCE', payload: code });
+            setOpenDocs((docs) => docs.map((doc) => doc.id === activeDocId ? { ...doc, content: code, dirty: true, contentVersion: doc.contentVersion + 1, status: 'stale' } : doc));
+          }}
+        />}
+        {sl28bView === 'workspace' && <AppPanels
           openDocs={openDocs}
           activeDocId={activeDocId}
           activateDoc={activateDoc}
@@ -594,7 +687,7 @@ export const App: React.FC = () => {
           agentMode={state.agentMode}
           agentModel={state.agentStatus?.model || 'qwen2.5-coder:3b'}
           samples={state.samples}
-        />
+        />}
       </main>
 
       <ExplanationPanel

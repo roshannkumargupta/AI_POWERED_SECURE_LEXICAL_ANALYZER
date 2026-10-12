@@ -1,0 +1,322 @@
+{
+  "language": "cpp",
+  "source": "#include <iostream>\n\nint main() {\n    int a = 9;\n    int b = 19;\n    int sum = a + b;\n\n    std::cout << sum << '\\n';\n    return 0;\n}\n",
+  "token_count": 35,
+  "tokens": [
+    {
+      "lexeme": "#include <iostream>",
+      "token_type": "PREPROCESSOR",
+      "category": "Preprocessor",
+      "start_line": 1,
+      "start_column": 1,
+      "end_line": 1,
+      "end_column": 20
+    },
+    {
+      "lexeme": "int",
+      "token_type": "KEYWORD",
+      "category": "Keyword",
+      "start_line": 3,
+      "start_column": 1,
+      "end_line": 3,
+      "end_column": 4
+    },
+    {
+      "lexeme": "main",
+      "token_type": "IDENTIFIER",
+      "category": "Identifier",
+      "start_line": 3,
+      "start_column": 5,
+      "end_line": 3,
+      "end_column": 9
+    },
+    {
+      "lexeme": "(",
+      "token_type": "DELIMITER",
+      "category": "Delimiter",
+      "start_line": 3,
+      "start_column": 9,
+      "end_line": 3,
+      "end_column": 10
+    },
+    {
+      "lexeme": ")",
+      "token_type": "DELIMITER",
+      "category": "Delimiter",
+      "start_line": 3,
+      "start_column": 10,
+      "end_line": 3,
+      "end_column": 11
+    },
+    {
+      "lexeme": "{",
+      "token_type": "DELIMITER",
+      "category": "Delimiter",
+      "start_line": 3,
+      "start_column": 12,
+      "end_line": 3,
+      "end_column": 13
+    },
+    {
+      "lexeme": "int",
+      "token_type": "KEYWORD",
+      "category": "Keyword",
+      "start_line": 4,
+      "start_column": 5,
+      "end_line": 4,
+      "end_column": 8
+    },
+    {
+      "lexeme": "a",
+      "token_type": "IDENTIFIER",
+      "category": "Identifier",
+      "start_line": 4,
+      "start_column": 9,
+      "end_line": 4,
+      "end_column": 10
+    },
+    {
+      "lexeme": "=",
+      "token_type": "OPERATOR",
+      "category": "Operator",
+      "start_line": 4,
+      "start_column": 11,
+      "end_line": 4,
+      "end_column": 12
+    },
+    {
+      "lexeme": "9",
+      "token_type": "NUMBER_LITERAL",
+      "category": "Literal",
+      "start_line": 4,
+      "start_column": 13,
+      "end_line": 4,
+      "end_column": 14
+    },
+    {
+      "lexeme": ";",
+      "token_type": "DELIMITER",
+      "category": "Delimiter",
+      "start_line": 4,
+      "start_column": 14,
+      "end_line": 4,
+      "end_column": 15
+    },
+    {
+      "lexeme": "int",
+      "token_type": "KEYWORD",
+      "category": "Keyword",
+      "start_line": 5,
+      "start_column": 5,
+      "end_line": 5,
+      "end_column": 8
+    },
+    {
+      "lexeme": "b",
+      "token_type": "IDENTIFIER",
+      "category": "Identifier",
+      "start_line": 5,
+      "start_column": 9,
+      "end_line": 5,
+      "end_column": 10
+    },
+    {
+      "lexeme": "=",
+      "token_type": "OPERATOR",
+      "category": "Operator",
+      "start_line": 5,
+      "start_column": 11,
+      "end_line": 5,
+      "end_column": 12
+    },
+    {
+      "lexeme": "19",
+      "token_type": "NUMBER_LITERAL",
+      "category": "Literal",
+      "start_line": 5,
+      "start_column": 13,
+      "end_line": 5,
+      "end_column": 15
+    },
+    {
+      "lexeme": ";",
+      "token_type": "DELIMITER",
+      "category": "Delimiter",
+      "start_line": 5,
+      "start_column": 15,
+      "end_line": 5,
+      "end_column": 16
+    },
+    {
+      "lexeme": "int",
+      "token_type": "KEYWORD",
+      "category": "Keyword",
+      "start_line": 6,
+      "start_column": 5,
+      "end_line": 6,
+      "end_column": 8
+    },
+    {
+      "lexeme": "sum",
+      "token_type": "IDENTIFIER",
+      "category": "Identifier",
+      "start_line": 6,
+      "start_column": 9,
+      "end_line": 6,
+      "end_column": 12
+    },
+    {
+      "lexeme": "=",
+      "token_type": "OPERATOR",
+      "category": "Operator",
+      "start_line": 6,
+      "start_column": 13,
+      "end_line": 6,
+      "end_column": 14
+    },
+    {
+      "lexeme": "a",
+      "token_type": "IDENTIFIER",
+      "category": "Identifier",
+      "start_line": 6,
+      "start_column": 15,
+      "end_line": 6,
+      "end_column": 16
+    },
+    {
+      "lexeme": "+",
+      "token_type": "OPERATOR",
+      "category": "Operator",
+      "start_line": 6,
+      "start_column": 17,
+      "end_line": 6,
+      "end_column": 18
+    },
+    {
+      "lexeme": "b",
+      "token_type": "IDENTIFIER",
+      "category": "Identifier",
+      "start_line": 6,
+      "start_column": 19,
+      "end_line": 6,
+      "end_column": 20
+    },
+    {
+      "lexeme": ";",
+      "token_type": "DELIMITER",
+      "category": "Delimiter",
+      "start_line": 6,
+      "start_column": 20,
+      "end_line": 6,
+      "end_column": 21
+    },
+    {
+      "lexeme": "std",
+      "token_type": "IDENTIFIER",
+      "category": "Identifier",
+      "start_line": 8,
+      "start_column": 5,
+      "end_line": 8,
+      "end_column": 8
+    },
+    {
+      "lexeme": "::",
+      "token_type": "OPERATOR",
+      "category": "Operator",
+      "start_line": 8,
+      "start_column": 8,
+      "end_line": 8,
+      "end_column": 10
+    },
+    {
+      "lexeme": "cout",
+      "token_type": "IDENTIFIER",
+      "category": "Identifier",
+      "start_line": 8,
+      "start_column": 10,
+      "end_line": 8,
+      "end_column": 14
+    },
+    {
+      "lexeme": "<<",
+      "token_type": "OPERATOR",
+      "category": "Operator",
+      "start_line": 8,
+      "start_column": 15,
+      "end_line": 8,
+      "end_column": 17
+    },
+    {
+      "lexeme": "sum",
+      "token_type": "IDENTIFIER",
+      "category": "Identifier",
+      "start_line": 8,
+      "start_column": 18,
+      "end_line": 8,
+      "end_column": 21
+    },
+    {
+      "lexeme": "<<",
+      "token_type": "OPERATOR",
+      "category": "Operator",
+      "start_line": 8,
+      "start_column": 22,
+      "end_line": 8,
+      "end_column": 24
+    },
+    {
+      "lexeme": "'\\n'",
+      "token_type": "CHAR_LITERAL",
+      "category": "Literal",
+      "start_line": 8,
+      "start_column": 25,
+      "end_line": 8,
+      "end_column": 29
+    },
+    {
+      "lexeme": ";",
+      "token_type": "DELIMITER",
+      "category": "Delimiter",
+      "start_line": 8,
+      "start_column": 29,
+      "end_line": 8,
+      "end_column": 30
+    },
+    {
+      "lexeme": "return",
+      "token_type": "KEYWORD",
+      "category": "Keyword",
+      "start_line": 9,
+      "start_column": 5,
+      "end_line": 9,
+      "end_column": 11
+    },
+    {
+      "lexeme": "0",
+      "token_type": "NUMBER_LITERAL",
+      "category": "Literal",
+      "start_line": 9,
+      "start_column": 12,
+      "end_line": 9,
+      "end_column": 13
+    },
+    {
+      "lexeme": ";",
+      "token_type": "DELIMITER",
+      "category": "Delimiter",
+      "start_line": 9,
+      "start_column": 13,
+      "end_line": 9,
+      "end_column": 14
+    },
+    {
+      "lexeme": "}",
+      "token_type": "DELIMITER",
+      "category": "Delimiter",
+      "start_line": 10,
+      "start_column": 1,
+      "end_line": 10,
+      "end_column": 2
+    }
+  ]
+}

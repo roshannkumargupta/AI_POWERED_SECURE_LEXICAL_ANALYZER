@@ -29,6 +29,11 @@ export default [
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-restricted-syntax': [
+        'error',
+        { selector: "JSXAttribute[name.name='dangerouslySetInnerHTML']", message: 'Render untrusted data as text.' },
+        { selector: "AssignmentExpression[left.property.name='innerHTML']", message: 'Render untrusted data as text.' },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'warn',

@@ -23,6 +23,14 @@ interface BuildPaletteCommandsOptions {
   languages: LanguageInfo[];
   onSetLanguage: (lang: string) => void;
   onOpenShortcuts: () => void;
+  onExplainToken: () => void;
+  onProposeFix: () => void;
+  onOpenSafetyLab: () => void;
+  onExportReport: () => void;
+  onOpenAst: () => void;
+  onShowSecurity: () => void;
+  onBuildWithAI: () => void;
+  onUndoFix: () => void;
 }
 
 export function buildPaletteCommands(opts: BuildPaletteCommandsOptions): PaletteCommand[] {
@@ -76,5 +84,13 @@ export function buildPaletteCommands(opts: BuildPaletteCommandsOptions): Palette
       run: () => opts.onSetLanguage(language.id),
     })),
     { label: 'Keyboard Shortcuts', run: opts.onOpenShortcuts },
+    { label: 'Explain selected token', run: opts.onExplainToken, keywords: 'Ctrl+Shift+E' },
+    { label: 'Propose a fix', run: opts.onProposeFix, keywords: 'Ctrl+Shift+F' },
+    { label: 'Open Safety Lab', run: opts.onOpenSafetyLab },
+    { label: 'Export report', run: opts.onExportReport },
+    { label: 'Open AST', run: opts.onOpenAst },
+    { label: 'Show Security', run: opts.onShowSecurity },
+    { label: 'Build with AI', run: opts.onBuildWithAI },
+    { label: 'Undo fix', run: opts.onUndoFix, keywords: 'Ctrl+Z' },
   ];
 }

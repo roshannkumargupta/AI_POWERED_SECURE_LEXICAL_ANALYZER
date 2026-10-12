@@ -8,6 +8,7 @@ import {
   foundBy,
 } from '../model/adapt';
 import { extractEditText } from '../utils/diff';
+import { sanitizeUntrustedText } from '../utils/sanitizeUntrusted';
 import { ExplanationActionBar } from './ExplanationActionBar';
 
 type Props = {
@@ -86,7 +87,7 @@ export const ExplanationPanel: React.FC<Props> = ({
 
   const handleCopyAdvice = () => {
     const toCopy = `${finding?.title || finding?.rule_id || 'Security Advice'}:\n${adviceText}`;
-    void navigator.clipboard.writeText(toCopy);
+    void navigator.clipboard.writeText(sanitizeUntrustedText(toCopy));
     setCopiedAdvice(true);
     setTimeout(() => setCopiedAdvice(false), 2000);
   };

@@ -25,7 +25,6 @@ def check_python_syntax(
     py_err: Exception | None = None
     try:
         ast.parse(source)
-        compile(source, "<string>", "exec")
         return []
     except (SyntaxError, IndentationError, TabError) as exc:
         py_err = exc
@@ -117,7 +116,7 @@ def check_python_syntax(
     # 4. Return outside function: return 5
     if re.search(r"^\s*return\b", source, re.MULTILINE):
         try:
-            compile(source, "<string>", "exec")
+            ast.parse(source)
         except SyntaxError as exc:
             if "return" in str(exc).lower():
                 rng = Range(start_line=1, start_col=1, end_line=1, end_col=len(source) + 1)
