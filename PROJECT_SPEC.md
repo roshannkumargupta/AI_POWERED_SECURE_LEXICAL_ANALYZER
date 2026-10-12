@@ -410,3 +410,18 @@ SecureLex IDE embeds a modular agent at every stage of the compilation and secur
 - **Strictly Local:** Powered exclusively by local Ollama instances (e.g., `qwen2.5-coder:3b` at `http://127.0.0.1:11434` or `localhost`). Remote hosts, external cloud APIs, and runtime internet connections are strictly prohibited ("outbound network calls: 0").
 - **Deterministic Authority:** Agents never replace compiler and analyzer engines; they only observe analysis state and choose tools from an explicit 14-tool allowlist.
 - **Robust Prompt-Injection Defense:** Untrusted source code is framed as data between fixed delimiters with line and character limits; LLM outputs are restricted to strict JSON schemas; agent planners cannot delete findings or bypass the fix verifier.
+
+## 22. Product v2 (SecureLex IDE)
+
+The v2 product requirements and SL2-0 audit artifacts are tracked in the following documents:
+
+- [Product v2 specification](docs/product_spec_v2.md) — authoritative Part 1–17 requirements, restored from the supplied `files (1).zip` during SL2-0.
+- [SL2-0 environment probe](docs/sl2_environment.md)
+- [SL2-0 repository inventory](docs/sl2_inventory.md)
+- [SL2-0 spec gap analysis](docs/sl2_gap_analysis.md)
+- [SL2-0 prototype audit](docs/sl2_prototype_audit.md)
+- [SL2-0 decisions](docs/sl2_decisions.md)
+- [SL2-0 implementation rules](docs/sl2_rules.md)
+- [SL2-0 phase plan](docs/sl2_plan.md)
+
+SL2 execution must follow `docs/sl2_rules.md`. The requirement matrix is now based on the supplied v2 spec; its Part 7.4 wording must be wired into the application in a later implementation phase.

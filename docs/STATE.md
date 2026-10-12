@@ -1,10 +1,10 @@
 # Project State & Progress Tracking
 
-**Current Phase:** Phase CLEAN-2 — Python & Frontend Code Quality, Component Architecture, Strict Typing & Unified CI Gates
-**Phase Tag:** `clean-2`
-**Date:** October 10, 2026
-**Status:** Complete & Fully Verified. Strict typing enforced with 0 errors across 117 Python source files (Mypy) and frontend (TypeScript strict mode). ESLint flat config and Prettier active. Decomposed all frontend components over 300 lines into shared primitives and subcomponents. Rule fixture coverage certified at 100% (64 tested rules covering all 58 catalog rules across Python, Java, JS, C++). 3x test flakiness audit passed with 0 failures; test coverage certified at 87%. Unified CI gate runner (`scripts/check_all.py`) and markdown link validator (`scripts/check_links.py`) operational. All 11 verification gates pass cleanly with 0 golden diffs.
+**Current Phase:** SL2-10 — Acceptance and handoff (**partial; acceptance gates remain**)  
+**Phase Tag:** none  
+**Date:** October 12, 2026
 
+The CLEAN-2 section below is the historical baseline recorded before SL2 work. For current v2 status and evidence, use the SL2 phase log at the end of this file and the reports linked there.
 ## Phase CLEAN-2 Progress (October 10, 2026)
 - **Part A (Python Quality & Strict Typing):** Configured strict Ruff (`ruff.toml`) and Mypy (`mypy.ini`, 117 source files fully typed with zero errors). Established domain exceptions hierarchy in `src/apsla/exceptions.py`. Decomposed diagnostic engine by language (`src/apsla/diagnostics/`) and extracted `numeric_lexical.py`. Extracted shared security rule helpers across plugins in `src/apsla/rules/helpers.py`. Added comprehensive docstrings to fix engine and registry classes.
 - **Part B (Frontend Architecture & TypeScript Quality):** Configured `strict: true` in `tsconfig.json`, ESLint Flat Config (`eslint.config.js`), and Prettier. Built shared accessible UI primitives (`Badge`, `Button`, `Chip`, `Segmented`, `Switch`, `Select`) in `web/src/components/primitives/`. Extracted pure domain models in `web/src/model/` (`problemsSelection.ts`, `paletteCommands.ts`, `doc.ts`) and custom hooks (`useKeyboardShortcuts.ts`, `useDocuments.ts`, `useAnalysis.ts`, `useFixActions.ts`). Decomposed all monolithic components over 300 lines (`ProblemsPanel`, `FindingPanel`, `Sidebar`, `TopBar`, `App`, `DiffView`, `MlInsights`, `FlyoutPanel`, `AgentTraceTab`, `EditorPane`). Added API contract test (`api-contract.test.ts`) validating against golden OpenAPI schema.
@@ -473,4 +473,28 @@ curl.exe -s http://127.0.0.1:8010/api/health
   - `.\.venv\Scripts\ruff.exe check .`: All checks passed cleanly (0 errors).
   - `.\.venv\Scripts\pytest.exe -q`: 100% of all tests passed cleanly (470+ tests).
   - `npm.cmd run qa:full`: Complete E2E pipeline passed.
+
+
+## SL2-0 through SL2-10 v2 status (2026-10-12)
+
+This log preserves the pre-SL2 history above. Detailed evidence is in the linked per-phase reports and explained notes.
+
+| Phase | Status | Evidence |
+|---|---|---|
+| SL2-0 Audit, decisions and plan | Complete | `docs/sl2_environment.md`, `docs/sl2_inventory.md`, `docs/sl2_gap_analysis.md`, `docs/sl2_prototype_audit.md`, `docs/sl2_decisions.md`, `docs/sl2_rules.md`, `docs/sl2_plan.md` |
+| SL2-1 Models, adapters, tool runner and API v2 | Partial | `reports/sl2_1_evidence.md`; schema/API docs exist; see actual test outcomes there |
+| SL2-2 Lexer/token contract | Partial | `reports/sl2_2_evidence.md`, `docs/lexer_conformance.md`, `docs/token_types.md`; conformance scope and tests remain bounded by the recorded results |
+| SL2-3 Parsing and syntax/semantic diagnostics | Partial | `reports/sl2_3_evidence.md`; optional compiler/tool availability limits semantic checks |
+| SL2-4 Security adapters, rules and quality | Partial | `reports/sl2_4_evidence.md`, `docs/rules_catalogue.md`; optional external tools are host-dependent |
+| SL2-5 Providers and agent gateway | Partial | `reports/sl2_5_evidence.md`; no live model acceptance on this host |
+| SL2-6 Fix proposal and independent verification | Partial | `reports/sl2_6_evidence.md`; browser flow and optional verification checks depend on host capabilities |
+| SL2-7 Safety Lab and exports | Partial | `reports/sl2_7_evidence.md`; deterministic harness results are distinct from live-model runs |
+| SL2-8b API-wired product workspace | Partial | `reports/sl2_8b_evidence.md`; component tests/build passed historically, browser golden path/screenshots are blocked |
+| SL2-9 Application hardening | Partial | `reports/sl2_9_evidence.md`; memory isolation, chunked request cap and browser session isolation remain gaps |
+| SL2-10 Acceptance and handoff | Partial | `reports/sl2_final_acceptance.md`, `reports/sl2_10_evidence.md`; mypy/full pytest/browser/fresh-clone and full-suite three-run requirements remain incomplete |
+
+SL2-10 repeat runs: Vitest passed 153 tests across 24 files on three consecutive runs; `pytest -m security` passed 15 tests on three consecutive runs. The full Python suite did not yield a result, mypy reports 36 errors, and browser E2E is denied on localhost port 9222.
+
+The shared checkout is on branch `sl2-0` and contains uncommitted changes from multiple phases. Phase tags were not created. Do not interpret an earlier phase summary as current machine verification; consult each evidence report for its commands and date.
+
 

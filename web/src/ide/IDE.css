@@ -137,7 +137,7 @@
 .ide-hidden { display: none !important; }
 .ide-title-divider { width: 1px; height: 14px; background: var(--color-vs-border); flex: none; }
 .ide-shell .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; overflow-wrap: normal; direction: ltr; font-feature-settings: 'liga'; -webkit-font-feature-settings: 'liga'; font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; -webkit-font-smoothing: antialiased; }
-.ide-workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--color-vs-bg); }
+.ide-workspace { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--color-vs-bg); }
 .ide-tabbar { height: var(--ide-tab-height); flex: 0 0 var(--ide-tab-height); display: flex; min-width: 0; overflow: auto hidden; background: var(--color-vs-darker); border-bottom: 1px solid var(--color-vs-border); scrollbar-width: thin; }
 .ide-tab { flex: 0 0 auto; min-width: 108px; max-width: 210px; justify-content: space-between; gap: 7px; padding: 0 6px 0 9px; border-right: 1px solid var(--color-vs-border); color: var(--color-vs-muted); background: var(--color-vs-darker); }
 .ide-tab.active { color: var(--color-vs-light); background: var(--color-vs-bg); border-top: 1px solid var(--color-vs-blue); }
@@ -155,7 +155,7 @@
 .ide-editor-area { min-height: 0; flex: 1; overflow: hidden; background: var(--color-vs-bg); }
 .ide-resizer { z-index: 1; touch-action: none; }
 .ide-panel { min-height: 120px; flex: 0 0 auto; display: flex; flex-direction: column; overflow: hidden; border-top: 1px solid var(--color-vs-border); background: var(--color-vs-darker); }
-.ide-panel.maximised { flex: 1; }
+.ide-panel.maximised { position: absolute; z-index: 3; top: calc(var(--ide-tab-height) + var(--ide-toolbar-height)); right: 0; bottom: 0; left: 0; height: auto !important; min-height: 0; flex: none; }
 .ide-panel-tabs { height: var(--ide-panel-tab-height); flex: 0 0 var(--ide-panel-tab-height); display: flex; align-items: stretch; justify-content: space-between; padding: 0 8px 0 9px; border-bottom: 1px solid var(--color-vs-border); }
 .ide-language-wrap { position: relative; height: 100%; display: flex; align-items: center; }
 .ide-tree-message { padding: 7px 12px; color: var(--color-vs-muted); font: .76rem Inter, sans-serif; }
@@ -174,3 +174,6 @@
 @media (max-width: 760px) { .ide-sidebar { flex-basis: 200px; width: 200px; } .ide-titlebar { grid-template-columns: minmax(145px,1fr) minmax(150px,1fr) auto; } .ide-project { display: none; } .ide-theme-switch button { padding-inline: 5px; } .ide-theme-switch button span:last-child { display: none; } .ide-toolbar-right .ide-small-button .ide-label { display: none; } .ide-status-right .ide-status-divider, .ide-status-right .ide-status-item:nth-of-type(n+3) { display: none; } }
 .ide-tab-stale { padding: 1px 4px; border-radius: 3px; color: var(--token-invalid); background: color-mix(in srgb, var(--token-invalid) 12%, transparent); font: 600 9px Inter, sans-serif; }
 .ide-toast { position: fixed; z-index: 20; right: 18px; bottom: 38px; max-width: min(440px, calc(100vw - 36px)); padding: 9px 13px; border: 1px solid var(--color-vs-border); border-radius: 5px; color: var(--color-vs-text); background: var(--color-vs-elevated);  font: .78rem Inter, sans-serif; } .ide-toast.error { border-color: var(--token-invalid); }
+.ide-backend-banner { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 34px; padding: 4px 12px; border-bottom: 1px solid var(--color-vs-red); color: var(--color-vs-text); background: color-mix(in srgb, var(--color-vs-red) 16%, var(--color-vs-elevated)); font: .78rem Inter, sans-serif; }
+.ide-backend-banner button { padding: 3px 10px; border: 1px solid var(--color-vs-borderSubtle); border-radius: 3px; color: var(--color-vs-text); background: var(--color-vs-elevated); cursor: pointer; }
+.ide-backend-banner button:focus-visible { outline: 2px solid var(--color-vs-blue); outline-offset: 2px; }

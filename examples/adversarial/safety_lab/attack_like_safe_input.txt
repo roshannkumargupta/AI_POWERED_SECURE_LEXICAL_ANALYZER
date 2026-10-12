@@ -1,0 +1,2 @@
+Safe source strings for Python, Java, JavaScript, and C++ are defined per language in scenarios.json.
+The placeholder host example.invalid and attack-like prose are inert data; no payload or credential is included.

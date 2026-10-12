@@ -1,0 +1,11 @@
+﻿
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/ROSHAN GUPTA/OneDrive/Documents/Desktop/AIDS -Nitw/sem3/toc/securelex-ide/web[39m
+
+ [32mΓ£ô[39m src/test/workspace.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32mΓ£ô[39m src/test/api-contract.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32mΓ£ô[39m src/test/problemsSelection.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 20[2mms[22m[39m
+ [32mΓ£ô[39m src/test/ui7-contrast.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 127[2mms[22m[39m
+ [32mΓ£ô[39m src/test/ui2-utils.test.ts [2m([22m[2m53 tests[22m[2m)[22m[90m 31[2mms[22m[39m
+ [32mΓ£ô[39m src/test/ui8-theme.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 214[2mms[22m[39m
+ [32mΓ£ô[39m src/test/tokens-derive.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 71[2mms[22m[39m
+ [32mΓ£ô[39m src/test/ui5-adapt.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 107[2mms[22m[39m

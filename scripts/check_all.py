@@ -1,6 +1,6 @@
 """Unified repository verification and CI gate script for SecureLex IDE.
 
-Executes all verification gates across Python backend and TypeScript frontend:
+Executes verification gates across Python backend and TypeScript frontend:
 1. Rule fixture schema and coverage check (`scripts/check_rule_fixtures.py`)
 2. Documentation markdown link integrity (`scripts/check_links.py`)
 3. Python linting (`ruff check .`)
@@ -12,6 +12,8 @@ Executes all verification gates across Python backend and TypeScript frontend:
 9. Frontend unit and contract tests (`npm test`)
 10. Frontend production build (`npm run build`)
 11. Python test suite (`pytest -q`)
+12. Python security tests (`pytest -m security -q`)
+13. Browser E2E matrix (`npm run e2e`; requires running app and CDP on port 9222)
 """
 
 from __future__ import annotations
@@ -41,12 +43,11 @@ def get_npm_cmd() -> str:
     return shutil.which("npm.cmd") or shutil.which("npm") or "npm"
 
 
-def run_gate(name: str, cmd: list[str] | str, cwd: Path, env: dict[str, str] | None = None) -> tuple[bool, float, str]:
+def run_gate(name: str, cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> tuple[bool, float, str]:
     """Execute a single gate command, returning (success, elapsed_seconds, output)."""
     print(f"\n[GATE] Running {name}...", flush=True)
     start_t = time.perf_counter()
 
-    use_shell = isinstance(cmd, str) or os.name == "nt"
     run_env = os.environ.copy()
     run_env["PYTHONUTF8"] = "1"
     if env:
@@ -62,7 +63,8 @@ def run_gate(name: str, cmd: list[str] | str, cwd: Path, env: dict[str, str] | N
             text=True,
             encoding="utf-8",
             errors="replace",
-            shell=use_shell,
+            shell=False,
+            timeout=900,
             check=False,
         )
         elapsed = time.perf_counter() - start_t
@@ -143,14 +145,18 @@ def main() -> int:
         ok, el, _ = run_gate("Frontend Production Build", [npm_cmd, "run", "build"], WEB_DIR)
         results.append(("Frontend Production Build", ok, el))
 
-    # 11. Pytest
+    # 11. Python suite
     if not skip_pytest:
         pytest_exe = ROOT / ".venv" / ("Scripts" if os.name == "nt" else "bin") / ("pytest.exe" if os.name == "nt" else "pytest")
         pytest_cmd = [str(pytest_exe) if pytest_exe.exists() else "pytest", "-q"]
         ok, el, _ = run_gate("Python Pytest Suite", pytest_cmd, ROOT)
         results.append(("Python Pytest Suite", ok, el))
-        # Revert any test-induced changes to reports/
-        subprocess.run(["git", "checkout", "--", "reports/"], cwd=str(ROOT), capture_output=True, check=False)
+
+        ok, el, _ = run_gate("Python Security Tests", [py_exe, "-m", "pytest", "-m", "security", "-q"], ROOT)
+        results.append(("Python Security Tests", ok, el))
+
+        ok, el, _ = run_gate("Browser E2E Matrix", [npm_cmd, "run", "e2e"], WEB_DIR)
+        results.append(("Browser E2E Matrix", ok, el))
 
     print("\n" + "=" * 70, flush=True)
     print("  VERIFICATION SUMMARY", flush=True)
@@ -164,7 +170,7 @@ def main() -> int:
     print("=" * 70, flush=True)
 
     if all_passed:
-        print("ALL VERIFICATION GATES PASSED! Repository is ready for merge/release.\n", flush=True)
+        print("All configured verification gates passed.\n", flush=True)
         return 0
 
     print("ONE OR MORE VERIFICATION GATES FAILED. See details above.\n", flush=True)

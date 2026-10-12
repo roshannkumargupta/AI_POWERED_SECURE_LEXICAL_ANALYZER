@@ -2,8 +2,8 @@
 
 Generated from `manifest.json` and actual `Analyzer` runs.
 - Manifest entries: 146; shipped: 136; pending: 10.
-- API sample-list source load: 0.0582s (timed via shared catalogue loader).
-- Slowest shipped analysis: py-a06 at 0.631s.
+- API sample-list source load: 0.0668s (timed via shared catalogue loader).
+- Slowest shipped analysis: py-a06 at 0.569s.
 
 ## Counts by language and level
 

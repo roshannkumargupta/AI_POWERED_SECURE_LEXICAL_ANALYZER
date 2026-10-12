@@ -71,10 +71,24 @@ export function overlaps(a: Range, b: Range): boolean {
 }
 
 const cache = new WeakMap<object, DerivedToken[]>();
+const severityRank: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3, info: 4 };
 export function deriveTokens(result: AnalysisResult): DerivedToken[] {
   const cached = cache.get(result);
   if (cached) return cached;
   const tokens = result.tokens || [];
+  const findings = (result.findings || []).map((finding) => ({
+    finding,
+    category: findingCategory(finding),
+    steps: finding.taint_path || [],
+    severity: finding.severity || 'Safe',
+    severityRank: severityRank[finding.severity?.toLowerCase() ?? ''] ?? Number.POSITIVE_INFINITY,
+    lexical: finding.kind === 'lexical',
+    unicodeRule: finding.rule_id.includes('UNI'),
+    obfuscationRule: finding.rule_id.includes('OBF') || /UNI-006/.test(finding.rule_id),
+    ruleDetector: finding.sources?.includes('rule') ?? false,
+    unicodeEvidence: finding.evidence?.unicode,
+    callEvidence: Boolean(finding.evidence?.call),
+  }));
   const derived = tokens.map((token, index): DerivedToken => {
     const text = token.token ?? token.text ?? '';
     const range = token.range || {
@@ -86,38 +100,39 @@ export function deriveTokens(result: AnalysisResult): DerivedToken[] {
     const related: Finding[] = [];
     const steps: Finding['taint_path'] = [];
     const unicode: unknown[] = [];
-    const lexicalError = (result.findings || []).some(
-      (finding) => finding.kind === 'lexical' && overlaps(range, finding.range)
-    );
+    let lexicalError = false;
     const detectors = new Set<string>();
     let role: TokenRole = 'Neutral';
     let severity = 'Safe';
-    for (const finding of result.findings || []) {
-      const matchedSteps = (finding.taint_path || []).filter((step) => overlaps(range, step.range));
+    let currentSeverityRank = Number.POSITIVE_INFINITY;
+    const relatedCategories: string[] = [];
+    const fullFlow: Finding['taint_path'] = [];
+    for (const info of findings) {
+      const { finding } = info;
       const findingHit = overlaps(range, finding.range);
-      const evidenceUnicode = finding.evidence?.unicode;
+      if (info.lexical && findingHit) lexicalError = true;
+      const matchedSteps = info.steps.filter((step) => overlaps(range, step.range));
       const unicodeHit = Boolean(
-        (finding.rule_id.includes('UNI') && findingHit) ||
-        (evidenceUnicode && (findingHit || matchedSteps.length))
+        (info.unicodeRule && findingHit) ||
+        (info.unicodeEvidence && (findingHit || matchedSteps.length))
       );
       if (!findingHit && !matchedSteps.length && !unicodeHit) continue;
       related.push(finding);
-      if (findingHit && finding.sources?.includes('rule')) detectors.add('Rule');
+      relatedCategories.push(info.category);
+      if (matchedSteps.length) fullFlow.push(...info.steps);
+      if (findingHit && info.ruleDetector) detectors.add('Rule');
       if (matchedSteps.length) {
         detectors.add('Taint');
         steps.push(...matchedSteps);
       }
       if (unicodeHit) {
         detectors.add('Unicode');
-        unicode.push(evidenceUnicode ?? finding.evidence);
+        unicode.push(info.unicodeEvidence ?? finding.evidence);
       }
-      if (
-        (finding.severity &&
-          ['critical', 'high', 'medium', 'low', 'info'].indexOf(finding.severity) <
-            ['critical', 'high', 'medium', 'low', 'info'].indexOf(severity.toLowerCase())) ||
-        severity === 'Safe'
-      )
-        severity = finding.severity;
+      if (info.severityRank < currentSeverityRank) {
+        severity = info.severity;
+        currentSeverityRank = info.severityRank;
+      }
       const step = matchedSteps.find(
         (item) =>
           item.step === 'source' ||
@@ -135,20 +150,13 @@ export function deriveTokens(result: AnalysisResult): DerivedToken[] {
                 ? 'Sanitizer'
                 : 'Propagation';
         if (role === 'Neutral' || mapped === 'Sink' || mapped === 'Source') role = mapped;
-      } else if (finding.rule_id.includes('OBF') || /UNI-006/.test(finding.rule_id))
+      } else if (info.obfuscationRule)
         role = 'Obfuscated/Encoded';
       else if (unicodeHit) role = 'Unicode';
-      else if (findingHit && finding.evidence?.call) role = 'Dangerous API';
+      else if (findingHit && info.callEvidence) role = 'Dangerous API';
     }
     if (token.label === 'SUSPICIOUS' || token.label === 'MALICIOUS') detectors.add('ML');
-    const categories = [
-      ...new Set(
-        related.map(findingCategory).filter((category) => !['APS', 'Other'].includes(category))
-      ),
-    ];
-    const fullFlow = related
-      .filter((finding) => (finding.taint_path || []).some((step) => overlaps(range, step.range)))
-      .flatMap((finding) => finding.taint_path || []);
+    const categories = [...new Set(relatedCategories.filter((category) => !['APS', 'Other'].includes(category)))];
     const securityRelevant = role !== 'Neutral' || severity !== 'Safe' || detectors.size > 0;
     return {
       index,

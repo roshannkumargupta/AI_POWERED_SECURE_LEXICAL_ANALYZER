@@ -5,6 +5,7 @@ force-exclude = true
 
 exclude = [
     "legacy",
+    "examples",
     "tests/fixtures",
     "src/apsla/samples",
     "data",

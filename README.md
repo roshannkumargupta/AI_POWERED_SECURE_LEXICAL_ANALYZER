@@ -1,77 +1,92 @@
-# SecureLex IDE (`apsla`)
+# SecureLex IDE
 
-SecureLex IDE is an intelligent, multi-language secure lexical analyzer and IDE-style static/hybrid code analysis platform supporting Python, Java, JavaScript, and C++.
+SecureLex IDE is a local-first editor and static analysis workbench for Python, Java, JavaScript, and C/C++. Its deterministic lexer, parser integrations, rule checks, and patch verifier work without a paid AI service. Results describe the checks that actually ran; static analysis cannot prove a program safe.
 
-## Features
+## Architecture
 
-- **Hybrid Detection**: Seamless fusion of deterministic rule checking, real taint data-flow analysis, and ML confidence scoring.
-- **Unicode Defense**: Detection and mitigation of Trojan Source (bidi overrides), zero-width characters, homoglyphs, and confusables.
-- **Fix & Verify Engine**: Generates syntax-aware remediation patches and re-analyzes transformed code to verify that vulnerabilities disappear without introducing regressions.
-- **Offline & Cross-Platform**: Self-contained architecture without runtime CDN requirements, compatible with Windows, macOS, and Linux.
+- `web/`: React, TypeScript, Vite, Monaco, local fonts and Lucide icons. The workspace UI talks to FastAPI through `web/src/api/client.ts`.
+- `src/apsla/server/`: FastAPI routes, request/response schemas, tool runner, resource limits and API compatibility routes.
+- `src/apsla/languages/` and `src/apsla/lexing/`: language lexers, parsing, diagnostics and language-specific analysis.
+- `src/apsla/rules/`, `src/apsla/taint/`, `src/apsla/security_v2.py`: deterministic security rules, taint tracking and result normalization.
+- `src/apsla/agents/` and `src/apsla/llm/`: bounded provider/agent adapters. Model output is untrusted and does not replace deterministic checks.
+- `src/apsla/fixes/`: rule or AI patch proposals and independent before/after verification.
 
-## Quickstart
+For the current implementation status and known gaps, see [docs/STATE.md](docs/STATE.md), [docs/threat_model.md](docs/threat_model.md), and [reports/sl2_final_acceptance.md](reports/sl2_final_acceptance.md).
 
-```bash
-# Set up environment
+## Setup
+
+Requires Python 3.12 or newer and Node.js/npm compatible with the lockfile. From the repository root:
+
+```powershell
 python -m venv .venv
-source .venv/bin/activate  # Or on Windows: .venv\Scripts\activate
-pip install -r requirements-dev.txt
-pip install -e .
-
-# CLI analysis
-apsla analyze <path-to-source-file>
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+cd web
+npm ci
+cd ..
 ```
 
-## Documentation
+On macOS/Linux, activate `.venv` and use `python -m pip install -e '.[dev]'`. Optional compiler/analyzer tools are discovered from PATH and reported through `GET /api/capabilities`; install only the tools you intend to use. Supported adapters include g++/gcc/clang/clang++, javac, node, Ruff, Pyflakes, mypy, ESLint, Bandit, Semgrep, cppcheck and clang-tidy. Availability depends on the host and tool configuration. Semgrep uses only the repository-local `rules/semgrep/` rules when that adapter is configured.
 
-Comprehensive project documentation is indexed in **[docs/README.md](docs/README.md)**:
-- **[System Architecture](docs/architecture.md)** & **[Threat Model](docs/threat_model.md)**
-- **[Security Rules Catalogue](docs/rules_catalogue.md)** (58 rules across 4 languages)
-- **[REST API Contract](docs/api.md)**
-- **[End-User Guide](docs/user_guide.md)** & **[Samples Guide](docs/samples_guide.md)**
-- **[UI QA Protocol](docs/ui_qa_protocol.md)** & **[Checklist](docs/ui_qa_checklist.md)**
-- **[Phase Retrospectives](docs/explained/)** & **[Master State](docs/STATE.md)**
+### Start the backend and frontend
 
-## How to run the UI QA
+Use two terminals from the repository root:
 
-Start the API and Vite app with `python scripts/dev.py` (the frontend is at `http://127.0.0.1:5173/`). Append `?ui7qa=1` to print read-only diagnostics at startup; press **Ctrl+Shift+Alt+F9** after changing the sample, tab, or viewport. See [docs/ui_qa_protocol.md](docs/ui_qa_protocol.md) for the viewport/state checklist and the `npm.cmd test`, build, ruff, pytest, and sample-verification commands. Browser E2E is manual in this checkout because Playwright is not installed.
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn apsla.server.app:app --app-dir src --host 127.0.0.1 --port 8000
+```
 
-## Agentic Layer & Local LLM Setup (Phase 15)
+```powershell
+cd web
+npm run dev -- --host 127.0.0.1
+```
 
-SecureLex IDE features an agentic compiler orchestration layer that navigates through lexical, syntax, semantic, triage, fix, verify, and explain stages. The deterministic compiler tools remain the sole source of truth; agents only choose which tool to call next and explain why.
+Open the Vite URL printed by the dev server (normally `http://127.0.0.1:5173`). Keep the API bound to loopback unless you configure an access token and understand the deployment boundary. `python scripts/dev.py` is the existing combined development launcher; its behavior is environment-dependent.
 
-### Agent Modes (`APSLA_AGENT_MODE`)
-Configure the mode via your `.env` file or environment variables:
-- `APSLA_AGENT_MODE=off` (Default): Traditional deterministic pipeline (Phase 14 baseline).
-- `APSLA_AGENT_MODE=rules`: Agentic loop guided by deterministic `RulesPlanner`. Zero LLM overhead, 100% reproducible.
-- `APSLA_AGENT_MODE=local`: Agentic loop guided by local Ollama model (`qwen2.5-coder:3b`).
+## Providers, consent and environment
 
-### Setting Up Local AI (Ollama)
-SecureLex IDE uses a local model exclusively. No external API keys, no cloud calls, and **zero outbound network calls** (`outbound network calls: 0`). The provider strictly enforces loopback connections (`127.0.0.1`, `localhost`, `::1`).
+Copy `.env.example` to `.env` and adjust values. Never commit real credentials. The lexical analyzer, token table, deterministic checks and sample catalogue do not need a provider or paid API.
 
-1. **Install Ollama**: Download from [ollama.com](https://ollama.com)
-2. **Pull the model**:
-   ```bash
-   ollama pull qwen2.5-coder:3b
-   ```
-3. **Start Ollama service**:
-   ```bash
-   ollama serve
-   ```
-4. **Configure `.env`**:
-   ```ini
-   APSLA_AGENT_MODE=local
-   APSLA_LOCAL_URL=http://127.0.0.1:11434
-   APSLA_LOCAL_MODEL=qwen2.5-coder:3b
-   APSLA_AGENT_MAX_STEPS=12
-   APSLA_AGENT_MAX_LLM_CALLS=8
-   APSLA_AGENT_TIMEOUT_S=60
-   ```
-5. **Evaluate or run**:
-   ```bash
-   python scripts/agent_eval.py --modes off rules local
-   ```
+Ollama is the default local provider. Install Ollama separately, start its service, then run `ollama pull qwen2.5-coder:3b` (or set `OLLAMA_MODEL` to a model you installed). Configuration: `SECURELEX_AI_PROVIDER`, `OLLAMA_BASE_URL`, and `OLLAMA_MODEL`. Provider reachability and model presence are runtime facts, not guaranteed by configuration.
 
-## Privacy & Security
+An OpenAI-compatible provider can be configured with `SECURELEX_AI_PROVIDER`, `OPENAI_COMPAT_BASE_URL`, `OPENAI_COMPAT_MODEL`, and `OPENAI_COMPAT_API_KEY`. Keep the key in the server environment only. Remote processing requires explicit per-session consent in the product flow. Check `/api/capabilities` and the UI processing-location/consent indicator before asking the provider to process source. AI actions are unavailable with a setup message when no provider is configured.
 
-SecureLex IDE operates 100% locally and offline. No telemetry, code, or tokens are transmitted outside your local machine. In Phase 15, all LLM planning calls are restricted to loopback interfaces, prompt injection attacks in scanned code are sanitized and isolated between untrusted delimiters, and automated fixes must pass deterministic AST verification before being marked verified.
+Other server variables are listed in `.env.example`; the example contains no credential. Do not put keys in frontend variables, source files, logs, or reports.
+
+## Analysis by language
+
+- **Python:** the Python lexer and standard-library AST parser; optional Ruff/Pyflakes and mypy diagnostics when installed.
+- **Java:** the Java lexer and optional tree-sitter parser; `javac` semantic checks when available.
+- **JavaScript:** the JavaScript lexer and optional tree-sitter parser; Node syntax checking and ESLint when installed.
+- **C/C++:** the C/C++ lexer and optional tree-sitter parser; compiler syntax/semantic checks when g++ or clang++ is available.
+
+Each result is limited to the stages and tools reported in that result. Missing tools are unavailable/incomplete checks, not a clean bill of health. The deterministic security rules and taint engine cover the rule families and source/sink pairs documented in [docs/rules_catalogue.md](docs/rules_catalogue.md) and [docs/limitations.md](docs/limitations.md). Coverage varies by language and syntax; findings require review.
+
+## Fixes and verification
+
+A proposal is a draft. Review its changed lines, assumptions and risks before applying. Applying uses the current source version and creates an undo point. The independent verifier reanalyzes before and after, reports Resolved, Remaining, Introduced and Unverified evidence, and explains which checks were unavailable. “Verified” applies only to the specified checks that ran; it is not a proof of correctness or a substitute for project tests. Undo restores the in-memory pre-patch buffer.
+
+## Agent Safety Lab
+
+Choose a scenario and language in the Safety Lab. Harness mode is deterministic and uses no model. Live mode requires a reachable configured provider; if unavailable, no simulated outcome is substituted. Inspect the observed event timeline, gateway decisions, independent before/after checks and assertions. Runs are not preloaded. See [docs/safety_lab.md](docs/safety_lab.md).
+
+## Rules and token types
+
+See [docs/token_types.md](docs/token_types.md) for token mapping. See [docs/adding_a_rule.md](docs/adding_a_rule.md) for the rule workflow and [docs/rules_catalogue.md](docs/rules_catalogue.md) for available rules. Contributions should add fixtures and tests with the rule, including safe counterparts.
+
+## Tests and reproducibility
+
+Install Python development dependencies and run `python scripts/check_all.py` from the root for the configured repository checks. Individual commands:
+
+```powershell
+.\.venv\Scripts\python.exe -m ruff check
+.\.venv\Scripts\python.exe -m mypy
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pytest -m security -q
+cd web; npm run test; npm run build; npm run e2e
+```
+
+The browser E2E command needs a running app and an available browser automation endpoint. A successful unit test or bundle build does not establish browser acceptance. Consult the phase evidence and final acceptance report for the commands that actually completed on this host.
+
+## Limitations
+
+Static analysis has false positives and false negatives, does not model every dependency/runtime/environment, and does not execute user code. External analyzers are optional; their absence reduces coverage. The Run/Test feature is unavailable without a sandbox. AI explanations and suggestions can be wrong; patch proposals must be reviewed and independently checked. Verification reports identify unverified checks and cannot establish all runtime behavior. Capabilities and resource protections have documented host-specific limits in the threat model and phase evidence.

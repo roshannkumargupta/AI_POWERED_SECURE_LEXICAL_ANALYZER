@@ -14,16 +14,18 @@ import './theme/tokens.css';
 import './ide/tailwind.css';
 import { ThemeProvider } from './theme/theme';
 import { AppProvider } from './state/store';
-import { App } from './App';
 import { IDE } from './ide/IDE';
+import { initIDEWorkers } from './ide/lib/monacoWorkers';
 
-const isNewIDE = new URLSearchParams(window.location.search).get('ui') === 'new';
+// Monaco reads this global while its editor module mounts. Install bundled workers
+// before React creates the Editor component so it never falls back to the CDN.
+initIDEWorkers();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider>
       <AppProvider>
-        {isNewIDE ? <IDE /> : <App />}
+        <IDE />
       </AppProvider>
     </ThemeProvider>
   </React.StrictMode>

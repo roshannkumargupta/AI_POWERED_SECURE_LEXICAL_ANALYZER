@@ -1,0 +1,155 @@
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+Traceback (most recent call last):
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\main.py", line 330, in wrap_session
+    session.exitstatus = doit(config, session) or 0
+                         ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\main.py", line 383, in _main
+    config.hook.pytest_collection(session=session)
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    raise exception
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\logging.py", line 803, in pytest_collection
+    return (yield)
+            ^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\warnings.py", line 99, in pytest_collection
+    return (yield)
+            ^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\config\__init__.py", line 1445, in pytest_collection
+    return (yield)
+            ^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\main.py", line 394, in pytest_collection
+    session.perform_collect()
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\main.py", line 872, in perform_collect
+    hook.pytest_collection_modifyitems(
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    raise exception
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\cacheprovider.py", line 437, in pytest_collection_modifyitems
+    res = yield
+          ^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\cacheprovider.py", line 367, in pytest_collection_modifyitems
+    res = yield
+          ^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_hypothesis_pytestplugin.py", line 450, in pytest_collection_modifyitems
+    _get_local_constants()
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\hypothesis\internal\conjecture\providers.py", line 368, in _get_local_constants
+    ) is not None and is_local_module_file(module_file):
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\hypothesis\internal\constants_ast.py", line 271, in is_local_module_file
+    and ModuleLocation.from_path(path) is ModuleLocation.LOCAL
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\hypothesis\internal\scrutineer.py", line 268, in from_path
+    path = Path(path).resolve()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\AppData\Local\Programs\Python\Python312\Lib\pathlib.py", line 1240, in resolve
+    s = self._flavour.realpath(self, strict=strict)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen ntpath>", line 732, in realpath
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\config\__init__.py", line 201, in main
+    return _main(args=args, plugins=plugins, prog="pytest.main()")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\config\__init__.py", line 229, in _main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    raise exception
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\main.py", line 377, in pytest_cmdline_main
+    return wrap_session(config, _main)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\main.py", line 344, in wrap_session
+    config.hook.pytest_keyboard_interrupt(excinfo=excinfo)
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 167, in _multicall
+    raise exception
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\terminal.py", line 1012, in pytest_keyboard_interrupt
+    self._keyboardinterrupt_memo = excinfo.getrepr(funcargs=True)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\_code\code.py", line 774, in getrepr
+    return fmt.repr_excinfo(self)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\_code\code.py", line 1224, in repr_excinfo
+    reprtraceback = self.repr_traceback(excinfo_)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\_code\code.py", line 1150, in repr_traceback
+    self.repr_traceback_entry(entry, excinfo if last == entry else None)
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\_code\code.py", line 1080, in repr_traceback_entry
+    source = self._getentrysource(entry)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\_code\code.py", line 916, in _getentrysource
+    source = entry.getsource(self.astcache)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\_code\code.py", line 292, in getsource
+    source = self.frame.code.fullsource
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\_code\code.py", line 105, in fullsource
+    full, _ = findsource(self.raw)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\OneDrive\Documents\Desktop\AIDS -Nitw\sem3\toc\securelex-ide\.venv\Lib\site-packages\_pytest\_code\source.py", line 127, in findsource
+    sourcelines, lineno = inspect.findsource(obj)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\AppData\Local\Programs\Python\Python312\Lib\inspect.py", line 1092, in findsource
+    lines = linecache.getlines(file, module.__dict__)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\AppData\Local\Programs\Python\Python312\Lib\linecache.py", line 46, in getlines
+    return updatecache(filename, module_globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROSHAN GUPTA\AppData\Local\Programs\Python\Python312\Lib\linecache.py", line 139, in updatecache
+    lines = fp.readlines()
+            ^^^^^^^^^^^^^^
+  File "<frozen codecs>", line 322, in decode
+KeyboardInterrupt

@@ -1,13 +1,16 @@
-# Demo script
+# SecureLex IDE Demo Script
 
-The curated, 13-step walkthrough is maintained in [docs/demo_path.md](demo_path.md). Use that file for the exact click path, two-sentence narration, and expected UI evidence at each step.
+Use this current-product path with the backend and frontend running. Start with deterministic capabilities and sample code; do not narrate a result that the current analysis did not return.
 
-## UI-6 review walkthrough
+1. Open a sample or paste a small Python program and select Analyze.
+2. Inspect a token's actual type, range and lexical status. Search/filter and confirm the visible rows and counters derive from the returned token data.
+3. Open Problems and Security. Select an evidence-backed finding and navigate to its source range; inspect the tool/rule, certainty, CWE and remediation.
+4. Open AST and inspect an available parser node and its range. If unavailable, show the unavailable reason.
+5. Open Security data flow and follow the returned source-to-sink steps, including any sanitizer or incomplete-path note.
+6. Request an explanation. If a provider is not ready, demonstrate the setup/unavailable state. If configured, show processing location and consent before submitting source.
+7. Propose a fix, review the diff and assumptions, then apply only after approval. Read Resolved, Remaining, Introduced and Unverified in the independent verification report.
+8. Undo and confirm the in-memory source is restored. Export a report and inspect its limitations section.
+9. Open Build with AI and Agent Safety Lab. Generate only with the configured provider; run harness separately from live mode. Never present harness output as a live-model run.
+10. Repeat the core analyze-and-inspect path for Java, JavaScript and C/C++; describe only parser/compiler/analyzer tools reported available by this machine.
 
-1. Open Samples. Confirm the Python **Target Demo - Security** and **Target Demo - Lexical Error** entries appear first. Open the security demo as a new file.
-2. Select `os.system` in the token table. Confirm the insecure badge, CWE and severity come from the finding, inspect the verified diff, apply it, then use Ctrl+Z to undo the one edit.
-3. Select the hard-coded secret, then the Cyrillic identifier. Explain only the evidence returned by the analyzer and show invisible characters as `<U+XXXX>`.
-4. Open the lexical-error demo and select its unterminated string. Confirm lexical errors are separate from the score and that ML reports `n/a` for that token.
-5. Open Taint path, ML insights, and Summary. Click a taint step to jump to source; inspect ML only when the engine says it ran.
-6. Use Security/Lexical/Syntax and Dangerous/Suspicious/Malicious chips, toggle Show all tokens, then use F8 and Shift+F8 to navigate visible problems.
-7. Open one sample for each supported language and verify the Help panel reports Python AST and lexer-only for the other languages.
+The browser E2E matrix requires a running app and browser automation endpoint. See `reports/sl2_final_acceptance.md` for current verified and blocked acceptance items.
