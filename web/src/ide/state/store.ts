@@ -2,7 +2,7 @@ import type { AnalysisResultV2 } from '../../api/client';
 
 export type DocumentLanguage = string;
 export type AnalysisStatus = 'idle' | 'running' | 'ok' | 'stale' | 'error';
-export type Activity = 'explorer' | 'search' | 'ast' | 'security' | 'safetylab';
+export type Activity = 'explorer' | 'samples' | 'search' | 'ast' | 'security' | 'safetylab';
 export type PanelTab = 'tokens' | 'problems' | 'security' | 'explain' | 'agent';
 
 export interface IDEDocument {
