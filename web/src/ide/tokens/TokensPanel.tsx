@@ -14,6 +14,7 @@ interface TokensPanelProps {
   inspectorOpen: boolean;
   onSelect(token: TokenV2): void;
   onFix?(token: TokenV2): void;
+  onExplain?(token: TokenV2): void;
   fixEnabled?: boolean;
   onToggleInspector(): void;
   onExport(message: string, error?: boolean): void;
@@ -28,7 +29,7 @@ function positionLabel(token: TokenV2) {
     : `${token.start_line}:${token.start_column}–${token.end_line}:${token.end_column}`;
 }
 
-export function TokensPanel({ result, analysisStatus, currentVersion, language, grammarLabel, selectedTokenId, inspectorOpen, onSelect, onFix, fixEnabled = false, onToggleInspector, onExport }: TokensPanelProps) {
+export function TokensPanel({ result, analysisStatus, currentVersion, language, grammarLabel, selectedTokenId, inspectorOpen, onSelect, onFix, onExplain, fixEnabled = false, onToggleInspector, onExport }: TokensPanelProps) {
   const [filter, setFilter] = useState<TokenFilter>('All');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<TokenSort>('position');
@@ -129,7 +130,7 @@ export function TokensPanel({ result, analysisStatus, currentVersion, language, 
               const index = start + offset;
               const isSelected = token.id === selectedTokenId;
               return <div key={token.id} role="row" aria-rowindex={index + 2} aria-selected={isSelected} tabIndex={isSelected || (!selectedTokenId && index === 0) ? 0 : -1} className={`ide-token-row ${isSelected ? 'selected' : ''} ${token.lexical_status}`} style={{ transform: `translateY(${index * ROW_HEIGHT}px)` }} onClick={() => onSelect(token)} onKeyDown={(event) => { if (event.key === 'Enter') onSelect(token); }}>
-                <span role="cell" title={positionLabel(token)}>{token.start_line}:{token.start_column}</span><span role="cell" className="ide-token-lexeme" title={visibleLexeme(token.lexeme)}>{visibleLexeme(token.lexeme)}</span><span role="cell" title={token.token_type}>{token.token_type}</span><span role="cell" className="ide-token-category" title={token.category}>{categoryGroup(token.category)}</span><span role="cell" className={`ide-token-status ${token.lexical_status}`}>{token.lexical_status}</span><span role="cell" className="ide-token-info">{token.lexical_status === 'invalid' && onFix ? <button type="button" disabled={!fixEnabled} title={fixEnabled ? 'Propose a rule-first token fix' : 'Rule fix capability is unavailable.'} aria-label={`Fix invalid token ${visibleLexeme(token.lexeme)}`} onClick={event => { event.stopPropagation(); onFix(token); }}>Fix</button> : '—'}</span>
+                <span role="cell" title={positionLabel(token)}>{token.start_line}:{token.start_column}</span><span role="cell" className="ide-token-lexeme" title={visibleLexeme(token.lexeme)}>{visibleLexeme(token.lexeme)}</span><span role="cell" title={token.token_type}>{token.token_type}</span><span role="cell" className="ide-token-category" title={token.category}>{categoryGroup(token.category)}</span><span role="cell" className={`ide-token-status ${token.lexical_status}`}>{token.lexical_status}</span><span role="cell" className="ide-token-info">{onExplain && <button type="button" title="Explain this token" aria-label={`Explain token ${visibleLexeme(token.lexeme)}`} onClick={event => { event.stopPropagation(); onExplain(token); }}>Explain</button>}{token.lexical_status === 'invalid' && onFix ? <button type="button" disabled={!fixEnabled} title={fixEnabled ? 'Propose a rule-first token fix' : 'Rule fix capability is unavailable.'} aria-label={`Fix invalid token ${visibleLexeme(token.lexeme)}`} onClick={event => { event.stopPropagation(); onFix(token); }}>Fix</button> : null}{!onExplain && token.lexical_status !== 'invalid' ? '—' : null}</span>
               </div>;
             })}
           </div> : <div className="ide-token-empty">{result ? 'No tokens match this filter.' : 'Run Analyze to inspect tokens from this file.'}</div>}
@@ -139,6 +140,7 @@ export function TokensPanel({ result, analysisStatus, currentVersion, language, 
     {inspectorOpen && <aside className="ide-token-inspector" id="inspectorPanel" aria-label="Token Inspector"><header><strong><span className="material-symbols-outlined" aria-hidden="true">token</span>Token Inspector</strong><button type="button" aria-label="Close token inspector" title="Close inspector" onClick={onToggleInspector}><span className="material-symbols-outlined" aria-hidden="true">close</span></button></header>{selected ? <div className="ide-token-inspector-body">
       <section className="ide-inspector-card"><span className="ide-inspector-label">Selected Lexeme</span><strong className="ide-inspector-lexeme">{visibleLexeme(selected.lexeme)}</strong><span className="ide-inspector-type">{selected.token_type}</span><span className={`ide-token-status ${selected.lexical_status}`}>{selected.lexical_status}</span></section>
       {selected.lexical_status === 'invalid' && onFix && <button type="button" disabled={!fixEnabled} title={fixEnabled ? 'Propose a rule-first token fix' : 'Rule fix capability is unavailable.'} onClick={() => onFix(selected)}>Fix token</button>}
+      {onExplain && <button type="button" onClick={() => onExplain(selected)}>Explain token</button>}
       <dl><dt>Category</dt><dd>{selected.category}</dd><dt>Range</dt><dd>{positionLabel(selected)}</dd><dt>Occurrences in file</dt><dd>{occurrences}</dd></dl>
       <section className="ide-inspector-section"><h3>Beginner explanation</h3><p>{explainToken(tokenTypeLabel, language)}</p></section>
       {security.length > 0 && <section className="ide-inspector-section security"><h3>Security note</h3>{security.map((finding) => <p key={finding.id}>{finding.message}</p>)}</section>}

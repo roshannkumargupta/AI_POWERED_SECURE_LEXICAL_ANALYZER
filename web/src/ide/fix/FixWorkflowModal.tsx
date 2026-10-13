@@ -12,6 +12,7 @@ interface Props {
   onConsent(): Promise<void>; onSourceApplied(source: string, version: number): void; onUndoApplied(source: string, version: number): void;
   onClose(): void; onAskAI(): void;
   initialFixAll?: boolean;
+  timeoutSeconds?: number;
   targetKind?: 'finding' | 'diagnostic' | 'token';
   onActions?(actions: FixActions): void;
 }
@@ -73,7 +74,7 @@ export function FixWorkflowModal(props: Props) {
       dispatch({ type: 'propose' });
       proposalStartedAt.current = Date.now();
       proposalTimedOut.current = false;
-      const timeout = window.setTimeout(() => { proposalTimedOut.current = true; controller.abort(); }, 90_000);
+      const timeout = window.setTimeout(() => { proposalTimedOut.current = true; controller.abort(); }, (props.timeoutSeconds ?? 90) * 1000);
       try {
         const body: PatchProposalRequest = { source: props.source, source_version: props.sourceVersion, language: props.language, filename: props.filename, target: { kind: props.targetKind ?? 'finding', id: finding.id }, ...(props.targetKind === 'finding' || !props.targetKind ? { target_finding_id: finding.id } : {}), session_id: props.sessionId, remote_consent: remoteConsent, origin };
         const response = await apiClient.proposeFix(body, controller.signal);
@@ -84,7 +85,7 @@ export function FixWorkflowModal(props: Props) {
         dispatch({ type: 'proposal', proposal: response.proposal });
       } catch (error) {
         if (!current || (controller.signal.aborted && !proposalTimedOut.current)) return;
-        const message = proposalTimedOut.current ? 'Fix proposal timed out after 90 seconds. Retry or use Improve with AI.' : error instanceof Error ? error.message : 'Could not create a fix proposal.';
+        const message = proposalTimedOut.current ? `AI fix proposal hit its ${props.timeoutSeconds ?? 90}-second deadline. Change SECURELEX_AI_TIMEOUT_SECONDS in .env, then retry or use the rule proposal.` : error instanceof Error ? error.message : 'Could not create a fix proposal.';
         const phase = /stale|version|hash/i.test(message) ? 'stale' : /malformed|edit|range|overlap/i.test(message) ? 'malformed' : 'error';
         if (origin === 'rule' && props.aiReady && /no automatic fix/i.test(message)) {
           if (props.remoteConsentRequired && !props.remoteConsented) {
@@ -99,7 +100,7 @@ export function FixWorkflowModal(props: Props) {
     };
     void propose('rule');
     return () => { current = false; controller.abort(); };
-  }, [finding, props.documentId, props.source, props.sourceVersion, props.language, props.filename, props.sessionId, props.aiReady, props.remoteConsentRequired, props.remoteConsented, props.initialFixAll, props.targetKind, retryNonce]);
+  }, [finding, props.documentId, props.source, props.sourceVersion, props.language, props.filename, props.sessionId, props.aiReady, props.remoteConsentRequired, props.remoteConsented, props.initialFixAll, props.targetKind, props.timeoutSeconds, retryNonce]);
 
   useEffect(() => {
     if (machine.phase !== 'proposing') return;
@@ -132,14 +133,14 @@ export function FixWorkflowModal(props: Props) {
       await props.onConsent(); setConsentPrompt(false);
       const controller = new AbortController(); requestController.current = controller; dispatch({ type: 'propose' });
       proposalStartedAt.current = Date.now();
-      timer = window.setTimeout(() => { timedOut = true; controller.abort(); }, 90_000);
+      timer = window.setTimeout(() => { timedOut = true; controller.abort(); }, (props.timeoutSeconds ?? 90) * 1000);
       const response = await apiClient.proposeFix({ source: props.source, source_version: props.sourceVersion, language: props.language, filename: props.filename, target: { kind: props.targetKind ?? 'finding', id: finding.id }, ...(props.targetKind === 'finding' || !props.targetKind ? { target_finding_id: finding.id } : {}), session_id: props.sessionId, remote_consent: true, origin: 'ai' }, controller.signal);
       if (controller.signal.aborted) return;
       if (!response.proposal?.edits?.length || response.proposal.source_hash.length !== 64) throw new Error('The server returned a malformed proposal.');
       if (applyEdits(props.source, response.proposal.edits) === props.source) throw new Error('The proposal does not change this source.');
       dispatch({ type: 'proposal', proposal: response.proposal });
     }
-    catch (error) { dispatch({ type: 'failure', phase: 'error', message: timedOut ? 'AI fix proposal timed out after 90 seconds. Retry or use the rule proposal.' : error instanceof Error ? error.message : 'Remote consent could not be saved.' }); setConsentPrompt(false); }
+    catch (error) { dispatch({ type: 'failure', phase: 'error', message: timedOut ? `AI fix proposal hit its ${props.timeoutSeconds ?? 90}-second deadline. Change SECURELEX_AI_TIMEOUT_SECONDS in .env, then retry or use the rule proposal.` : error instanceof Error ? error.message : 'Remote consent could not be saved.' }); setConsentPrompt(false); }
     finally { if (timer !== undefined) window.clearTimeout(timer); }
   };
   const apply = async () => {

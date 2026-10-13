@@ -279,7 +279,7 @@ export interface SafetyRunResult { run_id: string; scenario_id: string; source_h
 export interface AIConsentRequest { session_id: string; consent: boolean }
 export interface AIExplainV2Request { session_id: string; remote_consent?: boolean; target: 'token' | 'diagnostic' | 'finding' | 'file' | 'patch'; source: string; language: string; target_id?: string | null; patch?: string | null }
 export interface AIGenerateRequest { session_id: string; remote_consent?: boolean; language: 'python' | 'java' | 'javascript' | 'cpp'; requirements: string[] }
-export interface AgentEvent { id: string; timestamp: string; operation_id: string; agent: string; action: string; tool: string | null; argument_summary: string; decision_source: string; outcome: string; duration: number; error?: string | null }
+export interface AgentEvent { id: string; timestamp: string; operation_id: string; agent: string; action: string; tool: string | null; argument_summary: string; decision_source: string; outcome: string; duration: number; error?: string | null; subject_type?: AIExplainV2Request['target'] | null; subject_id?: string | null }
 export interface AIExplainV2Response { operation_id: string; explanation: string; provider: string; processing_location: string; provenance: Array<Record<string, unknown>>; limitations: string[]; grounded?: boolean; deterministic_fallback?: boolean }
 export interface AIGenerateResponse { operation_id: string; language: string; code: string; explanation: string; assumptions: string[]; requirements_checklist: Array<{ requirement: string; status: 'met' | 'unmet' | 'unverified'; evidence: string }>; analysis: AnalysisResultV2; executed: boolean; provider: string; processing_location: string; limitations: string[] }
 
@@ -338,7 +338,7 @@ export interface LLMStatusResponse {
 }
 
 export interface AICapabilities {
-  ai: { provider: string; configured: boolean; reachable: boolean | null; model: string | null; processing_location: string; consent_required: boolean; remote_consented: boolean; model_present?: boolean; setup_message?: string | null };
+  ai: { provider: string; configured: boolean; reachable: boolean | null; model: string | null; processing_location: string; consent_required: boolean; remote_consented: boolean; model_present?: boolean; configured_model_present?: boolean | null; installed_models?: string[]; setup_message?: string | null };
   features: { build_with_ai: boolean; fix_with_ai: boolean; fix_ai?: boolean; fix_rule?: boolean };
   languages?: Array<{ id: string; name: string; extensions?: string[]; monaco_id?: string }>;
   tools?: Array<{ name: string; available: boolean; status: string; version?: string | null; reason?: string | null }>;
@@ -394,6 +394,7 @@ export const apiClient = {
   getSafetyResult: (runId: string, signal?: AbortSignal) => request<SafetyRunResult>(`/agent-safety/results/${encodeURIComponent(runId)}`, { signal }),
   exportReport: (body: ReportExportRequest, signal?: AbortSignal) => request<Blob>('/reports/export', { method: 'POST', body: JSON.stringify(body), signal }, 'blob'),
   explainAI: (body: AIExplainV2Request, signal?: AbortSignal) => request<AIExplainV2Response>('/ai/explain', { method: 'POST', body: JSON.stringify(body), signal }),
+  setAIModel: (sessionId: string, model: string, signal?: AbortSignal) => request<{ model: string; capabilities: CapabilitiesResponse }>('/ai/model', { method: 'POST', body: JSON.stringify({ session_id: sessionId, model }), signal }),
   generateAI: (body: AIGenerateRequest, signal?: AbortSignal) => request<AIGenerateResponse>('/ai/generate', { method: 'POST', body: JSON.stringify(body), signal }),
   getCapabilities: (sessionId?: string, signal?: AbortSignal) =>
     request<CapabilitiesResponse>(`/capabilities${sessionId ? `?session_id=${encodeURIComponent(sessionId)}` : ''}`, { signal }),
@@ -405,6 +406,7 @@ export const apiClient = {
     const query = operationId ? `?operation_id=${encodeURIComponent(operationId)}` : '';
     return request<AgentEvent[]>(`/agent/events${query}`, { signal });
   },
+  clearAgentEvents: (signal?: AbortSignal) => request<{ cleared: number }>('/agent/events', { method: 'DELETE', signal }),
   analyze: (req: AnalyzeRequest, signal?: AbortSignal) =>
     request<AnalysisResult>('/analyze', {
       method: 'POST',

@@ -183,6 +183,7 @@ class OllamaProvider(HttpJsonProvider):
         super().__init__(
             url,
             model or os.getenv("OLLAMA_MODEL", os.getenv("APSLA_LOCAL_MODEL", "qwen2.5-coder:3b")),
+            timeout=float(os.getenv("SECURELEX_AI_TIMEOUT_SECONDS", os.getenv("OLLAMA_TIMEOUT_SECONDS", "90"))),
             **kwargs,
         )
 
@@ -265,7 +266,9 @@ class OpenAICompatibleProvider(HttpJsonProvider):
 def provider_from_environment() -> ModelProvider:
     choice = os.getenv("SECURELEX_AI_PROVIDER", "ollama").strip().lower()
     if choice in {"openai", "openai-compatible"}:
-        return OpenAICompatibleProvider()
+        return OpenAICompatibleProvider(
+            timeout=float(os.getenv("SECURELEX_AI_TIMEOUT_SECONDS", os.getenv("OLLAMA_TIMEOUT_SECONDS", "90")))
+        )
     return OllamaProvider()
 
 
@@ -313,6 +316,8 @@ class AgentEvent:
     outcome: str
     duration: float
     error: str | None = None
+    subject_type: str | None = None
+    subject_id: str | None = None
 
 
 class AgentEventLog:
@@ -330,6 +335,8 @@ class AgentEventLog:
         outcome: str,
         duration: float,
         error: str | None = None,
+        subject_type: str | None = None,
+        subject_id: str | None = None,
     ) -> AgentEvent:
         event = AgentEvent(
             str(uuid.uuid4()),
@@ -343,6 +350,8 @@ class AgentEventLog:
             outcome,
             round(duration, 3),
             (error or "")[:240] or None,
+            subject_type,
+            subject_id,
         )
         self._events.append(event)
         return event
@@ -353,6 +362,12 @@ class AgentEventLog:
             for event in self._events
             if operation_id is None or event.operation_id == operation_id
         ]
+
+    def remove(self, operation_ids: set[str]) -> None:
+        self._events = deque(
+            (event for event in self._events if event.operation_id not in operation_ids),
+            maxlen=self._events.maxlen,
+        )
 
 
 class ToolGateway:

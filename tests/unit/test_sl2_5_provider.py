@@ -8,6 +8,7 @@ from apsla.agents.provider_v2 import (
     AgentEventLog,
     FakeProvider,
     HttpJsonProvider,
+    OllamaProvider,
     OpenAICompatibleProvider,
     ProviderFailure,
     ToolGateway,
@@ -62,6 +63,13 @@ def test_loopback_openai_compatible_provider_is_local_without_consent() -> None:
         base_url="http://127.0.0.1:9000/v1", model="local-model", api_key=None
     )
     assert provider.processing_location == "local"
+
+
+def test_ollama_provider_uses_configurable_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("SECURELEX_AI_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.setenv("OLLAMA_TIMEOUT_SECONDS", "45")
+    provider = OllamaProvider(model="configured-model")
+    assert provider.timeout == 45
 
 
 def test_untrusted_data_is_escaped_and_secrets_redacted(monkeypatch: pytest.MonkeyPatch) -> None:

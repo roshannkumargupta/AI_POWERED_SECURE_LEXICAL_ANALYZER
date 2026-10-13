@@ -217,15 +217,17 @@ def get_agent_status(
         return {
             "mode": mode,
             "ollama_reachable": False,
-            "model": os.environ.get("APSLA_LOCAL_MODEL", DEFAULT_LOCAL_MODEL),
+            "model": os.environ.get("OLLAMA_MODEL", os.environ.get("APSLA_LOCAL_MODEL", DEFAULT_LOCAL_MODEL)),
             "model_present": False,
+            "models": [],
             "fallback_active": mode != "off",
             "message": str(e),
         }
 
-    model_name = os.environ.get("APSLA_LOCAL_MODEL", DEFAULT_LOCAL_MODEL)
+    model_name = os.environ.get("OLLAMA_MODEL", os.environ.get("APSLA_LOCAL_MODEL", DEFAULT_LOCAL_MODEL))
     reachable = False
     present = False
+    models: list[str] = []
     message = ""
 
     try:
@@ -237,14 +239,13 @@ def get_agent_status(
                 models = [
                     m.get("name", "") for m in tags_data.get("models", []) if isinstance(m, dict)
                 ]
-                # Check exact match or base tag (e.g. qwen2.5-coder:3b vs qwen2.5-coder:3b:latest)
-                clean_target = model_name.split(":")[0]
-                present = any(
-                    m == model_name
-                    or m.startswith(f"{model_name}:")
-                    or m.split(":")[0] == clean_target
-                    for m in models
-                )
+                models = [model for model in models if model]
+                # Compare the full tag. Matching only the family name incorrectly treats
+                # qwen2.5-coder:1.5b as a substitute for qwen2.5-coder:3b and yields HTTP 404.
+                expected_tags = {model_name, f"{model_name}:latest"}
+                if ":" not in model_name:
+                    expected_tags.add(f"{model_name}:latest")
+                present = bool(expected_tags.intersection(models))
                 if not present:
                     message = f"model_missing: run 'ollama pull {model_name}'"
     except Exception:
@@ -262,6 +263,7 @@ def get_agent_status(
         "ollama_reachable": reachable,
         "model": model_name,
         "model_present": present,
+        "models": models,
         "fallback_active": fallback_active,
         "message": message,
     }

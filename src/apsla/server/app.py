@@ -27,6 +27,7 @@ from fastapi.staticfiles import StaticFiles
 from apsla import __version__
 from apsla.agents.provider_v2 import (
     AgentEventLog,
+    OllamaProvider,
     ProviderFailure,
     frame_untrusted,
     provider_from_environment,
@@ -93,6 +94,7 @@ from apsla.server.schemas import (
     AgentStatusResponse,
     AIExplainRequest,
     AIGenerateRequest,
+    AIModelRequest,
     AIPermissionRequest,
     AnalyzeRequest,
     CapabilitiesLanguage,
@@ -139,6 +141,7 @@ _request_session: ContextVar[str | None] = ContextVar("securelex_session", defau
 _session_expiry: dict[str, datetime] = {}
 _safety_run_owner: dict[str, str] = {}
 _operation_owner: dict[str, str] = {}
+SESSION_AI_MODELS: dict[str, str] = {}
 _analysis_owner: dict[str, str] = {}
 _request_slots = threading.BoundedSemaphore(MAX_CONCURRENT_EXPENSIVE_REQUESTS)
 SESSION_COOKIE = "securelex_session"
@@ -290,9 +293,19 @@ def _session_key(_provided: str | None = None) -> str:
     return _request_session.get() or _provided or "direct-call"
 
 
+def _ai_timeout_seconds() -> float:
+    """Shared AI request deadline, defaulting to 90 seconds for every provider and endpoint."""
+    raw = os.getenv("SECURELEX_AI_TIMEOUT_SECONDS") or os.getenv("OLLAMA_TIMEOUT_SECONDS", "90")
+    try:
+        return min(600.0, max(1.0, float(raw)))
+    except ValueError:
+        return 90.0
+
+
 def _expire_session(session_id: str) -> None:
     """Drop session-owned transient state after cookie expiry."""
     REMOTE_CONSENTS.discard(session_id)
+    SESSION_AI_MODELS.pop(session_id, None)
     PATCH_UNDO.pop(session_id, None)
     PATCH_SESSION_CURRENT.pop(session_id, None)
     for proposal_id, owner in list(PATCH_PROPOSAL_SESSIONS.items()):
@@ -305,6 +318,8 @@ def _expire_session(session_id: str) -> None:
             from apsla.safety_lab import RUNS
 
             RUNS.pop(run_id, None)
+    expired_operations = {operation_id for operation_id, owner in _operation_owner.items() if owner == session_id}
+    AGENT_EVENTS.remove(expired_operations)
     for operation_id, owner in list(_operation_owner.items()):
         if owner == session_id:
             _operation_owner.pop(operation_id, None)
@@ -504,16 +519,24 @@ def build_capabilities(session_id: str | None = None) -> CapabilitiesResponse:
         if remote_processing:
             remote_configured = remote_configured and bool(os.environ.get("OPENAI_COMPAT_API_KEY"))
     remote_consented = bool(session_id and session_id in REMOTE_CONSENTS)
+    installed_models = list(agent.get("models", [])) if provider == "ollama" else []
+    selected_model = SESSION_AI_MODELS.get(session_id or "")
+    configured_model = selected_model or agent.get("model")
+    model_present = bool(agent["model_present"])
+    if selected_model and installed_models:
+        model_present = selected_model in installed_models
     setup_message = None
     if not test_ai_enabled and provider == "ollama":
         if not agent["ollama_reachable"]:
-            setup_message = f"Ollama is unavailable. Start Ollama, then run: ollama pull {agent['model']}"
-        elif not agent["model_present"]:
-            setup_message = f"Ollama model is unavailable. Run: ollama pull {agent['model']}"
+            setup_message = f"Ollama is unavailable. Start Ollama, then run: ollama pull {configured_model}"
+        elif not model_present and installed_models:
+            setup_message = f"Configured Ollama model {configured_model} is missing. Choose an installed model in Settings or run: ollama pull {configured_model}"
+        elif not model_present:
+            setup_message = f"Ollama model is unavailable. Run: ollama pull {configured_model}"
     ai_configured = test_ai_enabled or (
-        remote_configured if provider == "openai-compatible" else bool(agent["ollama_reachable"] and agent["model_present"])
+        remote_configured if provider == "openai-compatible" else bool(agent["ollama_reachable"] and model_present)
     )
-    ai_model = "deterministic-fixture" if test_ai_enabled else os.environ.get("OPENAI_COMPAT_MODEL") if remote_configured else agent["model"]
+    ai_model = "deterministic-fixture" if test_ai_enabled else os.environ.get("OPENAI_COMPAT_MODEL") if remote_configured else configured_model
     return CapabilitiesResponse(
         version=app_version,
         languages=languages,
@@ -523,7 +546,9 @@ def build_capabilities(session_id: str | None = None) -> CapabilitiesResponse:
             "configured": ai_configured,
             "reachable": True if test_ai_enabled else None if remote_configured else bool(agent["ollama_reachable"]),
             "model": ai_model,
-            "model_present": True if test_ai_enabled else None if remote_configured else bool(agent["model_present"]),
+            "model_present": True if test_ai_enabled else None if remote_configured else model_present,
+            "installed_models": installed_models,
+            "configured_model_present": True if test_ai_enabled else None if remote_configured else model_present,
             "processing_location": "remote" if remote_processing else "local",
             "consent_required": remote_processing,
             "remote_consented": remote_consented,
@@ -535,23 +560,30 @@ def build_capabilities(session_id: str | None = None) -> CapabilitiesResponse:
             "max_tokens": MAX_TOKENS_PER_FILE,
             "max_findings_per_file": MAX_FINDINGS_PER_FILE,
             "max_ast_nodes": MAX_AST_NODES,
-            "timeouts": {"analysis_seconds": 10.0, "tool_seconds": 5.0},
+            "timeouts": {
+                "analysis_seconds": 10.0,
+                "tool_seconds": 5.0,
+                "ai_seconds": _ai_timeout_seconds(),
+                "ai_explain_seconds": _ai_timeout_seconds(),
+                "ai_fix_seconds": _ai_timeout_seconds(),
+                "ai_generate_seconds": _ai_timeout_seconds(),
+            },
             "concurrency": MAX_CONCURRENT_EXPENSIVE_REQUESTS,
         },
         features={
             "ast": any(callable(plugin.parse_structure) for plugin in registry.list_plugins()),
             "quality": False,
-            "build_with_ai": True if test_ai_enabled else bool(agent["ollama_reachable"] and agent["model_present"])
+            "build_with_ai": True if test_ai_enabled else bool(agent["ollama_reachable"] and model_present)
             if provider == "ollama"
             else remote_configured and (remote_consented if remote_processing else True),
-            "fix_with_ai": True if test_ai_enabled else bool(agent["ollama_reachable"] and agent["model_present"])
+            "fix_with_ai": True if test_ai_enabled else bool(agent["ollama_reachable"] and model_present)
             if provider == "ollama"
             else remote_configured and (remote_consented if remote_processing else True),
-            "fix_ai": True if test_ai_enabled else bool(agent["ollama_reachable"] and agent["model_present"])
+            "fix_ai": True if test_ai_enabled else bool(agent["ollama_reachable"] and model_present)
             if provider == "ollama"
             else remote_configured and (remote_consented if remote_processing else True),
             "fix_rule": True,
-            "safety_lab_live": bool(agent["ollama_reachable"] and agent["model_present"])
+            "safety_lab_live": bool(agent["ollama_reachable"] and model_present)
             if provider == "ollama"
             else remote_configured,
             "safety_lab_harness": True,
@@ -1525,7 +1557,10 @@ def _provider_for_session(session_id: str, remote_consent: bool):
             detail="Remote processing requires explicit consent for this session.",
         )
     try:
-        provider = provider_from_environment()
+        if provider_name not in {"openai", "openai-compatible"} and session_id in SESSION_AI_MODELS:
+            provider = OllamaProvider(model=SESSION_AI_MODELS[session_id])
+        else:
+            provider = provider_from_environment()
     except ProviderFailure as exc:
         raise HTTPException(
             status_code=503, detail=f"{exc}. {exc.retry_guidance}".strip()
@@ -1547,7 +1582,9 @@ def _provider_for_session(session_id: str, remote_consent: bool):
                 status_code=503,
                 detail=f"Ollama is unavailable. Start Ollama, then run: ollama pull {model}",
             )
-        if not status_data.get("model_present"):
+        selected_model = SESSION_AI_MODELS.get(session_id)
+        selected_model_present = bool(selected_model and selected_model in status_data.get("models", []))
+        if not status_data.get("model_present") and not selected_model_present:
             model = status_data.get("model", "qwen2.5-coder:3b")
             raise HTTPException(
                 status_code=503,
@@ -1567,14 +1604,41 @@ async def set_ai_consent(req: AIPermissionRequest) -> dict[str, object]:
     return {"session_id": session_id, "remote_consented": session_id in REMOTE_CONSENTS}
 
 
+@api_router.post("/ai/model")
+async def set_ai_model(req: AIModelRequest) -> dict[str, object]:
+    """Select an already-installed local model for this cookie session only."""
+    if os.getenv("SECURELEX_AI_PROVIDER", "ollama").strip().lower() in {"openai", "openai-compatible"}:
+        raise HTTPException(status_code=409, detail="Local model selection is only available with Ollama.")
+    from apsla.llm.local_ollama import get_agent_status
+
+    status_data = await asyncio.to_thread(get_agent_status)
+    installed = status_data.get("models", [])
+    if req.model not in installed:
+        raise HTTPException(status_code=422, detail={"code": "MODEL_NOT_INSTALLED", "message": "Choose a model reported as installed by Ollama."})
+    session_id = _session_key(req.session_id)
+    SESSION_AI_MODELS[session_id] = req.model
+    return {"model": req.model, "capabilities": build_capabilities(session_id).model_dump(mode="json")}
+
+
 @api_router.get("/agent/events", response_model=list[AgentEventResponse])
 async def get_agent_events(operation_id: str | None = None) -> list[AgentEventResponse]:
     session_id = _session_key()
     if operation_id is not None and _operation_owner.get(operation_id) != session_id:
         return []
-    if operation_id is None:
-        return []
-    return [AgentEventResponse(**event.__dict__) for event in AGENT_EVENTS.query(operation_id)]
+    owned_operations = {key for key, owner in _operation_owner.items() if owner == session_id}
+    if operation_id is not None:
+        owned_operations.intersection_update({operation_id})
+    return [AgentEventResponse(**event.__dict__) for event in AGENT_EVENTS.query() if event.operation_id in owned_operations]
+
+
+@api_router.delete("/agent/events")
+async def clear_agent_events() -> dict[str, int]:
+    session_id = _session_key()
+    owned_operations = {key for key, owner in _operation_owner.items() if owner == session_id}
+    AGENT_EVENTS.remove(owned_operations)
+    for operation_id in owned_operations:
+        _operation_owner.pop(operation_id, None)
+    return {"cleared": len(owned_operations)}
 
 
 @api_router.post("/ai/explain")
@@ -1583,6 +1647,7 @@ async def ai_explain(req: AIExplainRequest) -> dict[str, object]:
     _validate_payload_size(req.source)
     operation = str(uuid.uuid4())
     _operation_owner[operation] = _session_key(req.session_id)
+    event_subject_id = req.target_id
     language = _resolve_language(req.language, "<editor>", req.source)
     provider = _provider_for_session(_session_key(req.session_id), req.remote_consent)
     if (
@@ -1696,7 +1761,7 @@ async def ai_explain(req: AIExplainRequest) -> dict[str, object]:
                 prompt,
                 schema,
             ),
-            timeout=20,
+            timeout=_ai_timeout_seconds(),
         )
         explanation = output["explanation"]
         if req.target == "finding" and not verify_grounding(explanation, found, req.source):
@@ -1731,6 +1796,8 @@ async def ai_explain(req: AIExplainRequest) -> dict[str, object]:
             "model",
             "accepted",
             (time.perf_counter() - started) * 1000,
+            subject_type=req.target,
+            subject_id=event_subject_id,
         )
         return {
             "operation_id": operation,
@@ -1747,6 +1814,7 @@ async def ai_explain(req: AIExplainRequest) -> dict[str, object]:
     except (ProviderFailure, TimeoutError) as exc:
         reason = str(exc)
         guidance = getattr(exc, "retry_guidance", "Retry after checking provider responsiveness.")
+        timed_out = isinstance(exc, TimeoutError)
         AGENT_EVENTS.add(
             operation,
             "ExplanationAgent",
@@ -1754,13 +1822,16 @@ async def ai_explain(req: AIExplainRequest) -> dict[str, object]:
             provider.name,
             f"target={req.target}",
             "model",
-            "failed",
+            "timeout" if timed_out else "failed",
             (time.perf_counter() - started) * 1000,
             reason,
+            subject_type=req.target,
+            subject_id=event_subject_id,
         )
-        raise HTTPException(
-            status_code=503, detail=f"AI explanation unavailable: {reason}. {guidance}"
-        ) from None
+        timeout_seconds = _ai_timeout_seconds()
+        if timed_out:
+            raise HTTPException(status_code=504, detail={"code": "AI_EXPLAIN_TIMEOUT", "message": f"AI explanation hit its {timeout_seconds:g}-second deadline. Change SECURELEX_AI_TIMEOUT_SECONDS in .env, then retry."}) from None
+        raise HTTPException(status_code=503, detail=f"AI explanation unavailable: {reason}. {guidance}") from None
 
 
 @api_router.post("/ai/generate")
@@ -1825,7 +1896,7 @@ async def ai_generate(req: AIGenerateRequest) -> dict[str, object]:
                 prompt,
                 schema,
             ),
-            timeout=float(os.getenv("SECURELEX_AI_GENERATE_TIMEOUT_SECONDS", "90")),
+                timeout=_ai_timeout_seconds(),
         )
         AGENT_EVENTS.add(
             operation,
@@ -1888,8 +1959,8 @@ async def ai_generate(req: AIGenerateRequest) -> dict[str, object]:
         raise
     except (ProviderFailure, TimeoutError) as exc:
         if isinstance(exc, TimeoutError):
-            timeout_seconds = float(os.getenv("SECURELEX_AI_GENERATE_TIMEOUT_SECONDS", "90"))
-            message = f"AI generation timed out after {timeout_seconds:g} seconds."
+            timeout_seconds = _ai_timeout_seconds()
+            message = f"AI generation hit its {timeout_seconds:g}-second deadline. Change SECURELEX_AI_TIMEOUT_SECONDS in .env, then retry."
             guidance = "Retry, or configure a faster model."
         else:
             message = str(exc) or "The AI provider did not complete the request."
@@ -2126,7 +2197,7 @@ async def propose_fix_v2(req: PatchRequest) -> dict[str, object]:
                     f"Language: {language}\nTarget: {target_id} {target_rule_id}: {target_message}\nAllowed line window: {start_line}-{end_line}.\n{numbered}",
                     schema,
                 ),
-                timeout=float(os.getenv("SECURELEX_AI_FIX_TIMEOUT_SECONDS", "90")),
+                timeout=_ai_timeout_seconds(),
             )
             offsets = OffsetMap(req.source)
             edits = []
@@ -2148,8 +2219,8 @@ async def propose_fix_v2(req: PatchRequest) -> dict[str, object]:
             assumptions = list(payload["assumptions"])
             risks = list(payload["risks"])
         except TimeoutError:
-            timeout_seconds = float(os.getenv("SECURELEX_AI_FIX_TIMEOUT_SECONDS", "90"))
-            raise HTTPException(status_code=504, detail={"code": "AI_FIX_TIMEOUT", "message": f"AI fix proposal timed out after {timeout_seconds:g} seconds. Retry or use the rule proposal."}) from None
+            timeout_seconds = _ai_timeout_seconds()
+            raise HTTPException(status_code=504, detail={"code": "AI_FIX_TIMEOUT", "message": f"AI fix proposal hit its {timeout_seconds:g}-second deadline. Change SECURELEX_AI_TIMEOUT_SECONDS in .env, then retry or use the rule proposal."}) from None
         except Exception as exc:
             message = str(exc) or "The AI provider did not complete a valid proposal."
             raise HTTPException(status_code=503, detail={"code": "AI_FIX_UNAVAILABLE", "message": f"AI proposal unavailable: {message}. Retry or use the rule proposal."}) from None

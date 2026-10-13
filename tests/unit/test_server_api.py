@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from apsla import __version__
+from apsla.agents.provider_v2 import FakeProvider
 from apsla.server.app import app
 from apsla.server.cache import ANALYSIS_CACHE
 from apsla.server.security_limits import clear_rate_state
@@ -382,6 +383,97 @@ def test_fixes_propose_keeps_legacy_target_finding_alias(client: TestClient):
     })
     assert response.status_code == 200, response.text
     assert response.json()["proposal"]["target_kind"] == "finding"
+
+
+def test_ai_explain_uses_fake_provider_and_records_linkable_session_events(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    import importlib
+
+    app_module = importlib.import_module("apsla.server.app")
+    fake = FakeProvider([{"explanation": "This file contains a small Python expression."}])
+    monkeypatch.setattr(app_module, "_provider_for_session", lambda _session, _consent: fake)
+    response = client.post("/api/ai/explain", json={
+        "session_id": "test-session-explanation", "target": "file", "source": "x = 1\n",
+        "language": "python",
+    })
+    assert response.status_code == 200, response.text
+    operation_id = response.json()["operation_id"]
+    assert response.json()["provider"] == "fake"
+    events = client.get("/api/agent/events")
+    assert events.status_code == 200
+    event_list = events.json()
+    assert {item["action"] for item in event_list} >= {"deterministic_analysis", "explain"}
+    explanation_event = next(item for item in event_list if item["action"] == "explain")
+    assert explanation_event["operation_id"] == operation_id
+    assert explanation_event["subject_type"] == "file"
+    assert client.delete("/api/agent/events").json()["cleared"] >= 1
+    assert client.get("/api/agent/events").json() == []
+
+
+def test_ai_explain_resolves_token_diagnostic_and_finding_targets(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    import importlib
+
+    from apsla.pipeline import Analyzer
+
+    app_module = importlib.import_module("apsla.server.app")
+    fake = FakeProvider([{"explanation": f"Grounded explanation {index}."} for index in range(3)])
+    monkeypatch.setattr(app_module, "_provider_for_session", lambda _session, _consent: fake)
+    diagnostic_source = "x = 'unterminated\n"
+    diagnostic = next(item for item in Analyzer().analyze(diagnostic_source, "python", "<editor>", {"fixes": False, "ml": False}).findings if getattr(item, "kind", None) == "lexical")
+    finding_source = "import os\nuser_input = input()\nos.system(user_input)\n"
+    finding = Analyzer().analyze(finding_source, "python", "<editor>", {"fixes": False, "ml": False}).findings[0]
+    requests = [
+        {"target": "token", "target_id": "0", "source": "x = 1\n"},
+        {"target": "diagnostic", "target_id": diagnostic.id, "source": diagnostic_source},
+        {"target": "finding", "target_id": finding.id, "source": finding_source},
+    ]
+    for body in requests:
+        response = client.post("/api/ai/explain", json={"session_id": "test-session-targets", "language": "python", **body})
+        assert response.status_code == 200, response.text
+    explained_events = [item for item in client.get("/api/agent/events").json() if item["action"] == "explain"]
+    assert [(item["subject_type"], item["subject_id"]) for item in explained_events] == [(item["target"], item["target_id"]) for item in requests]
+
+
+def test_ai_explain_timeout_reports_shared_configurable_deadline(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    import importlib
+
+    app_module = importlib.import_module("apsla.server.app")
+    monkeypatch.setenv("SECURELEX_AI_TIMEOUT_SECONDS", "1")
+    monkeypatch.setattr(app_module, "_provider_for_session", lambda _session, _consent: FakeProvider([{"explanation": "Late response."}], delay=1.2))
+    response = client.post("/api/ai/explain", json={
+        "session_id": "test-session-timeout", "target": "file", "source": "x = 1\n",
+        "language": "python",
+    })
+    assert response.status_code == 504
+    assert response.json()["detail"]["code"] == "AI_EXPLAIN_TIMEOUT"
+    assert "1-second deadline" in response.json()["detail"]["message"]
+    assert "SECURELEX_AI_TIMEOUT_SECONDS" in response.json()["detail"]["message"]
+
+
+def test_provider_uses_shared_ai_deadline_over_legacy_ollama_timeout(monkeypatch: pytest.MonkeyPatch):
+    from apsla.agents.provider_v2 import OllamaProvider
+
+    monkeypatch.setenv("SECURELEX_AI_TIMEOUT_SECONDS", "123")
+    monkeypatch.setenv("OLLAMA_TIMEOUT_SECONDS", "60")
+    assert OllamaProvider().timeout == 123
+
+
+def test_ai_model_selection_is_limited_to_installed_session_model(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    import apsla.llm.local_ollama as ollama
+
+    monkeypatch.setattr(ollama, "get_agent_status", lambda: {"ollama_reachable": True, "model_present": False, "model": "qwen2.5-coder:3b", "models": ["qwen2.5-coder:1.5b"], "fallback_active": False, "message": ""})
+    missing = client.get("/api/capabilities").json()["ai"]
+    assert missing["model"] == "qwen2.5-coder:3b"
+    assert missing["configured_model_present"] is False
+    assert missing["installed_models"] == ["qwen2.5-coder:1.5b"]
+    assert "Choose an installed model in Settings" in missing["setup_message"]
+    valid = client.post("/api/ai/model", json={"session_id": "test-session-model", "model": "qwen2.5-coder:1.5b"})
+    assert valid.status_code == 200, valid.text
+    assert valid.json()["capabilities"]["ai"]["model"] == "qwen2.5-coder:1.5b"
+    assert valid.json()["capabilities"]["ai"]["configured"] is True
+    assert "qwen2.5-coder:1.5b" in valid.json()["capabilities"]["ai"]["installed_models"]
+    invalid = client.post("/api/ai/model", json={"session_id": "test-session-model", "model": "qwen2.5-coder:3b"})
+    assert invalid.status_code == 422
+    assert invalid.json()["detail"]["code"] == "MODEL_NOT_INSTALLED"
 
 
 def test_feedback_and_suppression(client: TestClient):

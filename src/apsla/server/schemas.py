@@ -307,6 +307,11 @@ class AIPermissionRequest(BaseModel):
     consent: bool
 
 
+class AIModelRequest(BaseModel):
+    session_id: str = Field(min_length=16, max_length=128)
+    model: str = Field(min_length=1, max_length=160)
+
+
 class AIExplainRequest(BaseModel):
     session_id: str = Field(min_length=16, max_length=128)
     remote_consent: bool = False
@@ -336,3 +341,5 @@ class AgentEventResponse(BaseModel):
     outcome: str
     duration: float
     error: str | None = None
+    subject_type: Literal["token", "diagnostic", "finding", "file", "patch"] | None = None
+    subject_id: str | None = None
