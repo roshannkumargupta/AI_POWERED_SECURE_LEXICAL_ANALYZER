@@ -7,7 +7,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from apsla.fixes.edits import apply_edits, unified_diff
 from apsla.lexing.common import OffsetMap
@@ -19,6 +19,8 @@ class PatchProposalV2(BaseModel):
     source_hash: str
     source_version: int = Field(ge=0)
     target_finding_id: str
+    target_kind: Literal["finding", "diagnostic", "token"] = "finding"
+    target_signature: str | None = None
     origin: Literal["rule", "ai"]
     edits: list[Edit]
     diff: str = ""
@@ -29,15 +31,36 @@ class PatchProposalV2(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class PatchTarget(BaseModel):
+    kind: Literal["finding", "diagnostic", "token"]
+    id: str = Field(min_length=1, max_length=256)
+
+
 class PatchRequest(BaseModel):
     source: str = Field(max_length=512 * 1024)
     source_version: int = Field(ge=0)
     language: str = "python"
     filename: str = "<editor>"
-    target_finding_id: str
+    target: PatchTarget | None = None
+    target_finding_id: str | None = None
     session_id: str = "default"
     remote_consent: bool = False
     origin: Literal["rule", "ai"] = "rule"
+
+    @model_validator(mode="before")
+    @classmethod
+    def accept_legacy_finding_target(cls, value: object) -> object:
+        if not isinstance(value, dict):
+            return value
+        data = dict(value)
+        target = data.get("target")
+        if target is None and data.get("target_finding_id"):
+            data["target"] = {"kind": "finding", "id": data["target_finding_id"]}
+        elif isinstance(target, dict) and target.get("kind") == "finding":
+            data.setdefault("target_finding_id", target.get("id"))
+        if data.get("target") is None:
+            raise ValueError("A fix target is required.")
+        return data
 
 
 class PatchActionRequest(BaseModel):
@@ -97,6 +120,8 @@ def make_proposal(
     source: str,
     source_version: int,
     target_finding_id: str,
+    target_kind: Literal["finding", "diagnostic", "token"] = "finding",
+    target_signature: str | None = None,
     edits: list[Edit],
     origin: Literal["rule", "ai"],
     rationale: str,
@@ -109,6 +134,8 @@ def make_proposal(
         source_hash=source_sha256(source),
         source_version=source_version,
         target_finding_id=target_finding_id,
+        target_kind=target_kind,
+        target_signature=target_signature,
         origin=origin,
         edits=edits,
         diff=unified_diff(source, patched),

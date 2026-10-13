@@ -57,6 +57,23 @@ describe('fix review modal', () => {
     expect(screen.queryByRole('button', { name: 'Undo Changes' })).toBeNull();
   });
 
+  it('requests a rule proposal before an AI fallback and shows a reviewable result', async () => {
+    vi.mocked(apiClient.proposeFix).mockRejectedValueOnce(new Error('No automatic fix is available for this target; use Explain.')).mockResolvedValueOnce({ proposal: { ...proposal, origin: 'ai' }, applied: false });
+    render(<FixWorkflowModal {...props} aiReady />);
+    expect(await screen.findByText('+safe')).toBeTruthy();
+    expect(apiClient.proposeFix).toHaveBeenCalledTimes(2);
+    expect(apiClient.proposeFix).toHaveBeenNthCalledWith(1, expect.objectContaining({ origin: 'rule', target: { kind: 'finding', id: 'f1' } }), expect.any(AbortSignal));
+    expect(apiClient.proposeFix).toHaveBeenNthCalledWith(2, expect.objectContaining({ origin: 'ai' }), expect.any(AbortSignal));
+  });
+
+  it('ends no-fix failures visibly and offers Retry and Close controls', async () => {
+    vi.mocked(apiClient.proposeFix).mockRejectedValue(new Error('No automatic fix is available for this finding; use Explain.'));
+    render(<FixWorkflowModal {...props} />);
+    expect(await screen.findByText(/No automatic fix is available/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Close fix review' })).toBeEnabled();
+  });
+
   it('reviews the fix-all list and only applies the unchanged reviewed diff', async () => {
     const preview = { new_source: 'safe\n', applied: ['fix-one'], skipped: [{ fix_id: 'fix-two', reason: 'Verifier inconclusive' }], diff: '--- a/main.py\n+++ b/main.py\n@@ -1 +1 @@\n-bad\n+safe', score_before: 70, score_after: 80, source_version: 1, applied_to_source: false };
     vi.mocked(apiClient.applyFixAll).mockResolvedValueOnce(preview).mockResolvedValueOnce({ ...preview, applied_to_source: true, source_version: 2 });

@@ -21,4 +21,13 @@ describe('ProblemsPanel', () => {
     rerender(<ProblemsPanel diagnostics={[]} result={{ omissions: [], tools: [{ executed: true, available: true, status: 'ok', name: 'lexer' }] } as never} onSelect={vi.fn()} />);
     expect(screen.getByText('No findings detected by checks run')).toBeTruthy();
   });
+  it('enables lexical and syntax diagnostics when rule fixes are available', () => {
+    const onFix = vi.fn();
+    render(<ProblemsPanel diagnostics={[diag('lex', 'lexical', 'Invalid character'), diag('sem', 'semantic', 'Advisory')]} result={null} onSelect={vi.fn()} onFix={onFix} fixEnabled />);
+    const buttons = screen.getAllByRole('button', { name: 'Fix' });
+    expect(buttons[0]).toBeEnabled();
+    expect(buttons[1]).toBeDisabled();
+    fireEvent.click(buttons[0]);
+    expect(onFix).toHaveBeenCalledWith(expect.objectContaining({ id: 'lex' }));
+  });
 });

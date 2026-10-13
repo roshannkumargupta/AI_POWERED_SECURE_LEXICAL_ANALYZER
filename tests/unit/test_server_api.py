@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 from apsla import __version__
 from apsla.server.app import app
 from apsla.server.cache import ANALYSIS_CACHE
+from apsla.server.security_limits import clear_rate_state
 
 
 @pytest.fixture(autouse=True)
@@ -19,7 +20,9 @@ def clean_test_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     test_feedback_file = tmp_path / "feedback" / "false_positives.jsonl"
     monkeypatch.setattr("apsla.feedback.store.FEEDBACK_FILE", test_feedback_file)
     ANALYSIS_CACHE.clear()
+    clear_rate_state()
     yield
+    clear_rate_state()
     ANALYSIS_CACHE.clear()
 
 
@@ -335,6 +338,50 @@ def test_fix_all_endpoint(client: TestClient):
     assert "diff" in data
     assert len(data["applied"]) >= 1
     assert data["score_after"] > data["score_before"]
+
+
+def test_fixes_propose_resolves_v2_diagnostic_and_token_targets(client: TestClient):
+    source = "x = 1 §\n"
+    analysis = client.post("/api/analyze", json={
+        "source": source, "language": "python", "filename": "main.py",
+        "api_version": 2, "source_version": 7,
+        "options": {"include_tokens": True, "stages": ["lexical", "syntax", "security", "quality"]},
+    })
+    assert analysis.status_code == 200
+    result = analysis.json()
+    lexical = client.post("/api/analyze/lexical", json={
+        "source": source, "language": "python", "filename": "main.py",
+        "api_version": 2, "source_version": 7,
+        "options": {"include_tokens": True, "stages": ["lexical", "syntax", "security", "quality"]},
+    })
+    assert lexical.status_code == 200
+    diagnostic = next(item for item in lexical.json()["diagnostics"] if item["category"] == "lexical")
+    token = next(item for item in result["tokens"] if item["lexical_status"] == "invalid")
+    for kind, target_id in (("diagnostic", diagnostic["id"]), ("token", token["id"])):
+        proposal = client.post("/api/fixes/propose", json={
+            "source": source, "source_version": 7, "language": "python", "filename": "main.py",
+            "target": {"kind": kind, "id": target_id}, "origin": "rule",
+        })
+        assert proposal.status_code == 200, f"{kind}: {proposal.text}"
+        assert proposal.json()["proposal"]["origin"] == "rule"
+        assert proposal.json()["proposal"]["edits"]
+
+
+def test_fixes_propose_keeps_legacy_target_finding_alias(client: TestClient):
+    source = "import yaml\nstream = input()\ndata = yaml.load(stream)\n"
+    analysis = client.post("/api/analyze", json={
+        "source": source, "language": "python", "filename": "main.py",
+        "api_version": 2, "source_version": 3,
+        "options": {"include_tokens": True, "stages": ["lexical", "syntax", "security", "quality"]},
+    })
+    assert analysis.status_code == 200
+    finding = analysis.json()["security_findings"][0]
+    response = client.post("/api/fixes/propose", json={
+        "source": source, "source_version": 3, "language": "python", "filename": "main.py",
+        "target_finding_id": finding["id"], "origin": "rule",
+    })
+    assert response.status_code == 200, response.text
+    assert response.json()["proposal"]["target_kind"] == "finding"
 
 
 def test_feedback_and_suppression(client: TestClient):

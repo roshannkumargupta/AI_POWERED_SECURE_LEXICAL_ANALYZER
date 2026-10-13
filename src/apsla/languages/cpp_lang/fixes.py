@@ -81,7 +81,7 @@ def generate_unbounded_copy_fix(ctx: FixContext) -> list[Fix]:
 
         # Check if dst is a fixed array declared in source
         arr_size = _extract_array_size(source, dst)
-        if arr_size is not None or re.search(rf"\b{re.escape(dst)}\s*\[", source):
+        if arr_size is not None:
             call_edit = Edit(
                 range=Range(
                     start_line=line_no, start_col=col_start, end_line=line_no, end_col=col_end
@@ -98,7 +98,7 @@ def generate_unbounded_copy_fix(ctx: FixContext) -> list[Fix]:
                     finding_id=finding.id,
                     title="Replace strcpy() with snprintf() bounded copy",
                     description='Replaces strcpy() with snprintf(dst, sizeof(dst), "%s", src) guaranteeing bounds and null termination.',
-                    confidence="review",
+                    confidence="safe",
                     kind="rule",
                     edits=all_edits,
                     verification=_create_initial_verification(),

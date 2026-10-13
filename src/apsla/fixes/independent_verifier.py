@@ -6,6 +6,9 @@ from typing import Any
 
 from apsla.fixes.edits import apply_edits
 from apsla.fixes.patch_v2 import PatchProposalV2, source_sha256, validate_proposal
+from apsla.languages import registry
+from apsla.lexing.diagnostics_v2 import unicode_lexical_diagnostics
+from apsla.models_v2 import adapt_analysis_result
 from apsla.parsing_v2 import parse_source, run_semantic_checks
 from apsla.pipeline import Analyzer
 from apsla.quality_v2 import measure_quality
@@ -17,6 +20,36 @@ def _scan(source: str, language: str, filename: str) -> dict[str, Any]:
         source, language=language, filename=filename, options={"fixes": False, "ml": False}
     )
     parsed = parse_source(language, source, analysis_id)
+    adapted = adapt_analysis_result(source, before, 0, plugin=registry.get(language), include_tokens=True)
+    diagnostics = [*adapted.syntax_diagnostics, *adapted.semantic_diagnostics, *parsed.diagnostics, *unicode_lexical_diagnostics(source, language, analysis_id)]
+    for finding in before.findings:
+        if finding.kind in {"lexical", "syntax"} or "lexical" in finding.sources or "syntax" in finding.sources:
+            from apsla.models_v2 import DiagnosticV2
+
+            diagnostics.append(DiagnosticV2(
+                id=finding.id,
+                language=language,
+                range=finding.range,
+                category="lexical" if finding.kind == "lexical" or "lexical" in finding.sources else "syntax",
+                severity=finding.severity.value,
+                message=finding.message or finding.title,
+                related_evidence=[f"{key}: {value}" for key, value in finding.evidence.items()],
+                produced_by=finding.rule_id,
+                certainty="definitive",
+            ))
+    for token in adapted.tokens:
+        if token.lexical_status == "invalid" and not any(
+            item.id in token.diagnostic_ids for item in diagnostics
+        ):
+            from apsla.models import Range
+            from apsla.models_v2 import DiagnosticV2
+
+            diagnostics.append(DiagnosticV2(
+                id=token.id, language=language,
+                range=Range(start_line=token.start_line, start_col=token.start_column, end_line=token.end_line, end_col=token.end_column),
+                category="lexical", severity="error", message=f"Invalid token {token.lexeme!r}",
+                related_evidence=[], produced_by="internal-lexer", certainty="definitive",
+            ))
     semantic, semantic_tools, semantic_omissions = run_semantic_checks(
         language, source, analysis_id
     )
@@ -29,6 +62,7 @@ def _scan(source: str, language: str, filename: str) -> dict[str, Any]:
     return {
         "legacy": before,
         "parse": parsed,
+        "diagnostics": diagnostics,
         "semantic": semantic,
         "semantic_tools": semantic_tools,
         "omissions": semantic_omissions,
@@ -70,6 +104,13 @@ def verify_independently(
     target_before = [f for f in original["legacy"].findings if f.id == proposal.target_finding_id]
     target_rule = target_before[0].rule_id if target_before else None
     allowed_region = target_before[0].range if target_before else None
+    if allowed_region is None and proposal.target_signature:
+        target_diagnostic = next(
+            (item for item in original["diagnostics"] if _diagnostic_signature(item) == proposal.target_signature),
+            None,
+        )
+        if target_diagnostic is not None:
+            allowed_region = target_diagnostic.range
     out_of_scope: list[str] = []
     for edit in proposal.edits:
         edit_range = edit.range
@@ -91,9 +132,17 @@ def verify_independently(
             out_of_scope.append(
                 f"Edit at {edit_range.start_line}:{edit_range.start_col} is outside the target region and is not a justified import/declaration."
             )
-    target_gone = bool(target_rule) and not any(
-        f.rule_id == target_rule for f in updated["legacy"].findings
-    )
+    if proposal.target_kind == "finding":
+        target_gone = bool(target_rule) and not any(
+            f.rule_id == target_rule for f in updated["legacy"].findings
+        )
+    elif proposal.target_signature:
+        target_gone = not any(
+            _diagnostic_signature(item) == proposal.target_signature
+            for item in updated["diagnostics"]
+        )
+    else:
+        target_gone = False
     syntax_errors = list(getattr(updated["parse"], "diagnostics", []))
     syntax_ok = not syntax_errors
     integrity = (
@@ -174,3 +223,8 @@ def verify_independently(
         "tests_status": "tests unavailable",
         "patched_source": patched,
     }
+
+
+def _diagnostic_signature(item: Any) -> str:
+    r = item.range
+    return f"{item.category}|{item.produced_by}|{item.message}|{r.start_line}:{r.start_col}:{r.end_line}:{r.end_col}"

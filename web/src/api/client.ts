@@ -264,8 +264,8 @@ export interface AnalyzeV2Request { source: string; language?: string | null; fi
 export interface APIErrorBody { code: string; message: string; status: number }
 export interface ASTNodeResponse { root_id: string; nodes: Array<{ id: string; type: string; field_name: string | null; range: Range; parent_id: string | null; child_ids: string[]; text_preview: string; token_ids: string[]; finding_ids: string[] }>; truncated: boolean; node_limit: number; depth_limit: number }
 export interface StageAnalysisResponse { analysis_id: string; source_hash: string; source_version: number; language: string; stage: string; lexical_status: AnalysisDimensionV2; syntax_status: AnalysisDimensionV2; semantic_status: AnalysisDimensionV2; ast: ASTNodeResponse | null; diagnostics: DiagnosticV2[]; findings: AnalysisResultV2['security_findings']; taint_paths: AnalysisResultV2['taint_paths']; tools: AnalysisResultV2['tools']; warnings: string[]; omissions: string[] }
-export interface PatchProposalRequest { source: string; source_version: number; language?: string; filename?: string; target_finding_id: string; session_id?: string; remote_consent?: boolean; origin?: 'rule' | 'ai' }
-export interface PatchProposal { id: string; source_hash: string; source_version: number; target_finding_id: string; origin: 'rule' | 'ai'; edits: Edit[]; diff: string; rationale: string; expected_outcome: string; assumptions: string[]; risks: string[]; created_at: string }
+export interface PatchProposalRequest { source: string; source_version: number; language?: string; filename?: string; target?: { kind: 'finding' | 'diagnostic' | 'token'; id: string }; target_finding_id?: string; session_id?: string; remote_consent?: boolean; origin?: 'rule' | 'ai' }
+export interface PatchProposal { id: string; source_hash: string; source_version: number; target_finding_id: string; target_kind?: 'finding' | 'diagnostic' | 'token'; target_signature?: string | null; origin: 'rule' | 'ai'; edits: Edit[]; diff: string; rationale: string; expected_outcome: string; assumptions: string[]; risks: string[]; created_at: string }
 export interface VerificationItem { id?: string; rule_id?: string; title?: string; message?: string; reason?: string; check?: string; [key: string]: unknown }
 export interface VerificationToolStatus { name: string; available: boolean; status: string; version?: string | null; reason?: string | null }
 export interface FixVerificationReport { resolved: VerificationItem[]; remaining: VerificationItem[]; introduced: VerificationItem[]; unverified: VerificationItem[]; outcome: 'Verified for specified checks' | 'Partially verified' | 'Verification failed' | 'Inconclusive'; tools: VerificationToolStatus[]; quality_delta: Record<string, number>; quality_evaluation?: Record<string, unknown> }
@@ -339,7 +339,7 @@ export interface LLMStatusResponse {
 
 export interface AICapabilities {
   ai: { provider: string; configured: boolean; reachable: boolean | null; model: string | null; processing_location: string; consent_required: boolean; remote_consented: boolean; model_present?: boolean; setup_message?: string | null };
-  features: { build_with_ai: boolean; fix_with_ai: boolean };
+  features: { build_with_ai: boolean; fix_with_ai: boolean; fix_ai?: boolean; fix_rule?: boolean };
   languages?: Array<{ id: string; name: string; extensions?: string[]; monaco_id?: string }>;
   tools?: Array<{ name: string; available: boolean; status: string; version?: string | null; reason?: string | null }>;
 }
