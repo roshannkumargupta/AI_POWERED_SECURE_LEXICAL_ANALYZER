@@ -6,12 +6,13 @@ import json
 import re
 import xml.etree.ElementTree as ET
 from collections import Counter
+from collections.abc import Sequence
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 from apsla.languages import registry
-from apsla.models import Finding, Severity
+from apsla.models import Range, Severity
 from apsla.models_v2 import SecurityFindingV2
 
 _SEVERITY = {Severity.INFO: 0, Severity.LOW: 1, Severity.MEDIUM: 2, Severity.HIGH: 3, Severity.CRITICAL: 4}
@@ -66,7 +67,7 @@ def _safe_pattern(rule: Any) -> str:
     return "No structured safe-code example is declared by this rule."
 
 
-def internal_security_findings(findings: list[Finding]) -> list[SecurityFindingV2]:
+def internal_security_findings(findings: Sequence[Any]) -> list[SecurityFindingV2]:
     """Adapt internal deterministic/taint/ML fused findings into the v2 facade."""
     rules_by_id = {item["id"]: item for item in build_rule_registry()}
     adapted: list[SecurityFindingV2] = []
@@ -85,7 +86,7 @@ def internal_security_findings(findings: list[Finding]) -> list[SecurityFindingV
     return adapted
 
 
-def normalize_external(name: str, parsed: object, source: str, language: str) -> list[SecurityFindingV2]:
+def normalize_external(name: str, parsed: Any, source: str, language: str) -> list[SecurityFindingV2]:
     """Normalize bounded, structured analyzer output; unknown metadata stays unmapped."""
     records: list[dict[str, Any]] = []
     if name in {"bandit", "eslint", "semgrep"} and isinstance(parsed, (str, dict, list)):
@@ -142,7 +143,7 @@ def normalize_external(name: str, parsed: object, source: str, language: str) ->
         cwe_values = ([str(cwe) if str(cwe).startswith("CWE-") else f"CWE-{cwe}"] if cwe else [])
         rawsev = str(item.get("issue_severity") or item.get("severity") or "medium").lower()
         severity = {"critical": Severity.CRITICAL, "high": Severity.HIGH, "error": Severity.HIGH, "medium": Severity.MEDIUM, "warning": Severity.MEDIUM, "low": Severity.LOW, "info": Severity.INFO}.get(rawsev, Severity.MEDIUM)
-        rng = {"start_line": line, "start_col": col, "end_line": line, "end_col": endcol}
+        rng = Range(start_line=line, start_col=col, end_line=line, end_col=endcol)
         message = str(item.get("issue_text") or item.get("message") or item.get("extra", {}).get("message") or "External analyzer reported an issue.")
         results.append(SecurityFindingV2(
             id=f"{name}-{rid}-{line}-{col}-{i}", rule_id=rid, title=rid, cwe=cwe_values,

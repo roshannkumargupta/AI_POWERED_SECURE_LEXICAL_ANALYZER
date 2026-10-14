@@ -18,6 +18,14 @@ from apsla.models_v2 import (
 )
 from apsla.parsing_v2 import ASTViewV2
 
+_DEFAULT_ANALYSIS_STAGES: list[Literal["lexical", "syntax", "semantic", "security", "quality"]] = [
+    "lexical",
+    "syntax",
+    "semantic",
+    "security",
+    "quality",
+]
+
 
 class HealthResponse(BaseModel):
     """System health and active telemetry status."""
@@ -57,7 +65,7 @@ class AnalyzeOptions(BaseModel):
     include_suppressed: bool = False
     agent: str = "off"  # "off" | "rules" | "local"
     stages: list[Literal["lexical", "syntax", "semantic", "security", "quality"]] = Field(
-        default_factory=lambda: ["lexical", "syntax", "semantic", "security", "quality"]
+        default_factory=lambda: list(_DEFAULT_ANALYSIS_STAGES)
     )
 
 

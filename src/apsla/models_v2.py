@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Any, Literal
+from collections.abc import Sequence
+from typing import Any, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -48,7 +49,8 @@ class DiagnosticV2(BaseModel):
 
 
 class SecurityFindingV2(Finding):
-    cwe: list[str] = Field(default_factory=list)
+    # The V2 contract normalizes one-or-more CWE identifiers to a list.
+    cwe: list[str] = Field(default_factory=list)  # type: ignore[assignment]
     taint_path_id: str | None = None
     certainty: Literal["definitive", "heuristic", "incomplete"] = "heuristic"
     remediation: str | None = None
@@ -219,7 +221,7 @@ def adapt_analysis_result(
     plugin: Any = None,
     include_tokens: bool = True,
     elapsed_ms: float | None = None,
-    stages: list[str] | None = None,
+    stages: Sequence[str] | None = None,
 ) -> AnalysisResultV2:
     """Adapt the old pipeline result into v2 without changing the old result."""
     digest = hashlib.sha256(source.encode("utf-8")).hexdigest()
@@ -251,7 +253,12 @@ def adapt_analysis_result(
                 if role not in {"source", "propagation", "sanitizer", "sink"}:
                     role = "propagation"
                 steps.append(
-                    TaintPathStepV2(range=item.range, text=item.text, role=role, note=item.note)
+                    TaintPathStepV2(
+                        range=item.range,
+                        text=item.text,
+                        role=cast(Literal["source", "propagation", "sanitizer", "sink"], role),
+                        note=item.note,
+                    )
                 )
             taint_paths.append(
                 TaintPathV2(
@@ -272,7 +279,7 @@ def adapt_analysis_result(
                     id=finding.id,
                     language=result.language,
                     range=finding.range,
-                    category=category,
+                    category=cast(Literal["lexical", "syntax", "semantic", "security", "quality"], category),
                     severity=finding.severity.value,
                     message=finding.message or finding.title,
                     related_evidence=[f"{key}: {value}" for key, value in finding.evidence.items()],
@@ -346,7 +353,7 @@ def adapt_analysis_result(
                     start_column=token.col,
                     end_line=token.end_line,
                     end_column=token.end_col,
-                    lexical_status=lexical_status,
+                    lexical_status=cast(Literal["valid", "invalid", "unknown"], lexical_status),
                     diagnostic_ids=linked,
                 )
             )

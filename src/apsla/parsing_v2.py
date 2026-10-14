@@ -206,32 +206,32 @@ def parse_source(language: str, source: str, analysis_id: str) -> ParseOutcome:
     started = time.perf_counter()
     if language == "python":
         try:
-            tree = ast.parse(source)
+            python_tree = ast.parse(source)
             elapsed = (time.perf_counter() - started) * 1000
             return ParseOutcome(
-                language, "python.ast", "python_ast", tree, source, [],
+                language, "python.ast", "python_ast", python_tree, source, [],
                 [ToolStatus(name="python.ast", kind="parser", available=True, executed=True, duration_ms=elapsed, status="ok")], "ok",
             )
         except (SyntaxError, IndentationError, TabError) as exc:
             diagnostic = _syntax_error_from_python(source, language, analysis_id, exc)
-            partial, reason = _tree_sitter(language, source)
+            partial_tree, reason = _tree_sitter(language, source)
             diagnostics: list[DiagnosticV2] = []
             elapsed = (time.perf_counter() - started) * 1000
             tools = [ToolStatus(name="python.ast", kind="parser", available=True, executed=True, duration_ms=elapsed, status="failed", reason=exc.__class__.__name__)]
-            if partial is not None:
-                tools.append(ToolStatus(name="tree-sitter-python", kind="parser", available=True, executed=True, duration_ms=elapsed, status="ok" if not partial.root_node.has_error else "failed"))
-                diagnostics.extend(_tree_sitter_diagnostics(source, language, analysis_id, partial))
-                return ParseOutcome(language, "python.ast + tree-sitter-python", "tree_sitter", partial, source, [diagnostic, *diagnostics], tools, "issues", "Python AST rejected the source; tree-sitter supplies a partial recovery tree.", started)
+            if partial_tree is not None:
+                tools.append(ToolStatus(name="tree-sitter-python", kind="parser", available=True, executed=True, duration_ms=elapsed, status="ok" if not partial_tree.root_node.has_error else "failed"))
+                diagnostics.extend(_tree_sitter_diagnostics(source, language, analysis_id, partial_tree))
+                return ParseOutcome(language, "python.ast + tree-sitter-python", "tree_sitter", partial_tree, source, [diagnostic, *diagnostics], tools, "issues", "Python AST rejected the source; tree-sitter supplies a partial recovery tree.", started)
             tools.append(ToolStatus(name="tree-sitter-python", kind="parser", available=False, status="unavailable", reason=reason))
             return ParseOutcome(language, "python.ast", "none", None, source, [diagnostic], tools, "issues", reason, started)
-    tree, reason = _tree_sitter(language, source)
+    syntax_tree, reason = _tree_sitter(language, source)
     elapsed = (time.perf_counter() - started) * 1000
-    if tree is None:
+    if syntax_tree is None:
         return ParseOutcome(language, f"tree-sitter-{language}", "none", None, source, [], [ToolStatus(name=f"tree-sitter-{language}", kind="parser", available=False, status="unavailable", reason=reason)], "unavailable", reason, started)
-    errors = _tree_sitter_diagnostics(source, language, analysis_id, tree)
-    has_errors = bool(errors) or tree.root_node.has_error
+    errors = _tree_sitter_diagnostics(source, language, analysis_id, syntax_tree)
+    has_errors = bool(errors) or syntax_tree.root_node.has_error
     tool = ToolStatus(name=f"tree-sitter-{language}", kind="parser", available=True, executed=True, duration_ms=elapsed, status="failed" if has_errors else "ok")
-    return ParseOutcome(language, f"tree-sitter-{language}", "tree_sitter", tree, source, errors, [tool], "issues" if has_errors else "ok", "Tree-sitter recovery is incomplete and does not establish semantic correctness." if has_errors else None, started)
+    return ParseOutcome(language, f"tree-sitter-{language}", "tree_sitter", syntax_tree, source, errors, [tool], "issues" if has_errors else "ok", "Tree-sitter recovery is incomplete and does not establish semantic correctness." if has_errors else None, started)
 
 
 _SEMANTIC_TOOLS = {

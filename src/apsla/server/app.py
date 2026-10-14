@@ -17,7 +17,7 @@ import uuid
 from contextvars import ContextVar
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Final
+from typing import Any, Final, Literal, cast
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,12 +27,13 @@ from fastapi.staticfiles import StaticFiles
 from apsla import __version__
 from apsla.agents.provider_v2 import (
     AgentEventLog,
+    ModelProvider,
     OllamaProvider,
     ProviderFailure,
     frame_untrusted,
     provider_from_environment,
 )
-from apsla.fixes.generators import generate_rule_fix
+from apsla.fixes.generators import RuleFix, generate_rule_fix
 from apsla.fixes.independent_verifier import verify_independently
 from apsla.fixes.patch_v2 import (
     PatchActionRequest,
@@ -295,7 +296,7 @@ def _session_key(_provided: str | None = None) -> str:
 
 def _ai_timeout_seconds() -> float:
     """Shared AI request deadline, defaulting to 90 seconds for every provider and endpoint."""
-    raw = os.getenv("SECURELEX_AI_TIMEOUT_SECONDS") or os.getenv("OLLAMA_TIMEOUT_SECONDS", "90")
+    raw = os.getenv("SECURELEX_AI_TIMEOUT_SECONDS") or os.getenv("OLLAMA_TIMEOUT_SECONDS") or "90"
     try:
         return min(600.0, max(1.0, float(raw)))
     except ValueError:
@@ -519,7 +520,8 @@ def build_capabilities(session_id: str | None = None) -> CapabilitiesResponse:
         if remote_processing:
             remote_configured = remote_configured and bool(os.environ.get("OPENAI_COMPAT_API_KEY"))
     remote_consented = bool(session_id and session_id in REMOTE_CONSENTS)
-    installed_models = list(agent.get("models", [])) if provider == "ollama" else []
+    models_value = agent.get("models", [])
+    installed_models = list(models_value) if provider == "ollama" and isinstance(models_value, list) else []
     selected_model = SESSION_AI_MODELS.get(session_id or "")
     configured_model = selected_model or agent.get("model")
     model_present = bool(agent["model_present"])
@@ -790,7 +792,7 @@ async def _stage_only(req: AnalyzeRequest, stage: str) -> StageAnalysisResponse:
                 diagnostic.id in linked and diagnostic.severity.lower() not in {"warning", "info"}
                 for diagnostic in diagnostics
             )
-            lexical_status = (
+            token_lexical_status: Literal["valid", "invalid", "unknown"] = (
                 "invalid" if token_type == "INVALID_TOKEN" or has_lexical_error else "valid"
             )
             token_id = hashlib.sha256(
@@ -811,11 +813,11 @@ async def _stage_only(req: AnalyzeRequest, stage: str) -> StageAnalysisResponse:
                     start_column=raw.col,
                     end_line=raw.end_line,
                     end_column=raw.end_col,
-                    lexical_status=lexical_status,
+                    lexical_status=token_lexical_status,
                     diagnostic_ids=linked,
                 )
             )
-            status_counts[lexical_status] += 1
+            status_counts[token_lexical_status] += 1
             category_counts[category] = category_counts.get(category, 0) + 1
             visible_index += 1
         lexical_summary = {"status": status_counts, "category": category_counts}
@@ -839,7 +841,10 @@ async def _stage_only(req: AnalyzeRequest, stage: str) -> StageAnalysisResponse:
             status="issues" if raw_lexical_errors else "ok",
             reason="Lexer emitted invalid tokens." if raw_lexical_errors else None,
         )
-        syntax_status = AnalysisDimension(status=outcome.status, reason=outcome.reason)
+        syntax_status = AnalysisDimension(
+            status=cast(Literal["ok", "issues", "incomplete", "unavailable"], outcome.status),
+            reason=outcome.reason,
+        )
         semantic_diagnostics, semantic_tools, semantic_warnings = run_semantic_checks(
             language, req.source, analysis_id
         )
@@ -1059,7 +1064,7 @@ async def get_agent_status_endpoint() -> AgentStatusResponse:
 
 
 @api_router.post("/agent/analyze", response_model=AnalysisResult)
-async def analyze_code_agent(req: AnalyzeRequest) -> AnalysisResult:
+async def analyze_code_agent(req: AnalyzeRequest) -> AnalysisResult | JSONResponse:
     """Run code analysis with agent layer enabled (defaults to rules if set to off)."""
     if (req.options.agent or "off") == "off":
         req.options.agent = "rules"
@@ -1191,29 +1196,29 @@ async def apply_all_fixes(req: FixAllRequest) -> FixAllResponse:
     )
     score_before = before.summary.score
     for _pass in range(3):
-        current = analyzer.analyze(
+        current_analysis = analyzer.analyze(
             new_source, language=lang, filename=req.filename, options={"fixes": True, "ml": False}
         )
         candidate_pair = next(
             (
                 (finding, fix)
-                for finding in current.findings
+                for finding in current_analysis.findings
                 for fix in finding.fixes
                 if fix.edits and fix.confidence == "safe" and fix.id not in attempted
             ),
             None,
         )
-        diagnostic_fix: tuple[DiagnosticV2, object] | None = None
+        diagnostic_fix: tuple[DiagnosticV2, RuleFix] | None = None
         if candidate_pair is None:
             digest = hashlib.sha256(new_source.encode("utf-8")).hexdigest()
             analysis_id = hashlib.sha256(
                 f"{session}:{digest}:{current_version}:{lang}".encode()
             ).hexdigest()[:24]
             projected = adapt_analysis_result(
-                new_source, current, current_version, plugin=registry.get(lang), include_tokens=True
+                new_source, current_analysis, current_version, plugin=registry.get(lang), include_tokens=True
             )
             parsed = parse_source(lang, new_source, analysis_id)
-            diagnostics = [*_legacy_fix_diagnostics(current, lang), *projected.syntax_diagnostics, *projected.semantic_diagnostics, *parsed.diagnostics, *unicode_lexical_diagnostics(new_source, lang, analysis_id)]
+            diagnostics = [*_legacy_fix_diagnostics(current_analysis, lang), *projected.syntax_diagnostics, *projected.semantic_diagnostics, *parsed.diagnostics, *unicode_lexical_diagnostics(new_source, lang, analysis_id)]
             for token in projected.tokens:
                 if token.lexical_status == "invalid" and not any(item.id in token.diagnostic_ids for item in diagnostics):
                     diagnostics.append(DiagnosticV2(
@@ -1527,6 +1532,8 @@ def _provider_for_session(session_id: str, remote_consent: bool):
 
             def chat_json(self, system: str, user: str, schema: dict[str, object]) -> dict[str, object]:
                 properties = schema.get("properties", {})
+                if not isinstance(properties, dict):
+                    properties = {}
                 if "explanation" in properties and "code" not in properties:
                     return {"explanation": "Deterministic test explanation based only on the supplied evidence."}
                 language_match = re.search(r'"language"\s*:\s*"(python|java|javascript|cpp)"', user)
@@ -1557,6 +1564,7 @@ def _provider_for_session(session_id: str, remote_consent: bool):
             detail="Remote processing requires explicit consent for this session.",
         )
     try:
+        provider: ModelProvider
         if provider_name not in {"openai", "openai-compatible"} and session_id in SESSION_AI_MODELS:
             provider = OllamaProvider(model=SESSION_AI_MODELS[session_id])
         else:
@@ -1764,7 +1772,7 @@ async def ai_explain(req: AIExplainRequest) -> dict[str, object]:
             timeout=_ai_timeout_seconds(),
         )
         explanation = output["explanation"]
-        if req.target == "finding" and not verify_grounding(explanation, found, req.source):
+        if req.target == "finding" and found is not None and not verify_grounding(explanation, found, req.source):
             explanation = found.explanation or found.message
         # For other targets, reject ungrounded identifiers, line numbers and CWEs using the same strict evidence corpus.
         elif req.target != "finding":
@@ -2025,7 +2033,10 @@ def _analyze_generated_source(source: str, language: str) -> AnalysisResultV2:
         if not item.executed and item.reason:
             omissions.append(f"{item.name} unavailable: {item.reason}")
     syntax_diagnostics = list(parsed.diagnostics)
-    syntax_status = AnalysisDimension(status=parsed.status, reason=parsed.reason)
+    syntax_status = AnalysisDimension(
+        status=cast(Literal["ok", "issues", "incomplete", "unavailable"], parsed.status),
+        reason=parsed.reason,
+    )
     semantic_issues = bool(semantic_diagnostics)
     semantic_incomplete = any(not item.executed for item in semantic_tools)
     semantic_status = AnalysisDimension(
@@ -2077,7 +2088,7 @@ def _legacy_fix_diagnostics(analysis: AnalysisResult, language: str) -> list[Dia
     ]
 
 
-def _resolve_v2_fix_target(req: PatchRequest, language: str) -> tuple[object, object | None, str]:
+def _resolve_v2_fix_target(req: PatchRequest, language: str) -> tuple[Any, Any | None, str]:
     """Resolve the stable finding/diagnostic/token id from the same analyzer inputs as /api/analyze."""
     assert req.target is not None
     legacy = Analyzer().analyze(
@@ -2120,6 +2131,7 @@ def _resolve_v2_fix_target(req: PatchRequest, language: str) -> tuple[object, ob
                 )
             finding = next((value for value in legacy.findings if value.id in token.diagnostic_ids), None)
 
+    target: Any
     if req.target.kind == "finding":
         target = finding
     elif req.target.kind == "diagnostic":
@@ -2148,7 +2160,7 @@ async def propose_fix_v2(req: PatchRequest) -> dict[str, object]:
     assert req.target is not None
     target, finding, signature = _resolve_v2_fix_target(req, language)
     target_id = req.target.id
-    target_range = getattr(target, "range", None)
+    target_range = cast(Range | None, getattr(target, "range", None))
     target_message = getattr(target, "message", getattr(target, "title", ""))
     target_rule_id = getattr(target, "rule_id", getattr(target, "produced_by", "internal-lexer"))
     if req.target.kind == "token":
@@ -2161,7 +2173,7 @@ async def propose_fix_v2(req: PatchRequest) -> dict[str, object]:
     expected: str
     assumptions: list[str]
     risks: list[str]
-    origin: str = req.origin
+    origin: Literal["rule", "ai"] = req.origin
     if req.origin == "rule":
         candidate = next((fix for fix in (finding.fixes if finding else []) if fix.edits and fix.confidence == "safe"), None)
         if candidate is not None:
@@ -2171,6 +2183,7 @@ async def propose_fix_v2(req: PatchRequest) -> dict[str, object]:
             risks = ["Behavioral effects are not executed; verify the diff and report."]
             assumptions = []
         else:
+            assert target_range is not None
             generated, reason = generate_rule_fix(
                 source=req.source, language=language, range=target_range,
                 category=getattr(target, "category", "security" if finding else "lexical"),
@@ -2333,7 +2346,7 @@ async def undo_fix_v2(req: UndoRequest) -> dict[str, object]:
 
 @api_router.get("/agent-safety/scenarios")
 async def get_agent_safety_scenarios() -> list[SafetyScenarioResponse]:
-    return list_scenarios()
+    return [SafetyScenarioResponse.model_validate(item) for item in list_scenarios()]
 
 
 @api_router.post("/agent-safety/run")
@@ -2406,6 +2419,7 @@ async def get_agent_safety_result(run_id: str) -> dict[str, object]:
 
 @api_router.post("/reports/export")
 async def export_report(req: ReportExportRequest) -> Response:
+    data: dict[str, Any]
     if req.kind == "analysis":
         if req.source is None:
             raise HTTPException(status_code=422, detail="Analysis export requires source text.")
@@ -2427,12 +2441,12 @@ async def export_report(req: ReportExportRequest) -> Response:
             )
         if _safety_run_owner.get(req.run_id or "") != _session_key():
             raise HTTPException(status_code=404, detail="Safety Lab run is unavailable or expired.")
-        data = get_run(req.run_id or "")
-        if data is None:
+        run_data = get_run(req.run_id or "")
+        if run_data is None:
             raise HTTPException(status_code=404, detail="Safety Lab run is unavailable or expired.")
         capabilities = build_capabilities().model_dump(mode="json")
         data = {
-            **data,
+            **run_data,
             "capabilities": capabilities,
             "tools": capabilities["tools"],
             "tool_versions": {
@@ -2494,7 +2508,7 @@ def _openapi_with_v2_contract() -> dict:
     return schema
 
 
-app.openapi = _openapi_with_v2_contract
+app.openapi = _openapi_with_v2_contract  # type: ignore[method-assign]
 
 # ── Static / Frontend Serving ────────────────────────────────────────────────
 

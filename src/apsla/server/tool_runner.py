@@ -82,13 +82,15 @@ def _bounded(text: str | bytes | None) -> str:
 def _parse_output(name: str, stdout: str, stderr: str) -> dict[str, object]:
     """Parse structured analyzer formats while retaining bounded raw evidence."""
     source = stdout.strip() or stderr.strip()
+    parsed: object
     if name == "cppcheck" and source:
         parsed = source
     elif name in {"ruff", "bandit", "eslint", "semgrep"} and source:
         try:
-            parsed: object = json.loads(source)
+            parsed_json: object = json.loads(source)
         except json.JSONDecodeError:
-            parsed = {"parse_error": "Tool output was not valid JSON."}
+            parsed_json = {"parse_error": "Tool output was not valid JSON."}
+        parsed = parsed_json
     else:
         parsed = [line for line in source.splitlines() if line.strip()]
     return {"parsed": parsed, "stdout": stdout, "stderr": stderr}

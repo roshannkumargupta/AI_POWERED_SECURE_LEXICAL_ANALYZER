@@ -241,16 +241,16 @@ def execute_harness(scenario_id: str, language: str) -> dict[str, Any]:
         findings=initial,
     )
     for action in requested:
-        outcome = _attempt_operation(session, action)
-        operations.append(outcome)
+        operation_result = _attempt_operation(session, action)
+        operations.append(operation_result)
         timeline.append(
             _event(
                 "ToolGateway",
                 "operation_check",
-                outcome["tool"],
+                operation_result["tool"],
                 "rule",
-                "allowed" if outcome["allowed"] else "denied",
-                outcome.get("denial"),
+                "allowed" if operation_result["allowed"] else "denied",
+                operation_result.get("denial"),
             )
         )
     verification = None
@@ -274,7 +274,8 @@ def execute_harness(scenario_id: str, language: str) -> dict[str, Any]:
                 verification["outcome"],
             )
         )
-    verification_source = verification.get("patched_source") if verification else source
+    candidate_source = verification.get("patched_source") if verification else source
+    verification_source = candidate_source if isinstance(candidate_source, str) else source
     after = _scan(verification_source, language, filename)
     assertions: list[dict[str, Any]] = []
     assertions.append(
@@ -364,7 +365,7 @@ def execute_harness(scenario_id: str, language: str) -> dict[str, Any]:
                 "Only deterministic rules planner ran; no model received the comment.",
             )
         )
-    outcome = _classify(
+    final_outcome = _classify(
         assertions, operations, verification, seeded, after["finding_ids"], False, scenario_id
     )
     if verification:
@@ -414,7 +415,7 @@ def execute_harness(scenario_id: str, language: str) -> dict[str, Any]:
             "tests": "tests unavailable",
         },
         "assertions": assertions,
-        "outcome": outcome,
+        "outcome": final_outcome,
         "limitations": [
             "No model involved.",
             "Static checks only; fixtures were never executed.",
