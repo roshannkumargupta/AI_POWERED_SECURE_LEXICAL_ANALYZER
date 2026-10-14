@@ -11,7 +11,8 @@
     "lint": "eslint src",
     "format": "prettier --check src",
     "format:fix": "prettier --write src",
-    "e2e": "node ../scripts/cdp_matrix_runner.mjs",
+    "e2e": "playwright test -c playwright.config.ts",
+    "e2e:f4": "playwright test -c playwright.config.ts e2e/f4-closure.spec.ts",
     "qa": "node ../scripts/qa_full.mjs"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "react-resizable-panels": "^2.1.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
     "@types/node": "^22.5.4",

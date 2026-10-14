@@ -108,6 +108,28 @@
         "title": "AIGenerateRequest",
         "type": "object"
       },
+      "AIModelRequest": {
+        "properties": {
+          "model": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Model",
+            "type": "string"
+          },
+          "session_id": {
+            "maxLength": 128,
+            "minLength": 16,
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "model"
+        ],
+        "title": "AIModelRequest",
+        "type": "object"
+      },
       "AIPermissionRequest": {
         "properties": {
           "consent": {
@@ -278,6 +300,35 @@
           "outcome": {
             "title": "Outcome",
             "type": "string"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
+          "subject_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "token",
+                  "diagnostic",
+                  "finding",
+                  "file",
+                  "patch"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Type"
           },
           "timestamp": {
             "title": "Timestamp",
@@ -1857,6 +1908,27 @@
           "target_finding_id": {
             "title": "Target Finding Id",
             "type": "string"
+          },
+          "target_kind": {
+            "default": "finding",
+            "enum": [
+              "finding",
+              "diagnostic",
+              "token"
+            ],
+            "title": "Target Kind",
+            "type": "string"
+          },
+          "target_signature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Signature"
           }
         },
         "required": [
@@ -1910,17 +1982,58 @@
             "title": "Source Version",
             "type": "integer"
           },
+          "target": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PatchTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "target_finding_id": {
-            "title": "Target Finding Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Finding Id"
           }
         },
         "required": [
           "source",
-          "source_version",
-          "target_finding_id"
+          "source_version"
         ],
         "title": "PatchRequest",
+        "type": "object"
+      },
+      "PatchTarget": {
+        "properties": {
+          "id": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "finding",
+              "diagnostic",
+              "token"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "title": "PatchTarget",
         "type": "object"
       },
       "QualityObservationV2": {
@@ -2103,6 +2216,7 @@
         "type": "object"
       },
       "SafetyScenarioResponse": {
+        "description": "Public, source-free catalogue entry for one Safety Lab fixture.",
         "properties": {
           "description": {
             "title": "Description",
@@ -3256,6 +3370,26 @@
       }
     },
     "/api/agent/events": {
+      "delete": {
+        "operationId": "clear_agent_events_api_agent_events_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Clear Agent Events Api Agent Events Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Clear Agent Events"
+      },
       "get": {
         "operationId": "get_agent_events_api_agent_events_get",
         "parameters": [
@@ -3445,6 +3579,47 @@
           }
         },
         "summary": "Ai Generate"
+      }
+    },
+    "/api/ai/model": {
+      "post": {
+        "description": "Select an already-installed local model for this cookie session only.",
+        "operationId": "set_ai_model_api_ai_model_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIModelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Set Ai Model Api Ai Model Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Ai Model"
       }
     },
     "/api/analyze": {
@@ -3925,7 +4100,7 @@
     },
     "/api/fixes/propose": {
       "post": {
-        "description": "Create an unapplied, source-version-bound deterministic or AI proposal.",
+        "description": "Create an unapplied, source-version-bound rule or AI proposal for a V2 target.",
         "operationId": "propose_fix_v2_api_fixes_propose_post",
         "requestBody": {
           "content": {

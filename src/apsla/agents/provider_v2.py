@@ -44,8 +44,9 @@ def validate_json_schema(value: Any, schema: dict[str, Any]) -> bool:
     """Validate the JSON Schema subset used by our structured agent outputs."""
     if not isinstance(schema, dict):
         return False
-    typ = schema.get("type")
-    checks = {
+    raw_type = schema.get("type")
+    typ = raw_type if isinstance(raw_type, str) else ""
+    checks: dict[str, type[Any] | tuple[type[Any], ...]] = {
         "object": dict,
         "array": list,
         "string": str,
@@ -151,7 +152,7 @@ class HttpJsonProvider:
                         "Provider output exceeds the configured response-size limit.",
                         "Reduce output length and retry.",
                     )
-                parsed = json.loads(raw)
+                parsed: Any = json.loads(raw)
                 if validate_json_schema(parsed, schema):
                     return parsed
                 last = "Provider output did not match the required JSON schema."
@@ -174,15 +175,14 @@ class OllamaProvider(HttpJsonProvider):
     def __init__(
         self, base_url: str | None = None, model: str | None = None, **kwargs: Any
     ) -> None:
-        url = base_url or os.getenv(
-            "OLLAMA_BASE_URL", os.getenv("APSLA_LOCAL_URL", "http://127.0.0.1:11434")
-        )
-        host = (urlparse(url).hostname or "").lower().strip("[]")
+        url = base_url or os.getenv("OLLAMA_BASE_URL") or os.getenv("APSLA_LOCAL_URL") or "http://127.0.0.1:11434"
+        host = (urlparse(url).hostname or "").lower().removeprefix("[").removesuffix("]")
         if host not in {"localhost", "127.0.0.1", "::1"}:
             raise ValueError("Ollama provider must use a loopback address.")
+        configured_model = model or os.getenv("OLLAMA_MODEL") or os.getenv("APSLA_LOCAL_MODEL") or "qwen2.5-coder:3b"
         super().__init__(
             url,
-            model or os.getenv("OLLAMA_MODEL", os.getenv("APSLA_LOCAL_MODEL", "qwen2.5-coder:3b")),
+            configured_model,
             timeout=float(os.getenv("SECURELEX_AI_TIMEOUT_SECONDS", os.getenv("OLLAMA_TIMEOUT_SECONDS", "90"))),
             **kwargs,
         )
@@ -217,8 +217,8 @@ class OpenAICompatibleProvider(HttpJsonProvider):
         **kwargs: Any,
     ) -> None:
         super().__init__(
-            base_url or os.getenv("OPENAI_COMPAT_BASE_URL", ""),
-            model or os.getenv("OPENAI_COMPAT_MODEL", ""),
+            base_url or os.getenv("OPENAI_COMPAT_BASE_URL") or "",
+            model or os.getenv("OPENAI_COMPAT_MODEL") or "",
             api_key=api_key if api_key is not None else os.getenv("OPENAI_COMPAT_API_KEY"),
             **kwargs,
         )

@@ -31,6 +31,7 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-cov",
+    "pytest-timeout",
     "ruff",
     "mypy",
     "radon",
@@ -53,6 +54,9 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-q"
+timeout = 120
+timeout_method = "thread"
 markers = [
     "security: marks security verification tests",
+    "slow: resource-intensive tests with extended timeout",
 ]

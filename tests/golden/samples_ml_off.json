@@ -243,11 +243,11 @@
             "confidence": "manual",
             "edits": [],
             "kind": "rule",
-            "title": "Replace strcpy() with snprintf() bounded copy",
+            "title": "Replace strcpy with bounded copy",
             "verification": {
               "finding_gone": false,
-              "notes": "Unsupported language plugin: generic",
-              "syntax_ok": false,
+              "notes": "Manual review required: destination buffer size could not be determined statically.",
+              "syntax_ok": true,
               "verified": false
             }
           }

@@ -218,12 +218,18 @@ def collect_api_metadata() -> dict[str, Any]:
 
     from apsla.server.app import app
 
-    client = TestClient(app)
+    # The request-boundary middleware intentionally accepts localhost outside
+    # pytest; this also makes standalone `--record`/`--check` calls representative.
+    client = TestClient(app, base_url="http://localhost")
     resp_langs = client.get("/api/languages")
     resp_samples = client.get("/api/samples")
 
     samples_data = resp_samples.json()
     # Normalize sample entries: remove volatile fields if any, sort by id
+    # Older and failed responses may be an object (for example a FastAPI error).
+    # Golden collection must report that response instead of treating its keys as
+    # sample entries and crashing on ``str.get``.
+    sample_entries = samples_data if isinstance(samples_data, list) else []
     normalized_samples = sorted(
         [
             {
@@ -233,14 +239,15 @@ def collect_api_metadata() -> dict[str, Any]:
                 "category": s.get("category"),
                 "filename": s.get("filename"),
             }
-            for s in samples_data
+            for s in sample_entries
+            if isinstance(s, dict)
         ],
         key=lambda s: str(s.get("id")),
     )
 
     return {
         "languages": resp_langs.json(),
-        "samples": normalized_samples,
+        "samples": normalized_samples if isinstance(samples_data, list) else samples_data,
     }
 
 
@@ -249,7 +256,14 @@ def find_fixture_files() -> list[Path]:
     fixtures_dir = ROOT_DIR / "tests" / "fixtures"
     candidates = []
     for p in fixtures_dir.rglob("*"):
-        if p.is_file() and not p.name.endswith(".expect.json"):
+        # Token snapshots and adapter payloads are inputs to dedicated unit
+        # tests, not source programs for Analyzer characterization.
+        if (
+            p.is_file()
+            and not p.name.endswith((".expect.json", ".tokens.json"))
+            and "security_adapter_outputs" not in p.parts
+            and "ui-p3" not in p.parts
+        ):
             candidates.append(p)
     return candidates
 

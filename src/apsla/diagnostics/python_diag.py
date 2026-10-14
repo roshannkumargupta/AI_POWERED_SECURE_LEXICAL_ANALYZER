@@ -23,9 +23,36 @@ def check_python_syntax(
     Returns a list of findings if an error was detected, or None if syntax is valid.
     """
     py_err: Exception | None = None
+    top_level_return: ast.Return | None = None
     try:
-        ast.parse(source)
-        return []
+        tree = ast.parse(source)
+
+        class TopLevelReturnFinder(ast.NodeVisitor):
+            function_depth = 0
+            found: ast.Return | None = None
+
+            def _visit_function(
+                self, node: ast.FunctionDef | ast.AsyncFunctionDef
+            ) -> None:
+                self.function_depth += 1
+                self.generic_visit(node)
+                self.function_depth -= 1
+
+            def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+                self._visit_function(node)
+
+            def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+                self._visit_function(node)
+
+            def visit_Return(self, node: ast.Return) -> None:
+                if self.function_depth == 0 and self.found is None:
+                    self.found = node
+
+        return_finder = TopLevelReturnFinder()
+        return_finder.visit(tree)
+        top_level_return = return_finder.found
+        if top_level_return is None:
+            return []
     except (SyntaxError, IndentationError, TabError) as exc:
         py_err = exc
 
@@ -114,30 +141,42 @@ def check_python_syntax(
         ]
 
     # 4. Return outside function: return 5
-    if re.search(r"^\s*return\b", source, re.MULTILINE):
-        try:
-            ast.parse(source)
-        except SyntaxError as exc:
-            if "return" in str(exc).lower():
-                rng = Range(start_line=1, start_col=1, end_line=1, end_col=len(source) + 1)
-                fix_edit = Edit(range=rng, new_text=f"def run():\n    {source}")
-                fix = _make_fix(
-                    "syn",
-                    "Wrap in function",
-                    "Wraps top-level return statement inside a function definition.",
-                    [fix_edit],
-                )
-                return [
-                    make_syntax_finding(
-                        prefix,
-                        "001",
-                        "Return outside function",
-                        "Return outside function: 'return' can only be used inside a function.",
-                        "The return statement cannot appear at module top level.",
-                        rng,
-                        fix,
-                    )
-                ]
+    if top_level_return is not None:
+        start_line = top_level_return.lineno
+        end_line = top_level_return.end_lineno or start_line
+        start_col = top_level_return.col_offset + 1
+        end_col = (top_level_return.end_col_offset or start_col) + 1
+        rng = Range(
+            start_line=start_line,
+            start_col=start_col,
+            end_line=end_line,
+            end_col=end_col,
+        )
+        newline = "\r\n" if "\r\n" in source else "\n"
+        indented_source = "".join(
+            f"    {line}" for line in source.splitlines(keepends=True)
+        )
+        fix_edit = Edit(
+            range=_offset_to_range(source, 0, len(source)),
+            new_text=f"def run():{newline}{indented_source}",
+        )
+        fix = _make_fix(
+            "syn",
+            "Wrap in function",
+            "Wraps top-level return statement inside a function definition.",
+            [fix_edit],
+        )
+        return [
+            make_syntax_finding(
+                prefix,
+                "001",
+                "Return outside function",
+                "Return outside function: 'return' can only be used inside a function.",
+                "The return statement cannot appear at module top level.",
+                rng,
+                fix,
+            )
+        ]
 
     # 5. Unexpected else: else:
     if source.strip() == "else:":

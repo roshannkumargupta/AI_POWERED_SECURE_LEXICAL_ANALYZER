@@ -13,7 +13,7 @@ Executes verification gates across Python backend and TypeScript frontend:
 10. Frontend production build (`npm run build`)
 11. Python test suite (`pytest -q`)
 12. Python security tests (`pytest -m security -q`)
-13. Browser E2E matrix (`npm run e2e`; requires running app and CDP on port 9222)
+13. Browser E2E matrix (`npm run e2e`; Playwright starts the app when needed)
 """
 
 from __future__ import annotations

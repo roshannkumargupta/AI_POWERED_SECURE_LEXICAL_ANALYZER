@@ -5,10 +5,14 @@ from __future__ import annotations
 import shutil
 import time
 
+import pytest
+
 from apsla.ml.features import FEATURE_SCHEMA_HASH
 from apsla.ml.train import ARTIFACTS_ROOT, train_pipeline
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(180)
 def test_fast_training_run_under_60_seconds():
     artifact_dir = ARTIFACTS_ROOT / "test_fast_model"
     try:

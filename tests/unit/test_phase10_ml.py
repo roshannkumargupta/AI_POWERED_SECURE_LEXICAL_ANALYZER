@@ -7,6 +7,7 @@ import shutil
 import time
 
 import numpy as np
+import pytest
 
 from apsla.languages.cpp_lang.lexer import CppLexer
 from apsla.languages.java_lang.lexer import JavaLexer
@@ -131,6 +132,8 @@ def test_unsupported_language_disables_ml_mode() -> None:
     assert engine.get_mode("unknown_esoteric_lang") == "off"
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(300)
 def test_tiny_e2e_training_run_under_3_minutes() -> None:
     """CI Performance Guarantee: A fast multi-language training run finishes in under 3 minutes."""
     start_time = time.perf_counter()

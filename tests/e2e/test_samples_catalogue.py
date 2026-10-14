@@ -6,6 +6,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 from apsla.samples.loader import load_samples
 from apsla.server.samples import get_samples
 
@@ -34,6 +36,8 @@ def test_catalogue_quota_sources_and_pending_reason() -> None:
             assert chr(int(value[2:], 16)) in source
 
 
+@pytest.mark.slow
+@pytest.mark.timeout(600)
 def test_catalogue_analysis_and_clean_samples() -> None:
     """Verify every shipped sample against live analyzer behavior and write reports."""
     sys.path.insert(0, str(ROOT / "scripts"))

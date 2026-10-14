@@ -1,7 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider, useTheme } from '../theme/theme';
 import { IDE } from '../ide/IDE';
+
+vi.mock('../ide/lib/MonacoEditor', () => ({
+  default: () => <div aria-label="Editor test stub" />,
+}));
 
 function ThemeProbe() {
   const theme = useTheme();
@@ -45,13 +49,13 @@ describe('P1 theme engine', () => {
     );
     expect(init).toContain("root.classList.toggle('theme-light'");
   });
-  it('renders the new workbench shell and its segmented theme switch', () => {
+  it('renders the new workbench shell and its segmented theme switch', async () => {
     render(
       <ThemeProvider>
         <IDE />
       </ThemeProvider>
     );
-    expect(screen.getByRole('region', { name: 'Workbench' })).toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'Workbench' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Light' }));
     expect(document.documentElement.dataset.theme).toBe('light');
   });
