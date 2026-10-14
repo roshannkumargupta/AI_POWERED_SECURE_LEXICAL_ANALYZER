@@ -60,9 +60,14 @@ export const App: React.FC = () => {
     try {
       const key = 'securelex-ai-session';
       let value = sessionStorage.getItem(key);
-      if (!value) { value = crypto.randomUUID(); sessionStorage.setItem(key, value); }
+      if (!value) {
+        value = crypto.randomUUID();
+        sessionStorage.setItem(key, value);
+      }
       return value;
-    } catch { return crypto.randomUUID(); }
+    } catch {
+      return crypto.randomUUID();
+    }
   });
   const [tokenMap, setTokenMap] = useState<'off' | 'security' | 'full'>('off');
   const [tokenCategory, setTokenCategory] = useState('');
@@ -227,8 +232,19 @@ export const App: React.FC = () => {
     const onWorkspaceShortcut = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || !event.shiftKey) return;
       const key = event.key.toLowerCase();
-      const target: Record<string, SL28bView> = { e: 'explain', f: 'fix', a: 'ast', s: 'security', l: 'safety', b: 'build', r: 'export' };
-      if (target[key]) { event.preventDefault(); setSl28bView(target[key]); }
+      const target: Record<string, SL28bView> = {
+        e: 'explain',
+        f: 'fix',
+        a: 'ast',
+        s: 'security',
+        l: 'safety',
+        b: 'build',
+        r: 'export',
+      };
+      if (target[key]) {
+        event.preventDefault();
+        setSl28bView(target[key]);
+      }
     };
     window.addEventListener('keydown', onWorkspaceShortcut);
     return () => window.removeEventListener('keydown', onWorkspaceShortcut);
@@ -307,14 +323,22 @@ export const App: React.FC = () => {
   };
 
   const selectedFinding = activeFindings.find((f) => f.id === state.selectedFindingId) || null;
-  const selectedToken = state.analysis && state.selectedTokenIndex !== null
-    ? deriveTokens(state.analysis)[state.selectedTokenIndex] || null : null;
+  const selectedToken =
+    state.analysis && state.selectedTokenIndex !== null
+      ? deriveTokens(state.analysis)[state.selectedTokenIndex] || null
+      : null;
   const openCandidate = async (code: string, language: string, explanation: string) => {
     const ext = language === 'cpp' ? 'cpp' : language === 'javascript' ? 'js' : language;
     const name = `AI candidate.${ext}`;
     const outcome = await handleOpenFileObject(new File([code], name, { type: 'text/plain' }));
     if (outcome.error || outcome.unsupported) return;
-    dispatch({ type: 'ADD_TOAST', payload: { message: 'AI candidate opened as a new editable file; review its analysis before use.', type: 'info' } });
+    dispatch({
+      type: 'ADD_TOAST',
+      payload: {
+        message: 'AI candidate opened as a new editable file; review its analysis before use.',
+        type: 'info',
+      },
+    });
     void explanation;
   };
 
@@ -502,10 +526,30 @@ export const App: React.FC = () => {
       />
 
       {aiCapabilities && (
-        <div data-qa="ai-processing-location" role="status" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 12px', fontSize: 11, color: 'var(--text-muted)', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
-          <span>AI provider: {aiCapabilities.ai.provider} · Processing: {aiCapabilities.ai.processing_location} · {aiCapabilities.ai.model || 'model not configured'} · {aiCapabilities.ai.reachable === false ? 'unavailable' : 'status reported by provider'}</span>
+        <div
+          data-qa="ai-processing-location"
+          role="status"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '4px 12px',
+            fontSize: 11,
+            color: 'var(--text-muted)',
+            background: 'var(--surface-2)',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
+          <span>
+            AI provider: {aiCapabilities.ai.provider} · Processing:{' '}
+            {aiCapabilities.ai.processing_location} ·{' '}
+            {aiCapabilities.ai.model || 'model not configured'} ·{' '}
+            {aiCapabilities.ai.reachable === false ? 'unavailable' : 'status reported by provider'}
+          </span>
           {aiCapabilities.ai.consent_required && (
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
+            <label
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}
+            >
               <input
                 type="checkbox"
                 aria-label="Consent to send source code to the configured remote AI provider"
@@ -572,122 +616,186 @@ export const App: React.FC = () => {
           }}
         />
 
-        <nav aria-label="SecureLex analysis workspaces" style={{ display: 'flex', gap: 4, padding: '4px 8px', overflowX: 'auto', borderBottom: '1px solid var(--border)', background: 'var(--surface-2)' }}>
-          {([['workspace','Editor'],['problems','Problems'],['security','Security'],['ast','AST'],['explain','AI Explain'],['activity','Agent Activity'],['build','Build with AI'],['fix','Fix with AI'],['safety','Safety Lab'],['settings','Settings'],['export','Export']] as const).map(([view,label]) => <button key={view} type="button" aria-pressed={sl28bView===view} onClick={() => setSl28bView(view)} style={{ padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 4, background: sl28bView===view ? 'var(--surface-3)' : 'var(--surface-1)', color: 'var(--text-primary)' }}>{label}</button>)}
+        <nav
+          aria-label="SecureLex analysis workspaces"
+          style={{
+            display: 'flex',
+            gap: 4,
+            padding: '4px 8px',
+            overflowX: 'auto',
+            borderBottom: '1px solid var(--border)',
+            background: 'var(--surface-2)',
+          }}
+        >
+          {(
+            [
+              ['workspace', 'Editor'],
+              ['problems', 'Problems'],
+              ['security', 'Security'],
+              ['ast', 'AST'],
+              ['explain', 'AI Explain'],
+              ['activity', 'Agent Activity'],
+              ['build', 'Build with AI'],
+              ['fix', 'Fix with AI'],
+              ['safety', 'Safety Lab'],
+              ['settings', 'Settings'],
+              ['export', 'Export'],
+            ] as const
+          ).map(([view, label]) => (
+            <button
+              key={view}
+              type="button"
+              aria-pressed={sl28bView === view}
+              onClick={() => setSl28bView(view)}
+              style={{
+                padding: '4px 8px',
+                border: '1px solid var(--border)',
+                borderRadius: 4,
+                background: sl28bView === view ? 'var(--surface-3)' : 'var(--surface-1)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              {label}
+            </button>
+          ))}
         </nav>
 
-        {sl28bView !== 'workspace' && <SL28bWorkspace
-          view={sl28bView}
-          onView={setSl28bView}
-          source={state.source}
-          language={state.language === 'auto' ? (state.analysis?.language || 'python') : state.language}
-          filename={state.filename}
-          sourceVersion={activeDoc?.contentVersion ?? 0}
-          capabilities={(aiCapabilities || null) as any}
-          sessionId={aiSessionId}
-          selectedFinding={selectedFinding as any}
-          selectedToken={selectedToken as any}
-          findings={activeFindings as any}
-          onSelectFinding={(finding) => { dispatch({ type: 'SELECT_FINDING', payload: finding.id }); }}
-          onDataFlow={(id) => dispatch({ type: 'SET_DATA_FLOW', payload: id })}
-          theme={themeMode}
-          onThemeChange={setThemeMode}
-          onNavigate={(range) => setNavTarget({ type: 'finding', range: range as any, timestamp: Date.now() })}
-          onCandidate={(code, language, explanation) => { void openCandidate(code, language, explanation); }}
-          onSourceChange={(code) => {
-            dirtyRef.current = true;
-            dispatch({ type: 'SET_SOURCE', payload: code });
-            setOpenDocs((docs) => docs.map((doc) => doc.id === activeDocId ? { ...doc, content: code, dirty: true, contentVersion: doc.contentVersion + 1, status: 'stale' } : doc));
-          }}
-        />}
-        {sl28bView === 'workspace' && <AppPanels
-          openDocs={openDocs}
-          activeDocId={activeDocId}
-          activateDoc={activateDoc}
-          closeCurrentFile={closeCurrentFile}
-          source={state.source}
-          language={state.language}
-          filename={state.filename}
-          findings={activeFindings}
-          selectedFindingId={state.selectedFindingId}
-          activeDataFlowFindingId={state.activeDataFlowFindingId}
-          navTarget={navTarget}
-          onChangeSource={(val) => {
-            dirtyRef.current = true;
-            dispatch({ type: 'SET_SOURCE', payload: val });
-            setOpenDocs((docs) =>
-              docs.map((doc) =>
-                doc.id === activeDocId
-                  ? {
-                      ...doc,
-                      content: val,
-                      dirty: true,
-                      contentVersion: doc.contentVersion + 1,
-                      status: doc.analysis ? 'stale' : 'not analysed',
-                    }
-                  : doc
-              )
-            );
-          }}
-          onCursorChange={(pos) => dispatch({ type: 'SET_CURSOR_POSITION', payload: pos })}
-          selectedTokenIndex={state.selectedTokenIndex}
-          tokenMap={tokenMap}
-          tokenCategory={tokenCategory}
-          onSelectToken={(idx) => dispatch({ type: 'SELECT_TOKEN_INDEX', payload: idx })}
-          onOpenTokens={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'tokens' })}
-          onSelectFinding={selectFindingAndToken}
-          onOpenDiff={handleOpenDiff}
-          onAnalyzeShortcut={() => runAnalysis(state.source, state.language, state.filename)}
-          onDownloadShortcut={handleDownload}
-          onNextProblem={handleNextProblem}
-          onPrevProblem={handlePrevProblem}
-          activeTab={state.activeTab}
-          onChangeTab={(tab) => dispatch({ type: 'SET_ACTIVE_TAB', payload: tab })}
-          selectedFinding={selectedFinding}
-          summary={state.analysis?.summary || null}
-          engine={state.analysis?.engine || null}
-          analysisLanguage={state.analysis?.language}
-          mlInsights={state.mlInsights}
-          isLoadingInsights={state.isLoadingInsights}
-          mlMode={state.analysis?.engine?.ml_mode ?? 'on'}
-          onApplyFix={handleApplyFix}
-          onJumpToStep={(step: TaintPathStep) => {
-            dispatch({
-              type: 'SET_CURSOR_POSITION',
-              payload: { line: step.range.start_line, col: step.range.start_col },
-            });
-            setNavTarget({ type: 'finding', range: step.range, timestamp: Date.now() });
-          }}
-          onToggleDataFlow={(id) => {
-            dispatch({
-              type: 'SET_DATA_FLOW',
-              payload: state.activeDataFlowFindingId === id ? null : id,
-            });
-          }}
-          onMarkFalsePositive={handleMarkFalsePositive}
-          onSuppressFinding={handleSuppressFinding}
-          onAskAIFix={handleAskAIFix}
-          isAskingAI={isAskingAI}
-          llmConfigured={llmStatus.configured}
-          llmProvider={llmStatus.provider}
-          analysis={state.analysis}
-          onTokenMap={setTokenMap}
-          onTokenCategory={setTokenCategory}
-          onSelectTokenFromPanel={selectTokenFromPanel}
-          onLoadTokenML={loadTokenInsights}
-          showAllTokens={showAllTokens}
-          tokenMainFilter={tokenMainFilter}
-          tokenGroups={tokenGroups}
-          activeSample={activeSample}
-          onDemoStep={(delta) => {
-            const index = DEMO_PATH.indexOf(activeSample?.id || '');
-            const next = state.samples.find((item) => item.id === DEMO_PATH[index + delta]);
-            if (next) handleSelectSample(next);
-          }}
-          agentMode={state.agentMode}
-          agentModel={state.agentStatus?.model || 'qwen2.5-coder:3b'}
-          samples={state.samples}
-        />}
+        {sl28bView !== 'workspace' && (
+          <SL28bWorkspace
+            view={sl28bView}
+            onView={setSl28bView}
+            source={state.source}
+            language={
+              state.language === 'auto' ? state.analysis?.language || 'python' : state.language
+            }
+            filename={state.filename}
+            sourceVersion={activeDoc?.contentVersion ?? 0}
+            capabilities={(aiCapabilities || null) as any}
+            sessionId={aiSessionId}
+            selectedFinding={selectedFinding as any}
+            selectedToken={selectedToken as any}
+            findings={activeFindings as any}
+            onSelectFinding={(finding) => {
+              dispatch({ type: 'SELECT_FINDING', payload: finding.id });
+            }}
+            onDataFlow={(id) => dispatch({ type: 'SET_DATA_FLOW', payload: id })}
+            theme={themeMode}
+            onThemeChange={setThemeMode}
+            onNavigate={(range) =>
+              setNavTarget({ type: 'finding', range: range as any, timestamp: Date.now() })
+            }
+            onCandidate={(code, language, explanation) => {
+              void openCandidate(code, language, explanation);
+            }}
+            onSourceChange={(code) => {
+              dirtyRef.current = true;
+              dispatch({ type: 'SET_SOURCE', payload: code });
+              setOpenDocs((docs) =>
+                docs.map((doc) =>
+                  doc.id === activeDocId
+                    ? {
+                        ...doc,
+                        content: code,
+                        dirty: true,
+                        contentVersion: doc.contentVersion + 1,
+                        status: 'stale',
+                      }
+                    : doc
+                )
+              );
+            }}
+          />
+        )}
+        {sl28bView === 'workspace' && (
+          <AppPanels
+            openDocs={openDocs}
+            activeDocId={activeDocId}
+            activateDoc={activateDoc}
+            closeCurrentFile={closeCurrentFile}
+            source={state.source}
+            language={state.language}
+            filename={state.filename}
+            findings={activeFindings}
+            selectedFindingId={state.selectedFindingId}
+            activeDataFlowFindingId={state.activeDataFlowFindingId}
+            navTarget={navTarget}
+            onChangeSource={(val) => {
+              dirtyRef.current = true;
+              dispatch({ type: 'SET_SOURCE', payload: val });
+              setOpenDocs((docs) =>
+                docs.map((doc) =>
+                  doc.id === activeDocId
+                    ? {
+                        ...doc,
+                        content: val,
+                        dirty: true,
+                        contentVersion: doc.contentVersion + 1,
+                        status: doc.analysis ? 'stale' : 'not analysed',
+                      }
+                    : doc
+                )
+              );
+            }}
+            onCursorChange={(pos) => dispatch({ type: 'SET_CURSOR_POSITION', payload: pos })}
+            selectedTokenIndex={state.selectedTokenIndex}
+            tokenMap={tokenMap}
+            tokenCategory={tokenCategory}
+            onSelectToken={(idx) => dispatch({ type: 'SELECT_TOKEN_INDEX', payload: idx })}
+            onOpenTokens={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'tokens' })}
+            onSelectFinding={selectFindingAndToken}
+            onOpenDiff={handleOpenDiff}
+            onAnalyzeShortcut={() => runAnalysis(state.source, state.language, state.filename)}
+            onDownloadShortcut={handleDownload}
+            onNextProblem={handleNextProblem}
+            onPrevProblem={handlePrevProblem}
+            activeTab={state.activeTab}
+            onChangeTab={(tab) => dispatch({ type: 'SET_ACTIVE_TAB', payload: tab })}
+            selectedFinding={selectedFinding}
+            summary={state.analysis?.summary || null}
+            engine={state.analysis?.engine || null}
+            analysisLanguage={state.analysis?.language}
+            mlInsights={state.mlInsights}
+            isLoadingInsights={state.isLoadingInsights}
+            mlMode={state.analysis?.engine?.ml_mode ?? 'on'}
+            onApplyFix={handleApplyFix}
+            onJumpToStep={(step: TaintPathStep) => {
+              dispatch({
+                type: 'SET_CURSOR_POSITION',
+                payload: { line: step.range.start_line, col: step.range.start_col },
+              });
+              setNavTarget({ type: 'finding', range: step.range, timestamp: Date.now() });
+            }}
+            onToggleDataFlow={(id) => {
+              dispatch({
+                type: 'SET_DATA_FLOW',
+                payload: state.activeDataFlowFindingId === id ? null : id,
+              });
+            }}
+            onMarkFalsePositive={handleMarkFalsePositive}
+            onSuppressFinding={handleSuppressFinding}
+            onAskAIFix={handleAskAIFix}
+            isAskingAI={isAskingAI}
+            llmConfigured={llmStatus.configured}
+            llmProvider={llmStatus.provider}
+            analysis={state.analysis}
+            onTokenMap={setTokenMap}
+            onTokenCategory={setTokenCategory}
+            onSelectTokenFromPanel={selectTokenFromPanel}
+            onLoadTokenML={loadTokenInsights}
+            showAllTokens={showAllTokens}
+            tokenMainFilter={tokenMainFilter}
+            tokenGroups={tokenGroups}
+            activeSample={activeSample}
+            onDemoStep={(delta) => {
+              const index = DEMO_PATH.indexOf(activeSample?.id || '');
+              const next = state.samples.find((item) => item.id === DEMO_PATH[index + delta]);
+              if (next) handleSelectSample(next);
+            }}
+            agentMode={state.agentMode}
+            agentModel={state.agentStatus?.model || 'qwen2.5-coder:3b'}
+            samples={state.samples}
+          />
+        )}
       </main>
 
       <ExplanationPanel

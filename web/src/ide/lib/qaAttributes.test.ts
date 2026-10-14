@@ -11,20 +11,28 @@ describe('stable UI audit identifiers', () => {
       root.append(element);
       return element;
     };
-    add('button', 'Open settings'); add('button', 'Open settings'); add('input', 'Search files', 'placeholder');
-    add('div', 'tab', 'role').textContent = 'Tokens'; add('div', 'option', 'role').textContent = 'Python';
+    add('button', 'Open settings');
+    add('button', 'Open settings');
+    add('input', 'Search files', 'placeholder');
+    add('div', 'tab', 'role').textContent = 'Tokens';
+    add('div', 'option', 'role').textContent = 'Python';
     add('div', 'menuitem', 'role').textContent = 'Export';
     add('div', 'separator', 'role').setAttribute('aria-label', 'Resize panel');
     tagInteractiveElements(root);
     const controls = [...root.querySelectorAll<HTMLElement>('button,input,[role]')];
-    expect(controls.every(control => control.dataset.qa)).toBe(true);
-    expect(controls.map(control => control.dataset.qa)).toEqual([
-      'button-open-settings', 'button-open-settings-2', 'input-search-files',
-      'div-tokens', 'div-python', 'div-export', 'div-resize-panel',
+    expect(controls.every((control) => control.dataset.qa)).toBe(true);
+    expect(controls.map((control) => control.dataset.qa)).toEqual([
+      'button-open-settings',
+      'button-open-settings-2',
+      'input-search-files',
+      'div-tokens',
+      'div-python',
+      'div-export',
+      'div-resize-panel',
     ]);
-    const identifiers = controls.map(control => control.dataset.qa);
+    const identifiers = controls.map((control) => control.dataset.qa);
     tagInteractiveElements(root);
-    expect(controls.map(control => control.dataset.qa)).toEqual(identifiers);
+    expect(controls.map((control) => control.dataset.qa)).toEqual(identifiers);
   });
 
   it('does not replace an explicit contract identifier', () => {

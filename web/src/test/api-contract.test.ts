@@ -21,7 +21,15 @@ describe('B4 - API Contract with OpenAPI Schema', () => {
     expect(paths).toContain('/api/llm/status');
     expect(paths).toContain('/api/llm/fix');
     expect(paths).toContain('/api/llm/explain');
-    for (const path of ['/api/capabilities', '/api/ast/{analysis_id}/node/{node_id}', '/api/analyze/lexical', '/api/analyze/syntax', '/api/analyze/security', '/api/analyze/quality']) expect(paths).toContain(path);
+    for (const path of [
+      '/api/capabilities',
+      '/api/ast/{analysis_id}/node/{node_id}',
+      '/api/analyze/lexical',
+      '/api/analyze/syntax',
+      '/api/analyze/security',
+      '/api/analyze/quality',
+    ])
+      expect(paths).toContain(path);
 
     expect(typeof api.analyze).toBe('function');
     expect(typeof api.getHealth).toBe('function');
@@ -53,13 +61,24 @@ describe('B4 - API Contract with OpenAPI Schema', () => {
     const optionProps = Object.keys(schema.components.schemas.AnalyzeOptions.properties);
     const responseProps = Object.keys(schema.components.schemas.AnalysisResultV2.properties);
     const client = fs.readFileSync(path.resolve(__dirname, '../api/client.ts'), 'utf8');
-    for (const key of ['api_version', 'source_version', 'include_ast']) expect(requestProps).toContain(key);
+    for (const key of ['api_version', 'source_version', 'include_ast'])
+      expect(requestProps).toContain(key);
     for (const key of ['include_tokens', 'stages']) expect(optionProps).toContain(key);
-    for (const key of ['analysis_id', 'source_hash', 'source_version', 'lexical_status', 'syntax_status', 'semantic_status', 'tokens', 'security_findings', 'quality']) {
+    for (const key of [
+      'analysis_id',
+      'source_hash',
+      'source_version',
+      'lexical_status',
+      'syntax_status',
+      'semantic_status',
+      'tokens',
+      'security_findings',
+      'quality',
+    ]) {
       expect(responseProps).toContain(key);
       expect(client).toContain(key);
     }
-    expect(client).toContain("api_version: 2");
+    expect(client).toContain('api_version: 2');
     expect(client).toContain("'lexical' | 'syntax' | 'security' | 'quality'");
   });
 

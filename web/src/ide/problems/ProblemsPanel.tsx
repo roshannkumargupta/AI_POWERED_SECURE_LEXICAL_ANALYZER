@@ -2,27 +2,230 @@ import { useMemo, useState } from 'react';
 import type { AnalysisDimensionV2, AnalysisResultV2, DiagnosticV2 } from '../../api/client';
 
 type Category = 'all' | 'lexical' | 'syntax' | 'semantic';
-interface Props { diagnostics: DiagnosticV2[]; result: AnalysisResultV2 | null; lexicalStatus?: AnalysisDimensionV2; onSelect(item: DiagnosticV2): void; onExplain?(item: DiagnosticV2): void; onFix?(item: DiagnosticV2): void; onFixAll?(): void; fixEnabled?: boolean }
+interface Props {
+  diagnostics: DiagnosticV2[];
+  result: AnalysisResultV2 | null;
+  lexicalStatus?: AnalysisDimensionV2;
+  onSelect(item: DiagnosticV2): void;
+  onExplain?(item: DiagnosticV2): void;
+  onFix?(item: DiagnosticV2): void;
+  onFixAll?(): void;
+  fixEnabled?: boolean;
+}
 
-export function ProblemsPanel({ diagnostics, result, lexicalStatus, onSelect, onExplain, onFix, onFixAll, fixEnabled = false }: Props) {
+export function ProblemsPanel({
+  diagnostics,
+  result,
+  lexicalStatus,
+  onSelect,
+  onExplain,
+  onFix,
+  onFixAll,
+  fixEnabled = false,
+}: Props) {
   const [category, setCategory] = useState<Category>('all');
   const [query, setQuery] = useState('');
   const [severity, setSeverity] = useState('all');
-  const filtered = useMemo(() => diagnostics.filter(item => (category === 'all' || item.category === category)
-    && (severity === 'all' || item.severity.toLowerCase() === severity)
-    && [item.message, item.produced_by, item.category, item.severity, item.certainty, `${item.range.start_line}:${item.range.start_col}`].some(value => value.toLowerCase().includes(query.trim().toLowerCase()))), [diagnostics, category, severity, query]);
-  const statusByCategory = { lexical: lexicalStatus ?? result?.lexical_status, syntax: result?.syntax_status, semantic: result?.semantic_status };
-  const unavailable = result?.tools.filter(tool => tool.status === 'unavailable' || (!tool.available && !tool.executed)) ?? [];
-  const ranChecks = Boolean(result?.tools.some(tool => tool.executed)
-    || [lexicalStatus ?? result?.lexical_status, result?.syntax_status, result?.semantic_status]
-      .some(stage => stage?.status === 'ok' || stage?.status === 'issues'));
-  const incomplete = Object.values(statusByCategory).some(stage => stage?.status === 'incomplete') || Boolean(result?.omissions.length);
-  const count = (key: Category) => diagnostics.filter(item => key === 'all' || item.category === key).length;
-  return <section className="ide-p4-pane" aria-label="Problems">
-    <header className="ide-p4-toolbar"><strong>Diagnostics</strong><span>{diagnostics.length} findings</span>{onFixAll && <button type="button" disabled={!fixEnabled || !(diagnostics.some(item => item.category === 'lexical' || item.category === 'syntax') || Boolean(result?.security_findings.length) || Boolean(result?.tokens.some(token => token.lexical_status === 'invalid')))} title={!fixEnabled ? 'Rule fixes and AI fixes are unavailable.' : 'Preview safe fixes for lexical, syntax, and security findings'} onClick={onFixAll}>Fix all safe</button>}<label><span className="sr-only">Filter problems</span><select aria-label="Filter problems by category" value={category} onChange={event => setCategory(event.target.value as Category)}><option value="all">All categories ({count('all')})</option>{(['lexical', 'syntax', 'semantic'] as const).map(key => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)} ({count(key)})</option>)}</select></label><label><span className="sr-only">Filter severity</span><select aria-label="Filter severity" value={severity} onChange={event => setSeverity(event.target.value)}><option value="all">All severity</option>{['critical', 'high', 'medium', 'low', 'info', 'warning', 'error'].map(value => <option key={value} value={value}>{value}</option>)}</select></label><input aria-label="Search problems" placeholder="Search diagnostics…" value={query} onChange={event => setQuery(event.target.value)} /></header>
-    {unavailable.map(tool => <div key={tool.name} className="ide-p4-notice warning">Check unavailable: {tool.name}{tool.reason ? ` — ${tool.reason}` : ''}</div>)}
-    {incomplete && <div className="ide-p4-notice warning">Analysis incomplete{result?.omissions.length ? ` — ${result.omissions.join(' ')}` : ''}</div>}
-    <div className="ide-problem-list">{filtered.map(item => { const securityFinding = result?.security_findings?.some(finding => finding.id === item.id) ?? false; const fixable = securityFinding || item.category === 'lexical' || item.category === 'syntax'; return <div key={item.id} className="ide-problem-row"><button type="button" className="ide-problem-select" onClick={() => onSelect(item)}><span className={`ide-severity ${item.severity.toLowerCase()}`} aria-label={`Severity ${item.severity}`}>{item.severity.toLowerCase() === 'error' || item.severity.toLowerCase() === 'critical' || item.severity.toLowerCase() === 'high' ? 'error' : 'warning'}</span><span className="ide-problem-copy"><strong>{item.message}</strong><small>{item.category} · {item.produced_by} · {item.certainty}</small></span><code>{item.range.start_line}:{item.range.start_col}</code></button>{onExplain && <button type="button" aria-label="Explain diagnostic with AI" title="Explain with AI" onClick={() => onExplain(item)}>Explain</button>}{onFix && <button type="button" disabled={!fixEnabled || !fixable} title={!fixEnabled ? 'Fix capability is unavailable.' : !fixable ? 'No rule fix applies to this diagnostic.' : 'Propose a rule-first fix for this diagnostic'} onClick={() => onFix(item)}>Fix</button>}</div>; })}{!filtered.length && <div className="ide-p4-empty">{incomplete ? 'Analysis incomplete; findings may be missing.' : ranChecks && diagnostics.length === 0 ? 'No findings detected by checks run' : diagnostics.length ? 'No diagnostics match these filters.' : 'Run Analyze to see diagnostics.'}</div>}</div>
-    <footer className="ide-p4-stage-status">{(['lexical', 'syntax', 'semantic'] as const).map(key => { const stage = statusByCategory[key]; return <span key={key} data-status={stage?.status ?? 'unavailable'}>{key}: {stage?.status === 'unavailable' || !stage ? 'Check unavailable' : stage.status === 'incomplete' ? 'Analysis incomplete' : stage.status === 'issues' ? 'Findings detected' : 'No findings detected by checks run'}</span>; })}</footer>
-  </section>;
+  const filtered = useMemo(
+    () =>
+      diagnostics.filter(
+        (item) =>
+          (category === 'all' || item.category === category) &&
+          (severity === 'all' || item.severity.toLowerCase() === severity) &&
+          [
+            item.message,
+            item.produced_by,
+            item.category,
+            item.severity,
+            item.certainty,
+            `${item.range.start_line}:${item.range.start_col}`,
+          ].some((value) => value.toLowerCase().includes(query.trim().toLowerCase()))
+      ),
+    [diagnostics, category, severity, query]
+  );
+  const statusByCategory = {
+    lexical: lexicalStatus ?? result?.lexical_status,
+    syntax: result?.syntax_status,
+    semantic: result?.semantic_status,
+  };
+  const unavailable =
+    result?.tools.filter(
+      (tool) => tool.status === 'unavailable' || (!tool.available && !tool.executed)
+    ) ?? [];
+  const ranChecks = Boolean(
+    result?.tools.some((tool) => tool.executed) ||
+    [lexicalStatus ?? result?.lexical_status, result?.syntax_status, result?.semantic_status].some(
+      (stage) => stage?.status === 'ok' || stage?.status === 'issues'
+    )
+  );
+  const incomplete =
+    Object.values(statusByCategory).some((stage) => stage?.status === 'incomplete') ||
+    Boolean(result?.omissions.length);
+  const count = (key: Category) =>
+    diagnostics.filter((item) => key === 'all' || item.category === key).length;
+  return (
+    <section className="ide-p4-pane" aria-label="Problems">
+      <header className="ide-p4-toolbar">
+        <strong>Diagnostics</strong>
+        <span>{diagnostics.length} findings</span>
+        {onFixAll && (
+          <button
+            type="button"
+            disabled={
+              !fixEnabled ||
+              !(
+                diagnostics.some(
+                  (item) => item.category === 'lexical' || item.category === 'syntax'
+                ) ||
+                Boolean(result?.security_findings.length) ||
+                Boolean(result?.tokens.some((token) => token.lexical_status === 'invalid'))
+              )
+            }
+            title={
+              !fixEnabled
+                ? 'Rule fixes and AI fixes are unavailable.'
+                : 'Preview safe fixes for lexical, syntax, and security findings'
+            }
+            onClick={onFixAll}
+          >
+            Fix all safe
+          </button>
+        )}
+        <label>
+          <span className="sr-only">Filter problems</span>
+          <select
+            aria-label="Filter problems by category"
+            value={category}
+            onChange={(event) => setCategory(event.target.value as Category)}
+          >
+            <option value="all">All categories ({count('all')})</option>
+            {(['lexical', 'syntax', 'semantic'] as const).map((key) => (
+              <option key={key} value={key}>
+                {key[0].toUpperCase() + key.slice(1)} ({count(key)})
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span className="sr-only">Filter severity</span>
+          <select
+            aria-label="Filter severity"
+            value={severity}
+            onChange={(event) => setSeverity(event.target.value)}
+          >
+            <option value="all">All severity</option>
+            {['critical', 'high', 'medium', 'low', 'info', 'warning', 'error'].map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </label>
+        <input
+          aria-label="Search problems"
+          placeholder="Search diagnostics…"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </header>
+      {unavailable.map((tool) => (
+        <div key={tool.name} className="ide-p4-notice warning">
+          Check unavailable: {tool.name}
+          {tool.reason ? ` — ${tool.reason}` : ''}
+        </div>
+      ))}
+      {incomplete && (
+        <div className="ide-p4-notice warning">
+          Analysis incomplete{result?.omissions.length ? ` — ${result.omissions.join(' ')}` : ''}
+        </div>
+      )}
+      <div className="ide-problem-list">
+        {filtered.map((item) => {
+          const securityFinding =
+            result?.security_findings?.some((finding) => finding.id === item.id) ?? false;
+          const fixable =
+            securityFinding || item.category === 'lexical' || item.category === 'syntax';
+          return (
+            <div key={item.id} className="ide-problem-row">
+              <button type="button" className="ide-problem-select" onClick={() => onSelect(item)}>
+                <span
+                  className={`ide-severity ${item.severity.toLowerCase()}`}
+                  aria-label={`Severity ${item.severity}`}
+                >
+                  {item.severity.toLowerCase() === 'error' ||
+                  item.severity.toLowerCase() === 'critical' ||
+                  item.severity.toLowerCase() === 'high'
+                    ? 'error'
+                    : 'warning'}
+                </span>
+                <span className="ide-problem-copy">
+                  <strong>{item.message}</strong>
+                  <small>
+                    {item.category} · {item.produced_by} · {item.certainty}
+                  </small>
+                </span>
+                <code>
+                  {item.range.start_line}:{item.range.start_col}
+                </code>
+              </button>
+              {onExplain && (
+                <button
+                  type="button"
+                  aria-label="Explain diagnostic with AI"
+                  title="Explain with AI"
+                  onClick={() => onExplain(item)}
+                >
+                  Explain
+                </button>
+              )}
+              {onFix && (
+                <button
+                  type="button"
+                  disabled={!fixEnabled || !fixable}
+                  title={
+                    !fixEnabled
+                      ? 'Fix capability is unavailable.'
+                      : !fixable
+                        ? 'No rule fix applies to this diagnostic.'
+                        : 'Propose a rule-first fix for this diagnostic'
+                  }
+                  onClick={() => onFix(item)}
+                >
+                  Fix
+                </button>
+              )}
+            </div>
+          );
+        })}
+        {!filtered.length && (
+          <div className="ide-p4-empty">
+            {incomplete
+              ? 'Analysis incomplete; findings may be missing.'
+              : ranChecks && diagnostics.length === 0
+                ? 'No findings detected by checks run'
+                : diagnostics.length
+                  ? 'No diagnostics match these filters.'
+                  : 'Run Analyze to see diagnostics.'}
+          </div>
+        )}
+      </div>
+      <footer className="ide-p4-stage-status">
+        {(['lexical', 'syntax', 'semantic'] as const).map((key) => {
+          const stage = statusByCategory[key];
+          return (
+            <span key={key} data-status={stage?.status ?? 'unavailable'}>
+              {key}:{' '}
+              {stage?.status === 'unavailable' || !stage
+                ? 'Check unavailable'
+                : stage.status === 'incomplete'
+                  ? 'Analysis incomplete'
+                  : stage.status === 'issues'
+                    ? 'Findings detected'
+                    : 'No findings detected by checks run'}
+            </span>
+          );
+        })}
+      </footer>
+    </section>
+  );
 }

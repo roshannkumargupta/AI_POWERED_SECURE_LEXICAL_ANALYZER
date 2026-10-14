@@ -14,8 +14,25 @@ describe('proposal diff', () => {
     ]);
   });
   it('renders actual edited source as text with red/green line classes', () => {
-    const proposal: PatchProposal = { id: 'p1', source_hash: 'hash', source_version: 1, target_finding_id: 'f1', origin: 'rule', edits: [{ range: { start_line: 1, start_col: 1, end_line: 1, end_col: 4 }, new_text: 'safe' }], diff: '', rationale: '', expected_outcome: '', assumptions: [], risks: [], created_at: '' };
-    const { container } = render(<DiffPreview source={'bad\nkeep'} filename="x.py" proposal={proposal}/>);
+    const proposal: PatchProposal = {
+      id: 'p1',
+      source_hash: 'hash',
+      source_version: 1,
+      target_finding_id: 'f1',
+      origin: 'rule',
+      edits: [
+        { range: { start_line: 1, start_col: 1, end_line: 1, end_col: 4 }, new_text: 'safe' },
+      ],
+      diff: '',
+      rationale: '',
+      expected_outcome: '',
+      assumptions: [],
+      risks: [],
+      created_at: '',
+    };
+    const { container } = render(
+      <DiffPreview source={'bad\nkeep'} filename="x.py" proposal={proposal} />
+    );
     expect(screen.getByText('-bad')).toBeTruthy();
     expect(screen.getByText('+safe')).toBeTruthy();
     expect(container.querySelector('.context code')?.textContent).toBe(' keep');

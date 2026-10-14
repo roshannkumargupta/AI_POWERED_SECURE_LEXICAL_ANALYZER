@@ -10,11 +10,16 @@ export const SAMPLE_GROUPS = [
 export type SampleGroup = (typeof SAMPLE_GROUPS)[number]['id'];
 
 export function groupSample(sample: SampleItem): SampleGroup {
-  const metadata = [sample.kind, sample.category, sample.topic, sample.title].filter(Boolean).join(' ').toLocaleLowerCase().replace(/[_-]+/g, ' ');
+  const metadata = [sample.kind, sample.category, sample.topic, sample.title]
+    .filter(Boolean)
+    .join(' ')
+    .toLocaleLowerCase()
+    .replace(/[_-]+/g, ' ');
   if (metadata.includes('adversarial')) return 'adversarial';
   if (metadata.includes('lexical') || metadata.includes('lexer')) return 'lexical-errors';
   if (metadata.includes('syntax') || metadata.includes('parser')) return 'syntax-errors';
-  if (metadata.includes('security') || metadata.includes('vulnerable') || metadata.includes('cwe')) return 'security';
+  if (metadata.includes('security') || metadata.includes('vulnerable') || metadata.includes('cwe'))
+    return 'security';
   return 'valid';
 }
 

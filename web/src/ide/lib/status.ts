@@ -19,8 +19,11 @@ export function dimensionLabel(result: AnalysisResultV2 | null, dimension: 'lexi
 
 export function securityLabel(result: AnalysisResultV2 | null) {
   if (!result) return 'Not analysed';
-  if (result.omissions.length && result.tools.every((tool) => tool.status === 'unavailable')) return 'Check unavailable';
-  return result.security_findings.length ? `${result.security_findings.length} findings` : 'No findings detected by checks run';
+  if (result.omissions.length && result.tools.every((tool) => tool.status === 'unavailable'))
+    return 'Check unavailable';
+  return result.security_findings.length
+    ? `${result.security_findings.length} findings`
+    : 'No findings detected by checks run';
 }
 
 export function engineLabel(health: HealthResponse | null, error: boolean) {

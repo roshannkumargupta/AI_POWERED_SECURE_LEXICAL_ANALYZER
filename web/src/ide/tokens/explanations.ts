@@ -18,11 +18,16 @@ const generic: Record<string, string> = {
 };
 
 const languageNames: Record<string, string> = {
-  cpp: 'C++', c: 'C', python: 'Python', java: 'Java', javascript: 'JavaScript',
+  cpp: 'C++',
+  c: 'C',
+  python: 'Python',
+  java: 'Java',
+  javascript: 'JavaScript',
 };
 
 export function explainToken(tokenType: string, language: string): string {
   const explanation = generic[tokenType.toUpperCase()];
-  if (!explanation) return `A ${languageNames[language.toLowerCase()] ?? language} language-specific token.`;
+  if (!explanation)
+    return `A ${languageNames[language.toLowerCase()] ?? language} language-specific token.`;
   return explanation;
 }

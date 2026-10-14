@@ -150,13 +150,14 @@ export function deriveTokens(result: AnalysisResult): DerivedToken[] {
                 ? 'Sanitizer'
                 : 'Propagation';
         if (role === 'Neutral' || mapped === 'Sink' || mapped === 'Source') role = mapped;
-      } else if (info.obfuscationRule)
-        role = 'Obfuscated/Encoded';
+      } else if (info.obfuscationRule) role = 'Obfuscated/Encoded';
       else if (unicodeHit) role = 'Unicode';
       else if (findingHit && info.callEvidence) role = 'Dangerous API';
     }
     if (token.label === 'SUSPICIOUS' || token.label === 'MALICIOUS') detectors.add('ML');
-    const categories = [...new Set(relatedCategories.filter((category) => !['APS', 'Other'].includes(category)))];
+    const categories = [
+      ...new Set(relatedCategories.filter((category) => !['APS', 'Other'].includes(category))),
+    ];
     const securityRelevant = role !== 'Neutral' || severity !== 'Safe' || detectors.size > 0;
     return {
       index,

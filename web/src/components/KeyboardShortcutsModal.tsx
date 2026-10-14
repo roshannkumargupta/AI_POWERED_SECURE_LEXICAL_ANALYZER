@@ -21,8 +21,16 @@ const SHORTCUTS: ShortcutItem[] = [
   { keys: ['Ctrl', 'P'], description: 'Open command palette', category: 'Navigation' },
   { keys: ['F1'], description: 'Open command palette (VS Code style)', category: 'Navigation' },
   { keys: ['Ctrl', 'Shift', 'T'], description: 'Toggle Token Map decorations', category: 'Editor' },
-  { keys: ['Ctrl', 'Shift', 'E'], description: 'Explain selected token or finding', category: 'Analysis' },
-  { keys: ['Ctrl', 'Shift', 'F'], description: 'Open the fix proposal workflow', category: 'Analysis' },
+  {
+    keys: ['Ctrl', 'Shift', 'E'],
+    description: 'Explain selected token or finding',
+    category: 'Analysis',
+  },
+  {
+    keys: ['Ctrl', 'Shift', 'F'],
+    description: 'Open the fix proposal workflow',
+    category: 'Analysis',
+  },
   { keys: ['Ctrl', 'Shift', 'A'], description: 'Open AST view', category: 'Navigation' },
   { keys: ['Ctrl', 'Shift', 'S'], description: 'Open Security view', category: 'Navigation' },
   { keys: ['Ctrl', 'Shift', 'L'], description: 'Open Agent Safety Lab', category: 'Navigation' },
