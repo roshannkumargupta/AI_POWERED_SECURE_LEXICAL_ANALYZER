@@ -92,11 +92,20 @@ export function FixWorkflowModal(props: Props) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [elapsed, setElapsed] = useState(0);
   const [retryNonce, setRetryNonce] = useState(0);
+  const [countdown, setCountdown] = useState<number>(0);
   const proposalStartedAt = useRef(Date.now());
   const proposalTimedOut = useRef(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const consentRef = useRef<HTMLElement>(null);
   const requestController = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = window.setInterval(() => {
+      setCountdown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [countdown]);
   const closeWorkflow = () => {
     requestController.current?.abort();
     requestController.current = null;
@@ -113,8 +122,9 @@ export function FixWorkflowModal(props: Props) {
     }
   }, [machine.proposal, props.source]);
   const stale =
-    props.documentId !== props.activeDocumentId ||
-    Boolean(machine.proposal && machine.proposal.source_version !== props.sourceVersion);
+    machine.phase !== 'report' &&
+    (props.documentId !== props.activeDocumentId ||
+      Boolean(machine.proposal && machine.proposal.source_version !== props.sourceVersion));
   const report = machine.report;
   const reportCounts = report ? verificationCounts(report) : null;
   useModalBehavior(Boolean(finding) && !consentPrompt, dialogRef, closeWorkflow);
@@ -129,14 +139,18 @@ export function FixWorkflowModal(props: Props) {
       return;
     }
     const key = `${props.documentId}:${finding.id}:${props.sourceVersion}`;
+    if (proposalKey.current === key && (machine.phase === 'review' || machine.phase === 'report')) {
+      return;
+    }
     if (proposalKey.current?.startsWith(`${props.documentId}:${finding.id}:`)) {
-      if (proposalKey.current !== key && phaseRef.current !== 'report')
+      if (proposalKey.current !== key && phaseRef.current !== 'report') {
         dispatch({
           type: 'failure',
           phase: 'stale',
           message: 'The source changed while this proposal was open. Start a new fix review.',
         });
-      return;
+        return;
+      }
     }
     proposalKey.current = key;
     if (props.initialFixAll) {
@@ -144,16 +158,16 @@ export function FixWorkflowModal(props: Props) {
       return;
     }
     let current = true;
-    const controller = new AbortController();
-    requestController.current = controller;
     const propose = async (origin: 'rule' | 'ai', remoteConsent = false) => {
+      const activeController = new AbortController();
+      requestController.current = activeController;
       dispatch({ type: 'propose' });
       proposalStartedAt.current = Date.now();
       proposalTimedOut.current = false;
       const timeout = window.setTimeout(
         () => {
           proposalTimedOut.current = true;
-          controller.abort();
+          activeController.abort();
         },
         (props.timeoutSeconds ?? 90) * 1000
       );
@@ -171,8 +185,8 @@ export function FixWorkflowModal(props: Props) {
           remote_consent: remoteConsent,
           origin,
         };
-        const response = await apiClient.proposeFix(body, controller.signal);
-        if (!current || controller.signal.aborted) return;
+        const response = await apiClient.proposeFix(body, activeController.signal);
+        if (!current || activeController.signal.aborted) return;
         if (!response.proposal?.edits?.length || response.proposal.source_hash.length !== 64)
           throw new Error('The server returned a malformed proposal.');
         try {
@@ -185,12 +199,17 @@ export function FixWorkflowModal(props: Props) {
         }
         dispatch({ type: 'proposal', proposal: response.proposal });
       } catch (error) {
-        if (!current || (controller.signal.aborted && !proposalTimedOut.current)) return;
+        if (!current || (activeController.signal.aborted && !proposalTimedOut.current)) return;
         const message = proposalTimedOut.current
           ? `AI fix proposal hit its ${props.timeoutSeconds ?? 90}-second deadline. Change SECURELEX_AI_TIMEOUT_SECONDS in .env, then retry or use the rule proposal.`
           : error instanceof Error
             ? error.message
             : 'Could not create a fix proposal.';
+        const match = message.match(/(?:429|rate\s*limit|retry(?: after| in)?)\D*(\d+)/i);
+        const waitSec = match ? parseInt(match[1], 10) : /429|rate\s*limit/i.test(message) ? 30 : 0;
+        if (waitSec > 0) {
+          setCountdown(waitSec);
+        }
         const phase = /stale|version|hash/i.test(message)
           ? 'stale'
           : /malformed|edit|range|overlap/i.test(message)
@@ -216,7 +235,7 @@ export function FixWorkflowModal(props: Props) {
     void propose('rule');
     return () => {
       current = false;
-      controller.abort();
+      requestController.current?.abort();
     };
   }, [
     finding,
@@ -248,17 +267,18 @@ export function FixWorkflowModal(props: Props) {
   const beginAIProposal = async () => {
     let timer: number | undefined;
     let timedOut = false;
+    let controller: AbortController | null = null;
     try {
       await props.onConsent();
       setConsentPrompt(false);
-      const controller = new AbortController();
+      controller = new AbortController();
       requestController.current = controller;
       dispatch({ type: 'propose' });
       proposalStartedAt.current = Date.now();
       timer = window.setTimeout(
         () => {
           timedOut = true;
-          controller.abort();
+          controller?.abort();
         },
         (props.timeoutSeconds ?? 90) * 1000
       );
@@ -285,17 +305,24 @@ export function FixWorkflowModal(props: Props) {
         throw new Error('The proposal does not change this source.');
       dispatch({ type: 'proposal', proposal: response.proposal });
     } catch (error) {
+      if (controller?.signal.aborted && !timedOut) return;
+      const message = timedOut
+        ? `AI fix proposal hit its ${props.timeoutSeconds ?? 90}-second deadline. Change SECURELEX_AI_TIMEOUT_SECONDS in .env, then retry or use the rule proposal.`
+        : error instanceof Error
+          ? error.message
+          : 'Remote consent could not be saved.';
+      const match = message.match(/(?:429|rate\s*limit|retry(?: after| in)?)\D*(\d+)/i);
+      const waitSec = match ? parseInt(match[1], 10) : /429|rate\s*limit/i.test(message) ? 30 : 0;
+      if (waitSec > 0) {
+        setCountdown(waitSec);
+      }
       dispatch({
         type: 'failure',
         phase: 'error',
-        message: timedOut
-          ? `AI fix proposal hit its ${props.timeoutSeconds ?? 90}-second deadline. Change SECURELEX_AI_TIMEOUT_SECONDS in .env, then retry or use the rule proposal.`
-          : error instanceof Error
-            ? error.message
-            : 'Remote consent could not be saved.',
+        message,
       });
-      setConsentPrompt(false);
     } finally {
+      setConsentPrompt(false);
       if (timer !== undefined) window.clearTimeout(timer);
     }
   };
@@ -332,22 +359,6 @@ export function FixWorkflowModal(props: Props) {
         });
         return;
       }
-      const unavailable = missingVerificationTools(
-        verified.report as unknown as Record<string, unknown>
-      );
-      if (unavailable) {
-        dispatch({
-          type: 'report',
-          report: verified.report as unknown as Record<string, unknown>,
-          sourceVersion: null,
-        });
-        dispatch({
-          type: 'failure',
-          phase: 'missing-tools',
-          message: 'One or more verification tools were unavailable; source was not changed.',
-        });
-        return;
-      }
       if (
         !['Verified for specified checks', 'Partially verified'].includes(verified.report.outcome)
       ) {
@@ -374,12 +385,6 @@ export function FixWorkflowModal(props: Props) {
         });
         return;
       }
-      if (
-        response.applied &&
-        response.source !== undefined &&
-        response.source_version !== undefined
-      )
-        props.onSourceApplied(response.source, response.source_version);
       const missingTools = missingVerificationTools(
         actualReport as unknown as Record<string, unknown>
       );
@@ -388,6 +393,15 @@ export function FixWorkflowModal(props: Props) {
         report: actualReport as unknown as Record<string, unknown>,
         sourceVersion: response.source_version ?? null,
       });
+      if (response.applied && response.source_version !== undefined) {
+        proposalKey.current = `${props.documentId}:${finding.id}:${response.source_version}`;
+      }
+      if (
+        response.applied &&
+        response.source !== undefined &&
+        response.source_version !== undefined
+      )
+        props.onSourceApplied(response.source, response.source_version);
       if (
         !response.applied &&
         outcomeLabel(actualReport as unknown as Record<string, unknown>) === 'Verification failed'
@@ -823,37 +837,40 @@ export function FixWorkflowModal(props: Props) {
               {machine.phase === 'review' && props.aiReady && (
                 <button
                   type="button"
+                  disabled={countdown > 0}
                   onClick={() => {
                     if (props.remoteConsentRequired && !props.remoteConsented)
                       setConsentPrompt(true);
                     else void beginAIProposal();
                   }}
                 >
-                  Improve with AI
+                  {countdown > 0 ? `Improve with AI (${countdown}s)` : 'Improve with AI'}
                 </button>
               )}
               {machine.phase === 'error' && props.aiReady && (
                 <button
                   type="button"
+                  disabled={countdown > 0}
                   onClick={() => {
                     if (props.remoteConsentRequired && !props.remoteConsented)
                       setConsentPrompt(true);
                     else void beginAIProposal();
                   }}
                 >
-                  Improve with AI
+                  {countdown > 0 ? `Improve with AI (${countdown}s)` : 'Improve with AI'}
                 </button>
               )}
               {machine.phase === 'error' && (
                 <button
                   type="button"
+                  disabled={countdown > 0}
                   onClick={() => {
                     requestController.current?.abort();
                     proposalKey.current = null;
                     setRetryNonce((value) => value + 1);
                   }}
                 >
-                  Retry
+                  {countdown > 0 ? `Retry (${countdown}s)` : 'Retry'}
                 </button>
               )}
               <span />

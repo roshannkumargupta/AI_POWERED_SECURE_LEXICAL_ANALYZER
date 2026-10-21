@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -14,6 +16,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from apsla.models_v2 import ToolStatus
+
+VERSION_TIMEOUT_SECONDS = 2.0
+DEFAULT_TIMEOUT_SECONDS = 5.0
+MAX_OUTPUT_BYTES = 64 * 1024
 
 
 @dataclass(frozen=True)
@@ -35,6 +41,7 @@ TOOL_REGISTRY: dict[str, ToolDefinition] = {
     "javac": ToolDefinition("javac", "compiler", ("-version",), ("java",), "java"),
     "node": ToolDefinition("node", "runtime", ("--version",), ("javascript",), "node-check"),
     "ruff": ToolDefinition("ruff", "analyzer", ("--version",), ("python",), "ruff"),
+    "ruff-format": ToolDefinition("ruff", "formatter", ("--version",), ("python",)),
     "pyflakes": ToolDefinition("pyflakes", "analyzer", ("--version",), ("python",), "pyflakes"),
     "mypy": ToolDefinition("mypy", "analyzer", ("--version",), ("python",), "mypy"),
     "eslint": ToolDefinition("eslint", "analyzer", ("--version",), ("javascript",), "eslint"),
@@ -48,10 +55,58 @@ TOOL_REGISTRY: dict[str, ToolDefinition] = {
     ),
 }
 
-VERSION_TIMEOUT_SECONDS = 2.0
-DEFAULT_TIMEOUT_SECONDS = 5.0
-MAX_OUTPUT_BYTES = 64 * 1024
 
+class FormatterUnavailable(RuntimeError):
+    """No installed formatter is configured for the requested language."""
+
+
+def format_source(source: str, language: str, *, timeout: float = DEFAULT_TIMEOUT_SECONDS) -> tuple[str, str]:
+    """Format source with fixed, non-executing formatter commands and bounded I/O."""
+    suffix = {"python": ".py", "java": ".java", "javascript": ".js", "cpp": ".cpp"}[language]
+    executable: str | None = None
+    args: list[str] = []
+    formatter = ""
+    if language == "python" and importlib.util.find_spec("ruff") is not None:
+        executable, args, formatter = sys.executable, ["-m", "ruff", "format", "--stdin-filename", f"source{suffix}", "-"], "ruff"
+    else:
+        choices = {
+            "python": [("black", ["--quiet", "--stdin-filename", f"source{suffix}", "-"])],
+            "java": [("google-java-format", ["-"])],
+            "javascript": [("prettier", ["--parser", "babel"])],
+            "cpp": [("clang-format", [f"--assume-filename=source{suffix}"])],
+        }
+        for name, command_args in choices[language]:
+            executable = shutil.which(name)
+            if executable:
+                args, formatter = command_args, name
+                break
+    if executable is None:
+        raise FormatterUnavailable(f"No formatter is installed for {language}.")
+    try:
+        completed = subprocess.run(
+            [executable, *args],
+            input=source,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+            cwd=tempfile.gettempdir(),
+            env=_clean_env(),
+            shell=False,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise TimeoutError(f"{formatter} exceeded the {timeout:g}-second format deadline.") from exc
+    except OSError as exc:
+        raise FormatterUnavailable(f"{formatter} could not start ({type(exc).__name__}).") from exc
+    if completed.returncode != 0:
+        message = _bounded(completed.stderr).strip() or f"{formatter} exited with status {completed.returncode}."
+        raise ValueError(message)
+    output = completed.stdout
+    if len(output.encode("utf-8")) > MAX_OUTPUT_BYTES:
+        raise ValueError("Formatted output exceeds the 64 KB formatter response limit.")
+    return output, formatter
 
 def network_sandbox_available() -> bool:
     """Return whether this host has an OS-enforced offline subprocess sandbox.

@@ -123,7 +123,25 @@ class LocalLLM:
     ) -> None:
         raw_url = (base_url or os.environ.get("APSLA_LOCAL_URL", DEFAULT_LOCAL_URL)).rstrip("/")
         self.base_url = validate_loopback_url(raw_url)
-        self.model = model or os.environ.get("APSLA_LOCAL_MODEL", DEFAULT_LOCAL_MODEL)
+        requested = model or os.environ.get("APSLA_LOCAL_MODEL", DEFAULT_LOCAL_MODEL)
+        if model:
+            self.model = model
+        elif transport is not None:
+            self.model = requested
+        else:
+            try:
+                status_data = get_agent_status()
+                installed = status_data.get("models", [])
+                if requested in installed:
+                    self.model = requested
+                elif status_data.get("model") and status_data.get("model") in installed:
+                    self.model = str(status_data["model"])
+                elif installed:
+                    self.model = installed[0]
+                else:
+                    self.model = requested
+            except Exception:
+                self.model = requested
         self.transport = transport
         self.timeout = timeout
         self.call_count = 0
@@ -205,7 +223,6 @@ def get_agent_status(
     Returns:
         dict with {mode, ollama_reachable, model, model_present, fallback_active, message}
     """
-    _load_env_file()
     mode = (override_mode or os.environ.get("APSLA_AGENT_MODE", "off")).lower()
     if mode not in {"off", "rules", "local"}:
         mode = "off"
@@ -225,6 +242,7 @@ def get_agent_status(
         }
 
     model_name = os.environ.get("OLLAMA_MODEL", os.environ.get("APSLA_LOCAL_MODEL", DEFAULT_LOCAL_MODEL))
+    requested_model = model_name
     reachable = False
     present = False
     models: list[str] = []
@@ -240,14 +258,24 @@ def get_agent_status(
                     m.get("name", "") for m in tags_data.get("models", []) if isinstance(m, dict)
                 ]
                 models = [model for model in models if model]
-                # Compare the full tag. Matching only the family name incorrectly treats
-                # qwen2.5-coder:1.5b as a substitute for qwen2.5-coder:3b and yields HTTP 404.
-                expected_tags = {model_name, f"{model_name}:latest"}
-                if ":" not in model_name:
-                    expected_tags.add(f"{model_name}:latest")
-                present = bool(expected_tags.intersection(models))
+                # Prefer the configured exact tag, but when it is absent bind to an
+                # actually installed tag from the same model family. Returning the
+                # installed tag prevents the provider from sending a nonexistent tag.
+                exact = next(
+                    (tag for tag in models if tag in {requested_model, f"{requested_model}:latest"}),
+                    None,
+                )
+                family = requested_model.split(":", 1)[0]
+                compatible = next(
+                    (tag for tag in sorted(models) if tag == family or tag.startswith(f"{family}:")),
+                    None,
+                )
+                matched_model = exact or compatible
+                present = matched_model is not None
+                if matched_model:
+                    model_name = matched_model
                 if not present:
-                    message = f"model_missing: run 'ollama pull {model_name}'"
+                    message = f"Model unavailable. Run: ollama pull {requested_model}"
     except Exception:
         reachable = False
         message = f"Ollama is not running at {validated_url}"

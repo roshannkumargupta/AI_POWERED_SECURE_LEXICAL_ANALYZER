@@ -163,6 +163,33 @@ def generate_rule_fix(
         if closer:
             at = _at_eof(source)
             return RuleFix([_position_edit(source, at, at, closer)], f"Close the unterminated {('block comment' if closer == '*/' else 'raw string' if closer.startswith(')') else 'literal')}.", "The missing closing delimiter is inserted at the end of the source."), None
+        # Support closing an unterminated single-line literal on the reported line
+        line_start = source.rfind("\n", 0, start) + 1
+        line_end = source.find("\n", start)
+        if line_end == -1:
+            line_end = len(source)
+        elif line_end > 0 and source[line_end - 1] == "\r":
+            line_end -= 1
+        line_text = source[line_start:line_end]
+
+        quote_char = None
+        for q in ('"', "'", "`"):
+            if sample.startswith(q) or (lexeme and lexeme.startswith(q)):
+                quote_char = q
+                break
+        if not quote_char and start < len(source) and source[start] in ('"', "'", "`"):
+            quote_char = source[start]
+        if not quote_char:
+            for q in ('"', "'", "`"):
+                if line_text.count(q) % 2 == 1:
+                    quote_char = q
+                    break
+        if quote_char:
+            return RuleFix(
+                [_position_edit(source, line_end, line_end, quote_char)],
+                f"Close the unterminated {quote_char} string literal.",
+                "The missing closing quote is inserted at the end of the line.",
+            ), None
 
     if produced_by.startswith("tree-sitter-") and ("expected" in lowered or "missing" in lowered):
         expected = None

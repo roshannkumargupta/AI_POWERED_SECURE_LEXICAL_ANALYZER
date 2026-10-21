@@ -5,7 +5,9 @@ from __future__ import annotations
 import ipaddress
 import json
 import os
+import random
 import re
+import threading
 import time
 import uuid
 from collections import deque
@@ -13,10 +15,36 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, Protocol
 from urllib.parse import urlparse
 
 import httpx
+
+
+def _load_env_file() -> None:
+    """Best-effort loading of root .env configuration."""
+    root_env = Path(__file__).resolve().parents[3] / ".env"
+    if root_env.is_file():
+        try:
+            parsed: dict[str, str] = {}
+            for raw_line in root_env.read_text(encoding="utf-8").splitlines():
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                k = k.strip()
+                v = v.strip().strip("'\"")
+                if k:
+                    parsed[k] = v
+            for k, v in parsed.items():
+                if k not in os.environ:
+                    os.environ[k] = v
+        except Exception:
+            pass
+
+
+_load_env_file()
 
 MAX_PROMPT_BYTES = 512 * 1024
 MAX_RESPONSE_BYTES = 256 * 1024
@@ -92,7 +120,8 @@ def redact_prompt(text: str) -> str:
     text = re.sub(
         r"(?i)(api[_-]?key|token|password|secret)(\s*[:=]\s*)([^\s,;]+)", r"\1\2[REDACTED]", text
     )
-    for key in ("OPENAI_COMPAT_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"):
+    text = re.sub(r"\bgsk_[A-Za-z0-9_-]+\b", "[REDACTED]", text)
+    for key in ("GROQ_API_KEY", "OPENAI_COMPAT_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"):
         secret = os.environ.get(key)
         if secret:
             text = text.replace(secret, "[REDACTED]")
@@ -123,11 +152,15 @@ class HttpJsonProvider:
             transport,
         )
         self.call_count = 0
+        self.last_tokens: int | None = None
+        self.last_usage: dict[str, Any] = {}
 
     def _request(self, system: str, user: str, schema: dict[str, Any]) -> str:
         raise NotImplementedError
 
     def chat_json(self, system: str, user: str, schema: dict[str, Any]) -> dict[str, Any]:
+        if "required json schema" not in system.lower() and "schema" not in system.lower():
+            system = f"{system}\nRequired JSON schema:\n{json.dumps(schema)}"
         system, user = redact_prompt(system), redact_prompt(user)
         if len((system + user).encode("utf-8")) > MAX_PROMPT_BYTES:
             raise ProviderFailure(
@@ -152,7 +185,11 @@ class HttpJsonProvider:
                         "Provider output exceeds the configured response-size limit.",
                         "Reduce output length and retry.",
                     )
-                parsed: Any = json.loads(raw)
+                clean_raw = raw.strip()
+                if clean_raw.startswith("```"):
+                    clean_raw = re.sub(r"^```(?:json)?\s*", "", clean_raw)
+                    clean_raw = re.sub(r"\s*```$", "", clean_raw)
+                parsed: Any = json.loads(clean_raw)
                 if validate_json_schema(parsed, schema):
                     return parsed
                 last = "Provider output did not match the required JSON schema."
@@ -175,20 +212,36 @@ class OllamaProvider(HttpJsonProvider):
     def __init__(
         self, base_url: str | None = None, model: str | None = None, **kwargs: Any
     ) -> None:
+        from apsla.llm.local_ollama import get_agent_status
         url = base_url or os.getenv("OLLAMA_BASE_URL") or os.getenv("APSLA_LOCAL_URL") or "http://127.0.0.1:11434"
         host = (urlparse(url).hostname or "").lower().removeprefix("[").removesuffix("]")
         if host not in {"localhost", "127.0.0.1", "::1"}:
             raise ValueError("Ollama provider must use a loopback address.")
-        configured_model = model or os.getenv("OLLAMA_MODEL") or os.getenv("APSLA_LOCAL_MODEL") or "qwen2.5-coder:3b"
+        configured_model = model or os.getenv("OLLAMA_MODEL") or os.getenv("APSLA_LOCAL_MODEL")
+        status = get_agent_status()
+        installed_models = status.get("models", [])
+        if model:
+            configured_model = model
+        elif configured_model and installed_models and configured_model not in installed_models:
+            if status.get("model") and status.get("model") in installed_models:
+                configured_model = str(status.get("model"))
+            elif installed_models:
+                configured_model = installed_models[0]
+        elif configured_model is None:
+            configured_model = str(status.get("model") or "qwen2.5-coder:3b")
+        # Per-request httpx timeout is half the outer deadline so chat_json
+        # has room for its validation-retry attempt within asyncio.wait_for.
+        outer = float(os.getenv("SECURELEX_AI_TIMEOUT_SECONDS", os.getenv("OLLAMA_TIMEOUT_SECONDS", "90")))
         super().__init__(
             url,
             configured_model,
-            timeout=float(os.getenv("SECURELEX_AI_TIMEOUT_SECONDS", os.getenv("OLLAMA_TIMEOUT_SECONDS", "90"))),
+            timeout=outer,
             **kwargs,
         )
 
     def _request(self, system: str, user: str, schema: dict[str, Any]) -> str:
-        with httpx.Client(transport=self.transport, timeout=self.timeout) as client:
+        req_timeout = max(30.0, self.timeout / 2) if self.timeout >= 60.0 else self.timeout
+        with httpx.Client(transport=self.transport, timeout=req_timeout) as client:
             response = client.post(
                 self.base_url + "/api/chat",
                 json={
@@ -197,9 +250,14 @@ class OllamaProvider(HttpJsonProvider):
                         {"role": "system", "content": system},
                         {"role": "user", "content": user},
                     ],
-                    "format": schema,
+                    "format": "json",
                     "stream": False,
-                    "options": {"num_predict": MAX_OUTPUT_TOKENS},
+                    "options": {
+                        "num_predict": int(os.getenv("OLLAMA_NUM_PREDICT", "1024")),
+                        "num_ctx": int(os.getenv("OLLAMA_NUM_CTX", "2048")),
+                        "temperature": 0.1,
+                    },
+                    "keep_alive": "10m",
                 },
             )
             response.raise_for_status()
@@ -263,11 +321,348 @@ class OpenAICompatibleProvider(HttpJsonProvider):
             return str(response.json()["choices"][0]["message"]["content"])
 
 
-def provider_from_environment() -> ModelProvider:
-    choice = os.getenv("SECURELEX_AI_PROVIDER", "ollama").strip().lower()
+DEFAULT_GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+DEFAULT_GROQ_FAST_MODEL = "llama-3.1-8b-instant"
+DEFAULT_GROQ_CODE_MODEL = "llama-3.3-70b-versatile"
+_GROQ_MODELS_CACHE: dict[str, Any] = {"timestamp": 0.0, "models": []}
+_GROQ_SEMAPHORE = threading.Semaphore(int(os.getenv("GROQ_MAX_CONCURRENCY", "2")))
+
+
+class GroqProvider(HttpJsonProvider):
+    name = "groq"
+    processing_location = "remote"
+
+    def __init__(
+        self,
+        base_url: str | None = None,
+        model: str | None = None,
+        api_key: str | None = None,
+        task: str | None = None,
+        timeout: float | None = None,
+        **kwargs: Any,
+    ) -> None:
+        key = api_key or os.getenv("GROQ_API_KEY")
+        if not key:
+            raise ProviderFailure(
+                "unavailable",
+                "Groq API key is not configured.",
+                "Set GROQ_API_KEY in .env.",
+            )
+        url = (base_url or os.getenv("GROQ_BASE_URL") or DEFAULT_GROQ_BASE_URL).rstrip("/")
+        if model:
+            chosen_model = model
+        elif task in {"fast", "explain"}:
+            chosen_model = os.getenv("GROQ_MODEL_FAST") or DEFAULT_GROQ_FAST_MODEL
+        else:
+            chosen_model = (
+                os.getenv("GROQ_MODEL_CODE")
+                or os.getenv("GROQ_MODEL")
+                or DEFAULT_GROQ_CODE_MODEL
+            )
+
+        if kwargs.get("transport") is None:
+            try:
+                available = self.list_models(api_key=key, base_url=url)
+                if available and chosen_model not in available:
+                    chosen_model = available[0]
+            except Exception:
+                pass
+
+        timeout_val = timeout
+        if timeout_val is None:
+            timeout_val = float(
+                os.getenv(
+                    "GROQ_TIMEOUT_SECONDS",
+                    os.getenv("SECURELEX_AI_TIMEOUT_SECONDS", "30.0"),
+                )
+            )
+
+        super().__init__(
+            url,
+            chosen_model,
+            timeout=timeout_val,
+            api_key=key,
+            **kwargs,
+        )
+
+    def _request(self, system: str, user: str, schema: dict[str, Any]) -> str:
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        max_tokens = min(int(os.getenv("GROQ_MAX_TOKENS", "1200")), 8192)
+        temperature = float(os.getenv("GROQ_TEMPERATURE", "0.1"))
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+
+        acquired = _GROQ_SEMAPHORE.acquire(timeout=self.timeout)
+        if not acquired:
+            raise ProviderFailure(
+                "concurrency_limit",
+                "Groq provider concurrency limit reached.",
+                "Wait for ongoing requests to finish, then retry.",
+            )
+        try:
+            max_retries = 4
+            last_error: Exception | None = None
+            for attempt in range(max_retries + 1):
+                try:
+                    with httpx.Client(
+                        transport=self.transport, timeout=self.timeout, headers=headers
+                    ) as client:
+                        response = client.post(
+                            f"{self.base_url}/chat/completions",
+                            json=payload,
+                        )
+                        if response.status_code == 401:
+                            raise ProviderFailure(
+                                "invalid_key",
+                                "Groq API key is invalid or unauthorized.",
+                                "Verify GROQ_API_KEY in .env.",
+                            )
+                        if response.status_code == 404:
+                            raise ProviderFailure(
+                                "model_unavailable",
+                                f"Groq model '{self.model}' is not available.",
+                                "Select a supported Groq model.",
+                            )
+                        if response.status_code == 429:
+                            if attempt < max_retries:
+                                retry_after = response.headers.get("Retry-After")
+                                delay = 1.0 * (1.5**attempt) + random.uniform(0.1, 0.4)
+                                if retry_after:
+                                    try:
+                                        delay = max(float(retry_after), 1.0)
+                                    except ValueError:
+                                        pass
+                                time.sleep(delay)
+                                continue
+                            raise ProviderFailure(
+                                "rate_limited",
+                                "Groq rate limit reached.",
+                                "Please wait a moment before trying again.",
+                            )
+                        if response.status_code >= 500:
+                            if attempt < max_retries:
+                                time.sleep(0.5 * (2**attempt))
+                                continue
+                            raise ProviderFailure(
+                                "provider_error",
+                                f"Groq service error (HTTP {response.status_code}).",
+                                "Check Groq service status, then retry.",
+                            )
+                        response.raise_for_status()
+                        data = response.json()
+                        self.last_usage = data.get("usage", {})
+                        self.last_tokens = self.last_usage.get("total_tokens")
+                        choices = data.get("choices", [])
+                        if not choices:
+                            raise ProviderFailure(
+                                "bad_output",
+                                "Groq returned an empty choice set.",
+                                "Retry the request.",
+                            )
+                        return str(choices[0].get("message", {}).get("content", ""))
+                except (httpx.TransportError, httpx.NetworkError) as net_err:
+                    last_error = net_err
+                    if attempt < max_retries:
+                        time.sleep(0.5 * (2**attempt))
+                        continue
+                    raise ProviderFailure(
+                        "network_error",
+                        "Network error connecting to Groq API.",
+                        "Check your internet connection and proxy settings.",
+                    ) from net_err
+                except httpx.TimeoutException as timeout_err:
+                    raise ProviderFailure(
+                        "timeout",
+                        f"Groq request timed out after {self.timeout}s.",
+                        "Increase GROQ_TIMEOUT_SECONDS in .env or try a faster model.",
+                    ) from timeout_err
+            if last_error:
+                raise last_error
+            raise ProviderFailure("provider_error", "Groq request failed after retries.")
+        finally:
+            _GROQ_SEMAPHORE.release()
+
+    @classmethod
+    def list_models(
+        cls,
+        base_url: str | None = None,
+        api_key: str | None = None,
+        transport: httpx.BaseTransport | None = None,
+        timeout: float = 10.0,
+    ) -> list[str]:
+        now = time.time()
+        if _GROQ_MODELS_CACHE["models"] and (now - _GROQ_MODELS_CACHE["timestamp"]) < 300:
+            return list(_GROQ_MODELS_CACHE["models"])
+
+        key = api_key or os.getenv("GROQ_API_KEY")
+        if not key:
+            return [DEFAULT_GROQ_CODE_MODEL, DEFAULT_GROQ_FAST_MODEL]
+        url = (base_url or os.getenv("GROQ_BASE_URL") or DEFAULT_GROQ_BASE_URL).rstrip("/")
+        headers = {"Authorization": f"Bearer {key}"}
+        try:
+            with httpx.Client(transport=transport, timeout=timeout, headers=headers) as client:
+                res = client.get(f"{url}/models")
+                if res.status_code == 200:
+                    data = res.json()
+                    models = [
+                        item["id"]
+                        for item in data.get("data", [])
+                        if isinstance(item, dict) and "id" in item
+                    ]
+                    chat_models = [
+                        m
+                        for m in models
+                        if not any(
+                            x in m.lower()
+                            for x in ["whisper", "guard", "embed", "tts", "distil-whisper"]
+                        )
+                    ]
+                    priority = [
+                        DEFAULT_GROQ_CODE_MODEL,
+                        DEFAULT_GROQ_FAST_MODEL,
+                        "qwen/qwen3.8-27b",
+                        "openai/gpt-oss-20b",
+                        "openai/gpt-oss-120b",
+                        "qwen-2.5-coder-32b",
+                    ]
+                    sorted_models = [m for m in priority if m in chat_models] + [
+                        m for m in chat_models if m not in priority
+                    ]
+                    final_models = sorted_models or models
+                    _GROQ_MODELS_CACHE["timestamp"] = now
+                    _GROQ_MODELS_CACHE["models"] = final_models
+                    return list(final_models)
+        except Exception:
+            pass
+        return [DEFAULT_GROQ_CODE_MODEL, DEFAULT_GROQ_FAST_MODEL]
+
+    @classmethod
+    def test_connection(
+        cls,
+        base_url: str | None = None,
+        api_key: str | None = None,
+        model: str | None = None,
+        transport: httpx.BaseTransport | None = None,
+        timeout: float = 10.0,
+    ) -> dict[str, Any]:
+        key = api_key or os.getenv("GROQ_API_KEY")
+        if not key:
+            return {
+                "ok": False,
+                "provider": "groq",
+                "latency_ms": 0.0,
+                "model": None,
+                "available_models": [],
+                "error": "GROQ_API_KEY is not configured in .env",
+            }
+        url = (base_url or os.getenv("GROQ_BASE_URL") or DEFAULT_GROQ_BASE_URL).rstrip("/")
+        headers = {"Authorization": f"Bearer {key}"}
+        t0 = time.perf_counter()
+        try:
+            with httpx.Client(transport=transport, timeout=timeout, headers=headers) as client:
+                res = client.get(f"{url}/models")
+                latency = round((time.perf_counter() - t0) * 1000, 2)
+                if res.status_code == 401:
+                    return {
+                        "ok": False,
+                        "provider": "groq",
+                        "latency_ms": latency,
+                        "model": None,
+                        "available_models": [],
+                        "error": "Invalid Groq API key (401 Unauthorized)",
+                    }
+                if res.status_code != 200:
+                    return {
+                        "ok": False,
+                        "provider": "groq",
+                        "latency_ms": latency,
+                        "model": None,
+                        "available_models": [],
+                        "error": f"Groq returned HTTP status {res.status_code}",
+                    }
+                data = res.json()
+                models = [
+                    item["id"]
+                    for item in data.get("data", [])
+                    if isinstance(item, dict) and "id" in item
+                ]
+                chat_models = [
+                    m
+                    for m in models
+                    if not any(
+                        x in m.lower()
+                        for x in ["whisper", "guard", "embed", "tts", "distil-whisper"]
+                    )
+                ]
+                priority = [
+                    DEFAULT_GROQ_CODE_MODEL,
+                    DEFAULT_GROQ_FAST_MODEL,
+                    "qwen/qwen3.8-27b",
+                    "openai/gpt-oss-20b",
+                    "openai/gpt-oss-120b",
+                    "qwen-2.5-coder-32b",
+                ]
+                sorted_models = [m for m in priority if m in chat_models] + [
+                    m for m in chat_models if m not in priority
+                ]
+                final_models = sorted_models or models
+                chosen = model or (final_models[0] if final_models else DEFAULT_GROQ_CODE_MODEL)
+                return {
+                    "ok": True,
+                    "provider": "groq",
+                    "latency_ms": latency,
+                    "model": chosen,
+                    "available_models": final_models,
+                    "error": None,
+                }
+        except httpx.TimeoutException:
+            return {
+                "ok": False,
+                "provider": "groq",
+                "latency_ms": round((time.perf_counter() - t0) * 1000, 2),
+                "model": None,
+                "available_models": [],
+                "error": f"Connection timed out after {timeout}s",
+            }
+        except Exception as exc:
+            err_msg = redact_prompt(str(exc))
+            return {
+                "ok": False,
+                "provider": "groq",
+                "latency_ms": round((time.perf_counter() - t0) * 1000, 2),
+                "model": None,
+                "available_models": [],
+                "error": f"Connection failed: {err_msg}",
+            }
+
+
+def provider_from_environment(task: str | None = None) -> ModelProvider:
+    choice = os.getenv("SECURELEX_AI_PROVIDER", "auto").strip().lower()
+    if choice == "auto":
+        if os.getenv("GROQ_API_KEY"):
+            return GroqProvider(task=task)
+        return OllamaProvider()
+    if choice == "groq":
+        return GroqProvider(task=task)
     if choice in {"openai", "openai-compatible"}:
         return OpenAICompatibleProvider(
-            timeout=float(os.getenv("SECURELEX_AI_TIMEOUT_SECONDS", os.getenv("OLLAMA_TIMEOUT_SECONDS", "90")))
+            timeout=float(
+                os.getenv(
+                    "SECURELEX_AI_TIMEOUT_SECONDS",
+                    os.getenv("OLLAMA_TIMEOUT_SECONDS", "90"),
+                )
+            )
         )
     return OllamaProvider()
 
@@ -318,6 +713,9 @@ class AgentEvent:
     error: str | None = None
     subject_type: str | None = None
     subject_id: str | None = None
+    provider: str | None = None
+    model: str | None = None
+    tokens: int | None = None
 
 
 class AgentEventLog:
@@ -337,6 +735,9 @@ class AgentEventLog:
         error: str | None = None,
         subject_type: str | None = None,
         subject_id: str | None = None,
+        provider: str | None = None,
+        model: str | None = None,
+        tokens: int | None = None,
     ) -> AgentEvent:
         event = AgentEvent(
             str(uuid.uuid4()),
@@ -352,6 +753,9 @@ class AgentEventLog:
             (error or "")[:240] or None,
             subject_type,
             subject_id,
+            provider,
+            model,
+            tokens,
         )
         self._events.append(event)
         return event

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { apiClient, type AIGenerateResponse, type CapabilitiesResponse } from '../../api/client';
 import { useModalBehavior } from '../lib/modalBehavior';
 
@@ -25,7 +25,16 @@ export function BuildAIDrawer({
   const [candidate, setCandidate] = useState<AIGenerateResponse | null>(null);
   const [consent, setConsent] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [countdown, setCountdown] = useState(0);
   const activeController = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = window.setInterval(() => {
+      setCountdown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [countdown]);
   const drawerRef = useRef<HTMLElement>(null);
   const consentRef = useRef<HTMLElement>(null);
   const close = () => {
@@ -45,12 +54,14 @@ export function BuildAIDrawer({
   const supported = (capabilities?.languages ?? []).filter((item) =>
     ['python', 'java', 'javascript', 'cpp'].includes(item.id)
   );
-  const disabledReason = !ai
-    ? 'AI provider status is unavailable.'
-    : !ai.configured
-      ? ai.setup_message ||
-        'AI provider unavailable. Configure the provider in the server environment.'
-      : '';
+  const disabledReason = countdown > 0
+    ? `Rate limit active. Retrying enabled in ${countdown}s.`
+    : !ai
+      ? 'AI provider status is unavailable.'
+      : !ai.configured
+        ? ai.setup_message ||
+          'AI provider unavailable. Configure the provider in the server environment.'
+        : '';
   const generate = async () => {
     if (ai?.consent_required && !ai.remote_consented && !consent) {
       setConsent(true);
@@ -93,8 +104,15 @@ export function BuildAIDrawer({
         setError(
           `AI generation hit its ${timeoutSeconds}-second deadline. Change SECURELEX_AI_TIMEOUT_SECONDS in .env, then retry.`
         );
-      else if (!controller.signal.aborted)
-        setError(reason instanceof Error ? reason.message : 'Generation failed.');
+      else if (!controller.signal.aborted) {
+        const msg = reason instanceof Error ? reason.message : 'Generation failed.';
+        setError(msg);
+        const match = msg.match(/(?:429|rate\s*limit|retry(?: after| in)?)\D*(\d+)/i);
+        const waitSec = match ? parseInt(match[1], 10) : /429|rate\s*limit/i.test(msg) ? 30 : 0;
+        if (waitSec > 0) {
+          setCountdown(waitSec);
+        }
+      }
     } finally {
       window.clearTimeout(timeout);
       window.clearInterval(ticker);
@@ -152,11 +170,15 @@ export function BuildAIDrawer({
         </label>
         <button
           type="button"
-          disabled={Boolean(disabledReason) || busy || !prompt.trim()}
+          disabled={Boolean(disabledReason) || busy || !prompt.trim() || countdown > 0}
           title={disabledReason || (!prompt.trim() ? 'Enter a requirement first.' : '')}
           onClick={() => void generate()}
         >
-          {busy ? `Generating… ${elapsed}s` : 'Generate'}
+          {busy
+            ? `Generating… ${elapsed}s`
+            : countdown > 0
+              ? `Rate limited (${countdown}s)`
+              : 'Generate'}
         </button>
         {busy && (
           <button
@@ -211,8 +233,13 @@ export function BuildAIDrawer({
         {error && (
           <div role="alert">
             <p>{error}</p>
-            <button type="button" onClick={() => void generate()}>
-              Retry
+            {countdown > 0 && <small>Retrying enabled in {countdown}s</small>}
+            <button
+              type="button"
+              disabled={busy || countdown > 0}
+              onClick={() => void generate()}
+            >
+              {countdown > 0 ? `Retry (${countdown}s)` : 'Retry'}
             </button>
           </div>
         )}

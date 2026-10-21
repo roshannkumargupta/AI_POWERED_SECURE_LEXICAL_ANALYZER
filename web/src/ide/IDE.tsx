@@ -32,7 +32,7 @@ import {
   securityLabel,
 } from './lib/status';
 import { clampPanelHeight } from './lib/panelResize';
-import { setEditorSelection, revealEditorRange } from '../editor/navigation';
+import { setEditorSelection, revealEditorRange, setEditorValue } from '../editor/navigation';
 import type { IDEFinding } from './security/SecurityPanel';
 import { SamplesSidebar } from './sidebar/SamplesSidebar';
 import { NewFileDialog } from './sidebar/NewFileDialog';
@@ -288,12 +288,19 @@ export function IDE() {
   const problemCount = problemDiagnostics.length;
   resultRef.current = result;
   const languageInfo = activeLanguage(document, capabilities);
-  const canBuild = Boolean(capabilities?.features.build_with_ai);
-  const canFixAI = Boolean(capabilities?.features.fix_ai ?? capabilities?.features.fix_with_ai);
+  const canBuild = Boolean(
+    capabilities?.features.build_with_ai ||
+    (capabilities?.ai.configured && capabilities?.ai.consent_required)
+  );
+  const canFixAI = Boolean(
+    (capabilities?.features.fix_ai ?? capabilities?.features.fix_with_ai) ||
+    (capabilities?.ai.configured && capabilities?.ai.consent_required)
+  );
   const canFixRule = Boolean(capabilities?.features.fix_rule);
   const canFix = canFixAI || canFixRule;
   const hasFixTarget = Boolean(
     currentFinding ||
+    (result?.security_findings.length ?? 0) > 0 ||
     problemDiagnostics.some((item) => item.category === 'lexical' || item.category === 'syntax') ||
     result?.tokens.some((token) => token.lexical_status === 'invalid')
   );
@@ -377,7 +384,7 @@ export function IDE() {
         options: {
           include_tokens: true,
           stages: ['lexical', 'syntax', 'security', 'quality'],
-          agent: 'off',
+          agent: capabilities?.ai?.configured && capabilities?.ai?.reachable ? 'local' : 'off',
         },
       };
       const [lexicalStage, syntaxStage] = await Promise.allSettled([
@@ -546,6 +553,7 @@ export function IDE() {
         source: document.source,
         language: document.language,
         target_id: targetId ?? null,
+        source_version: document.sourceVersion,
         remote_consent: Boolean(capabilities?.ai.remote_consented),
       };
       let deterministic: string;
@@ -807,22 +815,38 @@ export function IDE() {
   const onFixSourceApplied = useCallback(
     (source: string, version: number) => {
       const target = state.documents.find((item) => item.id === fixDocId);
-      if (!target || version !== target.sourceVersion + 1) return;
+      if (!target) return;
+      const running = analysisControllers.current.get(target.id);
+      if (running) {
+        running.abort();
+        analysisControllers.current.delete(target.id);
+      }
+      if (editorRef.current && target.id === state.activeDocId) {
+        setEditorValue(editorRef.current, source, 'fix applied');
+      }
       dispatch({ type: 'document/edit', id: target.id, source });
       setFixUndoAvailable(true);
       setPendingFixAnalysis({ id: target.id, version });
     },
-    [state.documents, fixDocId]
+    [state.documents, fixDocId, state.activeDocId]
   );
   const onFixUndo = useCallback(
     (source: string, version: number) => {
       const target = state.documents.find((item) => item.id === fixDocId);
-      if (!target || version !== target.sourceVersion + 1) return;
+      if (!target) return;
+      const running = analysisControllers.current.get(target.id);
+      if (running) {
+        running.abort();
+        analysisControllers.current.delete(target.id);
+      }
+      if (editorRef.current && target.id === state.activeDocId) {
+        setEditorValue(editorRef.current, source, 'fix undo');
+      }
       dispatch({ type: 'document/edit', id: target.id, source });
       setFixUndoAvailable(false);
       setPendingFixAnalysis({ id: target.id, version });
     },
-    [state.documents, fixDocId]
+    [state.documents, fixDocId, state.activeDocId]
   );
   const openGeneratedCandidate = useCallback(
     (candidate: AIGenerateResponse) => {
@@ -1895,7 +1919,7 @@ export function IDE() {
               }
             >
               {capabilities
-                ? `${capabilities.ai.provider} · ${capabilities.ai.model ?? 'model unavailable'} · ${capabilities.ai.processing_location}`
+                ? `${capabilities.ai.provider} - ${capabilities.ai.processing_location}`
                 : 'AI unavailable'}
             </span>
             <div className="ide-theme-switch" role="group" aria-label="IDE theme">
@@ -2377,9 +2401,40 @@ export function IDE() {
                         type="button"
                         className="ide-small-button"
                         title={`Format with ${languageInfo.formatter}`}
-                        onClick={() =>
-                          void editorRef.current?.getAction('editor.action.formatDocument')?.run()
-                        }
+                        onClick={async () => {
+                          if (!document) return;
+                          if (languageInfo.formatter === 'Monaco') {
+                            const action = editorRef.current?.getAction(
+                              'editor.action.formatDocument'
+                            );
+                            if (!action || !(await action.isSupported())) {
+                              reportToast('Monaco has no formatter registered for this language.', true);
+                              return;
+                            }
+                            await action.run();
+                            return;
+                          }
+                          try {
+                            const formatted = await apiClient.formatSource(
+                              document.source,
+                              document.language
+                            );
+                            if (editorRef.current) {
+                              setEditorValue(editorRef.current, formatted.source, 'format');
+                            }
+                            dispatch({
+                              type: 'document/edit',
+                              id: document.id,
+                              source: formatted.source,
+                            });
+                            reportToast(`Formatted with ${formatted.formatter}.`);
+                          } catch (error) {
+                            reportToast(
+                              error instanceof Error ? error.message : 'Formatting failed.',
+                              true
+                            );
+                          }
+                        }}
                       >
                         {icon('format_align_left', 15)}
                         <span className="ide-label">Format</span>

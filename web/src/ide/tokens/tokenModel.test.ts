@@ -111,14 +111,78 @@ describe('P3 token model', () => {
     expect(tokenAtPosition(tokens, 1, 9)).toBeNull();
   });
 
-  it('only associates actual overlapping security findings and detects incomplete analysis', () => {
+  it('only associates overlapping findings and ignores the semantic placeholder stage', () => {
     const finding = {
       id: 'f',
       range: { start_line: 1, start_col: 5, end_line: 1, end_col: 8 },
     } as AnalysisResultV2['security_findings'][number];
     expect(tokenSecurityFindings(tokens[1], [finding])).toEqual([finding]);
     expect(tokenSecurityFindings(tokens[0], [finding])).toEqual([]);
-    expect(isAnalysisIncomplete(result)).toBe(true);
+    expect(isAnalysisIncomplete(result)).toBe(false);
+  });
+
+  it('does not call analysis incomplete for an unavailable optional tool', () => {
+    const optionalToolOnly = {
+      ...result,
+      omissions: [],
+      lexical_status: { status: 'ok' },
+      syntax_status: { status: 'ok' },
+      semantic_status: { status: 'ok' },
+      tools: [
+        {
+          name: 'clang-tidy',
+          kind: 'analyzer',
+          available: false,
+          executed: false,
+          status: 'unavailable',
+        },
+      ],
+    } as unknown as AnalysisResultV2;
+    expect(isAnalysisIncomplete(optionalToolOnly)).toBe(false);
+  });
+
+  it('ignores documented semantic/quality omissions while core stages finish', () => {
+    const completedPipeline = {
+      ...result,
+      omissions: [
+        'Semantic diagnostics are not emitted by the current pipeline.',
+        'Quality observations are not emitted by the current pipeline.',
+        'The current analysis pipeline evaluates all supported stages; stages filters the returned result only.',
+      ],
+      lexical_status: { status: 'ok' },
+      syntax_status: { status: 'ok' },
+      semantic_status: { status: 'incomplete' },
+      tools: [
+        {
+          name: 'internal-security',
+          kind: 'analyzer',
+          available: true,
+          executed: true,
+          status: 'ok',
+        },
+      ],
+    } as unknown as AnalysisResultV2;
+    expect(isAnalysisIncomplete(completedPipeline)).toBe(false);
+  });
+
+  it('marks executed tool failures as incomplete', () => {
+    const failedTool = {
+      ...result,
+      omissions: [],
+      lexical_status: { status: 'ok' },
+      syntax_status: { status: 'ok' },
+      semantic_status: { status: 'ok' },
+      tools: [
+        {
+          name: 'internal-parser',
+          kind: 'parser',
+          available: true,
+          executed: true,
+          status: 'failed',
+        },
+      ],
+    } as unknown as AnalysisResultV2;
+    expect(isAnalysisIncomplete(failedTool)).toBe(true);
   });
 
   it('uses deterministic beginner explanations based on token type and language', () => {

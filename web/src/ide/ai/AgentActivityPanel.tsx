@@ -79,10 +79,14 @@ export function AgentActivityPanel({ onOpenEvent }: { onOpenEvent(event: AgentEv
               <time dateTime={event.timestamp}>{new Date(event.timestamp).toLocaleString()}</time>
               <b>{event.agent}</b>
               <span>{event.action}</span>
-              <span>{event.tool ?? 'Internal'}</span>
+              <span>{event.provider ?? event.tool ?? 'Internal'}</span>
+              {event.model && <span>{event.model}</span>}
               <span>{event.decision_source}</span>
               <strong>{event.outcome}</strong>
               <span>{event.duration.toFixed(1)} ms</span>
+              {event.tokens !== undefined && event.tokens !== null && (
+                <span>{event.tokens} tokens</span>
+              )}
               <small className="ide-agent-arguments">{event.argument_summary}</small>
               {event.subject_type && (
                 <button

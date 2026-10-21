@@ -84,12 +84,24 @@ export function tokenSecurityFindings(token: TokenV2, findings: SecurityFindingV
 
 export function isAnalysisIncomplete(result: AnalysisResultV2 | null): boolean {
   if (!result) return false;
+  const informationalOmissions = new Set([
+    'Semantic diagnostics are not emitted by the current pipeline.',
+    'Quality observations are not emitted by the current pipeline.',
+    'The current analysis pipeline evaluates all supported stages; stages filters the returned result only.',
+  ]);
   return (
-    result.omissions.length > 0 ||
-    [result.lexical_status, result.syntax_status, result.semantic_status].some(
+    result.omissions.some((omission) => !informationalOmissions.has(omission)) ||
+    [result.lexical_status, result.syntax_status].some(
       (item) => item.status === 'incomplete' || item.status === 'unavailable'
     ) ||
-    result.tools.some((tool) => ['failed', 'timeout', 'unavailable'].includes(tool.status))
+    result.tools.some(
+      (tool) =>
+        tool.name === 'internal-security' &&
+        (!tool.executed || tool.status === 'failed' || tool.status === 'timeout' || tool.status === 'unavailable')
+    ) ||
+    result.tools.some(
+      (tool) => tool.executed && (tool.status === 'failed' || tool.status === 'timeout')
+    )
   );
 }
 

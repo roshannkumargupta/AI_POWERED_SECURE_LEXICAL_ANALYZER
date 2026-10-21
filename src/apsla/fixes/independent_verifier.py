@@ -98,12 +98,44 @@ def verify_independently(
     new_findings = {_finding_key(f): f for f in updated["findings"]}
     resolved = [f.model_dump(mode="json") for k, f in old_findings.items() if k not in new_findings]
     remaining = [f.model_dump(mode="json") for k, f in old_findings.items() if k in new_findings]
-    introduced = [
-        f.model_dump(mode="json") for k, f in new_findings.items() if k not in old_findings
-    ]
+
+    # When the original source had syntax errors, AST and taint checks were blocked.
+    # Findings on lines unmodified by the proposal edits are preexisting, not introduced.
+    orig_had_syntax_errors = bool(
+        getattr(original["parse"], "diagnostics", [])
+        or any(getattr(d, "category", "") == "syntax" for d in original["diagnostics"])
+    )
+    edited_lines: set[int] = set()
+    for edit in proposal.edits:
+        edit_start = edit.range.start_line
+        edit_end = max(edit.range.end_line, edit_start + len(edit.new_text.splitlines()) - 1)
+        edited_lines.update(range(edit_start, edit_end + 1))
+
+    introduced: list[dict[str, Any]] = []
+    for k, f in new_findings.items():
+        if k in old_findings:
+            continue
+        if orig_had_syntax_errors:
+            f_rng = getattr(f, "range", None)
+            f_lines = set(range(f_rng.start_line, f_rng.end_line + 1)) if f_rng else set()
+            for step in getattr(f, "taint_path", []):
+                step_rng = getattr(step, "range", None)
+                if step_rng:
+                    f_lines.update(range(step_rng.start_line, step_rng.end_line + 1))
+            if not (f_lines & edited_lines):
+                remaining.append(f.model_dump(mode="json"))
+                continue
+        introduced.append(f.model_dump(mode="json"))
     target_before = [f for f in original["legacy"].findings if f.id == proposal.target_finding_id]
     target_rule = target_before[0].rule_id if target_before else None
     allowed_region = target_before[0].range if target_before else None
+    if allowed_region is None and proposal.target_finding_id:
+        target_diagnostic = next(
+            (item for item in original["diagnostics"] if item.id == proposal.target_finding_id),
+            None,
+        )
+        if target_diagnostic is not None:
+            allowed_region = target_diagnostic.range
     if allowed_region is None and proposal.target_signature:
         target_diagnostic = next(
             (item for item in original["diagnostics"] if _diagnostic_signature(item) == proposal.target_signature),
@@ -112,26 +144,28 @@ def verify_independently(
         if target_diagnostic is not None:
             allowed_region = target_diagnostic.range
     out_of_scope: list[str] = []
-    for edit in proposal.edits:
-        edit_range = edit.range
-        inside_target = bool(
-            allowed_region
-            and (edit_range.start_line, edit_range.start_col)
-            >= (allowed_region.start_line, allowed_region.start_col)
-            and (edit_range.end_line, edit_range.end_col)
-            <= (allowed_region.end_line, allowed_region.end_col)
-        )
-        import_declaration = (
-            edit.new_text.lstrip().startswith(
-                ("import ", "from ", "#include", "using ", "package ")
+    if allowed_region is not None:
+        for edit in proposal.edits:
+            edit_range = edit.range
+            inside_target = bool(
+                (edit_range.start_line, edit_range.start_col)
+                >= (allowed_region.start_line, allowed_region.start_col)
+                and (edit_range.end_line, edit_range.end_col)
+                <= (allowed_region.end_line, allowed_region.end_col)
             )
-            and edit_range.start_line <= 20
-            and bool(proposal.rationale.strip())
-        )
-        if not inside_target and not import_declaration:
-            out_of_scope.append(
-                f"Edit at {edit_range.start_line}:{edit_range.start_col} is outside the target region and is not a justified import/declaration."
+            import_declaration = (
+                edit.new_text.lstrip().startswith(
+                    ("import ", "from ", "#include", "using ", "package ")
+                )
+                and edit_range.start_line <= 20
+                and bool(proposal.rationale.strip())
             )
+            if not inside_target and not import_declaration:
+                out_of_scope.append(
+                    f"Edit at {edit_range.start_line}:{edit_range.start_col} is outside the target region and is not a justified import/declaration."
+                )
+    syntax_errors = list(getattr(updated["parse"], "diagnostics", []))
+    syntax_ok = not syntax_errors
     if proposal.target_kind == "finding":
         target_gone = bool(target_rule) and not any(
             f.rule_id == target_rule for f in updated["legacy"].findings
@@ -141,10 +175,13 @@ def verify_independently(
             _diagnostic_signature(item) == proposal.target_signature
             for item in updated["diagnostics"]
         )
+    elif proposal.target_finding_id:
+        target_gone = not any(
+            item.id == proposal.target_finding_id
+            for item in updated["diagnostics"]
+        )
     else:
-        target_gone = False
-    syntax_errors = list(getattr(updated["parse"], "diagnostics", []))
-    syntax_ok = not syntax_errors
+        target_gone = syntax_ok and not bool(introduced)
     integrity = (
         source_sha256(patched) == source_sha256(apply_edits(source, proposal.edits))
         and not out_of_scope

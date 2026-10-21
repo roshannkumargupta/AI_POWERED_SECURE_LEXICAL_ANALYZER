@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import time
 import unicodedata
@@ -12,7 +13,11 @@ MAX_TOKENS_PER_FILE = 100_000
 MAX_FINDINGS_PER_FILE = 2_000
 MAX_AST_NODES = 2_000
 MAX_CONCURRENT_EXPENSIVE_REQUESTS = 4
-RATE_LIMITS = {"analysis": (20, 60.0), "ai": (8, 60.0), "safety": (5, 60.0)}
+RATE_LIMITS = {
+    "analysis": (int(os.environ.get("SECURELEX_RATE_LIMIT_ANALYSIS", "20")), 60.0),
+    "ai": (int(os.environ.get("SECURELEX_RATE_LIMIT_AI", "8")), 60.0),
+    "safety": (int(os.environ.get("SECURELEX_RATE_LIMIT_SAFETY", "5")), 60.0),
+}
 _requests: dict[tuple[str, str], deque[float]] = defaultdict(deque)
 
 

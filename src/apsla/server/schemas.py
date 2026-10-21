@@ -327,7 +327,13 @@ class AIExplainRequest(BaseModel):
     source: str = Field(max_length=512 * 1024)
     language: str
     target_id: str | None = None
+    source_version: int = Field(default=0, ge=0)
     patch: str | None = Field(default=None, max_length=128 * 1024)
+
+
+class FormatRequest(BaseModel):
+    source: str = Field(max_length=512 * 1024)
+    language: Literal["python", "java", "javascript", "cpp"]
 
 
 class AIGenerateRequest(BaseModel):
@@ -351,3 +357,21 @@ class AgentEventResponse(BaseModel):
     error: str | None = None
     subject_type: Literal["token", "diagnostic", "finding", "file", "patch"] | None = None
     subject_id: str | None = None
+    provider: str | None = None
+    model: str | None = None
+    tokens: int | None = None
+
+
+class AITestConnectionRequest(BaseModel):
+    provider: str | None = None
+    model: str | None = None
+
+
+class AITestConnectionResponse(BaseModel):
+    ok: bool
+    provider: str
+    latency_ms: float = 0.0
+    model: str | None = None
+    available_models: list[str] = Field(default_factory=list)
+    error: str | None = None
+

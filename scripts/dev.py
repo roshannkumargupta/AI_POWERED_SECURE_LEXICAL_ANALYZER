@@ -16,6 +16,9 @@ import uvicorn
 def main() -> None:
     host = "127.0.0.1"
     port = int(os.environ.get("APSLA_API_PORT", "8010"))
+    os.environ.setdefault("SECURELEX_RATE_LIMIT_ANALYSIS", "120")
+    os.environ.setdefault("SECURELEX_RATE_LIMIT_AI", "60")
+    os.environ.setdefault("SECURELEX_RATE_LIMIT_SAFETY", "30")
     project_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(project_root / "src"))
 

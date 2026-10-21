@@ -46,7 +46,17 @@ export function AIExplainPanel({
   const [cancelled, setCancelled] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [consentPrompt, setConsentPrompt] = useState(false);
+  const [countdown, setCountdown] = useState<number>(0);
   const activeController = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = window.setInterval(() => {
+      setCountdown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [countdown]);
+
   useEffect(() => {
     if (!request || !shouldRun) return;
     onConsume(runId);
@@ -82,8 +92,15 @@ export function AIExplainPanel({
           setError(
             `AI explanation hit its ${timeoutSeconds}-second deadline. Change SECURELEX_AI_TIMEOUT_SECONDS in .env, then retry.`
           );
-        else if (!controller.signal.aborted)
-          setError(reason instanceof Error ? reason.message : 'Explanation failed.');
+        else if (!controller.signal.aborted) {
+          const msg = reason instanceof Error ? reason.message : 'Explanation failed.';
+          setError(msg);
+          const match = msg.match(/(?:429|rate\s*limit|retry(?: after| in)?)\D*(\d+)/i);
+          const waitSec = match ? parseInt(match[1], 10) : /429|rate\s*limit/i.test(msg) ? 30 : 0;
+          if (waitSec > 0) {
+            setCountdown(waitSec);
+          }
+        }
       })
       .finally(() => {
         window.clearTimeout(timer);
@@ -129,17 +146,25 @@ export function AIExplainPanel({
         )}
       </header>
       <nav className="ide-explain-actions" aria-label="Explain actions">
-        {buttonTargets.map(([target, label]) => (
-          <button
-            key={target}
-            type="button"
-            disabled={!available[target]}
-            title={!available[target] ? disabledReasons[target] : label}
-            onClick={() => onExplain(target)}
-          >
-            {label}
-          </button>
-        ))}
+        {buttonTargets.map(([target, label]) => {
+          const targetDisabled = !available[target] || loading || countdown > 0;
+          const targetTitle = countdown > 0
+            ? `Rate limit active. Retrying enabled in ${countdown}s.`
+            : !available[target]
+              ? disabledReasons[target]
+              : label;
+          return (
+            <button
+              key={target}
+              type="button"
+              disabled={targetDisabled}
+              title={targetTitle}
+              onClick={() => onExplain(target)}
+            >
+              {countdown > 0 ? `${label} (${countdown}s)` : label}
+            </button>
+          );
+        })}
       </nav>
       {!request && (
         <p>
@@ -182,8 +207,13 @@ export function AIExplainPanel({
       {error && (
         <div role="alert">
           <p>{error}</p>
-          <button type="button" onClick={onRetry}>
-            Retry
+          {countdown > 0 && <small>Rate limit active: retry enabled in {countdown}s</small>}
+          <button
+            type="button"
+            disabled={loading || countdown > 0}
+            onClick={onRetry}
+          >
+            {countdown > 0 ? `Retry (${countdown}s)` : 'Retry'}
           </button>
         </div>
       )}

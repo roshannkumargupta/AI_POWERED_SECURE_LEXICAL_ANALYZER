@@ -352,6 +352,10 @@ export interface AnalyzeV2Request {
     agent?: 'off' | 'rules' | 'local';
   };
 }
+export interface FormatSourceResponse {
+  source: string;
+  formatter: string;
+}
 export interface APIErrorBody {
   code: string;
   message: string;
@@ -553,6 +557,7 @@ export interface AIExplainV2Request {
   source: string;
   language: string;
   target_id?: string | null;
+  source_version?: number;
   patch?: string | null;
 }
 export interface AIGenerateRequest {
@@ -575,6 +580,9 @@ export interface AgentEvent {
   error?: string | null;
   subject_type?: AIExplainV2Request['target'] | null;
   subject_id?: string | null;
+  provider?: string | null;
+  model?: string | null;
+  tokens?: number | null;
 }
 export interface AIExplainV2Response {
   operation_id: string;
@@ -666,6 +674,15 @@ async function request<T>(
       'network_error'
     );
   }
+}
+
+export interface AITestConnectionResponse {
+  ok: boolean;
+  provider: string;
+  latency_ms: number;
+  model: string | null;
+  available_models: string[];
+  error: string | null;
 }
 
 export interface LLMStatusResponse {
@@ -844,6 +861,12 @@ export const apiClient = {
       body: JSON.stringify({ session_id: sessionId, consent }),
       signal,
     }),
+  testAiConnection: (provider?: string, model?: string, signal?: AbortSignal) =>
+    request<AITestConnectionResponse>('/ai/test-connection', {
+      method: 'POST',
+      body: JSON.stringify({ provider, model }),
+      signal,
+    }),
   getAgentEvents: async (operationId?: string, signal?: AbortSignal) => {
     const query = operationId ? `?operation_id=${encodeURIComponent(operationId)}` : '';
     return request<AgentEvent[]>(`/agent/events${query}`, { signal });
@@ -854,6 +877,12 @@ export const apiClient = {
     request<AnalysisResult>('/analyze', {
       method: 'POST',
       body: JSON.stringify(req),
+      signal,
+    }),
+  formatSource: (source: string, language: string, signal?: AbortSignal) =>
+    request<FormatSourceResponse>('/format', {
+      method: 'POST',
+      body: JSON.stringify({ source, language }),
       signal,
     }),
   getHealth: (signal?: AbortSignal) => request<HealthResponse>('/health', { signal }),

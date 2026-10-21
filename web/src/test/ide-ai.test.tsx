@@ -293,4 +293,56 @@ describe('F2 AI explain and activity', () => {
     expect(screen.getByText(noProvider.ai.setup_message)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Generate' })).toBeDisabled();
   });
+
+  it('renders agent activity provider, model, tokens, duration and outcome', async () => {
+    vi.mocked(apiClient.getAgentEvents).mockResolvedValue([
+      {
+        id: 'evt-1',
+        timestamp: '2026-10-21T12:00:00Z',
+        operation_id: 'op-1',
+        agent: 'BuildAgent',
+        action: 'generate_candidate',
+        tool: 'groq',
+        argument_summary: 'language=python',
+        decision_source: 'model',
+        outcome: 'accepted',
+        duration: 850,
+        provider: 'groq',
+        model: 'llama-3.3-70b-versatile',
+        tokens: 154,
+        error: null,
+      },
+    ]);
+    render(<AgentActivityPanel onOpenEvent={vi.fn()} />);
+    expect(await screen.findByText('groq')).toBeInTheDocument();
+    expect(screen.getByText('llama-3.3-70b-versatile')).toBeInTheDocument();
+    expect(screen.getByText(/850/)).toBeInTheDocument();
+    expect(screen.getByText(/154/)).toBeInTheDocument();
+    expect(screen.getByText('model')).toBeInTheDocument();
+  });
+
+  it('handles 429 rate limit countdown on BuildAIDrawer', async () => {
+    vi.mocked(apiClient.generateAI).mockRejectedValue(
+      new Error('429 Rate limit reached. Retry in 15 seconds.')
+    );
+    render(
+      <BuildAIDrawer
+        open
+        capabilities={caps}
+        sessionId={request.session_id}
+        onClose={vi.fn()}
+        onConsent={vi.fn()}
+        onCandidate={vi.fn()}
+      />
+    );
+    fireEvent.change(screen.getByPlaceholderText('Describe the code candidate you need'), {
+      target: { value: 'Write something' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Generate' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Retry/ })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: /Retry/ })).toBeDisabled();
+  });
 });
+

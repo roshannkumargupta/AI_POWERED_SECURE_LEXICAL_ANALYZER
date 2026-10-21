@@ -73,7 +73,12 @@ def internal_security_findings(findings: Sequence[Any]) -> list[SecurityFindingV
     adapted: list[SecurityFindingV2] = []
     for finding in findings:
         data = finding.model_dump()
-        data["cwe"] = [finding.cwe] if finding.cwe and finding.cwe != "CWE-000" else []
+        if isinstance(finding.cwe, list):
+            data["cwe"] = [str(x) for x in finding.cwe if x and x != "CWE-000"]
+        elif finding.cwe and finding.cwe != "CWE-000":
+            data["cwe"] = [str(finding.cwe)]
+        else:
+            data["cwe"] = []
         provenance = list(dict.fromkeys(["internal", *finding.sources]))
         data.update(
             tool_provenance=provenance,
