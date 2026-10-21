@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import functools
 import hashlib
 import math
 import re
@@ -246,6 +247,7 @@ TOKEN_KIND_MAP: Final[dict[str, float]] = {
 # ── Mathematical & Helper Routines ────────────────────────────────────────────
 
 
+@functools.lru_cache(maxsize=32768)
 def _levenshtein_distance(s1: str, s2: str) -> int:
     """Computes exact Levenshtein edit distance with short-circuit for <= 1."""
     if s1 == s2:
@@ -265,6 +267,7 @@ def _levenshtein_distance(s1: str, s2: str) -> int:
     return diffs if diffs <= 1 else 2
 
 
+@functools.lru_cache(maxsize=32768)
 def _compute_entropy(text: str, n: int = 1) -> float:
     """Calculates empirical Shannon entropy of n-grams (base 2)."""
     if not text or len(text) < n:
@@ -281,6 +284,7 @@ def _compute_entropy(text: str, n: int = 1) -> float:
     return float(ent)
 
 
+@functools.lru_cache(maxsize=32768)
 def _max_run_length(text: str) -> int:
     """Computes maximum consecutive identical character run."""
     if not text:
@@ -297,6 +301,7 @@ def _max_run_length(text: str) -> int:
     return max_run
 
 
+@functools.lru_cache(maxsize=32768)
 def _check_base64(text: str) -> bool:
     """Validates whether a string has typical base64 encoding characteristics."""
     clean = text.strip("'\"` \t\r\n")
@@ -311,6 +316,7 @@ def _check_base64(text: str) -> bool:
         return False
 
 
+@functools.lru_cache(maxsize=32768)
 def _check_hex(text: str) -> bool:
     """Validates whether a string has typical hex encoding characteristics."""
     clean = text.strip("'\"` \t\r\n")
@@ -319,6 +325,7 @@ def _check_hex(text: str) -> bool:
     return bool(len(clean) >= 8 and len(clean) % 2 == 0 and re.fullmatch(r"[0-9a-fA-F]+", clean))
 
 
+@functools.lru_cache(maxsize=32768)
 def _check_decoded_payload_danger(text: str) -> bool:
     """Decodes potential base64 or hex payloads and inspects for danger words."""
     clean = text.strip("'\"` \t\r\n")

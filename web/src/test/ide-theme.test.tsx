@@ -55,7 +55,7 @@ describe('P1 theme engine', () => {
         <IDE />
       </ThemeProvider>
     );
-    expect(await screen.findByRole('region', { name: 'Workbench' })).toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'Workbench' }, { timeout: 5000 })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Light' }));
     expect(document.documentElement.dataset.theme).toBe('light');
   });

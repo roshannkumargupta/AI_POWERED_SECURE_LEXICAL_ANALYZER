@@ -149,7 +149,7 @@ def test_tiny_e2e_training_run_under_3_minutes() -> None:
         for art_id in summary.get("saved_artifacts", []):
             art_dir = ARTIFACTS_DIR / art_id
             if art_dir.exists():
-                shutil.rmtree(art_dir)
+                shutil.rmtree(art_dir, ignore_errors=True)
 
 
 def test_multilang_inference_prob_shapes() -> None:

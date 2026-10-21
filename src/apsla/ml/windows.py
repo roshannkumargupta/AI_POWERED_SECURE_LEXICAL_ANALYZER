@@ -54,28 +54,19 @@ def build_token_windows(
         return empty_3d, empty_flat, empty_labels, []
 
     half = window_size // 2
-    pad_vector = np.zeros(DEFAULT_FEATURE_DIM, dtype=np.float32)
+    padded = np.pad(features, ((half, half), (0, 0)), mode="constant")
+    from numpy.lib.stride_tricks import sliding_window_view
 
-    windows_3d = np.zeros((n_tokens, window_size, DEFAULT_FEATURE_DIM), dtype=np.float32)
-    windows_flat = np.zeros((n_tokens, window_size * DEFAULT_FEATURE_DIM), dtype=np.float32)
+    windows_3d = sliding_window_view(padded, (window_size, DEFAULT_FEATURE_DIM))[:, 0, :, :].copy()
+    windows_flat = windows_3d.reshape(n_tokens, -1)
     hashes: list[str] = []
 
-    for i in range(n_tokens):
-        win_texts: list[str] = []
-        for offset_idx, k in enumerate(range(i - half, i + half + 1)):
-            if 0 <= k < n_tokens:
-                vec = features[k]
-                win_texts.append(tokens[k].text)
-            else:
-                vec = pad_vector
-                win_texts.append("<PAD>")
-
-            windows_3d[i, offset_idx, :] = vec
-            windows_flat[
-                i, offset_idx * DEFAULT_FEATURE_DIM : (offset_idx + 1) * DEFAULT_FEATURE_DIM
-            ] = vec
-
-        hashes.append(compute_window_hash(win_texts))
+    if labels is not None:
+        for i in range(n_tokens):
+            win_texts: list[str] = []
+            for k in range(i - half, i + half + 1):
+                win_texts.append(tokens[k].text if 0 <= k < n_tokens else "<PAD>")
+            hashes.append(compute_window_hash(win_texts))
 
     target_labels = np.array(labels, dtype=np.int64) if labels is not None else None
     return windows_3d, windows_flat, target_labels, hashes

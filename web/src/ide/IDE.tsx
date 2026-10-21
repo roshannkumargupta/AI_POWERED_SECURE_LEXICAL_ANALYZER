@@ -826,6 +826,7 @@ export function IDE() {
       }
       dispatch({ type: 'document/edit', id: target.id, source });
       setFixUndoAvailable(true);
+      setEditorHistory({ undo: true, redo: false });
       setPendingFixAnalysis({ id: target.id, version });
     },
     [state.documents, fixDocId, state.activeDocId]
@@ -851,7 +852,15 @@ export function IDE() {
   const openGeneratedCandidate = useCallback(
     (candidate: AIGenerateResponse) => {
       const id = makeId();
-      const name = `AI candidate.${candidate.language === 'cpp' ? 'cpp' : candidate.language === 'javascript' ? 'js' : candidate.language}`;
+      const ext =
+        candidate.language === 'cpp'
+          ? 'cpp'
+          : candidate.language === 'javascript'
+            ? 'js'
+            : candidate.language === 'python'
+              ? 'py'
+              : candidate.language;
+      const name = `AI candidate.${ext}`;
       dispatch({
         type: 'document/add',
         document: {
@@ -1511,6 +1520,9 @@ export function IDE() {
   const onEditorMount = (editor: Monaco.editor.IStandaloneCodeEditor, monacoApi: typeof Monaco) => {
     editorRef.current = editor;
     monacoRef.current = monacoApi;
+    if (typeof window !== 'undefined') {
+      (window as any).monaco = monacoApi;
+    }
     applyIdeMonacoTheme(monacoApi, resolved);
     setEditorReady(true);
     const pending = pendingNavigation.current;
@@ -2444,11 +2456,14 @@ export function IDE() {
                       type="button"
                       className="ide-small-button"
                       aria-label="Undo"
-                      title={editorHistory.undo ? 'Undo (Ctrl+Z)' : 'No editor changes to undo'}
-                      disabled={!editorHistory.undo}
+                      title={editorHistory.undo || fixUndoAvailable ? 'Undo (Ctrl+Z)' : 'No editor changes to undo'}
+                      disabled={!editorHistory.undo && !fixUndoAvailable}
                       onClick={() => {
                         toolbarHistoryAction.current = 'undo';
-                        editorRef.current?.trigger('ide', 'undo', null);
+                        editorRef.current?.focus();
+                        const m = editorRef.current?.getModel() as any;
+                        m?.undo?.();
+                        setEditorHistory({ undo: Boolean(m?.canUndo?.()), redo: true });
                       }}
                     >
                       {icon('undo', 15)}
@@ -2461,7 +2476,10 @@ export function IDE() {
                       disabled={!editorHistory.redo}
                       onClick={() => {
                         toolbarHistoryAction.current = 'redo';
-                        editorRef.current?.trigger('ide', 'redo', null);
+                        editorRef.current?.focus();
+                        const m = editorRef.current?.getModel() as any;
+                        m?.redo?.();
+                        setEditorHistory({ undo: true, redo: Boolean(m?.canRedo?.()) });
                       }}
                     >
                       {icon('redo', 15)}

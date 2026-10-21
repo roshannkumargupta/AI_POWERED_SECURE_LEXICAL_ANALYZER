@@ -100,8 +100,18 @@ class PythonTaintAnalyzer:
 
     def _build_function_summaries(self, tree: ast.AST) -> None:
         """Analyze function definitions to determine which arguments flow to return values."""
+        called_names = {
+            node.func.id
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        }
+        if not called_names:
+            return
         for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if (
+                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and node.name in called_names
+            ):
                 param_names = [arg.arg for arg in node.args.args]
                 param_taint: dict[str, bool] = {}
 
@@ -192,6 +202,9 @@ class PythonTaintAnalyzer:
                 if any(kw in dec_name for kw in ("route", "get", "post", "put", "delete", "api")):
                     is_route = True
                     break
+
+            if not is_route and not any(isinstance(n, ast.Call) for n in ast.walk(stmt)):
+                return
 
             func_env = {k: self._clone_taint(v) for k, v in env.items()}
             if is_route:

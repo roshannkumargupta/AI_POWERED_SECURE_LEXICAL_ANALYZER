@@ -49,6 +49,7 @@ where = ["src"]
 "apsla.samples" = ["manifest.json", "python/*.py", "java/*.java", "javascript/*.js", "cpp/*.cpp", "pending/*"]
 
 [tool.pytest.ini_options]
+pythonpath = [".", "src"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
