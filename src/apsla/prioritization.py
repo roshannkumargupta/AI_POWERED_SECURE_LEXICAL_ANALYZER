@@ -1,4 +1,4 @@
-"""Finding prioritization and exploitability calculation according to Phase 12 specification."""
+"""Finding prioritization and exploitability calculation for security findings."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ _WEAK_CRYPTO_CONFIG_MARKERS: Final[tuple[str, ...]] = (
 
 
 def compute_exploitability(finding: Finding) -> float:
-    """Calculate exploitability factor according to Phase 12 specification.
+    """Calculate exploitability factor for security findings.
 
     1.0 if taint confirmed
     0.7 if the sink is dangerous but no taint path

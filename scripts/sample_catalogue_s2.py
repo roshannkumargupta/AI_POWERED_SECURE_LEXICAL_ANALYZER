@@ -1,4 +1,4 @@
-"""Java and JavaScript demonstration catalogue data for phase S-2."""
+"""Java and JavaScript demonstration catalogue data catalogue data."""
 
 from __future__ import annotations
 

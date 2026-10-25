@@ -268,7 +268,7 @@ def write_docs(rows: list[dict[str, object]]) -> None:
         f"- Shipped and passing: Java {s2_shipped['java']}; JavaScript {s2_shipped['javascript']}.",
         f"- Pending with reason: {len(s2_pending)}; Python catalogue retained separately ({python_counts}).",
         f"- Slowest shipped sample analysis: {max(timings, default=0.0):.3f}s (limit: <2s).",
-        "- API smoke: `GET /api/samples?language=java&meta=1` and the JavaScript equivalent both returned HTTP 200, grouped by language, with 36 records each (32 shipped catalogue samples plus 4 legacy entries).",
+        "- API smoke: `GET /api/samples?language=java&meta=1` and the JavaScript equivalent both returned HTTP 200, grouped by language, with 36 records each (32 shipped catalogue samples plus 4 initial entries).",
         "- S-2 pending entries are excluded from sample APIs and require analyzer capability or sample-format follow-up.",
         "",
         "## Pending samples",

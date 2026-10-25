@@ -500,14 +500,14 @@ def test_provider_uses_shared_ai_deadline(monkeypatch: pytest.MonkeyPatch):
     from apsla.agents.provider_v2 import GroqProvider
 
     monkeypatch.setenv("SECURELEX_AI_TIMEOUT_SECONDS", "123")
-    monkeypatch.setenv("GROQ_API_KEY", "gsk_testdummysecretvalue1234567890123456")
+    monkeypatch.setenv("GROQ_API_KEY", "mock_dummy_secret_value_1234567890123456")
     assert GroqProvider().timeout == 123
 
 
 def test_ai_model_selection_is_limited_to_installed_session_model(client: TestClient, monkeypatch: pytest.MonkeyPatch):
     from apsla.agents.provider_v2 import GroqProvider
 
-    monkeypatch.setenv("GROQ_API_KEY", "gsk_testdummysecretvalue1234567890123456")
+    monkeypatch.setenv("GROQ_API_KEY", "mock_dummy_secret_value_1234567890123456")
     monkeypatch.setattr(GroqProvider, "list_models", classmethod(lambda cls: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]))
     caps = client.get("/api/capabilities").json()["ai"]
     assert caps["provider"] == "groq"

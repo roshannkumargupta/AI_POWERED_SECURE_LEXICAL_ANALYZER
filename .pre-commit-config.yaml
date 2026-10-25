@@ -5,12 +5,12 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: ^tests/fixtures/|^src/apsla/samples/|^legacy/
+        exclude: ^tests/fixtures/|^src/apsla/samples/
       - id: end-of-file-fixer
-        exclude: ^tests/fixtures/|^src/apsla/samples/|^legacy/
+        exclude: ^tests/fixtures/|^src/apsla/samples/
       - id: check-yaml
       - id: check-json
-        exclude: ^tests/fixtures/|^legacy/
+        exclude: ^tests/fixtures/
       - id: check-added-large-files
         args: ['--maxkb=10000']
 

@@ -163,7 +163,7 @@ _TRIVIA_KINDS = {"WHITESPACE", "NEWLINE", "NL", "INDENT", "DEDENT", "EOF"}
 
 
 def token_type_for(language: str, kind: str, lexeme: str) -> tuple[str, str] | None:
-    """Map a legacy lexer kind to the v2 public token type and category.
+    """Map an input lexer kind to the v2 public token type and category.
 
     None denotes trivia/EOF, which remains present in the raw lexer stream.
     """

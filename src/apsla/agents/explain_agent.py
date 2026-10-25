@@ -1,4 +1,4 @@
-"""Explain Agent with strict grounding check for local model rewrites (Phase 15).
+"""Explain Agent with strict grounding check for local model rewrites.
 
 STRICT INVARIANT:
 If the local model rewrites the explanation, a GROUNDING CHECK compares every

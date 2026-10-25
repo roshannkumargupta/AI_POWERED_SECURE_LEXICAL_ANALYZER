@@ -24,4 +24,4 @@ Harness mode runs deterministic scenarios without a model. Live mode requires a 
 
 ## Settings, navigation and support
 
-Use Settings for theme, interface size, provider state, consent, and tool availability where exposed. Use the command palette for registered actions. Optional tools are detected from the current machine; the capabilities endpoint is the authoritative runtime report. See the root README for installation, tests, analyzer coverage and limitations, and [docs/STATE.md](STATE.md) for current phase status.
+Use Settings for theme, interface size, provider state, consent, and tool availability where exposed. Use the command palette for registered actions. Optional tools are detected from the current machine; the capabilities endpoint is the authoritative runtime report. See the root README for installation, tests, analyzer coverage, and [docs/limitations.md](limitations.md) for operational boundaries.

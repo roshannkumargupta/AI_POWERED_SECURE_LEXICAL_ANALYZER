@@ -1,4 +1,4 @@
-"""Triage Agent for risk scoring and human-review triage (Phase 15).
+"""Triage Agent for risk scoring and human-review triage.
 
 STRICT INVARIANT:
 The Triage Agent may NEVER delete, suppress, or downgrade a finding.

@@ -2205,7 +2205,7 @@ export function IDE() {
               )}
               {state.ui.activity === 'safetylab' && (
                 <div className="ide-tree-scroll">
-                  <p className="ide-p4-empty">Safety Lab view is not connected in this phase.</p>
+                  <p className="ide-p4-empty">Safety Lab view is currently unavailable.</p>
                 </div>
               )}
             </aside>

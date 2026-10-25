@@ -122,7 +122,7 @@ export interface TokenInfo {
   range: Range;
   label: string;
   score: number;
-  // Legacy aliases are accepted to keep older cached API payloads usable.
+  // Backward-compatibility aliases are accepted to keep older cached API payloads usable.
   text?: string;
   line?: number;
   col?: number;

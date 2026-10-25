@@ -260,7 +260,7 @@ class Analyzer:
 
         findings = apply_code_suppressions(source, findings)
 
-        # Stage 7.3: Concrete Plain-English Explanations (Phase 12)
+        # Stage 7.3: Concrete Plain-English Explanations
         from apsla.rules.explanations import format_explanation
 
         findings = [
@@ -278,7 +278,7 @@ class Analyzer:
             for f in findings
         ]
 
-        # Stage 7.4: Exploitability & Priority Calculation (Phase 12)
+        # Stage 7.4: Exploitability & Priority Calculation
         from apsla.prioritization import apply_prioritization
 
         findings = apply_prioritization(findings)
@@ -387,7 +387,7 @@ class Analyzer:
             parser="python-ast" if plugin and plugin.id == "python" else "lexer-only",
         )
 
-        # Stage 10: Agentic Compiler Stage Orchestration (Phase 15)
+        # Stage 10: Agentic Compiler Stage Orchestration
         agent_mode = str(opts.get("agent") or "off").lower()
         trace_data: list[dict[str, Any]] = []
         agent_meta: dict[str, Any] = {"mode": agent_mode}

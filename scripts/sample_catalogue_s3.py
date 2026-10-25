@@ -1,4 +1,4 @@
-"""C/C++ catalogue sources for phase S-3."""
+"""C/C++ catalogue sources catalogue sources."""
 
 from __future__ import annotations
 

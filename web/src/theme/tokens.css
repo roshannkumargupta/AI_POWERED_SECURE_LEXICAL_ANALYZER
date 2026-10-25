@@ -23,7 +23,7 @@
   --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--transition-fast:150ms ease-in-out;--transition-normal:200ms ease-in-out;
 
 
-  /* IDE palette aliases used by legacy and new workbench styles. */
+  /* IDE palette aliases used by core and new workbench styles. */
   --color-vs-active: #37373D;
   --color-vs-bg: #1E1E1E;
   --color-vs-blue: #0078D4;
@@ -88,7 +88,7 @@
   --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--transition-fast:150ms ease-in-out;--transition-normal:200ms ease-in-out;
 
 
-  /* IDE palette aliases used by legacy and new workbench styles. */
+  /* IDE palette aliases used by core and new workbench styles. */
   --color-vs-active: #CBD5E1;
   --color-vs-bg: #FFFFFF;
   --color-vs-blue: #0052CC;

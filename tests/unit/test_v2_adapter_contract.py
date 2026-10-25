@@ -22,10 +22,10 @@ FIXTURE_SOURCES = sorted(
 
 def test_v2_schema_round_trip_and_hash_validation() -> None:
     source = "x = 'ok'\n"
-    legacy = Analyzer().analyze(source, language="python", options={"fixes": False, "ml": False})
+    raw_result = Analyzer().analyze(source, language="python", options={"fixes": False, "ml": False})
     v2 = adapt_analysis_result(
         source,
-        legacy,
+        raw_result,
         7,
         plugin=__import__("apsla.languages.registry", fromlist=["get"]).get("python"),
         elapsed_ms=0.25,
@@ -41,10 +41,10 @@ def test_v2_schema_round_trip_and_hash_validation() -> None:
 
 def test_offsets_are_available_in_utf16_and_codepoints() -> None:
     source = "emoji = '😀'\n"
-    legacy = Analyzer().analyze(source, language="python", options={"fixes": False, "ml": False})
+    raw_result = Analyzer().analyze(source, language="python", options={"fixes": False, "ml": False})
     from apsla.languages import registry
 
-    adapted = adapt_analysis_result(source, legacy, 1, plugin=registry.get("python"))
+    adapted = adapt_analysis_result(source, raw_result, 1, plugin=registry.get("python"))
     emoji = next(token for token in adapted.tokens if "😀" in token.lexeme)
     assert emoji.start_offset == emoji.start_offset_codepoint
     assert (
@@ -71,10 +71,10 @@ def test_adapter_does_not_mutate_or_change_legacy_response() -> None:
 
 def test_source_version_and_hash_both_gate_stale_results() -> None:
     source = "print(1)"
-    legacy = AnalysisResult(language="python", filename="sample.py")
+    raw_result = AnalysisResult(language="python", filename="sample.py")
     from apsla.languages import registry
 
-    result = adapt_analysis_result(source, legacy, 10, plugin=registry.get("python"))
+    result = adapt_analysis_result(source, raw_result, 10, plugin=registry.get("python"))
     assert result_matches_source(result, source, 10)
     assert not result_matches_source(result, source + " ", 10)
     assert not result_matches_source(result, source, 11)
@@ -219,14 +219,14 @@ def test_python_fixture_adaptation_retains_legacy_analysis() -> None:
         Path(__file__).parents[1] / "fixtures" / "python" / "vulnerable" / "cmd_injection_flask.py"
     )
     source = fixture.read_text(encoding="utf-8")
-    legacy = Analyzer().analyze(
+    raw_result = Analyzer().analyze(
         source, language="python", filename=fixture.name, options={"fixes": False, "ml": False}
     )
     from apsla.languages import registry
 
-    adapted = adapt_analysis_result(source, legacy, 21, plugin=registry.get("python"))
-    legacy_findings = [finding for finding in legacy.findings if finding.kind == "security"]
-    assert len(adapted.security_findings) == len(legacy_findings)
+    adapted = adapt_analysis_result(source, raw_result, 21, plugin=registry.get("python"))
+    raw_findings = [finding for finding in raw_result.findings if finding.kind == "security"]
+    assert len(adapted.security_findings) == len(raw_findings)
     assert all(item.cwe and item.tool_provenance for item in adapted.security_findings)
 
 

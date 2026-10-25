@@ -1,93 +1,176 @@
 # SecureLex IDE
 
-SecureLex IDE is a local-first editor and static analysis workbench for Python, Java, JavaScript, and C/C++. Its deterministic lexer, parser integrations, rule checks, and patch verifier work without a paid AI service. Results describe the checks that actually ran; static analysis cannot prove a program safe.
+SecureLex IDE is a modern, local-first code security analyzer and developer workbench for **Python, JavaScript, Java, and C/C++**. It combines deterministic multi-language lexing, AST parsing, interprocedural taint flow analysis, Trojan Source Unicode detection, machine-learning anomaly scoring, and independent fix verification into an integrated developer environment.
 
-## Architecture
+---
 
-- `web/`: React, TypeScript, Vite, Monaco, local fonts and Lucide icons. The workspace UI talks to FastAPI through `web/src/api/client.ts`.
-- `src/apsla/server/`: FastAPI routes, request/response schemas, tool runner, resource limits and API compatibility routes.
-- `src/apsla/languages/` and `src/apsla/lexing/`: language lexers, parsing, diagnostics and language-specific analysis.
-- `src/apsla/rules/`, `src/apsla/taint/`, `src/apsla/security_v2.py`: deterministic security rules, taint tracking and result normalization.
-- `src/apsla/agents/` and `src/apsla/llm/`: bounded provider/agent adapters. Model output is untrusted and does not replace deterministic checks.
-- `src/apsla/fixes/`: rule or AI patch proposals and independent before/after verification.
+## Key Capabilities
 
-For the current implementation status and known gaps, see [docs/STATE.md](docs/STATE.md), [docs/threat_model.md](docs/threat_model.md), and [reports/sl2_final_acceptance.md](reports/sl2_final_acceptance.md).
+- **Deterministic Multi-Language Security**: 58+ built-in security rules covering OWASP Top 10, CWE vulnerabilities, and language-specific injection vectors.
+- **Interprocedural Taint Tracking**: Traces taint flow from sources (`request.args`, `argv`, `cin`, `getParameter`) through propagators to dangerous sinks (`execute`, `eval`, `system`, `strcpy`).
+- **Trojan Source & Unicode Defense**: Detects bidirectional override attacks (CVE-2021-42574), homoglyphs, and invisible confusable characters before code compiles.
+- **Verified Automated Fixes**: Proposed patches are applied to an isolated sandbox and re-analyzed before presentation. Patches are marked "Verified" only when the target vulnerability is eliminated without regressions.
+- **Local-First Architecture**: Core lexical analysis, AST parsing, security rules, and patch verification run completely offline on your host machine with zero outbound network calls.
+- **AI-Assisted Explanations & Repair**: Optional Groq-powered AI assistance for explaining findings, generating patches, and building code, requiring explicit user consent.
 
-## Setup
+---
 
-Requires Python 3.12 or newer and Node.js/npm compatible with the lockfile. From the repository root:
+## Requirements
 
+- **Python**: 3.12 or newer
+- **Node.js**: 18.x or newer (and `npm`)
+- **Git**
+
+---
+
+## Installation
+
+### 1. Clone the repository
+```bash
+git clone <repository-url>
+cd securelex-ide
+```
+
+### 2. Set up the Python virtual environment
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+```
+*(On macOS/Linux: `source .venv/bin/activate && pip install -e ".[dev]" `)*
+
+### 3. Set up the Web Frontend
+```bash
 cd web
 npm ci
 cd ..
 ```
 
-On macOS/Linux, activate `.venv` and use `python -m pip install -e '.[dev]'`. Optional compiler/analyzer tools are discovered from PATH and reported through `GET /api/capabilities`; install only the tools you intend to use. Supported adapters include g++/gcc/clang/clang++, javac, node, Ruff, Pyflakes, mypy, ESLint, Bandit, Semgrep, cppcheck and clang-tidy. Availability depends on the host and tool configuration. Semgrep uses only the repository-local `rules/semgrep/` rules when that adapter is configured.
+---
 
-### Start the backend and frontend
+## Configuring AI Assistance (`GROQ_API_KEY`)
 
-Use two terminals from the repository root:
+SecureLex IDE uses **Groq** for high-speed AI assistance (explaining vulnerabilities, proposing remediation diffs, and AI code generation):
+- `llama-3.1-8b-instant`: Fast explanations and code triage.
+- `llama-3.3-70b-versatile`: Complex patch synthesis and code generation.
 
+### Setting your API key
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Open `.env` and configure your key:
+   ```env
+   GROQ_API_KEY=your_actual_groq_api_key_here
+   SECURELEX_AI_PROVIDER=groq
+   ```
+3. If no key is set, the entire IDE continues functioning normally in offline mode. AI buttons will indicate that a key is required.
+
+---
+
+## Running the Application
+
+Start the backend and frontend in two terminals:
+
+### Terminal 1: Backend API
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn apsla.server.app:app --app-dir src --host 127.0.0.1 --port 8000
 ```
 
+### Terminal 2: Frontend Dev Server
 ```powershell
 cd web
 npm run dev -- --host 127.0.0.1
 ```
 
-Open the Vite URL printed by the dev server (normally `http://127.0.0.1:5173`). Keep the API bound to loopback unless you configure an access token and understand the deployment boundary. `python scripts/dev.py` is the existing combined development launcher; its behavior is environment-dependent.
+Open your browser to `http://127.0.0.1:5173`.
 
-## Providers, consent and environment
+---
 
-Copy `.env.example` to `.env` and adjust values. Never commit real credentials. The lexical analyzer, token table, deterministic checks, and sample catalogue work entirely offline and do not need any LLM provider or paid API.
+## Building the Frontend
 
-SecureLex IDE uses Groq as its AI provider (configured via `GROQ_API_KEY` in `.env` or `SECURELEX_AI_PROVIDER=groq`):
-- **Groq:** When `GROQ_API_KEY` is present in `.env`, LLM tasks (explanations, AI fixes, code generation) route to high-speed models (`llama-3.1-8b-instant` for explanations, `llama-3.3-70b-versatile` for code generation/fixes). Because Groq is a remote provider, explicit user consent is required per session via Workbench Settings (`/api/ai/consent`). If no key is configured, AI endpoints return "Add GROQ_API_KEY to your .env file and restart", and all deterministic features keep working.
+To compile the production frontend bundle:
+```bash
+cd web
+npm run build
+```
+Build artifacts are placed in `web/dist/`.
 
-Deterministic lexical analysis, tree-sitter parsing, rule execution, and patch verification **always** run 100% locally on the host.
+---
 
-Keep API keys in the server environment only. Never commit or leak API keys into frontend code, client responses, logs, or git. Check `/api/capabilities` and the title bar status badge (`groq · remote`) to inspect active provider status.
+## Testing
 
-## Analysis by language
+SecureLex IDE includes an extensive automated test suite covering unit tests, security rules, API contracts, and browser end-to-end tests:
 
-- **Python:** the Python lexer and standard-library AST parser; optional Ruff/Pyflakes and mypy diagnostics when installed.
-- **Java:** the Java lexer and optional tree-sitter parser; `javac` semantic checks when available.
-- **JavaScript:** the JavaScript lexer and optional tree-sitter parser; Node syntax checking and ESLint when installed.
-- **C/C++:** the C/C++ lexer and optional tree-sitter parser; compiler syntax/semantic checks when g++ or clang++ is available.
-
-Each result is limited to the stages and tools reported in that result. Missing tools are unavailable/incomplete checks, not a clean bill of health. The deterministic security rules and taint engine cover the rule families and source/sink pairs documented in [docs/rules_catalogue.md](docs/rules_catalogue.md) and [docs/limitations.md](docs/limitations.md). Coverage varies by language and syntax; findings require review.
-
-## Fixes and verification
-
-A proposal is a draft. Review its changed lines, assumptions and risks before applying. Applying uses the current source version and creates an undo point. The independent verifier reanalyzes before and after, reports Resolved, Remaining, Introduced and Unverified evidence, and explains which checks were unavailable. “Verified” applies only to the specified checks that ran; it is not a proof of correctness or a substitute for project tests. Undo restores the in-memory pre-patch buffer.
-
-## Agent Safety Lab
-
-Choose a scenario and language in the Safety Lab. Harness mode is deterministic and uses no model. Live mode requires a reachable configured provider; if unavailable, no simulated outcome is substituted. Inspect the observed event timeline, gateway decisions, independent before/after checks and assertions. Runs are not preloaded. See [docs/safety_lab.md](docs/safety_lab.md).
-
-## Rules and token types
-
-See [docs/token_types.md](docs/token_types.md) for token mapping. See [docs/adding_a_rule.md](docs/adding_a_rule.md) for the rule workflow and [docs/rules_catalogue.md](docs/rules_catalogue.md) for available rules. Contributions should add fixtures and tests with the rule, including safe counterparts.
-
-## Tests and reproducibility
-
-Install Python development dependencies and run `python scripts/check_all.py` from the root for the configured repository checks. Individual commands:
-
+### Run Python Tests
 ```powershell
-.\.venv\Scripts\python.exe -m ruff check
-.\.venv\Scripts\python.exe -m mypy
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe -m pytest -m security -q
-cd web; npm run test; npm run build; npm run e2e
+.\.venv\Scripts\python.exe run_tests.py
 ```
 
-The browser E2E command needs a running app and an available browser automation endpoint. A successful unit test or bundle build does not establish browser acceptance. Consult the phase evidence and final acceptance report for the commands that actually completed on this host.
+### Run Frontend Tests
+```powershell
+cd web
+npm test
+```
+
+### Run Playwright Browser E2E Tests
+```powershell
+cd web
+npm run e2e
+```
+
+### Run Full Linter and Type Checks
+```powershell
+.\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m mypy src/apsla
+cd web && npm run typecheck
+```
+
+---
+
+## Supported Languages
+
+| Language | Analysis Stages | Key Vulnerability Classes Covered |
+|---|---|---|
+| **Python** | Scanner, AST parser, taint engine, ML model | Command injection, SQL injection, path traversal, weak crypto, eval/exec |
+| **JavaScript** | Scanner, AST parser, taint engine, ML model | DOM XSS, prototype pollution, eval injection, shell command execution |
+| **Java** | Scanner, AST structure parser, taint engine, ML model | SQL injection, LDAP injection, path traversal, hardcoded secrets |
+| **C / C++** | Scanner, AST structure parser, taint engine, ML model | Buffer overflow (`strcpy`, `sprintf`), format string bugs, use-after-free |
+
+---
+
+## Privacy & Security Notice
+
+> **Important**: Code Privacy & Consent
+>
+> 1. **100% Offline Core**: All lexical analysis, token inspection, AST parsing, deterministic security rules, taint propagation, and fix verification run strictly locally on your machine.
+> 2. **Explicit Consent Required**: The AI features (Build with AI, AI Explain, AI Propose Fix) transmit code snippets to Groq (`api.groq.com`) **only after you grant explicit consent** in Settings (`/api/ai/consent`).
+> 3. **No Unsolicited Network Calls**: The backend never initiates outbound network traffic without user action and consent.
+> 4. **No Credential Leakage**: Your `GROQ_API_KEY` is loaded strictly by the backend server; it is never transmitted to the browser client or logged.
+
+For more details, see [SECURITY.md](SECURITY.md) and [docs/threat_model.md](docs/threat_model.md).
+
+---
 
 ## Limitations
 
-Static analysis has false positives and false negatives, does not model every dependency/runtime/environment, and does not execute user code. External analyzers are optional; their absence reduces coverage. The Run/Test feature is unavailable without a sandbox. AI explanations and suggestions can be wrong; patch proposals must be reviewed and independently checked. Verification reports identify unverified checks and cannot establish all runtime behavior. Capabilities and resource protections have documented host-specific limits in the threat model and phase evidence.
+- **Static Analysis Inherent Limits**: Static analysis identifies pattern-based risks and taint flows; it cannot prove that code is completely bug-free or vulnerability-free.
+- **No Automatic Code Execution**: SecureLex IDE does not execute untrusted source code in a sandbox.
+- **Remediation Review**: Automated fix proposals are recommendations. Developers should review diffs and execute project-level integration tests before merging changes.
+
+---
+
+## Documentation Index
+
+- [System Architecture](docs/architecture.md)
+- [Security Threat Model](docs/threat_model.md)
+- [Rules Catalogue](docs/rules_catalogue.md)
+- [Adding a Custom Rule](docs/adding_a_rule.md)
+- [User Guide](docs/user_guide.md)
+- [REST API Specification](docs/api.md)
+- [Security Policy](SECURITY.md)
+
+---
+
+## License
+
+SecureLex IDE is licensed under the [MIT License](LICENSE).

@@ -1,4 +1,4 @@
-"""Semantic Agent for rule matching and data-flow taint propagation (Phase 15)."""
+"""Semantic Agent for rule matching and data-flow taint propagation."""
 
 from __future__ import annotations
 

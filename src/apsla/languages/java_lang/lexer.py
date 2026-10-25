@@ -305,6 +305,8 @@ class JavaLexer(LexerBase):
                 while not self.is_eof and self.peek() == "u":
                     self.advance()
                 self.advance_by(4)
+            else:
+                break
 
         if not self.is_eof and self._is_java_identifier_start(self.peek()):
             while not self.is_eof and (

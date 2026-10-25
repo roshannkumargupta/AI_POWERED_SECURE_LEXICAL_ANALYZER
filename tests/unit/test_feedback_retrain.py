@@ -1,4 +1,4 @@
-"""Unit tests for Phase 12 Active Learning Retraining and Safety Gate."""
+"""Unit tests for Active Learning Retraining and Safety Gate."""
 
 import json
 from pathlib import Path

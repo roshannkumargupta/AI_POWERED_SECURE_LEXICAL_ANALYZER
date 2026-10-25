@@ -26,7 +26,7 @@ SEVERITY_CAPS: Final[dict[Severity, int]] = {
 
 BASE_HEALTH_SCORE: Final[int] = 100
 
-# ── Exploitability Weights (Phase 12 Prioritisation) ─────────────
+# ── Exploitability Weights (Prioritisation) ─────────────
 # priority = severity_weight x confidence x exploitability
 EXPLOITABILITY_TAINT_CONFIRMED: Final[float] = 1.0
 EXPLOITABILITY_DANGEROUS_SINK: Final[float] = 0.7

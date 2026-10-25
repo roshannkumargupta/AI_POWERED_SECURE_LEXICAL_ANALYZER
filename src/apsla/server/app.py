@@ -693,7 +693,7 @@ async def analyze_code(req: AnalyzeRequest) -> AnalysisResult | JSONResponse:
     if not req.options.include_tokens:
         result = result.model_copy(update={"tokens": []})
 
-    # Agentic execution layer (Phase 15)
+    # Agentic execution layer
     agent_mode = (req.options.agent or "off").lower()
     if agent_mode in {"rules", "local"}:
         if not result.trace:
@@ -907,7 +907,7 @@ async def _stage_only(req: AnalyzeRequest, stage: str) -> StageAnalysisResponse:
     elif stage == "security":
         # The current security rules and taint engine share the pipeline context.
         try:
-            legacy = await asyncio.wait_for(
+            raw_analysis = await asyncio.wait_for(
                 asyncio.to_thread(
                     Analyzer().analyze,
                     req.source,
@@ -924,12 +924,12 @@ async def _stage_only(req: AnalyzeRequest, stage: str) -> StageAnalysisResponse:
             ) from None
         adapted_result = adapt_analysis_result(
             req.source,
-            legacy,
+            raw_analysis,
             req.source_version,
             plugin=plugin,
             include_tokens=False,
             stages=["security"],
-            elapsed_ms=legacy.engine.elapsed_ms,
+            elapsed_ms=raw_analysis.engine.elapsed_ms,
         )
         findings = internal_security_findings(adapted_result.security_findings)
         taint_paths = adapted_result.taint_paths
@@ -939,12 +939,12 @@ async def _stage_only(req: AnalyzeRequest, stage: str) -> StageAnalysisResponse:
                 kind="analyzer",
                 available=True,
                 executed=True,
-                duration_ms=legacy.engine.elapsed_ms,
+                duration_ms=raw_analysis.engine.elapsed_ms,
                 status="ok",
             )
         )
         if req.options.ml:
-            ml_available = legacy.engine.ml_mode not in {"off", "none", "unavailable"}
+            ml_available = raw_analysis.engine.ml_mode not in {"off", "none", "unavailable"}
             tools.append(
                 ToolStatus(
                     name="ml-adjustment",
@@ -1226,7 +1226,7 @@ async def apply_all_fixes(req: FixAllRequest) -> FixAllResponse:
                 new_source, current_analysis, current_version, plugin=registry.get(lang), include_tokens=True
             )
             parsed = parse_source(lang, new_source, analysis_id)
-            diagnostics = [*_legacy_fix_diagnostics(current_analysis, lang), *projected.syntax_diagnostics, *projected.semantic_diagnostics, *parsed.diagnostics, *unicode_lexical_diagnostics(new_source, lang, analysis_id)]
+            diagnostics = [*_core_fix_diagnostics(current_analysis, lang), *projected.syntax_diagnostics, *projected.semantic_diagnostics, *parsed.diagnostics, *unicode_lexical_diagnostics(new_source, lang, analysis_id)]
             for token in projected.tokens:
                 if token.lexical_status == "invalid" and not any(item.id in token.diagnostic_ids for item in diagnostics):
                     diagnostics.append(DiagnosticV2(
@@ -1610,7 +1610,7 @@ async def ai_explain(req: AIExplainRequest) -> dict[str, object]:
             matched_diagnostic = next(
                 (
                     item
-                    for item in _legacy_fix_diagnostics(result, language)
+                    for item in _core_fix_diagnostics(result, language)
                     if item.id == req.target_id
                 ),
                 None,
@@ -2027,7 +2027,7 @@ def _fix_diagnostic_signature(item: DiagnosticV2) -> str:
     return f"{item.category}|{item.produced_by}|{item.message}|{r.start_line}:{r.start_col}:{r.end_line}:{r.end_col}"
 
 
-def _legacy_fix_diagnostics(analysis: AnalysisResult, language: str) -> list[DiagnosticV2]:
+def _core_fix_diagnostics(analysis: AnalysisResult, language: str) -> list[DiagnosticV2]:
     return [
         DiagnosticV2(
             id=item.id,
@@ -2048,15 +2048,15 @@ def _legacy_fix_diagnostics(analysis: AnalysisResult, language: str) -> list[Dia
 def _resolve_v2_fix_target(req: PatchRequest, language: str) -> tuple[Any, Any | None, str]:
     """Resolve the stable finding/diagnostic/token id from the same analyzer inputs as /api/analyze."""
     assert req.target is not None
-    legacy = Analyzer().analyze(
+    raw_result = Analyzer().analyze(
         req.source, language=language, filename=req.filename, options={"fixes": True, "ml": False}
     )
     versioned = adapt_analysis_result(
-        req.source, legacy, req.source_version, plugin=registry.get(language), include_tokens=True
+        req.source, raw_result, req.source_version, plugin=registry.get(language), include_tokens=True
     )
     target_id = req.target.id
-    finding = next((value for value in legacy.findings if value.id == target_id), None)
-    versioned_diagnostics = [*_legacy_fix_diagnostics(legacy, language), *versioned.syntax_diagnostics, *versioned.semantic_diagnostics]
+    finding = next((value for value in raw_result.findings if value.id == target_id), None)
+    versioned_diagnostics = [*_core_fix_diagnostics(raw_result, language), *versioned.syntax_diagnostics, *versioned.semantic_diagnostics]
     diagnostic = next((value for value in versioned_diagnostics if value.id == target_id), None)
 
     digest = hashlib.sha256(req.source.encode("utf-8")).hexdigest()
@@ -2067,7 +2067,7 @@ def _resolve_v2_fix_target(req: PatchRequest, language: str) -> tuple[Any, Any |
         parsed = parse_source(language, req.source, parse_id)
         extra = [*parsed.diagnostics, *unicode_lexical_diagnostics(req.source, language, parse_id)]
         diagnostic = next((value for value in extra if value.id == target_id), None)
-        finding = next((value for value in legacy.findings if value.id == target_id), None)
+        finding = next((value for value in raw_result.findings if value.id == target_id), None)
 
     token = None
     if req.target.kind == "token":
@@ -2086,7 +2086,7 @@ def _resolve_v2_fix_target(req: PatchRequest, language: str) -> tuple[Any, Any |
                     category="lexical", severity="error", message=f"Invalid token {token.lexeme!r}",
                     produced_by="internal-lexer", certainty="definitive",
                 )
-            finding = next((value for value in legacy.findings if value.id in token.diagnostic_ids), None)
+            finding = next((value for value in raw_result.findings if value.id in token.diagnostic_ids), None)
 
     target: Any
     if req.target.kind == "finding":
@@ -2513,14 +2513,14 @@ def _openapi_with_v2_contract() -> dict:
     components["AnalysisResultV2"] = model_schema
     response_schema = schema["paths"]["/api/analyze"]["post"]["responses"]["200"]
     response_schema["description"] = (
-        "Legacy AnalysisResult by default; AnalysisResultV2 when api_version is 2."
+        "AnalysisResult by default; AnalysisResultV2 when api_version is 2."
     )
     response_schema.setdefault("content", {}).setdefault("application/json", {})["schema"] = {
         "oneOf": [
             {"$ref": "#/components/schemas/AnalysisResult"},
             {"$ref": "#/components/schemas/AnalysisResultV2"},
         ],
-        "description": "api_version=2 selects AnalysisResultV2; omitted or 1 preserves the legacy response.",
+        "description": "api_version=2 selects AnalysisResultV2; omitted or 1 preserves the standard response.",
     }
     analyze_operation = schema["paths"]["/api/analyze"]["post"]
     analyze_operation["description"] = (

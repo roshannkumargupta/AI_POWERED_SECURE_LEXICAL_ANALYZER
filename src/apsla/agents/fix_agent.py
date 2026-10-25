@@ -1,4 +1,4 @@
-"""Fix Agent for remediation candidate retrieval and prioritization (Phase 15)."""
+"""Fix Agent for remediation candidate retrieval and prioritization."""
 
 from __future__ import annotations
 

@@ -60,7 +60,7 @@ def _scan(source: str, language: str, filename: str) -> dict[str, Any]:
     findings = merge_findings(security)
     quality = measure_quality(language, source, parsed.tree)
     return {
-        "legacy": before,
+        "raw": before,
         "parse": parsed,
         "diagnostics": diagnostics,
         "semantic": semantic,
@@ -126,7 +126,7 @@ def verify_independently(
                 remaining.append(f.model_dump(mode="json"))
                 continue
         introduced.append(f.model_dump(mode="json"))
-    target_before = [f for f in original["legacy"].findings if f.id == proposal.target_finding_id]
+    target_before = [f for f in original["raw"].findings if f.id == proposal.target_finding_id]
     target_rule = target_before[0].rule_id if target_before else None
     allowed_region = target_before[0].range if target_before else None
     if allowed_region is None and proposal.target_finding_id:
@@ -168,7 +168,7 @@ def verify_independently(
     syntax_ok = not syntax_errors
     if proposal.target_kind == "finding":
         target_gone = bool(target_rule) and not any(
-            f.rule_id == target_rule for f in updated["legacy"].findings
+            f.rule_id == target_rule for f in updated["raw"].findings
         )
     elif proposal.target_signature:
         target_gone = not any(
@@ -244,7 +244,7 @@ def verify_independently(
         "tools": tool_status,
         "semantic_diagnostic_count": len(updated["semantic"]),
         "taint_path_count": sum(
-            bool(getattr(f, "taint_path", [])) for f in updated["legacy"].findings
+            bool(getattr(f, "taint_path", [])) for f in updated["raw"].findings
         ),
         "quality_delta": quality_delta,
         "quality_evaluation": {

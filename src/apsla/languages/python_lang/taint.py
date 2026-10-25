@@ -88,10 +88,10 @@ class PythonTaintAnalyzer:
         if tree is None:
             return TaintResult()
 
-        # Phase 1: Build function summaries for intra-file calls
+        # Pass 1: Build function summaries for intra-file calls
         self._build_function_summaries(tree)
 
-        # Phase 2: Flow-sensitive analysis of module-level statements and functions
+        # Pass 2: Flow-sensitive analysis of module-level statements and functions
         env: dict[str, TaintValue] = {}
         for stmt in getattr(tree, "body", []):
             self._analyze_statement(stmt, env)

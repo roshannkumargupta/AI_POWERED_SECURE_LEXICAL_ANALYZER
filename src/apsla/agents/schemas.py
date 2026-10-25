@@ -1,4 +1,4 @@
-"""Schemas and data models for the compiler agentic layer (Phase 15)."""
+"""Schemas and data models for the compiler agentic layer."""
 
 from __future__ import annotations
 

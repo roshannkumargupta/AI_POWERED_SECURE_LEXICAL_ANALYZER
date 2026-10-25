@@ -1,6 +1,6 @@
 # SecureLex API v2 OpenAPI
 
-Generated from the FastAPI OpenAPI schema. `/api/analyze` defaults to the legacy result. Set `api_version: 2` and supply a monotonically increasing `source_version` to select `AnalysisResultV2`; stage routes require `source_version`.
+Generated from the FastAPI OpenAPI schema. `/api/analyze` defaults to the standard v1 result. Set `api_version: 2` and supply a monotonically increasing `source_version` to select `AnalysisResultV2`; stage routes require `source_version`.
 
 ```json
 
@@ -118,7 +118,7 @@ Generated from the FastAPI OpenAPI schema. `/api/analyze` defaults to the legacy
         },
         "responses": {
           "200": {
-            "description": "Legacy AnalysisResult by default; AnalysisResultV2 when api_version is 2.",
+            "description": "AnalysisResult by default; AnalysisResultV2 when api_version is 2.",
             "content": {
               "application/json": {
                 "schema": {
@@ -130,7 +130,7 @@ Generated from the FastAPI OpenAPI schema. `/api/analyze` defaults to the legacy
                       "$ref": "#/components/schemas/AnalysisResultV2"
                     }
                   ],
-                  "description": "api_version=2 selects AnalysisResultV2; omitted or 1 preserves the legacy response."
+                  "description": "api_version=2 selects AnalysisResultV2; omitted or 1 preserves the standard response."
                 }
               }
             }

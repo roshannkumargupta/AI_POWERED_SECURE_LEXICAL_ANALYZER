@@ -1,7 +1,7 @@
-"""Phase 15 Agent Evaluation Script.
+"""Agent Evaluation Script.
 
 Evaluates SecureLex IDE across compiler stages in:
-  - 'off' mode (deterministic pipeline baseline, Phase 14)
+  - 'off' mode (deterministic pipeline baseline, baseline)
   - 'rules' mode (agentic loop with RulesPlanner)
 
 Reports real metrics only:
@@ -327,7 +327,7 @@ def run_evaluation(languages: list[str], modes: list[str]) -> None:
 def main() -> int:
     """Parse CLI arguments and run evaluation."""
     parser = argparse.ArgumentParser(
-        description="Phase 15 Agent Evaluation Runner for SecureLex IDE.",
+        description="Agent Evaluation Runner for SecureLex IDE.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
   python scripts/agent_eval.py --help

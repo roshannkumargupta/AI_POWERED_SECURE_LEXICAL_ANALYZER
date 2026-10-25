@@ -26,22 +26,22 @@ const proposal: PatchProposal = {
 describe('fix workflow state machine', () => {
   it('advances proposal, review, verify and report, and exposes explicit failure states', () => {
     let state = fixReducer(initialFixMachine, { type: 'propose' });
-    expect(state.phase).toBe('proposing');
+    expect(state.stage).toBe('proposing');
     state = fixReducer(state, { type: 'proposal', proposal });
-    expect(state.phase).toBe('review');
+    expect(state.stage).toBe('review');
     state = fixReducer(state, { type: 'apply' });
-    expect(fixReducer(state, { type: 'verifying' }).phase).toBe('verifying');
-    expect(fixReducer(state, { type: 'failure', phase: 'stale', message: 'stale' }).phase).toBe(
+    expect(fixReducer(state, { type: 'verifying' }).stage).toBe('verifying');
+    expect(fixReducer(state, { type: 'failure', stage: 'stale', message: 'stale' }).stage).toBe(
       'stale'
     );
     expect(
-      fixReducer(state, { type: 'failure', phase: 'malformed', message: 'bad edits' }).phase
+      fixReducer(state, { type: 'failure', stage: 'malformed', message: 'bad edits' }).stage
     ).toBe('malformed');
     expect(
-      fixReducer(state, { type: 'failure', phase: 'verification-failed', message: 'failed' }).phase
+      fixReducer(state, { type: 'failure', stage: 'verification-failed', message: 'failed' }).stage
     ).toBe('verification-failed');
     expect(
-      fixReducer(state, { type: 'failure', phase: 'missing-tools', message: 'missing' }).phase
+      fixReducer(state, { type: 'failure', stage: 'missing-tools', message: 'missing' }).stage
     ).toBe('missing-tools');
   });
 

@@ -1,7 +1,10 @@
 import { defineConfig } from '@playwright/test';
 import * as path from 'path';
 import * as fs from 'fs';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const venvPythonWin = path.resolve(__dirname, '..', '.venv', 'Scripts', 'python.exe');
 const venvPythonUnix = path.resolve(__dirname, '..', '.venv', 'bin', 'python');
 let pythonCmd = 'python';

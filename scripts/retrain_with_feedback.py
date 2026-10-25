@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Active learning feedback retraining script with safety gate.
 
-Phase 12: Converts false positive feedback into hard-negative SAFE-labelled training windows,
+Feedback Retraining: Converts false positive feedback into hard-negative SAFE-labelled training windows,
 retrains model (feedback windows in TRAIN only, never val/test), evaluates on val and
 external set, writes before vs after to reports/phase_12_evidence.md, and refuses to
 replace artifact if external set metrics regress.
@@ -234,7 +234,7 @@ def retrain_and_evaluate(
     metric_degraded = after_ext_f1 < before_ext_f1
 
     report_lines = [
-        "# Phase 12 Evidence — Active Learning & Feedback Retraining",
+        "# Feedback Retraining Evidence — Active Learning & Feedback Retraining",
         "",
         f"- **Date:** {datetime.datetime.now(datetime.UTC).isoformat()}",
         f"- **Language:** {language}",
@@ -259,7 +259,7 @@ def retrain_and_evaluate(
         refusal_reason = (
             f"External set macro F1 degraded from {before_ext_f1:.4f} to {after_ext_f1:.4f}. "
             "Incorporating user false-positive hard negatives caused model overfitting or generalizability regression. "
-            "Per Phase 12 safety policy, SecureLex REFUSES to deploy this artifact into production."
+            "Per Feedback Retraining safety policy, SecureLex REFUSES to deploy this artifact into production."
         )
         report_lines.extend(
             [
@@ -309,7 +309,7 @@ retrain_with_feedback = retrain_and_evaluate
 def main() -> int:
     """CLI entrypoint."""
     parser = argparse.ArgumentParser(
-        description="SecureLex Phase 12: Retrain token classifiers with human-in-the-loop feedback."
+        description="SecureLex Feedback Retraining: Retrain token classifiers with human-in-the-loop feedback."
     )
     parser.add_argument(
         "--model-type",

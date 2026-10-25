@@ -1,4 +1,4 @@
-"""Parser Agent for syntactic structure analysis (Phase 15)."""
+"""Parser Agent for syntactic structure analysis."""
 
 from __future__ import annotations
 

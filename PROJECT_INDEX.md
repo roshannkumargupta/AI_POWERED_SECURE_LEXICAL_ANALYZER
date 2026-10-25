@@ -32,10 +32,8 @@
 | `web/e2e/` | Playwright end-to-end tests for all workflows (Groq AI, failures, prompt injection, UI audit) |
 | `tests/` | Comprehensive backend test suites: `unit/`, `security/`, `e2e/`, `golden/` fixtures |
 | `scripts/` | Automation utilities: `check_all.py`, `build_all.py`, `golden.py`, `dev.py`, `package_for_claude.py` |
-| `docs/` | Architecture specs, `PROJECT_SPEC.md`, `rules_catalogue.md`, `api_v2.md`, threat models |
-| `reports/` | Test logs, phase evidence documents, samples matrix, benchmark findings |
+| `docs/` | Architecture specs, `rules_catalogue.md`, `api_v2.md`, threat models |
 | `examples/` | Test samples for all 4 languages: `valid/`, `lexical-errors/`, `syntax-errors/`, `security/`, `adversarial/` |
-| `legacy/` | Historical reference code and baseline datasets (`senior-part1`, `senior-part2`) |
 
 ## 3. Core Architecture & Data Flow
 ```mermaid

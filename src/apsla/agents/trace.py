@@ -1,4 +1,4 @@
-"""Trace logger for agent steps and compiler decisions (Phase 15)."""
+"""Trace logger for agent steps and compiler decisions."""
 
 from __future__ import annotations
 

@@ -653,7 +653,7 @@ def train_pipeline(
         else {},
     }
 
-    # Populate backward-compatible keys for Phase 4 tests
+    # Populate backward-compatible keys for anomaly detection tests
     best_name = "random_forest"
     if s2_results:
         best_name = s2_results.get("best_architecture", "random_forest")

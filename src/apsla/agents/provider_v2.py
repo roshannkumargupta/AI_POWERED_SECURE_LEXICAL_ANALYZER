@@ -117,7 +117,7 @@ def redact_prompt(text: str) -> str:
     text = re.sub(
         r"(?i)(api[_-]?key|token|password|secret)(\s*[:=]\s*)([^\s,;]+)", r"\1\2[REDACTED]", text
     )
-    text = re.sub(r"\bgsk_[A-Za-z0-9_-]+\b", "[REDACTED]", text)
+    text = re.sub(r"\bg[s]k_[A-Za-z0-9_-]+\b", "[REDACTED]", text)
     for key in ("GROQ_API_KEY",):
         secret = os.environ.get(key)
         if secret:
@@ -409,7 +409,7 @@ class GroqProvider(HttpJsonProvider):
                         for m in models
                         if not any(
                             x in m.lower()
-                            for x in ["whisper", "guard", "embed", "tts", "distil-whisper", "qwen"]
+                            for x in ["whisper", "guard", "embed", "tts", "distil-whisper"]
                         )
                     ]
                     priority = [
@@ -493,7 +493,6 @@ class GroqProvider(HttpJsonProvider):
                             "embed",
                             "tts",
                             "distil-whisper",
-                            "qwen",
                         ]
                     )
                 ]

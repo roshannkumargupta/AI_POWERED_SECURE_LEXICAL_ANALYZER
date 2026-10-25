@@ -1,4 +1,4 @@
-"""Unit tests for Phase 15 Part A: Lightweight Structure Parsers (Java, JS, C++).
+"""Unit tests for Lightweight Structure Parsers: Lightweight Structure Parsers (Java, JS, C++).
 
 Verifies:
   1. Hand-written recursive-descent parser produces a StructTree with zero ERROR nodes

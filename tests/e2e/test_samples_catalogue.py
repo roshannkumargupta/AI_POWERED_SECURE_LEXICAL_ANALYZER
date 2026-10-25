@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_catalogue_quota_sources_and_pending_reason() -> None:
-    """Keep all phase catalogue quotas and explain every unshipped item."""
+    """Keep all sample catalogue quotas and explain every unshipped item."""
     root = ROOT / "src" / "apsla" / "samples"
     rows = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     assert len(rows) == 146

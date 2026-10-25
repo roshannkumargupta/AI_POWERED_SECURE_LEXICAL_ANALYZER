@@ -452,7 +452,7 @@ def evaluate_ablations(engine: MLInferenceEngine) -> dict[str, Any]:
 
 
 def run_full_evaluation(language: str | None = None) -> dict[str, Any]:
-    """Runs complete Phase 10 evaluation and writes reports/metrics_phase10.json and reports/phase_10_evidence.md."""
+    """Runs complete multi-language ML evaluation and writes target/metrics_eval.json and target/eval_evidence.md."""
     engine = MLInferenceEngine(language="python")
     if not engine.is_available():
         logger.error("ML engine is 'off'. Cannot evaluate without trained model artifacts.")
@@ -478,7 +478,7 @@ def run_full_evaluation(language: str | None = None) -> dict[str, Any]:
     json_path = REPORTS_DIR / "metrics_phase10.json"
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(full_report, f, indent=2)
-    logger.info("Saved complete Phase 10 metrics to %s", json_path)
+    logger.info("Saved complete multi-language ML metrics to %s", json_path)
 
     # Generate Markdown evidence report
     generate_phase10_evidence_md(full_report)
@@ -487,14 +487,14 @@ def run_full_evaluation(language: str | None = None) -> dict[str, Any]:
 
 
 def generate_phase10_evidence_md(report: dict[str, Any]) -> None:
-    """Generates comprehensive reports/phase_10_evidence.md with all tables and honest limitations."""
+    """Generates comprehensive target/eval_evidence.md with all tables and honest limitations."""
     test_met = report["test_split_metrics"]
     ext_met = report["external_benchmark_metrics"]
     cross_met = report["cross_language_transfer_metrics"]
     abl_met = report["ablation_metrics"]
 
     md_lines = [
-        "# Phase 10 Evidence Report: Multi-Language ML & Cross-Language Evaluation",
+        "# multi-language ML Evidence Report: Multi-Language ML & Cross-Language Evaluation",
         "",
         f"**Evaluated Model ID:** `{report.get('model_id')}`  ",
         f"**Architecture:** `{report.get('model_type')}`  ",
@@ -624,7 +624,7 @@ def generate_phase10_evidence_md(report: dict[str, Any]) -> None:
 
     evidence_path = REPORTS_DIR / "phase_10_evidence.md"
     evidence_path.write_text("\n".join(md_lines), encoding="utf-8")
-    logger.info("Saved Phase 10 evidence markdown to %s", evidence_path)
+    logger.info("Saved multi-language ML evidence markdown to %s", evidence_path)
 
 
 def main() -> None:
@@ -636,7 +636,7 @@ def main() -> None:
     parser.add_argument(
         "--all",
         action="store_true",
-        help="Run complete Phase 10 evaluation across all 4 languages, benchmarks, and ablations",
+        help="Run complete multi-language ML evaluation across all 4 languages, benchmarks, and ablations",
     )
     parser.add_argument(
         "--lang",

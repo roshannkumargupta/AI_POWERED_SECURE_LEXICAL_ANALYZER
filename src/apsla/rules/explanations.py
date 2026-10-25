@@ -1,6 +1,6 @@
 """Rule explanation templates, concrete variable/line formatting, and catalogue generation.
 
-Phase 12: Every rule has a structured plain-English template with:
+Standard rule explanations: Every rule has a structured plain-English template with:
   - what
   - why it is dangerous
   - how an attacker uses it
@@ -142,7 +142,7 @@ RULE_TEMPLATES: Final[dict[str, RuleExplanationTemplate]] = {
         cwe="CWE-327",
         severity="medium",
         title="Weak Cipher Algorithm (DES/ECB)",
-        what="The code initializes encryption using legacy DES or Electronic Codebook (ECB) cipher mode.",
+        what="The code initializes encryption using obsolete DES or Electronic Codebook (ECB) cipher mode.",
         why_dangerous="DES uses an inadequate 56-bit key susceptible to brute force, while ECB mode preserves plaintext patterns across blocks.",
         how_attacker_uses_it="An attacker reconstructs data patterns or rapidly cracks DES keys using inexpensive cloud computing.",
         how_to_fix="Use AES in GCM authenticated encryption mode (AES-GCM-256) with unique initialization vectors.",

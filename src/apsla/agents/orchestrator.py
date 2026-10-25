@@ -1,11 +1,11 @@
-"""Compiler Agent Orchestrator coordinating all 7 compilation stages (Phase 15).
+"""Compiler Agent Orchestrator coordinating all 7 compilation stages.
 
 STRICT INVARIANTS:
 1. Runs stages strictly in sequence: lexical -> syntax -> semantic -> triage -> fix -> verify -> explain -> finish.
 2. Enforces global budgets: max steps (12), wall-clock timeout (60s).
 3. Findings are guaranteed to be a SUPERSET-or-equal of deterministic non-agentic findings.
 4. On any agent error or timeout, logs the error and returns deterministic results (never fails).
-5. Mode 'off' returns byte-identical results to Phase 14 analysis.
+5. Mode 'off' returns byte-identical results to deterministic analysis.
 """
 
 from __future__ import annotations

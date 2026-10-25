@@ -84,8 +84,8 @@ function isFixReport(value: unknown): value is FixVerificationReport {
 export function FixWorkflowModal(props: Props) {
   const { finding } = props;
   const [machine, dispatch] = useReducer(fixReducer, initialFixMachine);
-  const phaseRef = useRef(machine.phase);
-  phaseRef.current = machine.phase;
+  const stageRef = useRef(machine.stage);
+  stageRef.current = machine.stage;
   const [consentPrompt, setConsentPrompt] = useState(false);
   const [fixAllMode, setFixAllMode] = useState(false);
   const [fixAllPreview, setFixAllPreview] = useState<FixAllPreview | null>(null);
@@ -122,7 +122,7 @@ export function FixWorkflowModal(props: Props) {
     }
   }, [machine.proposal, props.source]);
   const stale =
-    machine.phase !== 'report' &&
+    machine.stage !== 'report' &&
     (props.documentId !== props.activeDocumentId ||
       Boolean(machine.proposal && machine.proposal.source_version !== props.sourceVersion));
   const report = machine.report;
@@ -139,14 +139,14 @@ export function FixWorkflowModal(props: Props) {
       return;
     }
     const key = `${props.documentId}:${finding.id}:${props.sourceVersion}`;
-    if (proposalKey.current === key && (machine.phase === 'review' || machine.phase === 'report')) {
+    if (proposalKey.current === key && (machine.stage === 'review' || machine.stage === 'report')) {
       return;
     }
     if (proposalKey.current?.startsWith(`${props.documentId}:${finding.id}:`)) {
-      if (proposalKey.current !== key && phaseRef.current !== 'report') {
+      if (proposalKey.current !== key && stageRef.current !== 'report') {
         dispatch({
           type: 'failure',
-          phase: 'stale',
+          stage: 'stale',
           message: 'The source changed while this proposal was open. Start a new fix review.',
         });
         return;
@@ -210,7 +210,7 @@ export function FixWorkflowModal(props: Props) {
         if (waitSec > 0) {
           setCountdown(waitSec);
         }
-        const phase = /stale|version|hash/i.test(message)
+        const stage = /stale|version|hash/i.test(message)
           ? 'stale'
           : /malformed|edit|range|overlap/i.test(message)
             ? 'malformed'
@@ -220,14 +220,14 @@ export function FixWorkflowModal(props: Props) {
             setConsentPrompt(true);
             dispatch({
               type: 'failure',
-              phase: 'error',
+              stage: 'error',
               message:
                 'No deterministic fix is available. AI improvement requires your consent before source is sent.',
             });
           } else void propose('ai', props.remoteConsentRequired && props.remoteConsented);
           return;
         }
-        dispatch({ type: 'failure', phase, message });
+        dispatch({ type: 'failure', stage, message });
       } finally {
         window.clearTimeout(timeout);
       }
@@ -255,13 +255,13 @@ export function FixWorkflowModal(props: Props) {
   ]);
 
   useEffect(() => {
-    if (machine.phase !== 'proposing') return;
+    if (machine.stage !== 'proposing') return;
     const timer = window.setInterval(
       () => setElapsed(Math.floor((Date.now() - proposalStartedAt.current) / 1000)),
       250
     );
     return () => window.clearInterval(timer);
-  }, [machine.phase]);
+  }, [machine.stage]);
 
   if (!finding) return null;
   const beginAIProposal = async () => {
@@ -318,7 +318,7 @@ export function FixWorkflowModal(props: Props) {
       }
       dispatch({
         type: 'failure',
-        phase: 'error',
+        stage: 'error',
         message,
       });
     } finally {
@@ -330,7 +330,7 @@ export function FixWorkflowModal(props: Props) {
     if (stale || !machine.proposal || !patchedPreview) {
       dispatch({
         type: 'failure',
-        phase: 'stale',
+        stage: 'stale',
         message: 'The source changed after this proposal. Create a new proposal.',
       });
       return;
@@ -354,7 +354,7 @@ export function FixWorkflowModal(props: Props) {
       if (!isFixReport(verified.report)) {
         dispatch({
           type: 'failure',
-          phase: 'malformed',
+          stage: 'malformed',
           message: 'Verifier returned a malformed report.',
         });
         return;
@@ -369,7 +369,7 @@ export function FixWorkflowModal(props: Props) {
         });
         dispatch({
           type: 'failure',
-          phase: 'verification-failed',
+          stage: 'verification-failed',
           message: `Verification outcome: ${verified.report.outcome}. Source was not changed.`,
         });
         return;
@@ -380,7 +380,7 @@ export function FixWorkflowModal(props: Props) {
       if (!isFixReport(actualReport)) {
         dispatch({
           type: 'failure',
-          phase: 'malformed',
+          stage: 'malformed',
           message: response.reason || 'Verifier returned a malformed report.',
         });
         return;
@@ -408,20 +408,20 @@ export function FixWorkflowModal(props: Props) {
       )
         dispatch({
           type: 'failure',
-          phase: 'verification-failed',
+          stage: 'verification-failed',
           message: response.reason || 'Verification failed; source was not changed.',
         });
       else if (missingTools)
         dispatch({
           type: 'failure',
-          phase: 'missing-tools',
+          stage: 'missing-tools',
           message: 'One or more verification tools were unavailable; review the unverified checks.',
         });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not apply the proposal.';
       dispatch({
         type: 'failure',
-        phase: /stale|version|hash/i.test(message) ? 'stale' : 'error',
+        stage: /stale|version|hash/i.test(message) ? 'stale' : 'error',
         message,
       });
     }
@@ -434,7 +434,7 @@ export function FixWorkflowModal(props: Props) {
     } catch (error) {
       dispatch({
         type: 'failure',
-        phase: 'error',
+        stage: 'error',
         message: error instanceof Error ? error.message : 'Undo failed.',
       });
     }
@@ -482,7 +482,7 @@ export function FixWorkflowModal(props: Props) {
     } catch (error) {
       dispatch({
         type: 'failure',
-        phase: 'error',
+        stage: 'error',
         message: error instanceof Error ? error.message : 'Fix all preview failed.',
       });
     }
@@ -508,13 +508,13 @@ export function FixWorkflowModal(props: Props) {
     } catch (error) {
       dispatch({
         type: 'failure',
-        phase: 'error',
+        stage: 'error',
         message: error instanceof Error ? error.message : 'Could not apply safe fixes.',
       });
     }
   };
   const tiles = reportCounts ? (Object.entries(reportCounts) as Array<[string, unknown[]]>) : [];
-  const phaseText: Record<string, string> = {
+  const stageText: Record<string, string> = {
     proposing: `Preparing proposal… ${elapsed}s`,
     applying: 'Applying approved changes…',
     verifying: 'Running independent verification…',
@@ -543,8 +543,8 @@ export function FixWorkflowModal(props: Props) {
           apply={() => void apply()}
           undo={() => void undo()}
           fixAll={() => void requestFixAllPreview()}
-          canApply={() => machine.phase === 'review' && Boolean(machine.proposal) && !stale}
-          canUndo={() => machine.phase === 'report' && machine.appliedSourceVersion !== null}
+          canApply={() => machine.stage === 'review' && Boolean(machine.proposal) && !stale}
+          canUndo={() => machine.stage === 'report' && machine.appliedSourceVersion !== null}
         />
         <header>
           <div>
@@ -613,7 +613,7 @@ export function FixWorkflowModal(props: Props) {
                       .catch((error) =>
                         dispatch({
                           type: 'failure',
-                          phase: 'error',
+                          stage: 'error',
                           message: error instanceof Error ? error.message : 'Rule proposal failed.',
                         })
                       );
@@ -633,7 +633,7 @@ export function FixWorkflowModal(props: Props) {
               </span>
             </div>
             {machine.error && <p role="alert">{machine.error}</p>}
-            {phaseText[machine.phase] && <p role="status">{phaseText[machine.phase]}</p>}
+            {stageText[machine.stage] && <p role="status">{stageText[machine.stage]}</p>}
             {stale && (
               <p role="alert">
                 Stale source: this proposal belongs to a different document or source version.
@@ -834,7 +834,7 @@ export function FixWorkflowModal(props: Props) {
               <button type="button" onClick={closeWorkflow}>
                 Cancel
               </button>
-              {machine.phase === 'review' && props.aiReady && (
+              {machine.stage === 'review' && props.aiReady && (
                 <button
                   type="button"
                   disabled={countdown > 0}
@@ -847,7 +847,7 @@ export function FixWorkflowModal(props: Props) {
                   {countdown > 0 ? `Improve with AI (${countdown}s)` : 'Improve with AI'}
                 </button>
               )}
-              {machine.phase === 'error' && props.aiReady && (
+              {machine.stage === 'error' && props.aiReady && (
                 <button
                   type="button"
                   disabled={countdown > 0}
@@ -860,7 +860,7 @@ export function FixWorkflowModal(props: Props) {
                   {countdown > 0 ? `Improve with AI (${countdown}s)` : 'Improve with AI'}
                 </button>
               )}
-              {machine.phase === 'error' && (
+              {machine.stage === 'error' && (
                 <button
                   type="button"
                   disabled={countdown > 0}
@@ -876,7 +876,7 @@ export function FixWorkflowModal(props: Props) {
               <span />
               <button
                 type="button"
-                disabled={!machine.proposal || stale || machine.phase !== 'review'}
+                disabled={!machine.proposal || stale || machine.stage !== 'review'}
                 title={
                   stale
                     ? 'Source changed; create a new proposal.'

@@ -1,4 +1,4 @@
-# SL2-9 Threat Model
+# SecureLex IDE Threat Model
 
 ## Assets and boundaries
 
@@ -17,11 +17,11 @@ Assets include submitted source and filenames, analysis/patch state, remote-prov
 
 ## Execution and worker limits
 
-The optional Run/Test feature is **unavailable** because there is no OS-enforced sandbox. Never run submitted code. Tool invocations use `src/apsla/server/tool_runner.py`, fixed argument arrays, and explicit `shell=False`; the runner currently disables execution when network isolation is unavailable. Analysis is not yet moved into a resource-limited worker process. Existing per-tool wall-clock timeouts do not cap Python analyzer memory. On Windows, the current implementation has timeout/kill behavior only; process memory/job-object limits and guaranteed descendant cleanup are not implemented. These are open SL2-9 gaps, not claims of protection.
+The optional Run/Test feature is **unavailable** because there is no OS-enforced sandbox. Never run submitted code. Tool invocations use `src/apsla/server/tool_runner.py`, fixed argument arrays, and explicit `shell=False`; the runner currently disables execution when network isolation is unavailable. Analysis is not yet moved into a resource-limited worker process. Existing per-tool wall-clock timeouts do not cap Python analyzer memory. On Windows, the current implementation has timeout/kill behavior only; process memory/job-object limits and guaranteed descendant cleanup are not implemented. These are open SecureLex gaps, not claims of protection.
 
 ### No-execution scan allowlist
 
-The security scan forbids built-in calls to `eval`, `exec` and `compile`, `os.system`, `shell=True`, dynamic imports from user-controlled values, and `pickle` imports in the backend request/analysis/agent/fix layers. The scan permits Python's `ast.parse(source)` because it constructs a syntax tree without executing the program; this is the supported syntax checker. The SL2-1 tool runner may use `subprocess.Popen(argv, shell=False)` only for fixed allowlisted static-analysis profiles, and each profile is fail-closed unless network isolation exists. Model inference code may call `model.eval()` to select inference mode; this is not Python's built-in `eval` and does not evaluate submitted source. Static rule text and inert examples may mention dangerous APIs, but they are not called by the product path.
+The security scan forbids built-in calls to `eval`, `exec` and `compile`, `os.system`, `shell=True`, dynamic imports from user-controlled values, and `pickle` imports in the backend request/analysis/agent/fix layers. The scan permits Python's `ast.parse(source)` because it constructs a syntax tree without executing the program; this is the supported syntax checker. The SecureLex tool runner may use `subprocess.Popen(argv, shell=False)` only for fixed allowlisted static-analysis profiles, and each profile is fail-closed unless network isolation exists. Model inference code may call `model.eval()` to select inference mode; this is not Python's built-in `eval` and does not evaluate submitted source. Static rule text and inert examples may mention dangerous APIs, but they are not called by the product path.
 
 Concurrency is capped at four simultaneous guarded analysis/AI/Safety Lab requests; response limits reject files over 100,000 tokens or 2,000 findings, AST output is capped at 2,000 nodes, and provider prompts have a 512 KiB cap with 2,048 generated-token cap. Token/finding limits apply after the relevant analysis pass and do not bound peak memory. These caps do not provide a process memory limit or terminate an already-running Python analysis thread after an HTTP timeout.
 

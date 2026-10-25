@@ -2,7 +2,7 @@
 """
 scripts/audit_fix_coverage.py
 Audits fix coverage for EVERY sample across all 4 languages.
-Writes reports/ui9/fix_coverage.md according to Phase B3 specifications.
+Writes reports/ui9/fix_coverage.md according to fix coverage specifications.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Inline suppression comment detection and formatting according to Phase 12 specification."""
+"""Inline suppression comment detection and formatting for inline comments."""
 
 from __future__ import annotations
 

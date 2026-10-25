@@ -415,20 +415,20 @@ def get_samples(language: str | None = None) -> list[SampleItem]:
         List of matching SampleItem objects.
     """
     if language is None:
-        legacy = (
+        builtin = (
             list(PYTHON_SAMPLES) + list(JAVA_SAMPLES) + list(JAVASCRIPT_SAMPLES) + list(CPP_SAMPLES)
         )
         language_key = None
     else:
         aliases = {"py": "python", "js": "javascript", "c": "cpp", "c++": "cpp"}
         language_key = aliases.get(language.lower(), language.lower())
-        legacy = [sample for sample in get_legacy_samples() if sample.language == language_key]
+        builtin = [sample for sample in get_builtin_samples() if sample.language == language_key]
 
     senior = _senior_results()
-    items = list(legacy)
-    legacy_ids = {sample.id for sample in items}
+    items = list(builtin)
+    builtin_ids = {sample.id for sample in items}
     for meta, code in load_samples():
-        if (language_key is None or meta.language == language_key) and meta.id not in legacy_ids:
+        if (language_key is None or meta.language == language_key) and meta.id not in builtin_ids:
             items.append(
                 SampleItem(
                     id=meta.id,
@@ -465,13 +465,13 @@ def get_samples(language: str | None = None) -> list[SampleItem]:
     return items
 
 
-def get_legacy_samples() -> list[SampleItem]:
-    """Return the original sample records for backward-compatible UI presets."""
+def get_builtin_samples() -> list[SampleItem]:
+    """Return the original sample records for UI presets."""
     return list(PYTHON_SAMPLES) + list(JAVA_SAMPLES) + list(JAVASCRIPT_SAMPLES) + list(CPP_SAMPLES)
 
 
 def _with_metadata_defaults(sample: SampleItem) -> SampleItem:
-    """Add stable metadata fields to a legacy sample without changing its open behavior."""
+    """Add stable metadata fields to a sample without changing its open behavior."""
     kind = {"adversarial": "unicode"}.get(sample.category, sample.category)
     return sample.model_copy(
         update={
@@ -519,7 +519,7 @@ def get_sample(sample_id: str) -> SampleItem | None:
     return next(
         (
             _with_metadata_defaults(sample)
-            for sample in get_legacy_samples()
+            for sample in get_builtin_samples()
             if sample.id == sample_id
         ),
         None,

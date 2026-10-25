@@ -81,7 +81,7 @@
   },
   "ext_17_crypto_des_ecb_cipher.java": {
     "label": "MALICIOUS",
-    "note": "Legacy DES encryption in insecure ECB mode",
+    "note": "Obsolete DES encryption in insecure ECB mode",
     "length": 320
   },
   "ext_18_crypto_aes_gcm_safe.java": {

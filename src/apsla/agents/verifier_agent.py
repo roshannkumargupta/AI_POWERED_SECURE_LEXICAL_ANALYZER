@@ -1,4 +1,4 @@
-"""Verifier Agent for automated fix validation and regression testing (Phase 15).
+"""Verifier Agent for automated fix validation and regression testing.
 
 STRICT INVARIANT:
 ONLY the verify_fix tool can set verified=true; no agent or model output can.

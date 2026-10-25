@@ -1,4 +1,4 @@
-"""Unit and integration tests for Phase 10 multi-language ML and cross-language evaluation."""
+"""Unit and integration tests for multi-language ML and cross-language evaluation."""
 
 from __future__ import annotations
 

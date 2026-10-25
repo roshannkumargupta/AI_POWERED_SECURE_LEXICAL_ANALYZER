@@ -1,4 +1,4 @@
-"""Unit tests for Phase 12 Feedback Store."""
+"""Unit tests for Feedback Store."""
 
 from pathlib import Path
 

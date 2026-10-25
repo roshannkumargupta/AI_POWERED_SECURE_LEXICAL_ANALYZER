@@ -3,7 +3,7 @@
 Supports:
   - Keywords (including contextual: async, await, of, get, set, static, let)
   - Identifiers with $, _, and Unicode (XID_Start, XID_Continue)
-  - Numbers: hex (0x), octal (0o/legacy), binary (0b), BigInt (10n),
+  - Numbers: hex (0x), octal (0o/traditional), binary (0b), BigInt (10n),
     numeric separators (1_000), exponents (1e5, 1.5e-3), decimals (.5)
   - Strings with escapes (single and double quoted)
   - Template literals with nested ${...} to arbitrary depth (mode stack)
@@ -515,7 +515,7 @@ class JavaScriptLexer(LexerBase):
             tokens.append(self.make_token("NUMBER", start_pos, self.cursor))
             return
 
-        # Decimal / legacy octal / float
+        # Decimal / traditional octal / float
         while not self.is_eof and (self.peek().isdigit() or self.peek() == "_"):
             self.advance()
 

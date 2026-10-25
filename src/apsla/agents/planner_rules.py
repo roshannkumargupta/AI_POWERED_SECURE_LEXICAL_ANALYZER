@@ -1,4 +1,4 @@
-"""Deterministic rules-based planner for compiler agents (Phase 15).
+"""Deterministic rules-based planner for compiler agents.
 
 Serves as the deterministic baseline and resilient fallback when LLM is off
 or produces invalid / out-of-schema outputs.
@@ -160,7 +160,7 @@ class RulesPlanner:
                         args={"mode": "deep", "focus_sinks": candidates[:2]},
                     )
             return AgentAction(
-                reason="Triage phase complete; findings verified without suppression.",
+                reason="Triage stage complete; findings verified without suppression.",
                 action="finish",
                 args={},
             )

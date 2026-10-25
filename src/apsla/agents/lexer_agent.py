@@ -1,4 +1,4 @@
-"""Lexer Agent for lexical analysis and encoding validation (Phase 15)."""
+"""Lexer Agent for lexical analysis and encoding validation."""
 
 from __future__ import annotations
 

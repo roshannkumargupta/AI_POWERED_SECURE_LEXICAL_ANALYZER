@@ -1,4 +1,4 @@
-"""Base agent class for compiler pipeline stages (Phase 15)."""
+"""Base agent class for compiler pipeline stages."""
 
 from __future__ import annotations
 

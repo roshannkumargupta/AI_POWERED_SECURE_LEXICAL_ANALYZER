@@ -1,4 +1,4 @@
-# Agentic Compiler Architecture Map (Phase 15)
+# Agentic Compiler Architecture Map
 
 SecureLex IDE integrates deterministic compiler tools with an agentic orchestration layer. Local agents act strictly as navigators choosing which deterministic compiler tool to invoke next, while the underlying parsers, rule engines, and verifiers remain the sole authoritative source of truth.
 
@@ -54,6 +54,6 @@ flowchart TD
 ## Invariant Guarantees
 
 1. **Findings Superset-or-Equal**: Agentic results never drop, suppress, or delete findings produced by deterministic rules (`Findings_agentic >= Findings_deterministic`).
-2. **Deterministic Baseline**: In `off` mode, output is bit-for-bit identical to Phase 14. In `rules` mode, execution is completely deterministic and reproducible.
-3. **Loopback Isolation**: The local model provider strictly allows only `127.0.0.1`, `localhost`, or `::1`. Outbound network calls = 0.
+2. **Deterministic Baseline**: In `off` mode, output is bit-for-bit identical to baseline deterministic analysis. In `rules` mode, execution is completely deterministic and reproducible.
+3. **Local Isolation & Explicit Consent**: All deterministic rules, AST, and token processing run strictly on the local host. External AI calls require explicit user consent and an active `GROQ_API_KEY`.
 4. **Verification Authority**: Verification status is solely produced by running the deterministic parser and re-scanner against the modified AST. No LLM generation can assert a fix as verified.

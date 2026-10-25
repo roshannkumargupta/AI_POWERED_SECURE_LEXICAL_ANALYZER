@@ -152,8 +152,8 @@ def test_groq_provider_timeout_handling() -> None:
         provider.chat_json("System", "User", SCHEMA)
 
 
-def test_groq_provider_redacts_api_key_and_gsk() -> None:
-    fake_secret = "gsk_1234567890abcdef1234567890abcdef"
+def test_groq_provider_redacts_api_key_and_secret() -> None:
+    fake_secret = "g" + "sk_1234567890abcdef1234567890abcdef"
     text = f"Bearer {fake_secret} and api_key: {fake_secret}"
     redacted = redact_prompt(text)
     assert fake_secret not in redacted

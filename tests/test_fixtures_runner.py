@@ -1,4 +1,4 @@
-"""Test runner executing all Phase 2 Python fixtures and verifying exact (rule_id, line) matches."""
+"""Test runner executing all Python fixtures and verifying exact (rule_id, line) matches."""
 
 from __future__ import annotations
 

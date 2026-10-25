@@ -1,4 +1,4 @@
-"""Agentic compilation and triage layer for SecureLex IDE (Phase 15)."""
+"""Agentic compilation and triage layer for SecureLex IDE."""
 
 from __future__ import annotations
 

@@ -39,7 +39,7 @@ def _make_finding(
 
 
 def test_exploitability_weights():
-    """Verify exploitability rules adhere strictly to Phase 12 specifications."""
+    """Verify exploitability rules adhere strictly to finding priority specifications."""
     # 1.0 if taint confirmed
     f_taint = _make_finding("APS-PY-INJ-001", Severity.HIGH, 0.9, taint_confirmed=True)
     assert determine_exploitability(f_taint) == EXPLOITABILITY_TAINT_CONFIRMED

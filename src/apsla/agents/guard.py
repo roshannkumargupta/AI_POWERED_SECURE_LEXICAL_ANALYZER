@@ -1,4 +1,4 @@
-"""Prompt injection defense and input/output sanitization for agents (Phase 15).
+"""Prompt injection defense and input/output sanitization for agents.
 
 STRICT SECURITY INVARIANTS:
 1. Analysed code is UNTRUSTED DATA. Prompts never contain raw file content beyond

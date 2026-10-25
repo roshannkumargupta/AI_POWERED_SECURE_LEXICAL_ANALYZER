@@ -23,7 +23,7 @@ def save_feedback(
 ) -> bool:
     """Append a user feedback record to the append-only JSONL storage.
 
-    Enforces Phase 12 schema:
+    Enforces feedback schema:
     {timestamp, language, rule_id, fingerprint, snippet (max 400 chars), verdict, note}
 
     Args:

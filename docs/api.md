@@ -4,7 +4,7 @@
 
 ## 1. Overview & Architecture
 
-The SecureLex IDE backend exposes an HTTP REST API powered by **FastAPI** and **Uvicorn**, serving as the headless bridge between the core `Analyzer` pipeline and the Phase 6 web interface (React / Monaco Editor).
+The SecureLex IDE backend exposes an HTTP REST API powered by **FastAPI** and **Uvicorn**, serving as the headless bridge between the core `Analyzer` pipeline and the web interface (React / Monaco Editor).
 
 ### Key Architectural Characteristics
 - **Base Prefix:** All API endpoints are mounted under `/api`.

@@ -1,6 +1,6 @@
-# SecureLex IDE Documentation Index
+# SecureLex IDE Technical Documentation
 
-Welcome to the SecureLex IDE (`apsla`) technical documentation. This directory provides detailed specifications, architectural blueprints, rule definitions, and phase retrospectives for the platform.
+Welcome to the SecureLex IDE (`apsla`) technical documentation. This directory provides detailed specifications, architectural blueprints, rule definitions, and usage guides for the platform.
 
 ---
 
@@ -9,7 +9,8 @@ Welcome to the SecureLex IDE (`apsla`) technical documentation. This directory p
 - **[System Architecture](architecture.md)**: Layered design of lexical analysis, syntactic parsing, semantic AST extraction, taint flow tracking, and ML fusion.
 - **[Threat Model](threat_model.md)**: Security boundary analysis, threat vectors, untrusted input containment, and Trojan Source defenses.
 - **[Rules Catalogue](rules_catalogue.md)**: Complete catalog of deterministic security rules across Python, Java, JavaScript, and C++ with CWE classifications.
-- **[Agentic Compiler Map](agentic_map.md)**: Phase 15 multi-agent compiler orchestration, deterministic tool boundaries, and local groq planner integration.
+- **[Adding a Rule](adding_a_rule.md)**: Developer guide and workflow for implementing, testing, and registering new static security rules.
+- **[Agentic Compiler Map](agentic_map.md)**: Multi-agent compiler orchestration, deterministic tool boundaries, and AI planner integration.
 - **[Design Rules](design_rules.md)**: Architectural invariants, zero-external-dependency constraints, and cross-platform guarantees.
 - **[System Limitations](limitations.md)**: Explicit operational boundaries, resource caps, and unsupported edge cases.
 
@@ -18,51 +19,19 @@ Welcome to the SecureLex IDE (`apsla`) technical documentation. This directory p
 ## 2. API & Integration
 
 - **[REST API Specification](api.md)**: Endpoints, OpenAPI schemas, request/response models, and error structures.
+- **[API v2 Specification](api_v2.md)**: Versioned API contracts, diagnostic models, and stage-by-stage pipelines.
 - **[API Request/Response Samples](api_samples/)**: Raw payload examples for automated ingestion and tooling integration.
 
 ---
 
-## 3. UI, Frontend & Testing Protocol
+## 3. UI & Developer Guides
 
-- **[User Guide](user_guide.md)**: Desktop-style web IDE walkthrough, keyboard shortcuts, panel navigation, and diff views.
+- **[User Guide](user_guide.md)**: Web IDE walkthrough, keyboard shortcuts, panel navigation, and diff views.
+- **[Safety Lab Guide](safety_lab.md)**: Security scenario evaluation harness, adversarial attack matrix, and verification reporting.
 - **[Samples Guide](samples_guide.md)**: Guide to included vulnerability and safe coding test files across all supported languages.
-- **[UI QA Protocol](ui_qa_protocol.md)**: Rigorous QA testing protocol covering theme contrast, layout resilience, and event isolation.
-- **[UI QA Checklist](ui_qa_checklist.md)**: Checkpoint list for visual, keyboard, and functional verification.
-- **[UI Bug Audit](ui_bug_audit.md)**: Root cause analysis and fixes for historical interface defects.
+- **[Lexer Conformance](lexer_conformance.md)**: Conformance specifications and language token mappings.
+- **[Token Types](token_types.md)**: Token classification, categories, and severity mappings.
 - **[Token Security Data Model](token_security_data.md)**: Security scoring and token-level attribute models.
+- **[Security Adapter Mappings](security_adapter_mappings.md)**: Integration adapters for external tools and diagnostic normalizers.
+- **[Product Specification v2](product_spec_v2.md)**: Core requirements, workbench workflows, and system constraints.
 - **[Demo Script](demo_script.md)** & **[Demo Walkthrough Path](demo_path.md)**: Step-by-step presentation pathways for live evaluation.
-
----
-
-## 4. Phase Retrospectives & Technical Notes
-
-Detailed phase explanations are located in the [`explained/`](explained/) directory:
-
-| Phase Track | Focus Area | Documentation |
-|---|---|---|
-| **Phase 0–3** | Foundation, Tokenizer, AST & Rules | [Phase 0](explained/phase0.md), [Phase 1](explained/phase1.md), [Phase 2](explained/phase2.md), [Phase 3](explained/phase3.md) |
-| **Phase 4–6** | Taint Engine, CFG, Multi-Language | [Phase 4](explained/phase4.md), [Phase 5](explained/phase5.md), [Phase 6](explained/phase6.md) |
-| **Phase 8–10** | Unicode Defense, ML Scoring & Calibration | [Phase 8](explained/phase8.md), [Phase 9](explained/phase9.md), [Phase 10](explained/phase10.md) |
-| **Phase 12–15** | Prioritization, Fix Engine, Agentic Loop | [Phase 12](explained/phase12.md), [Phase 15](explained/phase15.md) |
-| **UI 1–9** | Desktop UI, Monaco Integration, Themes, Guards | [UI 1–9 Explanations](explained/) |
-| **Samples** | Benchmark Catalogue | [Samples Matrix](explained/samples.md), [Phase S1](explained/phaseS1.md) |
-| **Cleanup** | Hygiene, Quality & Architecture (CLEAN-1 & 2) | [Cleanup Retrospective](explained/cleanup.md) |
-
----
-
-## 5. Repository Cleanup & Safety Registers
-
-Registers and evidence generated during repository hygiene (CLEAN-1 & CLEAN-2):
-
-- **[Final Cleanup Report](../reports/cleanup/final_report.md)**: Quantitative before/after metrics, gate results, and contract audit.
-- **[Repository Inventory](cleanup/inventory.md)**: Depth-3 folder tree and component purpose index.
-- **[Dead Code Candidates](cleanup/dead_code_candidates.md)**: Audit of unreferenced symbols and justification for dynamic preservation.
-- **[Architectural Decisions](cleanup/needs_decision.md)**: Decisions on retained components, datasets, and dependencies.
-- **[Deleted Files Register](cleanup/deleted_files.md)**: Traceable record of verified obsolete files removed.
-- **[Skipped Items Register](cleanup/skipped.md)**: Intentionally preserved legacy, ML weights, and benchmark corpora.
-
----
-
-## 6. Project State Tracker
-
-- **[Master State Tracker](STATE.md)**: Authoritative phase progress, pass criteria, commit hashes, and verification milestones.

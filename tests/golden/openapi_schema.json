@@ -3596,7 +3596,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "description": "api_version=2 selects AnalysisResultV2; omitted or 1 preserves the legacy response.",
+                  "description": "api_version=2 selects AnalysisResultV2; omitted or 1 preserves the standard response.",
                   "oneOf": [
                     {
                       "$ref": "#/components/schemas/AnalysisResult"
@@ -3608,7 +3608,7 @@
                 }
               }
             },
-            "description": "Legacy AnalysisResult by default; AnalysisResultV2 when api_version is 2."
+            "description": "AnalysisResult by default; AnalysisResultV2 when api_version is 2."
           },
           "422": {
             "content": {

@@ -1,6 +1,6 @@
 import type { PatchProposal } from '../../api/client';
 
-export type FixPhase =
+export type FixStage =
   | 'idle'
   | 'proposing'
   | 'review'
@@ -13,14 +13,14 @@ export type FixPhase =
   | 'missing-tools'
   | 'error';
 export interface FixMachine {
-  phase: FixPhase;
+  stage: FixStage;
   proposal: PatchProposal | null;
   report: Record<string, unknown> | null;
   error: string | null;
   appliedSourceVersion: number | null;
 }
 export const initialFixMachine: FixMachine = {
-  phase: 'idle',
+  stage: 'idle',
   proposal: null,
   report: null,
   error: null,
@@ -34,30 +34,30 @@ export type FixAction =
   | { type: 'report'; report: Record<string, unknown>; sourceVersion: number | null }
   | {
       type: 'failure';
-      phase: 'stale' | 'malformed' | 'verification-failed' | 'missing-tools' | 'error';
+      stage: 'stale' | 'malformed' | 'verification-failed' | 'missing-tools' | 'error';
       message: string;
     }
   | { type: 'reset' };
 export function fixReducer(state: FixMachine, action: FixAction): FixMachine {
   switch (action.type) {
     case 'propose':
-      return { ...initialFixMachine, phase: 'proposing' };
+      return { ...initialFixMachine, stage: 'proposing' };
     case 'proposal':
-      return { ...state, phase: 'review', proposal: action.proposal, error: null };
+      return { ...state, stage: 'review', proposal: action.proposal, error: null };
     case 'apply':
-      return { ...state, phase: 'applying', error: null };
+      return { ...state, stage: 'applying', error: null };
     case 'verifying':
-      return { ...state, phase: 'verifying' };
+      return { ...state, stage: 'verifying' };
     case 'report':
       return {
         ...state,
-        phase: 'report',
+        stage: 'report',
         report: action.report,
         appliedSourceVersion: action.sourceVersion,
         error: null,
       };
     case 'failure':
-      return { ...state, phase: action.phase, error: action.message };
+      return { ...state, stage: action.stage, error: action.message };
     case 'reset':
       return initialFixMachine;
   }

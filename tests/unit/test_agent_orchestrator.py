@@ -1,4 +1,4 @@
-"""Unit tests for Phase 15 agentic compilation pipeline and core invariants."""
+"""Unit tests for agentic compilation pipeline and core invariants."""
 
 from __future__ import annotations
 

@@ -253,12 +253,12 @@ def build_java_benchmarks() -> None:
         },
         "ext_17_crypto_des_ecb_cipher.java": {
             "label": "MALICIOUS",
-            "note": "Legacy DES encryption in insecure ECB mode",
+            "note": "Obsolete DES encryption in insecure ECB mode",
             "code": (
                 "package com.app.crypto;\n\n"
                 "import javax.crypto.Cipher;\n"
                 "import javax.crypto.SecretKey;\n\n"
-                "public class LegacyEncryption {\n"
+                "public class DesEncryption {\n"
                 "    public static Cipher getDesCipher(SecretKey key) throws Exception {\n"
                 '        Cipher c = Cipher.getInstance("DES/ECB/PKCS5Padding");\n'
                 "        c.init(Cipher.ENCRYPT_MODE, key);\n"

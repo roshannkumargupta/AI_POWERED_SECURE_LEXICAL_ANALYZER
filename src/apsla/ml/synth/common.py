@@ -38,7 +38,7 @@ class SyntheticSnippet:
 
 
 def get_legacy_raw_skip_reason() -> str:
-    """Explains why legacy senior CSV datasets in data/raw/ are excluded from training.
+    """Explains why historical senior CSV datasets in data/raw/ are excluded from training.
 
     Documentation rationale:
     The files in data/raw/ (homoglyph_attacks.csv, injection_payloads.csv, safe_tokens.csv)
@@ -49,6 +49,6 @@ def get_legacy_raw_skip_reason() -> str:
     verification. They are therefore excluded to ensure zero data pollution.
     """
     return (
-        "Skipped legacy CSVs in data/raw/: files contain isolated pre-computed token rows "
+        "Skipped historical CSVs in data/raw/: files contain isolated pre-computed token rows "
         "without source documents or token context required for 9-token window modeling."
     )
