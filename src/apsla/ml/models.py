@@ -155,7 +155,7 @@ class UnifiedModelWrapper:
         epochs: int = 5,
         batch_size: int = 128,
         lr: float = 1e-3,
-        val_data: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray] | None = None,
+        _val_data: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray] | None = None,
     ) -> None:
         """Trains the underlying model."""
         self.use_lang_features = use_lang_features

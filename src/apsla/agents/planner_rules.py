@@ -19,7 +19,7 @@ class RulesPlanner:
 
     def plan(
         self,
-        agent_name: str,
+        _agent_name: str,
         stage: str,
         observation: AgentObservation,
         allowed_tools: set[str],
