@@ -44,13 +44,16 @@ Open the Vite URL printed by the dev server (normally `http://127.0.0.1:5173`). 
 
 ## Providers, consent and environment
 
-Copy `.env.example` to `.env` and adjust values. Never commit real credentials. The lexical analyzer, token table, deterministic checks and sample catalogue do not need a provider or paid API.
+Copy `.env.example` to `.env` and adjust values. Never commit real credentials. The lexical analyzer, token table, deterministic checks, and sample catalogue work entirely offline and do not need any LLM provider or paid API.
 
-Ollama is the default local provider. Install Ollama separately, start its service, then run `ollama pull qwen2.5-coder:3b` (or set `OLLAMA_MODEL` to a model you installed). Configuration: `SECURELEX_AI_PROVIDER`, `OLLAMA_BASE_URL`, and `OLLAMA_MODEL`. Provider reachability and model presence are runtime facts, not guaranteed by configuration.
+SecureLex IDE supports a fast hybrid AI architecture configured via `SECURELEX_AI_PROVIDER` (`auto`, `groq`, `ollama`, or `openai-compatible`):
+- **Groq (Fast Cloud Layer):** When `GROQ_API_KEY` is present in `.env` or `SECURELEX_AI_PROVIDER=groq`, LLM tasks (explanations, AI fixes, code generation) route to high-speed models (`llama-3.1-8b-instant` for explanations, `llama-3.3-70b-versatile` for code generation/fixes). Because Groq is a remote provider, explicit user consent is required per session via Workbench Settings (`/api/ai/consent`).
+- **Ollama (Local Offline Layer):** Local-only loopback provider (`127.0.0.1:11434`). Install Ollama separately and run `ollama pull qwen2.5-coder:3b`.
+- **Auto-Routing:** When set to `auto` (default), SecureLex automatically uses Groq if `GROQ_API_KEY` is configured; otherwise it gracefully falls back to local Ollama.
 
-An OpenAI-compatible provider can be configured with `SECURELEX_AI_PROVIDER`, `OPENAI_COMPAT_BASE_URL`, `OPENAI_COMPAT_MODEL`, and `OPENAI_COMPAT_API_KEY`. Keep the key in the server environment only. Remote processing requires explicit per-session consent in the product flow. Check `/api/capabilities` and the UI processing-location/consent indicator before asking the provider to process source. AI actions are unavailable with a setup message when no provider is configured.
+Deterministic lexical analysis, tree-sitter parsing, rule execution, and patch verification **always** run 100% locally on the host, regardless of the active LLM provider.
 
-Other server variables are listed in `.env.example`; the example contains no credential. Do not put keys in frontend variables, source files, logs, or reports.
+Keep API keys in the server environment only. Never commit or leak API keys into frontend code, client responses, logs, or git. Check `/api/capabilities` and the title bar status badge (`groq · remote` or `ollama · local`) to inspect active provider status.
 
 ## Analysis by language
 

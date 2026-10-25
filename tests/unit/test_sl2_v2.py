@@ -303,6 +303,7 @@ def test_capabilities_builder_reports_discovered_adapter_states(
             )
         ],
     )
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
     monkeypatch.setattr(
         "apsla.llm.local_ollama.get_agent_status",
         lambda: {

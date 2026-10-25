@@ -1,5 +1,6 @@
 """Unit tests for LocalLLM and local Ollama client (Phase 15)."""
 
+import importlib
 import json
 
 import httpx
@@ -110,3 +111,35 @@ def test_get_agent_status_mocked():
     assert status["model_present"] is True
     assert status["fallback_active"] is False
     assert status["mode"] == "local"
+
+
+def test_get_agent_status_selects_installed_model_from_configured_family(monkeypatch):
+    module = importlib.import_module("apsla.llm.local_ollama")
+    monkeypatch.setattr(module, "_load_env_file", lambda: None)
+    monkeypatch.setenv("APSLA_LOCAL_MODEL", "qwen2.5-coder:3b")
+    monkeypatch.delenv("OLLAMA_MODEL", raising=False)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={"models": [{"name": "qwen2.5-coder:1.5b"}, {"name": "llama3:8b"}]},
+        )
+
+    status = get_agent_status(transport=httpx.MockTransport(handler), override_mode="local")
+    assert status["model_present"] is True
+    assert status["model"] == "qwen2.5-coder:1.5b"
+    assert status["models"] == ["qwen2.5-coder:1.5b", "llama3:8b"]
+
+
+def test_get_agent_status_reports_exact_pull_command_when_model_family_missing(monkeypatch):
+    module = importlib.import_module("apsla.llm.local_ollama")
+    monkeypatch.setattr(module, "_load_env_file", lambda: None)
+    monkeypatch.setenv("APSLA_LOCAL_MODEL", "qwen2.5-coder:3b")
+    monkeypatch.delenv("OLLAMA_MODEL", raising=False)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"models": [{"name": "llama3:8b"}]})
+
+    status = get_agent_status(transport=httpx.MockTransport(handler), override_mode="local")
+    assert status["model_present"] is False
+    assert status["message"] == "Model unavailable. Run: ollama pull qwen2.5-coder:3b"

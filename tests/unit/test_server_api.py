@@ -433,6 +433,53 @@ def test_ai_explain_resolves_token_diagnostic_and_finding_targets(client: TestCl
     assert [(item["subject_type"], item["subject_id"]) for item in explained_events] == [(item["target"], item["target_id"]) for item in requests]
 
 
+def test_ai_explain_resolves_tree_sitter_syntax_diagnostic(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    import importlib
+
+    app_module = importlib.import_module("apsla.server.app")
+    fake = FakeProvider([{"explanation": "The parser reported a syntax error in this source."}])
+    monkeypatch.setattr(app_module, "_provider_for_session", lambda _session, _consent: fake)
+    source = "def calculate(:\n    return 1\n"
+    analyzed = client.post(
+        "/api/analyze/syntax",
+        json={
+            "source": source,
+            "language": "python",
+            "filename": "<editor>",
+            "api_version": 2,
+            "source_version": 7,
+            "options": {"include_tokens": True, "stages": ["lexical", "syntax"]},
+        },
+    )
+    assert analyzed.status_code == 200, analyzed.text
+    syntax_diagnostic = next(
+        item for item in analyzed.json()["diagnostics"] if item["category"] == "syntax"
+    )
+    response = client.post(
+        "/api/ai/explain",
+        json={
+            "session_id": "syntax-explain-session-1",
+            "target": "diagnostic",
+            "target_id": syntax_diagnostic["id"],
+            "source": source,
+            "language": "python",
+            "source_version": 7,
+        },
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["explanation"]
+
+
+def test_python_format_endpoint_uses_available_ruff_formatter(client: TestClient):
+    response = client.post(
+        "/api/format",
+        json={"language": "python", "source": "def calculate():\n  return  1\n"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["formatter"] in {"ruff", "ruff-format"}
+    assert response.json()["source"] == "def calculate():\n    return 1\n"
+
+
 def test_ai_explain_timeout_reports_shared_configurable_deadline(client: TestClient, monkeypatch: pytest.MonkeyPatch):
     import importlib
 
@@ -460,6 +507,7 @@ def test_provider_uses_shared_ai_deadline_over_legacy_ollama_timeout(monkeypatch
 def test_ai_model_selection_is_limited_to_installed_session_model(client: TestClient, monkeypatch: pytest.MonkeyPatch):
     import apsla.llm.local_ollama as ollama
 
+    monkeypatch.setenv("SECURELEX_AI_PROVIDER", "ollama")
     monkeypatch.setattr(ollama, "get_agent_status", lambda: {"ollama_reachable": True, "model_present": False, "model": "qwen2.5-coder:3b", "models": ["qwen2.5-coder:1.5b"], "fallback_active": False, "message": ""})
     missing = client.get("/api/capabilities").json()["ai"]
     assert missing["model"] == "qwen2.5-coder:3b"
