@@ -97,7 +97,10 @@ export function isAnalysisIncomplete(result: AnalysisResultV2 | null): boolean {
     result.tools.some(
       (tool) =>
         tool.name === 'internal-security' &&
-        (!tool.executed || tool.status === 'failed' || tool.status === 'timeout' || tool.status === 'unavailable')
+        (!tool.executed ||
+          tool.status === 'failed' ||
+          tool.status === 'timeout' ||
+          tool.status === 'unavailable')
     ) ||
     result.tools.some(
       (tool) => tool.executed && (tool.status === 'failed' || tool.status === 'timeout')

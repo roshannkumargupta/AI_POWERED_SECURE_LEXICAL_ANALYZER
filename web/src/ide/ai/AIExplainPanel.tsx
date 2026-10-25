@@ -148,11 +148,12 @@ export function AIExplainPanel({
       <nav className="ide-explain-actions" aria-label="Explain actions">
         {buttonTargets.map(([target, label]) => {
           const targetDisabled = !available[target] || loading || countdown > 0;
-          const targetTitle = countdown > 0
-            ? `Rate limit active. Retrying enabled in ${countdown}s.`
-            : !available[target]
-              ? disabledReasons[target]
-              : label;
+          const targetTitle =
+            countdown > 0
+              ? `Rate limit active. Retrying enabled in ${countdown}s.`
+              : !available[target]
+                ? disabledReasons[target]
+                : label;
           return (
             <button
               key={target}
@@ -208,11 +209,7 @@ export function AIExplainPanel({
         <div role="alert">
           <p>{error}</p>
           {countdown > 0 && <small>Rate limit active: retry enabled in {countdown}s</small>}
-          <button
-            type="button"
-            disabled={loading || countdown > 0}
-            onClick={onRetry}
-          >
+          <button type="button" disabled={loading || countdown > 0} onClick={onRetry}>
             {countdown > 0 ? `Retry (${countdown}s)` : 'Retry'}
           </button>
         </div>

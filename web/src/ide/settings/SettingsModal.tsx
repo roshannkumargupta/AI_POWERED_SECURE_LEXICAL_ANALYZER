@@ -82,8 +82,7 @@ export function SettingsModal({
             <span>{ai?.processing_location ?? 'remote'}</span>
           </p>
           <p>
-            API Key configured:{' '}
-            <strong>{ai?.configured ? 'Yes' : 'No'}</strong>
+            API Key configured: <strong>{ai?.configured ? 'Yes' : 'No'}</strong>
           </p>
           <p>
             Reachable: <strong>{ai?.reachable ? 'Yes' : 'No'}</strong>
@@ -112,7 +111,15 @@ export function SettingsModal({
               ))}
             </select>
           </label>
-          <div style={{ marginTop: '0.75rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div
+            style={{
+              marginTop: '0.75rem',
+              marginBottom: '0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
             <button
               type="button"
               disabled={testing || !ai?.configured}
@@ -145,7 +152,8 @@ export function SettingsModal({
             </label>
           )}
           <small style={{ display: 'block', marginTop: '0.4rem', color: 'var(--text-muted)' }}>
-            Deterministic lexing, parsing, and rule fixes remain 100% local. Remote processing is only used for AI explanations and candidates when consented.
+            Deterministic lexing, parsing, and rule fixes remain 100% local. Remote processing is
+            only used for AI explanations and candidates when consented.
           </small>
         </section>
         <section>

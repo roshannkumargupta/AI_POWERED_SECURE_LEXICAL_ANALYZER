@@ -89,7 +89,12 @@ export function SafetyLab({
     setRunId(null);
     try {
       const started = await apiClient.runSafety(
-        { scenario_id: scenario.id, language: selectedLanguage, mode, config: { remote_consent: true } },
+        {
+          scenario_id: scenario.id,
+          language: selectedLanguage,
+          mode,
+          config: { remote_consent: true },
+        },
         abort.signal
       );
       if (abort.signal.aborted) return;

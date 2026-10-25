@@ -2420,7 +2420,10 @@ export function IDE() {
                               'editor.action.formatDocument'
                             );
                             if (!action || !(await action.isSupported())) {
-                              reportToast('Monaco has no formatter registered for this language.', true);
+                              reportToast(
+                                'Monaco has no formatter registered for this language.',
+                                true
+                              );
                               return;
                             }
                             await action.run();
@@ -2456,7 +2459,11 @@ export function IDE() {
                       type="button"
                       className="ide-small-button"
                       aria-label="Undo"
-                      title={editorHistory.undo || fixUndoAvailable ? 'Undo (Ctrl+Z)' : 'No editor changes to undo'}
+                      title={
+                        editorHistory.undo || fixUndoAvailable
+                          ? 'Undo (Ctrl+Z)'
+                          : 'No editor changes to undo'
+                      }
                       disabled={!editorHistory.undo && !fixUndoAvailable}
                       onClick={() => {
                         toolbarHistoryAction.current = 'undo';

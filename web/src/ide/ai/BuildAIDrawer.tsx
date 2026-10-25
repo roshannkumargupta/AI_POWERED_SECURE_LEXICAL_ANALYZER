@@ -54,14 +54,15 @@ export function BuildAIDrawer({
   const supported = (capabilities?.languages ?? []).filter((item) =>
     ['python', 'java', 'javascript', 'cpp'].includes(item.id)
   );
-  const disabledReason = countdown > 0
-    ? `Rate limit active. Retrying enabled in ${countdown}s.`
-    : !ai
-      ? 'AI provider status is unavailable.'
-      : !ai.configured
-        ? ai.setup_message ||
-          'AI provider unavailable. Configure the provider in the server environment.'
-        : '';
+  const disabledReason =
+    countdown > 0
+      ? `Rate limit active. Retrying enabled in ${countdown}s.`
+      : !ai
+        ? 'AI provider status is unavailable.'
+        : !ai.configured
+          ? ai.setup_message ||
+            'AI provider unavailable. Configure the provider in the server environment.'
+          : '';
   const generate = async () => {
     if (ai?.consent_required && !ai.remote_consented && !consent) {
       setConsent(true);
@@ -234,11 +235,7 @@ export function BuildAIDrawer({
           <div role="alert">
             <p>{error}</p>
             {countdown > 0 && <small>Retrying enabled in {countdown}s</small>}
-            <button
-              type="button"
-              disabled={busy || countdown > 0}
-              onClick={() => void generate()}
-            >
+            <button type="button" disabled={busy || countdown > 0} onClick={() => void generate()}>
               {countdown > 0 ? `Retry (${countdown}s)` : 'Retry'}
             </button>
           </div>

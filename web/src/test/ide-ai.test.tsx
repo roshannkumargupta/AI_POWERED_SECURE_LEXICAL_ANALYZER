@@ -216,7 +216,9 @@ describe('F2 AI explain and activity', () => {
         onClose={vi.fn()}
       />
     );
-    expect(screen.getByRole('option', { name: 'llama-3.1-70b-versatile (not installed)' })).toBeDisabled();
+    expect(
+      screen.getByRole('option', { name: 'llama-3.1-70b-versatile (not installed)' })
+    ).toBeDisabled();
     expect(screen.getByRole('option', { name: 'llama-3.3-70b-versatile' })).toBeInTheDocument();
   });
 
@@ -273,8 +275,7 @@ describe('F2 AI explain and activity', () => {
         provider: 'groq',
         configured: false,
         model: 'llama-3.3-70b-versatile',
-        setup_message:
-          'Add GROQ_API_KEY to your .env file and restart',
+        setup_message: 'Add GROQ_API_KEY to your .env file and restart',
       },
       features: { ...caps.features, build_with_ai: false },
     };
@@ -343,4 +344,3 @@ describe('F2 AI explain and activity', () => {
     expect(screen.getByRole('button', { name: /Retry/ })).toBeDisabled();
   });
 });
-
