@@ -71,15 +71,9 @@ src/apsla/ml/cache/
 api-run.log
 web-run.log
 
-# Raw bulky report outputs while keeping markdown and json reports
-reports/**/*.html
-reports/**/*.xml
-reports/tmp/
-!reports/**/*.md
-!reports/**/*.json
-!reports/cleanup/**
-!reports/ui7/**
-!reports/ui9/**
+# Dynamic test outputs under reports/
+reports/*
+!reports/.gitkeep
 
 # Editor & IDE files
 .idea/
