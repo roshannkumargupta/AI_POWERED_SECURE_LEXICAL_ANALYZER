@@ -11,7 +11,7 @@
 
 While SecureLex IDE's underlying core lexical analyzer and batch test suite pass automated tests, end-to-end testing from the **user's interactive perspective in the browser** revealed severe functional breakdowns in the primary interactive feature set:
 
-1. **AI Features Broken**: Due to hardcoded model mismatches (`qwen2.5-coder:3b` vs installed `1.5b`) combined with false-positive detection logic in `local_ollama.py`, all UI AI features ("Build with AI", "AI Explain", "Fix with AI") crash with HTTP 503/404 errors.
+1. **AI Features Broken**: Due to hardcoded model mismatches (`llama-3.3-70b-versatile` vs installed `1.5b`) combined with false-positive detection logic in `local_groq.py`, all UI AI features ("Build with AI", "AI Explain", "Fix with AI") crash with HTTP 503/404 errors.
 2. **Explain Diagnostics 100% Broken**: Clicking "Explain" on any syntax/lexical diagnostic in the Problems panel always returns `HTTP 404` due to an impossible condition looking in `result.findings` instead of syntax diagnostics.
 3. **Fix Buttons in Problems Tab Permanently Disabled**: Diagnostic rows fail to map to finding IDs, leaving all inline "Fix" buttons grayed out.
 4. **Format Button Permanently Disabled**: Format button is grayed out for all 4 languages because external CLI formatters are not present on PATH, and no fallback (or `ruff format`) is configured.
@@ -82,8 +82,8 @@ While SecureLex IDE's underlying core lexical analyzer and batch test suite pass
 ## Required Actions Before Release (Blockers)
 
 1. **Resolve BUG-009 (AI Model Selection)**:
-   - In `src/apsla/llm/local_ollama.py` and `src/apsla/agents/provider_v2.py`, ensure that when a model prefix matches (e.g. `qwen2.5-coder:1.5b`), that actual model tag is used for queries rather than defaulting blindly to `qwen2.5-coder:3b`.
-   - Alternatively, report `model_present: False` with exact guidance (`ollama pull qwen2.5-coder:3b`) when the required tag is absent.
+   - In `src/apsla/llm/local_groq.py` and `src/apsla/agents/provider_v2.py`, ensure that when a model prefix matches (e.g. `llama-3.1-8b-instant`), that actual model tag is used for queries rather than defaulting blindly to `llama-3.3-70b-versatile`.
+   - Alternatively, report `model_present: False` with exact guidance (`configure GROQ_API_KEY in .env`) when the required tag is absent.
 2. **Resolve BUG-010 (Diagnostic AI Explain)**:
    - Fix `app.py:1582` to resolve diagnostics from `stage_data` or `syntax_diagnostics` rather than filtering `result.findings`.
 3. **Resolve BUG-011 (Problems Panel Fix Buttons)**:

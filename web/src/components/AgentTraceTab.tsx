@@ -26,17 +26,13 @@ export interface AgentTraceTabProps {
     elapsed_ms?: number;
     verified_fixes?: number;
   };
-  agentMode?: 'off' | 'rules' | 'local';
-  agentModel?: string;
-  ollamaUrl?: string;
+  agentMode?: 'off' | 'rules';
 }
 
 export const AgentTraceTab: React.FC<AgentTraceTabProps> = ({
   trace = [],
   agentMeta,
   agentMode = 'off',
-  agentModel = 'qwen2.5-coder:3b',
-  ollamaUrl = 'http://127.0.0.1:11434',
 }) => {
   const totalMs = agentMeta?.elapsed_ms ?? trace.reduce((acc, s) => acc + s.ms, 0);
   const llmCalls = agentMeta?.llm_calls ?? trace.filter((s) => s.decision_source === 'llm').length;
@@ -61,7 +57,7 @@ export const AgentTraceTab: React.FC<AgentTraceTabProps> = ({
           </h4>
           <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
             {agentMode === 'off'
-              ? 'Agent is currently turned off. Switch agent mode to "Rules" or "Local AI" in the top bar and click Analyze.'
+              ? 'Agent is currently turned off. Switch agent mode to "Rules" in the top bar and click Analyze.'
               : 'Analyze code to inspect real-time agent decisions across all compiler stages.'}
           </p>
         </div>
@@ -110,13 +106,13 @@ export const AgentTraceTab: React.FC<AgentTraceTabProps> = ({
             Outbound network calls: <strong style={{ color: 'var(--text-primary)' }}>0</strong>
           </div>
           <div>
-            Endpoint: <strong style={{ color: 'var(--text-primary)' }}>{ollamaUrl}</strong>
+            Engine: <strong style={{ color: 'var(--text-primary)' }}>RulesPlanner</strong>
           </div>
           <div>
-            Model: <strong style={{ color: 'var(--text-primary)' }}>{agentModel}</strong>
+            Deterministic execution: <strong style={{ color: 'var(--text-primary)' }}>Active</strong>
           </div>
           <div>
-            Deterministic fallback: <strong style={{ color: 'var(--text-primary)' }}>Active</strong>
+            Shadow verifier: <strong style={{ color: 'var(--text-primary)' }}>Active</strong>
           </div>
         </div>
       </div>

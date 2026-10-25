@@ -211,13 +211,14 @@ export const App: React.FC = () => {
       } catch {}
 
       try {
-        const llm = await api.getLLMStatus();
-        if (llm) {
-          setLlmStatus(llm);
+        const caps = await api.getCapabilities(aiSessionId);
+        setAiCapabilities(caps);
+        if (caps?.ai) {
+          setLlmStatus({
+            configured: Boolean(caps.ai.configured),
+            provider: caps.ai.provider || 'groq',
+          });
         }
-      } catch {}
-      try {
-        setAiCapabilities(await api.getCapabilities(aiSessionId));
       } catch {}
     } catch {
       dispatch({ type: 'SET_BACKEND_AVAILABLE', payload: false });
@@ -250,21 +251,6 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', onWorkspaceShortcut);
   }, []);
 
-  // Query Local Agent status on mount
-  useEffect(() => {
-    let mounted = true;
-    api
-      .getAgentStatus()
-      .then((status) => {
-        if (mounted) {
-          dispatch({ type: 'SET_AGENT_STATUS', payload: status });
-        }
-      })
-      .catch(() => {});
-    return () => {
-      mounted = false;
-    };
-  }, [dispatch]);
 
   // Active findings
   const activeFindings = (state.analysis?.findings || []).filter((f) => !f.suppressed);
@@ -521,8 +507,6 @@ export const App: React.FC = () => {
         backendAvailable={state.isBackendAvailable}
         agentMode={state.agentMode}
         onChangeAgentMode={(m) => dispatch({ type: 'SET_AGENT_MODE', payload: m })}
-        ollamaReachable={state.agentStatus?.ollama_reachable ?? false}
-        ollamaModel={state.agentStatus?.model || 'qwen2.5-coder:3b'}
       />
 
       {aiCapabilities && (
@@ -792,7 +776,6 @@ export const App: React.FC = () => {
               if (next) handleSelectSample(next);
             }}
             agentMode={state.agentMode}
-            agentModel={state.agentStatus?.model || 'qwen2.5-coder:3b'}
             samples={state.samples}
           />
         )}
@@ -849,7 +832,6 @@ export const App: React.FC = () => {
         analysisFailed={!state.isBackendAvailable}
         fileState={fileAnalysisState}
         agentMode={state.agentMode}
-        agentModel={state.agentStatus?.model || 'qwen2.5-coder:3b'}
       />
 
       <AppModals

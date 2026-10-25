@@ -24,6 +24,6 @@ Date: 2026-10-12. Scope: documentation, acceptance inventory, lint fixture scope
 
 ## Honest status
 
-Ollama CLI exists but no service is reachable. `javac`, Clang tools, cppcheck, Semgrep, Bandit, Pyflakes and Playwright/browser tooling are unavailable (see `docs/sl2_environment.md`). Java compiler-backed analysis, optional external analyzers, live-model paths and browser screenshot acceptance were therefore not exercised. The compatibility routes `/api/fix` and `/api/fix-all` remain because current tests/clients reference them. Git branch/tag state and uncommitted phase changes prevent a clean clone of this exact state; no tag is claimed.
+groq CLI exists but no service is reachable. `javac`, Clang tools, cppcheck, Semgrep, Bandit, Pyflakes and Playwright/browser tooling are unavailable (see `docs/sl2_environment.md`). Java compiler-backed analysis, optional external analyzers, live-model paths and browser screenshot acceptance were therefore not exercised. The compatibility routes `/api/fix` and `/api/fix-all` remain because current tests/clients reference them. Git branch/tag state and uncommitted phase changes prevent a clean clone of this exact state; no tag is claimed.
 
 See `reports/sl2_final_acceptance.md` for all 16 criteria, the honesty sweep commands, and limitations.

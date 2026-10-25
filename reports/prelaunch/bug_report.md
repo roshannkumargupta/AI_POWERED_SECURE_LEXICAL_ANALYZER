@@ -95,17 +95,17 @@
 
 ### BUG-009 · AI features fail with HTTP 503/404 due to model tag mismatch and false positive model detection
 - **Severity**: Critical (User POV)
-- **Component**: `src/apsla/llm/local_ollama.py` (lines 240-247) & `src/apsla/agents/provider_v2.py` (line 185)
+- **Component**: `src/apsla/llm/local_groq.py` (lines 240-247) & `src/apsla/agents/provider_v2.py` (line 185)
 - **Reproduction**:
-  1. Have Ollama running with `qwen2.5-coder:1.5b` (or any non-3b tag).
-  2. Open IDE at `http://localhost:5173/`. UI shows `ollama · local` and enables "Build with AI", "Fix with AI", and "Explain".
+  1. Have groq running with `llama-3.1-8b-instant` (or any non-3b tag).
+  2. Open IDE at `http://localhost:5173/`. UI shows `groq · local` and enables "Build with AI", "Fix with AI", and "Explain".
   3. Click "Build with AI" -> enter prompt -> click "Generate" -> Drawer errors with "Generation failed: Provider returned HTTP status 404".
   4. Click "Fix with AI" or inline "Fix" -> Fix modal gets stuck on "Preparing proposal..." because `POST /api/fixes/propose` with `origin='ai'` returns HTTP 503 (`AI proposal unavailable: Provider returned HTTP status 404`).
   5. Click "Explain" on any finding -> AI Explain panel errors with HTTP 503 (`AI explanation unavailable: Provider returned HTTP status 404`).
 - **Root Cause**:
-  `local_ollama.py` tests `m.split(":")[0] == clean_target` (`"qwen2.5-coder"`), which evaluates to `True` for `qwen2.5-coder:1.5b`. It sets `model_present = True` and tells the frontend AI is ready. However, it never updates `model_name` or configures the provider with the matched tag. The provider still attempts to call `qwen2.5-coder:3b`, which Ollama rejects with HTTP 404 Not Found.
+  `local_groq.py` tests `m.split(":")[0] == clean_target` (`"llama-3.3-70b-versatile"`), which evaluates to `True` for `llama-3.1-8b-instant`. It sets `model_present = True` and tells the frontend AI is ready. However, it never updates `model_name` or configures the provider with the matched tag. The provider still attempts to call `llama-3.3-70b-versatile`, which groq rejects with HTTP 404 Not Found.
 - **Impact**: All AI capabilities advertised in the UI are completely broken out of the box unless the user explicitly happens to have pulled the exact `3b` tag.
-- **Recommendation**: Update `local_ollama.py` and `provider_v2.py` to either auto-select the detected matching tag, or correctly report `model_present = False` with the exact pull command if the exact tag is missing.
+- **Recommendation**: Update `local_groq.py` and `provider_v2.py` to either auto-select the detected matching tag, or correctly report `model_present = False` with the exact pull command if the exact tag is missing.
 
 ---
 

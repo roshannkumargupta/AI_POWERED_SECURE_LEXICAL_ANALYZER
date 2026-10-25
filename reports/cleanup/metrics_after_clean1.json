@@ -208,7 +208,7 @@
     },
     {
       "name": "validate_schema",
-      "file": "src/apsla/llm/local_ollama.py",
+      "file": "src/apsla/llm/local_groq.py",
       "line": 68,
       "cyclomatic_complexity": 30
     },

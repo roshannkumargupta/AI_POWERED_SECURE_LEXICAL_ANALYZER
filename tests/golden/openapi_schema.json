@@ -35,6 +35,12 @@
             "title": "Source",
             "type": "string"
           },
+          "source_version": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Source Version",
+            "type": "integer"
+          },
           "target": {
             "enum": [
               "token",
@@ -148,6 +154,86 @@
           "consent"
         ],
         "title": "AIPermissionRequest",
+        "type": "object"
+      },
+      "AITestConnectionRequest": {
+        "properties": {
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          }
+        },
+        "title": "AITestConnectionRequest",
+        "type": "object"
+      },
+      "AITestConnectionResponse": {
+        "properties": {
+          "available_models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Available Models",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "latency_ms": {
+            "default": 0.0,
+            "title": "Latency Ms",
+            "type": "number"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "provider"
+        ],
+        "title": "AITestConnectionResponse",
         "type": "object"
       },
       "ASTNodeV2": {
@@ -293,6 +379,17 @@
             "title": "Id",
             "type": "string"
           },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
           "operation_id": {
             "title": "Operation Id",
             "type": "string"
@@ -300,6 +397,17 @@
           "outcome": {
             "title": "Outcome",
             "type": "string"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
           },
           "subject_id": {
             "anyOf": [
@@ -334,6 +442,17 @@
             "title": "Timestamp",
             "type": "string"
           },
+          "tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tokens"
+          },
           "tool": {
             "anyOf": [
               {
@@ -359,45 +478,6 @@
           "duration"
         ],
         "title": "AgentEventResponse",
-        "type": "object"
-      },
-      "AgentStatusResponse": {
-        "description": "Status of the local agent and local model provider.",
-        "properties": {
-          "fallback_active": {
-            "title": "Fallback Active",
-            "type": "boolean"
-          },
-          "message": {
-            "default": "",
-            "title": "Message",
-            "type": "string"
-          },
-          "mode": {
-            "title": "Mode",
-            "type": "string"
-          },
-          "model": {
-            "title": "Model",
-            "type": "string"
-          },
-          "model_present": {
-            "title": "Model Present",
-            "type": "boolean"
-          },
-          "ollama_reachable": {
-            "title": "Ollama Reachable",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "mode",
-          "ollama_reachable",
-          "model",
-          "model_present",
-          "fallback_active"
-        ],
-        "title": "AgentStatusResponse",
         "type": "object"
       },
       "AnalysisDimension": {
@@ -1476,6 +1556,31 @@
         "title": "FixResponse",
         "type": "object"
       },
+      "FormatRequest": {
+        "properties": {
+          "language": {
+            "enum": [
+              "python",
+              "java",
+              "javascript",
+              "cpp"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "source": {
+            "maxLength": 524288,
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "language"
+        ],
+        "title": "FormatRequest",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1516,144 +1621,6 @@
           "ml_model_id"
         ],
         "title": "HealthResponse",
-        "type": "object"
-      },
-      "LLMExplainRequest": {
-        "description": "Payload to request plain-English explanation.",
-        "properties": {
-          "finding_id": {
-            "title": "Finding Id",
-            "type": "string"
-          },
-          "message": {
-            "default": "",
-            "title": "Message",
-            "type": "string"
-          },
-          "rule_id": {
-            "title": "Rule Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "finding_id",
-          "rule_id"
-        ],
-        "title": "LLMExplainRequest",
-        "type": "object"
-      },
-      "LLMExplainResponse": {
-        "description": "AI-generated plain English explanation.",
-        "properties": {
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
-          },
-          "explanation": {
-            "title": "Explanation",
-            "type": "string"
-          }
-        },
-        "required": [
-          "explanation"
-        ],
-        "title": "LLMExplainResponse",
-        "type": "object"
-      },
-      "LLMFixRequest": {
-        "description": "Payload to request an AI-suggested fix.",
-        "properties": {
-          "finding_id": {
-            "title": "Finding Id",
-            "type": "string"
-          },
-          "language": {
-            "default": "python",
-            "title": "Language",
-            "type": "string"
-          },
-          "rule_id": {
-            "title": "Rule Id",
-            "type": "string"
-          },
-          "source": {
-            "title": "Source",
-            "type": "string"
-          },
-          "start_col": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Start Col"
-          },
-          "start_line": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Start Line"
-          }
-        },
-        "required": [
-          "source",
-          "finding_id",
-          "rule_id"
-        ],
-        "title": "LLMFixRequest",
-        "type": "object"
-      },
-      "LLMFixResponse": {
-        "description": "Fix response containing shadow-verified or advice-only proposals.",
-        "properties": {
-          "fixes": {
-            "items": {
-              "$ref": "#/components/schemas/Fix"
-            },
-            "title": "Fixes",
-            "type": "array"
-          },
-          "notes": {
-            "default": "",
-            "title": "Notes",
-            "type": "string"
-          }
-        },
-        "title": "LLMFixResponse",
-        "type": "object"
-      },
-      "LLMStatusResponse": {
-        "description": "Configuration status for optional LLM assistant.",
-        "properties": {
-          "configured": {
-            "title": "Configured",
-            "type": "boolean"
-          },
-          "provider": {
-            "title": "Provider",
-            "type": "string"
-          }
-        },
-        "required": [
-          "configured",
-          "provider"
-        ],
-        "title": "LLMStatusResponse",
         "type": "object"
       },
       "Label": {
@@ -3330,45 +3297,6 @@
         "summary": "Get Agent Safety Scenarios"
       }
     },
-    "/api/agent/analyze": {
-      "post": {
-        "description": "Run code analysis with agent layer enabled (defaults to rules if set to off).",
-        "operationId": "analyze_code_agent_api_agent_analyze_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AnalyzeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AnalysisResult"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Analyze Code Agent"
-      }
-    },
     "/api/agent/events": {
       "delete": {
         "operationId": "clear_agent_events_api_agent_events_delete",
@@ -3437,25 +3365,6 @@
           }
         },
         "summary": "Get Agent Events"
-      }
-    },
-    "/api/agent/status": {
-      "get": {
-        "description": "Return local agent status and local model availability.",
-        "operationId": "get_agent_status_endpoint_api_agent_status_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AgentStatusResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Get Agent Status Endpoint"
       }
     },
     "/api/ai/consent": {
@@ -3583,7 +3492,7 @@
     },
     "/api/ai/model": {
       "post": {
-        "description": "Select an already-installed local model for this cookie session only.",
+        "description": "Select a model for this cookie session only.",
         "operationId": "set_ai_model_api_ai_model_post",
         "requestBody": {
           "content": {
@@ -3620,6 +3529,52 @@
           }
         },
         "summary": "Set Ai Model"
+      }
+    },
+    "/api/ai/test-connection": {
+      "post": {
+        "description": "Test connectivity, model availability, and measure round-trip latency to the AI provider.",
+        "operationId": "test_ai_connection_api_ai_test_connection_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AITestConnectionRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Req"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AITestConnectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Test Ai Connection"
       }
     },
     "/api/analyze": {
@@ -4219,6 +4174,49 @@
         "summary": "Verify Fix V2"
       }
     },
+    "/api/format": {
+      "post": {
+        "description": "Format source through an installed formatter without executing the source.",
+        "operationId": "format_code_api_format_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Format Code Api Format Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Format Code"
+      }
+    },
     "/api/health": {
       "get": {
         "description": "Return service health status, active version, and ML engine telemetry.",
@@ -4259,103 +4257,6 @@
           }
         },
         "summary": "Get Languages"
-      }
-    },
-    "/api/llm/explain": {
-      "post": {
-        "description": "Request plain-English explanation from configured LLM.",
-        "operationId": "request_llm_explain_api_llm_explain_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LLMExplainRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMExplainResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Request Llm Explain"
-      }
-    },
-    "/api/llm/fix": {
-      "post": {
-        "description": "Request and shadow-verify an AI-suggested remediation fix.",
-        "operationId": "request_llm_fix_api_llm_fix_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LLMFixRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMFixResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Request Llm Fix"
-      }
-    },
-    "/api/llm/status": {
-      "get": {
-        "description": "Check whether an LLM provider is configured in environment variables.",
-        "operationId": "get_llm_status_api_llm_status_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LLMStatusResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Get Llm Status"
       }
     },
     "/api/ml/insights": {

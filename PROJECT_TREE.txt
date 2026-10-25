@@ -917,14 +917,6 @@ SecureLex IDE (apsla) — Project Tree
         common.py
         diagnostics_v2.py
         token.py
-      llm/
-        __init__.py
-        anthropic_provider.py
-        gemini_provider.py
-        local_ollama.py
-        null.py
-        openai_compat.py
-        provider.py
       ml/
         __init__.py
         calibrate.py
@@ -1648,7 +1640,6 @@ SecureLex IDE (apsla) — Project Tree
       test_javascript_taint.py
       test_languages_registry.py
       test_lexical_syntax_cases.py
-      test_local_ollama.py
       test_ml_features.py
       test_ml_infer_and_explain.py
       test_ml_train_fast.py
@@ -1657,7 +1648,6 @@ SecureLex IDE (apsla) — Project Tree
       test_offset_map.py
       test_phase10_ml.py
       test_phase12_feedback.py
-      test_phase12_llm.py
       test_phase12_priority.py
       test_phase12_retrain.py
       test_phase12_suppression.py

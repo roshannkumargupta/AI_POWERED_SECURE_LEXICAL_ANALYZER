@@ -304,15 +304,6 @@ def test_capabilities_builder_reports_discovered_adapter_states(
         ],
     )
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
-    monkeypatch.setattr(
-        "apsla.llm.local_ollama.get_agent_status",
-        lambda: {
-            "mode": "off",
-            "ollama_reachable": False,
-            "model": "configured",
-            "model_present": False,
-        },
-    )
     response = app_module.build_capabilities()
     assert response.version
     assert {language.id for language in response.languages} == {
@@ -322,7 +313,10 @@ def test_capabilities_builder_reports_discovered_adapter_states(
         "cpp",
     }
     assert response.tools[0].name == "ruff" and response.tools[0].available
-    assert response.ai["processing_location"] == "local"
+    assert response.ai["provider"] == "groq"
+    assert response.ai["processing_location"] == "remote"
+    assert response.ai["configured"] is False
+    assert "Add GROQ_API_KEY to your .env file and restart" in response.ai["setup_message"]
 
 
 def test_v2_request_requires_client_source_version() -> None:

@@ -17,10 +17,6 @@ describe('B4 - API Contract with OpenAPI Schema', () => {
     expect(paths).toContain('/api/fix-all');
     expect(paths).toContain('/api/feedback');
     expect(paths).toContain('/api/ml/insights');
-    expect(paths).toContain('/api/agent/status');
-    expect(paths).toContain('/api/llm/status');
-    expect(paths).toContain('/api/llm/fix');
-    expect(paths).toContain('/api/llm/explain');
     for (const path of [
       '/api/capabilities',
       '/api/ast/{analysis_id}/node/{node_id}',
@@ -39,10 +35,6 @@ describe('B4 - API Contract with OpenAPI Schema', () => {
     expect(typeof api.applyFixAll).toBe('function');
     expect(typeof api.submitFeedback).toBe('function');
     expect(typeof api.getMLInsights).toBe('function');
-    expect(typeof api.getAgentStatus).toBe('function');
-    expect(typeof api.getLLMStatus).toBe('function');
-    expect(typeof api.requestLLMFix).toBe('function');
-    expect(typeof api.requestLLMExplain).toBe('function');
     expect(typeof api.analyzeV2).toBe('function');
     expect(typeof api.getASTNode).toBe('function');
     expect(typeof api.proposeFix).toBe('function');

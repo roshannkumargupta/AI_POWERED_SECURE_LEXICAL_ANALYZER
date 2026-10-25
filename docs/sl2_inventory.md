@@ -18,7 +18,7 @@ Inventory is based on the checked-in source tree and direct source inspection on
 | `ml/` | Feature extraction, training/evaluation/calibration/inference/explainability, token windows and synthetic-data modules. Model files are stored under `src/apsla/ml/artifacts/`; contents were not opened or modified for this audit. |
 | `agents/` | Seven compiler-stage agents, orchestration, planner variants, structured schemas, trace and prompt guard. |
 | `agents/tools.py` | In-memory allowlisted tool registry (source comment says 14 registered capabilities). |
-| `llm/` | Provider abstraction, null provider, local Ollama, OpenAI-compatible, Anthropic and Gemini implementations. |
+| `llm/` | Provider abstraction, null provider, local groq, OpenAI-compatible, groq and groq implementations. |
 | `feedback/` | Local append-only feedback persistence. |
 | `samples/` | Manifest, schema, loader, per-language samples, pending samples and senior comparison data. |
 | `server/` | FastAPI app, API schemas, samples endpoint support and analysis LRU cache. |
@@ -33,7 +33,7 @@ Routes are registered under `/api` in `src/apsla/server/app.py`. Responses below
 | `GET /api/health` | none | `HealthResponse {status, version, ml_mode, ml_model_id}` |
 | `GET /api/languages` | none | `LanguageInfo[] {id, display_name, extensions[], monaco_id}` |
 | `POST /api/analyze` | `AnalyzeRequest {source, language?, filename?, options?}`; options `{fixes, ml, include_tokens, include_suppressed, agent}` | `AnalysisResult` |
-| `GET /api/agent/status` | none | `{mode, ollama_reachable, model, model_present, fallback_active, message}` |
+| `GET /api/agent/status` | none | `{mode, groq_reachable, model, model_present, fallback_active, message}` |
 | `POST /api/agent/analyze` | `AnalyzeRequest` | `AnalysisResult` |
 | `POST /api/fix` | `{source, language, finding_id, fix_id, filename}` | `{new_source, diff, verification, new_result?}` |
 | `POST /api/fix-all` | `{source, language, filename, allow_review}` | `{new_source, applied[], skipped[{fix_id,reason}], diff, score_before, score_after}` |
@@ -63,7 +63,7 @@ Python package discovery found tree-sitter core and cpp/java/javascript/python g
 
 ## Agents and planner
 
-Agents: `LexerAgent`, `ParserAgent`, `SemanticAgent`, `TriageAgent`, `FixAgent`, `VerifierAgent`, `ExplainAgent`, coordinated by `AgentOrchestrator`. Planning has deterministic `RulesPlanner` and `LLMPlanner`. `guard.py` bounds and marks untrusted snippets; `schemas.py` validates structured decisions; `trace.py` records agent, stage, action, reasons, observation, decision source, timing and acceptance. Tool registry is in-memory and designed not to provide arbitrary file/process/network capabilities. Ollama is currently unreachable; live local-model behavior is therefore unavailable in this probe.
+Agents: `LexerAgent`, `ParserAgent`, `SemanticAgent`, `TriageAgent`, `FixAgent`, `VerifierAgent`, `ExplainAgent`, coordinated by `AgentOrchestrator`. Planning has deterministic `RulesPlanner` and `LLMPlanner`. `guard.py` bounds and marks untrusted snippets; `schemas.py` validates structured decisions; `trace.py` records agent, stage, action, reasons, observation, decision source, timing and acceptance. Tool registry is in-memory and designed not to provide arbitrary file/process/network capabilities. groq is currently unreachable; live local-model behavior is therefore unavailable in this probe.
 
 ## ML artifacts and fixes
 

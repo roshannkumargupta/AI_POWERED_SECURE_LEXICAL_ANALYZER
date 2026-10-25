@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from apsla.models import AnalysisResult, Fix, VerificationResult
+from apsla.models import AnalysisResult, VerificationResult
 from apsla.models_v2 import (
     AnalysisDimension,
     DiagnosticV2,
@@ -69,15 +69,6 @@ class AnalyzeOptions(BaseModel):
     )
 
 
-class AgentStatusResponse(BaseModel):
-    """Status of the local agent and local model provider."""
-
-    mode: str
-    ollama_reachable: bool
-    model: str
-    model_present: bool
-    fallback_active: bool
-    message: str = ""
 
 
 class AnalyzeRequest(BaseModel):
@@ -270,44 +261,6 @@ class MLInsightsResponse(BaseModel):
     feature_group_drops: dict[str, float] | None = None
 
 
-class LLMStatusResponse(BaseModel):
-    """Configuration status for optional LLM assistant."""
-
-    configured: bool
-    provider: str
-
-
-class LLMFixRequest(BaseModel):
-    """Payload to request an AI-suggested fix."""
-
-    source: str
-    finding_id: str
-    rule_id: str
-    language: str = "python"
-    start_line: int | None = None
-    start_col: int | None = None
-
-
-class LLMFixResponse(BaseModel):
-    """Fix response containing shadow-verified or advice-only proposals."""
-
-    fixes: list[Fix] = Field(default_factory=list)
-    notes: str = ""
-
-
-class LLMExplainRequest(BaseModel):
-    """Payload to request plain-English explanation."""
-
-    finding_id: str
-    rule_id: str
-    message: str = ""
-
-
-class LLMExplainResponse(BaseModel):
-    """AI-generated plain English explanation."""
-
-    explanation: str
-    error: str | None = None
 
 
 class AIPermissionRequest(BaseModel):

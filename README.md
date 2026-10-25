@@ -46,14 +46,12 @@ Open the Vite URL printed by the dev server (normally `http://127.0.0.1:5173`). 
 
 Copy `.env.example` to `.env` and adjust values. Never commit real credentials. The lexical analyzer, token table, deterministic checks, and sample catalogue work entirely offline and do not need any LLM provider or paid API.
 
-SecureLex IDE supports a fast hybrid AI architecture configured via `SECURELEX_AI_PROVIDER` (`auto`, `groq`, `ollama`, or `openai-compatible`):
-- **Groq (Fast Cloud Layer):** When `GROQ_API_KEY` is present in `.env` or `SECURELEX_AI_PROVIDER=groq`, LLM tasks (explanations, AI fixes, code generation) route to high-speed models (`llama-3.1-8b-instant` for explanations, `llama-3.3-70b-versatile` for code generation/fixes). Because Groq is a remote provider, explicit user consent is required per session via Workbench Settings (`/api/ai/consent`).
-- **Ollama (Local Offline Layer):** Local-only loopback provider (`127.0.0.1:11434`). Install Ollama separately and run `ollama pull qwen2.5-coder:3b`.
-- **Auto-Routing:** When set to `auto` (default), SecureLex automatically uses Groq if `GROQ_API_KEY` is configured; otherwise it gracefully falls back to local Ollama.
+SecureLex IDE uses Groq as its AI provider (configured via `GROQ_API_KEY` in `.env` or `SECURELEX_AI_PROVIDER=groq`):
+- **Groq:** When `GROQ_API_KEY` is present in `.env`, LLM tasks (explanations, AI fixes, code generation) route to high-speed models (`llama-3.1-8b-instant` for explanations, `llama-3.3-70b-versatile` for code generation/fixes). Because Groq is a remote provider, explicit user consent is required per session via Workbench Settings (`/api/ai/consent`). If no key is configured, AI endpoints return "Add GROQ_API_KEY to your .env file and restart", and all deterministic features keep working.
 
-Deterministic lexical analysis, tree-sitter parsing, rule execution, and patch verification **always** run 100% locally on the host, regardless of the active LLM provider.
+Deterministic lexical analysis, tree-sitter parsing, rule execution, and patch verification **always** run 100% locally on the host.
 
-Keep API keys in the server environment only. Never commit or leak API keys into frontend code, client responses, logs, or git. Check `/api/capabilities` and the title bar status badge (`groq · remote` or `ollama · local`) to inspect active provider status.
+Keep API keys in the server environment only. Never commit or leak API keys into frontend code, client responses, logs, or git. Check `/api/capabilities` and the title bar status badge (`groq · remote`) to inspect active provider status.
 
 ## Analysis by language
 

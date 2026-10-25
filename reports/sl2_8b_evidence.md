@@ -47,7 +47,7 @@ Direct API/frontend probe: PowerShell `Invoke-WebRequest` to `http://127.0.0.1:8
 - The real-backend golden path for Python, Java, JavaScript and C++ could not run because the sandbox denies loopback sockets, including the configured API/frontend ports and Chrome DevTools port 9222. No pass is claimed for real-browser API flows.
 - Cross-theme diagnostics at five viewports could not run without the browser connection. The Vitest theme/contrast unit checks passed, which is not a substitute for the requested viewport browser matrix.
 - Requested per-view screenshots for light and dark themes were not captured; no placeholder or fabricated screenshots were written. See `docs/screenshots/sl2_8b/README.md` for the host limitation.
-- No configured reachable Ollama model was available according to `docs/STATE.md`; live Explain, Generate, AI Fix and LIVE Safety Lab remain unverified. Their unavailable/consent states are displayed from capability responses.
+- No configured reachable groq model was available according to `docs/STATE.md`; live Explain, Generate, AI Fix and LIVE Safety Lab remain unverified. Their unavailable/consent states are displayed from capability responses.
 - `npm run e2e` is the repository's existing UI-9 CDP matrix runner. It failed before opening a page, so no four-language interaction was attempted or asserted.
 
 ## Scope

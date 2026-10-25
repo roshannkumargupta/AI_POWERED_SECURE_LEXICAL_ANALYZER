@@ -12,7 +12,7 @@ Phase 12 transforms SecureLex IDE (`apsla`) from a static rule scanner into an *
    Exploitability accounts for data-flow taint confirmation ($1.0$), dangerous sinks without verified taint ($0.7$), weak cryptographic/config errors ($0.5$), and informational notices ($0.3$). Top 3 findings receive a prominent `⚡ Fix first` badge.
 4. **Delivers Concrete Explanations & Rules Catalogue:** Every rule provides plain-English explanations answering: *What is this? Why is it dangerous? How can an attacker exploit it? How to fix it?* Concrete variable names and source lines are dynamically resolved. Users can toggle between **Simple** (1-sentence summary) and **Detailed** (full structured guidance) modes in the UI.
 5. **Supports Inline Suppression Comments:** Standardized comments (`# securelex: ignore <RULE_ID>` for Python, `// securelex: ignore <RULE_ID>` for Java, JS, and C++) allow surgical silencing on the same or immediately preceding line. A one-click code action applies undoable workspace edits in the editor.
-6. **Integrates Guarded, Shadow-Verified LLM Fix Generation:** Developers can optionally enable state-of-the-art LLMs (Claude via Anthropic, Gemini via Google, or any OpenAI-compatible API). LLMs are **strictly opt-in, offline by default, and isolated from telemetry**. Crucially, every LLM-proposed code fix must pass the **exact same AST/lexical/rule verification engine** as built-in fixes. If an LLM hallucination breaks code syntax or leaves vulnerabilities intact, it is automatically downgraded to non-executable "advice only".
+6. **Integrates Guarded, Shadow-Verified LLM Fix Generation:** Developers can optionally enable state-of-the-art LLMs (Claude via groq, groq via Google, or any OpenAI-compatible API). LLMs are **strictly opt-in, offline by default, and isolated from telemetry**. Crucially, every LLM-proposed code fix must pass the **exact same AST/lexical/rule verification engine** as built-in fixes. If an LLM hallucination breaks code syntax or leaves vulnerabilities intact, it is automatically downgraded to non-executable "advice only".
 
 ---
 
@@ -127,8 +127,8 @@ SecureLex IDE recognizes standard suppression comments across all four supported
          ┌───────────────────┼───────────────────┐
          ▼                   ▼                   ▼
 ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│AnthropicProvider│ │ GeminiProvider  │ │ OpenAICompat    │
-│(Claude 3.5 Son.)│ │(Gemini 1.5 Pro) │ │(OpenAI/vLLM)    │
+│GroqFastProvider│ │ GroqCodeProvider  │ │ OpenAICompat    │
+│(Llama 3.1 8B)│ │(Llama 3.3 70B) │ │(OpenAI/vLLM)    │
 └────────┬────────┘ └────────┬────────┘ └────────┬────────┘
          └───────────────────┼───────────────────┘
                              │ Returns candidate Fix
@@ -158,7 +158,7 @@ SecureLex IDE recognizes standard suppression comments across all four supported
 1. **Offline & Disabled by Default:** If no API key is set in the environment, the system instantiates `NullLLMProvider`, completely disabling network communication. The UI "Ask AI for another fix" button is dimmed and disabled with an explanatory tooltip.
 2. **Context Minimization:** Only a 200-line slice centered around the finding range is sent to the LLM. Whole repositories are never uploaded.
 3. **Privacy Transparency:** Code is transmitted to external providers **only** when the user explicitly clicks "Ask AI for another fix".
-4. **Credential Isolation:** Keys (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY`) are read strictly from local `.env`. Keys are never logged, never exposed via REST API, and never sent to the frontend.
+4. **Credential Isolation:** Keys (`GROQ_API_KEY`, `GROQ_API_KEY`, `OPENAI_API_KEY`) are read strictly from local `.env`. Keys are never logged, never exposed via REST API, and never sent to the frontend.
 5. **Enforced Timeouts:** All HTTP requests via `httpx` are capped at a strict 15-second timeout.
 
 #### 3. Mandatory Shadow Verification

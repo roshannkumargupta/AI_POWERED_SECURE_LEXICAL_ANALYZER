@@ -9,7 +9,7 @@
 
 ## 1. Evaluation Results (`scripts/agent_eval.py`)
 
-Evaluation was executed across all 241 fixtures across Python, Java, JavaScript, and C++ in `off` and `rules` modes. In local test execution, Ollama was probed and detected as not currently running; local AI mode was marked truthfully as `[NOT RUN - Ollama not available]`, with zero invented numbers.
+Evaluation was executed across all 241 fixtures across Python, Java, JavaScript, and C++ in `off` and `rules` modes. In local test execution, groq was probed and detected as not currently running; local AI mode was marked truthfully as `[NOT RUN - groq not available]`, with zero invented numbers.
 
 ### Real Execution Output
 
@@ -17,17 +17,17 @@ Evaluation was executed across all 241 fixtures across Python, Java, JavaScript,
 ================================================================================
 SECURELEX IDE - PHASE 15 AGENTIC EVALUATION REPORT
 ================================================================================
-Status: Mode=off | Model=qwen2.5-coder:3b
-Ollama reachable: False | Model present: False
-Loopback URL: http://127.0.0.1:11434
+Status: Mode=off | Model=llama-3.3-70b-versatile
+groq reachable: False | Model present: False
+Loopback URL: https://api.groq.com/openai/v1
 Outbound network calls: 0 (local loopback only)
 --------------------------------------------------------------------------------
 Loaded 241 fixtures across languages: python, java, javascript, cpp
 
-[NOTE] local mode: not run (Ollama not available or model not pulled)
+[NOTE] local mode: not run (groq not available or model not pulled)
 To run local AI mode on your machine, execute:
-  1. Start Ollama: ollama serve
-  2. Pull model:   ollama pull qwen2.5-coder:3b
+  1. Start groq: configure GROQ_API_KEY in .env
+  2. Pull model:   configure GROQ_API_KEY in .env
   3. Run eval:     python scripts/agent_eval.py --modes off rules local
 
 Evaluating mode 'off'...
@@ -40,19 +40,19 @@ Language     | Mode    | Precision | Recall   | Verified | Fix Att. | Steps/f | 
 ------------------------------------------------------------------------------------------------
 python       | off     | 100.0%    | 100.0%   | 45       | 0.0      | 0.0     | 0.0   | 9.59    
 python       | rules   | 94.5%     | 100.0%   | 45       | 0.0      | 12.2    | 0.0   | 638.99  
-python       | local   | [NOT RUN - Ollama not available]                      
+python       | local   | [NOT RUN - groq not available]                      
 ------------------------------------------------------------------------------------------------
 java         | off     | 100.0%    | 100.0%   | 16       | 0.0      | 0.0     | 0.0   | 14.73   
 java         | rules   | 100.0%    | 100.0%   | 16       | 0.0      | 6.0     | 0.0   | 27.98   
-java         | local   | [NOT RUN - Ollama not available]                      
+java         | local   | [NOT RUN - groq not available]                      
 ------------------------------------------------------------------------------------------------
 javascript   | off     | 100.0%    | 100.0%   | 14       | 0.0      | 0.0     | 0.0   | 8.04    
 javascript   | rules   | 100.0%    | 100.0%   | 14       | 0.0      | 6.0     | 0.0   | 11.39   
-javascript   | local   | [NOT RUN - Ollama not available]                      
+javascript   | local   | [NOT RUN - groq not available]                      
 ------------------------------------------------------------------------------------------------
 cpp          | off     | 100.0%    | 100.0%   | 12       | 0.0      | 0.0     | 0.0   | 8.29    
 cpp          | rules   | 100.0%    | 100.0%   | 12       | 0.0      | 6.0     | 0.0   | 11.07   
-cpp          | local   | [NOT RUN - Ollama not available]                      
+cpp          | local   | [NOT RUN - groq not available]                      
 ------------------------------------------------------------------------------------------------
 
 INVARIANT CHECKS:

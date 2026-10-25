@@ -14,12 +14,10 @@ This script:
 
 from __future__ import annotations
 
-import io
 import json
 import os
 import zipfile
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -74,26 +72,23 @@ def should_exclude(rel_path: str) -> bool:
 
     # Check directory exclusions
     for p in parts[:-1]:
-        if p in EXCLUDED_DIR_NAMES or p.startswith(".pytest-") or p.startswith(".pytest_"):
+        if p in EXCLUDED_DIR_NAMES or p.startswith((".pytest-", ".pytest_")):
             return True
 
     # Check filename
     fname = parts[-1]
-    if fname in EXCLUDED_FILES or fname.endswith(".log") or fname.endswith(".err.log"):
+    if fname in EXCLUDED_FILES or fname.endswith((".log", ".err.log")):
         return True
 
     # Check extension
     ext = os.path.splitext(fname)[1].lower()
-    if ext in EXCLUDED_EXTENSIONS:
-        return True
-
-    return False
+    return ext in EXCLUDED_EXTENSIONS
 
 
 def generate_project_tree() -> str:
     """Build a clean text tree of all files included in the Claude package."""
     lines: list[str] = ["SecureLex IDE (apsla) — Project Tree", "=" * 50, ""]
-    
+
     for root, dirs, files in os.walk(ROOT):
         # Prune excluded directories in-place
         dirs[:] = sorted([
@@ -102,7 +97,7 @@ def generate_project_tree() -> str:
             and not d.startswith(".pytest-")
             and not d.startswith(".pytest_")
         ])
-        
+
         rel_dir = os.path.relpath(root, ROOT)
         if rel_dir == ".":
             level = 0
@@ -132,7 +127,7 @@ def collect_ml_manifest() -> list[dict]:
     if artifacts_dir.exists():
         for meta_file in sorted(artifacts_dir.glob("*/meta.json")):
             try:
-                with open(meta_file, "r", encoding="utf-8") as f:
+                with open(meta_file, encoding="utf-8") as f:
                     data = json.load(f)
                     manifest.append({
                         "model_id": data.get("model_id"),
@@ -164,10 +159,10 @@ def generate_project_index(ml_manifest: list[dict]) -> str:
     doc.append("  1. **Hybrid Detection Fusion**: Unifies AST/token rules + interprocedural taint flow + machine learning confidence + Unicode trojan defense.")
     doc.append("  2. **Path-Level Explainability**: Traces `source -> propagate -> sanitizer_missing -> sink` with Monaco coordinates.")
     doc.append("  3. **Verified Automated Fixes**: Fixes are applied to an isolated AST copy and re-analyzed; marked `verified` only if the vulnerability is eliminated without introducing new regressions.")
-    doc.append("  4. **Hybrid AI Assistance**: Integrated with local Ollama (`qwen2.5-coder`) and cloud Groq providers with strict prompt injection detection and tool runner harnesses.")
+    doc.append("  4. **AI Assistance**: Integrated with Groq AI provider with strict prompt injection detection and tool runner harnesses.")
     doc.append("  5. **Rich Offline Web IDE**: React 18, TypeScript, Monaco Editor, dark/light themes, AST tree visualizer, Safety Lab, and Fix Workflow modal.")
     doc.append("")
-    
+
     doc.append("## 2. Directory Structure & Component Map")
     doc.append("| Directory / File | Description |")
     doc.append("|---|---|")
@@ -176,8 +171,7 @@ def generate_project_index(ml_manifest: list[dict]) -> str:
     doc.append("| `src/apsla/languages/` | Multi-language lexers, AST parsers, and token normalizers (Python, JS, Java, C++) |")
     doc.append("| `src/apsla/security_v2.py` | 58 internal security rule definitions, registry builder, rule evaluation |")
     doc.append("| `src/apsla/fixes/` | Fix synthesis (`generators.py`), AST patchers, `independent_verifier.py` (verification harness) |")
-    doc.append("| `src/apsla/agents/` | Agent planner, hybrid provider (`provider_v2.py`), prompt injection classifier, execution budget |")
-    doc.append("| `src/apsla/llm/` | Local Ollama client (`local_ollama.py`), Groq provider, fallback handlers |")
+    doc.append("| `src/apsla/agents/` | Agent planner, Groq provider (`provider_v2.py`), prompt injection classifier, execution budget |")
     doc.append("| `src/apsla/ml/` | ML pipeline: token windowing (`windows.py`), feature extraction (`features.py`), inference, training scripts |")
     doc.append("| `src/apsla/ml/artifacts/` | Model metadata (`meta.json`) for trained scikit-learn & gradient boosting models |")
     doc.append("| `web/` | Modern React 18 + TypeScript + Vite frontend IDE |")
@@ -216,7 +210,7 @@ def generate_project_index(ml_manifest: list[dict]) -> str:
     doc.append("- `POST /api/analyze`: Main pipeline. Analyzes code for syntax, lexical tokens, AST nodes, security findings, taint paths, and ML anomalies.")
     doc.append("- `POST /api/fix/propose`: Proposes automated AST/regex fixes for a finding.")
     doc.append("- `POST /api/fix/verify`: Runs candidate patch against the isolated verification harness.")
-    doc.append("- `POST /api/ai/explain`: Explains a vulnerability or code segment with local Ollama or Groq.")
+    doc.append("- `POST /api/ai/explain`: Explains a vulnerability or code segment with Groq.")
     doc.append("- `POST /api/ai/propose-fix`: AI agent proposes a semantic remediation with diff generation.")
     doc.append("- `POST /api/ai/generate`: AI code generation / completion with safety filters.")
     doc.append("- `POST /api/safety-lab/run`: Evaluates code against known adversarial attacks and injection vectors.")
@@ -311,7 +305,7 @@ def build_claude_zip() -> None:
     print(f"Total files included: {file_count:,}")
     print(f"Uncompressed size:    {uncomp_mb:.2f} MB")
     print(f"Compressed ZIP size:  {zip_size_mb:.2f} MB")
-    print(f"Claude limit status:  PASS (Well below 30MB limit)")
+    print("Claude limit status:  PASS (Well below 30MB limit)")
     print("=" * 60)
 
 

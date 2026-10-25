@@ -76,50 +76,42 @@ export function SettingsModal({
           </button>
         </header>
         <section>
-          <h3>AI provider and consent</h3>
+          <h3>Groq AI provider and consent</h3>
           <p>
-            Provider: <strong>{ai?.provider ?? 'Unavailable'}</strong> ·{' '}
-            <span>{ai?.processing_location ?? 'Unknown'}</span>
+            Provider: <strong>{ai?.provider ?? 'groq'}</strong> ·{' '}
+            <span>{ai?.processing_location ?? 'remote'}</span>
           </p>
           <p>
-            Status:{' '}
-            {ai
-              ? ai.configured
-                ? ai.reachable === false
-                  ? 'Configured, unavailable'
-                  : 'Configured & ready'
-                : 'Not configured (check .env)'
-              : 'Capabilities unavailable'}
+            API Key configured:{' '}
+            <strong>{ai?.configured ? 'Yes' : 'No'}</strong>
+          </p>
+          <p>
+            Reachable: <strong>{ai?.reachable ? 'Yes' : 'No'}</strong>
           </p>
           <p>
             Active Model: <code>{ai?.model ?? 'None'}</code>
           </p>
           {ai?.setup_message && <p role="status">{ai.setup_message}</p>}
-          {(ai?.provider === 'ollama' || ai?.provider === 'groq') && (
-            <label className="ide-setting-control">
-              {ai?.provider === 'groq' ? 'Groq model' : 'Local model'}
-              <select
-                aria-label={ai?.provider === 'groq' ? 'Select Groq model' : 'Select installed local model'}
-                value={ai.model ?? ''}
-                disabled={consentBusy || !ai.installed_models?.length}
-                onChange={(event) => onModel(event.target.value)}
-              >
-                {ai.model && !ai.installed_models?.includes(ai.model) && (
-                  <option value={ai.model} disabled>
-                    {ai.model} (not installed)
-                  </option>
-                )}
-                {(ai.installed_models ?? []).map((model) => (
-                  <option key={model} value={model}>
-                    {model}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          {ai?.provider === 'ollama' && !ai.installed_models?.length && (
-            <small>No installed local models were reported by Ollama.</small>
-          )}
+          <label className="ide-setting-control">
+            Groq model
+            <select
+              aria-label="Select Groq model"
+              value={ai?.model ?? ''}
+              disabled={consentBusy || !ai?.installed_models?.length}
+              onChange={(event) => onModel(event.target.value)}
+            >
+              {ai?.model && !ai?.installed_models?.includes(ai.model) && (
+                <option value={ai.model} disabled>
+                  {ai.model} (not installed)
+                </option>
+              )}
+              {(ai?.installed_models ?? []).map((model) => (
+                <option key={model} value={model}>
+                  {model}
+                </option>
+              ))}
+            </select>
+          </label>
           <div style={{ marginTop: '0.75rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button
               type="button"
@@ -149,7 +141,7 @@ export function SettingsModal({
                 disabled={consentBusy}
                 onChange={(event) => onConsent(event.target.checked)}
               />{' '}
-              Allow remote processing ({ai.provider}) for this session
+              Allow remote processing (Groq) for this session
             </label>
           )}
           <small style={{ display: 'block', marginTop: '0.4rem', color: 'var(--text-muted)' }}>

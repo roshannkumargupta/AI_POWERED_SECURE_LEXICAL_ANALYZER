@@ -48,9 +48,7 @@ describe('AgentTraceTab Component', () => {
     render(
       <AgentTraceTab
         trace={sampleTrace}
-        agentMode="local"
-        agentModel="qwen2.5-coder:3b"
-        ollamaUrl="http://127.0.0.1:11434"
+        agentMode="rules"
       />
     );
 
@@ -71,7 +69,7 @@ describe('AgentTraceTab Component', () => {
     // Verify security telemetry
     expect(screen.getByText('Outbound network calls:')).toBeTruthy();
     expect(screen.getByText('0')).toBeTruthy();
-    expect(screen.getByText('http://127.0.0.1:11434')).toBeTruthy();
+    expect(screen.getByText('RulesPlanner')).toBeTruthy();
   });
 
   it('renders malicious reason string strictly as plain text without HTML injection', () => {
@@ -91,7 +89,7 @@ describe('AgentTraceTab Component', () => {
       },
     ];
 
-    const { container } = render(<AgentTraceTab trace={maliciousTrace} agentMode="local" />);
+    const { container } = render(<AgentTraceTab trace={maliciousTrace} agentMode="rules" />);
 
     // Verify no injected executable DOM nodes
     expect(container.querySelector('img')).toBeNull();

@@ -32,10 +32,8 @@ from apsla.agents.provider_v2 import (
     AgentEventLog,
     GroqProvider,
     ModelProvider,
-    OllamaProvider,
     ProviderFailure,
     frame_untrusted,
-    provider_from_environment,
 )
 from apsla.fixes.generators import RuleFix, generate_rule_fix
 from apsla.fixes.independent_verifier import verify_independently
@@ -96,7 +94,6 @@ from apsla.server.cache import ANALYSIS_CACHE
 from apsla.server.samples import get_sample, get_samples
 from apsla.server.schemas import (
     AgentEventResponse,
-    AgentStatusResponse,
     AIExplainRequest,
     AIGenerateRequest,
     AIModelRequest,
@@ -115,11 +112,6 @@ from apsla.server.schemas import (
     FormatRequest,
     HealthResponse,
     LanguageInfo,
-    LLMExplainRequest,
-    LLMExplainResponse,
-    LLMFixRequest,
-    LLMFixResponse,
-    LLMStatusResponse,
     MLInsightsRequest,
     MLInsightsResponse,
     SafetyScenarioResponse,
@@ -309,7 +301,7 @@ def _session_key(_provided: str | None = None) -> str:
 
 def _ai_timeout_seconds() -> float:
     """Shared AI request deadline, defaulting to 90 seconds for every provider and endpoint."""
-    raw = os.getenv("SECURELEX_AI_TIMEOUT_SECONDS") or os.getenv("OLLAMA_TIMEOUT_SECONDS") or "90"
+    raw = os.getenv("SECURELEX_AI_TIMEOUT_SECONDS") or "90"
     try:
         return min(600.0, max(1.0, float(raw)))
     except ValueError:
@@ -522,37 +514,23 @@ def build_capabilities(session_id: str | None = None) -> CapabilitiesResponse:
         os.environ.get("SECURELEX_ENV", "").lower() == "test"
         and os.environ.get("SECURELEX_TEST_AI_PROVIDER") == "1"
     )
-    if test_ai_enabled:
-        agent = {"ollama_reachable": True, "model_present": True, "model": "deterministic-fixture"}
-    else:
-        from apsla.llm.local_ollama import get_agent_status
 
-        agent = get_agent_status()
+    remote_consented = bool(session_id and session_id in REMOTE_CONSENTS)
+    selected_model = SESSION_AI_MODELS.get(session_id or "")
 
-    raw_provider = os.environ.get("SECURELEX_AI_PROVIDER", "auto").strip().lower()
     if test_ai_enabled:
         provider = "test-only-fake"
-    elif raw_provider == "auto":
-        provider = "groq" if os.environ.get("GROQ_API_KEY") else "ollama"
-    elif raw_provider in {"openai", "openai-compatible"}:
-        provider = "openai-compatible"
-    elif raw_provider == "groq":
-        provider = "groq"
+        remote_processing = False
+        remote_configured = True
+        ai_configured = True
+        installed_models = ["deterministic-fixture"]
+        ai_model = "deterministic-fixture"
+        model_present = True
+        reachable = True
+        setup_message = None
+        ai_feature_active = True
     else:
-        provider = "ollama"
-
-    remote_processing = False
-    remote_configured = False
-    remote_consented = bool(session_id and session_id in REMOTE_CONSENTS)
-    setup_message = None
-    installed_models: list[str] = []
-    selected_model = SESSION_AI_MODELS.get(session_id or "")
-    ai_model: str | None = None
-    model_present: bool | None = False
-    reachable: bool | None = False
-    configured_model: str | None = None
-
-    if provider == "groq":
+        provider = "groq"
         remote_processing = True
         remote_configured = bool(os.environ.get("GROQ_API_KEY"))
         ai_configured = remote_configured
@@ -569,53 +547,12 @@ def build_capabilities(session_id: str | None = None) -> CapabilitiesResponse:
         model_present = bool(remote_configured)
         reachable = bool(remote_configured)
         if not remote_configured:
-            setup_message = "Groq API key is not configured. Add GROQ_API_KEY to .env"
+            setup_message = "Add GROQ_API_KEY to your .env file and restart"
         elif not remote_consented:
             setup_message = "Remote Groq processing requires explicit consent in Settings."
+        else:
+            setup_message = None
         ai_feature_active = ai_configured and remote_consented
-
-    elif provider == "openai-compatible":
-        remote_configured = not test_ai_enabled and bool(
-            os.environ.get("OPENAI_COMPAT_BASE_URL") and os.environ.get("OPENAI_COMPAT_MODEL")
-        )
-        if remote_configured:
-            from urllib.parse import urlparse
-
-            provider_host = (urlparse(os.environ["OPENAI_COMPAT_BASE_URL"]).hostname or "").lower()
-            remote_processing = provider_host not in {"localhost", "127.0.0.1", "::1"}
-            if remote_processing:
-                remote_configured = remote_configured and bool(os.environ.get("OPENAI_COMPAT_API_KEY"))
-        ai_configured = remote_configured
-        ai_model = os.environ.get("OPENAI_COMPAT_MODEL")
-        model_present = None if remote_configured else False
-        reachable = None if remote_configured else False
-        ai_feature_active = remote_configured and (remote_consented if remote_processing else True)
-
-    elif test_ai_enabled:
-        ai_configured = True
-        ai_model = "deterministic-fixture"
-        model_present = True
-        reachable = True
-        ai_feature_active = True
-
-    else:  # provider == "ollama"
-        models_value = agent.get("models", [])
-        installed_models = list(models_value) if isinstance(models_value, list) else []
-        model_name = agent.get("model")
-        configured_model = selected_model or (str(model_name) if model_name else None)
-        model_present = bool(agent["model_present"])
-        if selected_model and installed_models:
-            model_present = selected_model in installed_models
-        if not agent["ollama_reachable"]:
-            setup_message = f"Ollama is unavailable. Start Ollama, then run: ollama pull {configured_model}"
-        elif not model_present and installed_models:
-            setup_message = f"Configured Ollama model {configured_model} is missing. Choose an installed model in Settings or run: ollama pull {configured_model}"
-        elif not model_present:
-            setup_message = f"Ollama model is unavailable. Run: ollama pull {configured_model}"
-        ai_configured = bool(agent["ollama_reachable"] and model_present)
-        ai_model = configured_model
-        reachable = bool(agent["ollama_reachable"])
-        ai_feature_active = ai_configured
 
     return CapabilitiesResponse(
         version=app_version,
@@ -1140,21 +1077,6 @@ async def get_ast_node(
     return result
 
 
-@api_router.get("/agent/status", response_model=AgentStatusResponse)
-async def get_agent_status_endpoint() -> AgentStatusResponse:
-    """Return local agent status and local model availability."""
-    from apsla.llm.local_ollama import get_agent_status
-
-    status_data = get_agent_status()
-    return AgentStatusResponse(**status_data)
-
-
-@api_router.post("/agent/analyze", response_model=AnalysisResult)
-async def analyze_code_agent(req: AnalyzeRequest) -> AnalysisResult | JSONResponse:
-    """Run code analysis with agent layer enabled (defaults to rules if set to off)."""
-    if (req.options.agent or "off") == "off":
-        req.options.agent = "rules"
-    return await analyze_code(req)
 
 
 @api_router.post("/fix", response_model=FixResponse)
@@ -1447,11 +1369,6 @@ async def get_ml_insights(req: MLInsightsRequest) -> MLInsightsResponse:
     """Compute per-feature-group occlusion explainability for a token window."""
     _validate_payload_size(req.source)
     lang = _resolve_language(req.language, "source.py", req.source)
-    from apsla.ml.infer import MLInferenceEngine
-
-    engine = MLInferenceEngine(language=lang)
-    if not engine.is_available(language=lang) or engine.model_wrapper is None:
-        return MLInsightsResponse(ml_mode="off")
     plugin = registry.get(lang)
     tokens = plugin.lex(req.source) if plugin else []
 
@@ -1460,6 +1377,12 @@ async def get_ml_insights(req: MLInsightsRequest) -> MLInsightsResponse:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Token index {req.token_index} is out of bounds (0..{max(0, len(tokens) - 1)}).",
         )
+
+    from apsla.ml.infer import MLInferenceEngine
+
+    engine = MLInferenceEngine(language=lang)
+    if not engine.is_available(language=lang) or engine.model_wrapper is None:
+        return MLInsightsResponse(ml_mode="off")
 
     import numpy as np
 
@@ -1505,109 +1428,12 @@ async def get_ml_insights(req: MLInsightsRequest) -> MLInsightsResponse:
     )
 
 
-@api_router.get("/llm/status", response_model=LLMStatusResponse)
-async def get_llm_status() -> LLMStatusResponse:
-    """Check whether an LLM provider is configured in environment variables."""
-    from apsla.llm.provider import get_llm_provider
-
-    provider = get_llm_provider()
-    return LLMStatusResponse(
-        configured=provider.is_configured(),
-        provider=provider.provider_name,
-    )
-
-
-@api_router.post("/llm/fix", response_model=LLMFixResponse)
-async def request_llm_fix(req: LLMFixRequest) -> LLMFixResponse:
-    """Request and shadow-verify an AI-suggested remediation fix."""
-    from apsla.fixes.verifier import verify_fix
-    from apsla.llm.provider import get_llm_provider
-    from apsla.models import Finding, Label, Severity
-    from apsla.pipeline import Analyzer
-
-    provider = get_llm_provider()
-    if not provider.is_configured():
-        return LLMFixResponse(fixes=[], notes="No LLM provider configured.")
-
-    target_finding: Finding | None = None
-    try:
-        analyzer = Analyzer()
-        res = analyzer.analyze(
-            req.source, language=req.language, options={"fixes": False, "ml": False}
-        )
-        for f in res.findings:
-            if f.id == req.finding_id or f.rule_id == req.rule_id:
-                target_finding = f
-                break
-    except Exception:
-        pass
-
-    if target_finding is None:
-        start_l = req.start_line or 1
-        start_c = req.start_col or 1
-        target_finding = Finding(
-            id=req.finding_id,
-            rule_id=req.rule_id,
-            title=f"Finding {req.rule_id}",
-            cwe="CWE-Other",
-            severity=Severity.HIGH,
-            label=Label.MALICIOUS,
-            confidence=0.9,
-            range=Range(
-                start_line=start_l, start_col=start_c, end_line=start_l, end_col=start_c + 10
-            ),
-            message=f"Remediate {req.rule_id}",
-            explanation="",
-        )
-
-    suggested_fixes = provider.suggest_fix(req.source, target_finding)
-    verified_fixes = []
-
-    for fix in suggested_fixes:
-        fix_with_kind = fix.model_copy(update={"kind": "llm"})
-        verified = verify_fix(req.source, fix_with_kind, target_finding, language=req.language)
-        verified_fixes.append(verified)
-
-    return LLMFixResponse(fixes=verified_fixes)
-
-
-@api_router.post("/llm/explain", response_model=LLMExplainResponse)
-async def request_llm_explain(req: LLMExplainRequest) -> LLMExplainResponse:
-    """Request plain-English explanation from configured LLM."""
-    from apsla.llm.provider import get_llm_provider
-    from apsla.models import Finding, Label, Severity
-
-    provider = get_llm_provider()
-    if not provider.is_configured():
-        from apsla.rules.explanations import get_rule_template
-
-        tmpl = get_rule_template(req.rule_id)
-        return LLMExplainResponse(explanation=tmpl.what if tmpl else req.message)
-
-    finding = Finding(
-        id=req.finding_id,
-        rule_id=req.rule_id,
-        title=f"Finding {req.rule_id}",
-        cwe="CWE-Other",
-        severity=Severity.HIGH,
-        label=Label.MALICIOUS,
-        confidence=0.9,
-        range=Range(start_line=1, start_col=1, end_line=1, end_col=1),
-        message=req.message,
-        explanation="",
-    )
-    explanation = provider.explain(finding)
-    return LLMExplainResponse(explanation=explanation)
-
-
-# Attach API router
 def _provider_for_session(session_id: str, remote_consent: bool, task: str | None = None):
     import os
-    from urllib.parse import urlparse
 
     session_id = _session_key(session_id)
     # Test-only deterministic provider. Both explicit opt-in and a non-production
-    # environment are required; this is never represented as Ollama or a real model.
+    # environment are required; this is never represented as a real model.
     if os.environ.get("SECURELEX_ENV", "").lower() == "test" and os.environ.get(
         "SECURELEX_TEST_AI_PROVIDER"
     ) == "1":
@@ -1633,78 +1459,26 @@ def _provider_for_session(session_id: str, remote_consent: bool, task: str | Non
                 return {"language": language, "code": code, "explanation": "Deterministic test candidate; not executed.", "assumptions": [], "requirements_checklist": [{"requirement": item, "status": "unverified", "evidence": "Test provider does not execute generated code."} for item in requirements] or [{"requirement": "Test fixture", "status": "unverified", "evidence": "Test fixture only."}]}
 
         return TestOnlyAIProvider()
-    raw_provider = os.environ.get("SECURELEX_AI_PROVIDER", "auto").strip().lower()
-    if raw_provider == "auto":
-        provider_name = "groq" if os.environ.get("GROQ_API_KEY") else "ollama"
-    else:
-        provider_name = raw_provider
 
-    if provider_name == "groq":
-        if session_id not in REMOTE_CONSENTS and not remote_consent:
-            raise HTTPException(
-                status_code=403,
-                detail="Remote processing requires explicit consent for this session.",
-            )
-        try:
-            return GroqProvider(model=SESSION_AI_MODELS.get(session_id), task=task)
-        except ProviderFailure as exc:
-            raise HTTPException(
-                status_code=503, detail=f"{exc}. {exc.retry_guidance}".strip()
-            ) from None
+    if not os.environ.get("GROQ_API_KEY"):
+        raise HTTPException(
+            status_code=503,
+            detail="Add GROQ_API_KEY to your .env file and restart",
+        )
 
-    configured_url = os.environ.get("OPENAI_COMPAT_BASE_URL", "")
-    configured_host = (urlparse(configured_url).hostname or "").lower()
-    remote_configured = provider_name in {
-        "openai",
-        "openai-compatible",
-    } and configured_host not in {
-        "localhost",
-        "127.0.0.1",
-        "::1",
-    }
-    if remote_configured and (session_id not in REMOTE_CONSENTS or not remote_consent):
+    if session_id not in REMOTE_CONSENTS and not remote_consent:
         raise HTTPException(
             status_code=403,
             detail="Remote processing requires explicit consent for this session.",
         )
+
     try:
-        provider: ModelProvider
-        if provider_name == "groq" and session_id in SESSION_AI_MODELS:
-            provider = GroqProvider(model=SESSION_AI_MODELS[session_id], task=task)
-        elif provider_name not in {"openai", "openai-compatible", "groq"} and session_id in SESSION_AI_MODELS:
-            provider = OllamaProvider(model=SESSION_AI_MODELS[session_id])
-        else:
-            provider = provider_from_environment(task=task)
+        model = SESSION_AI_MODELS.get(session_id)
+        return GroqProvider(model=model, task=task)
     except ProviderFailure as exc:
         raise HTTPException(
             status_code=503, detail=f"{exc}. {exc.retry_guidance}".strip()
         ) from None
-    if getattr(provider, "processing_location", "local") == "remote" and (
-        session_id not in REMOTE_CONSENTS or not remote_consent
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="Remote processing requires explicit consent for this session.",
-        )
-    if provider_name not in {"openai", "openai-compatible", "groq"}:
-        from apsla.llm.local_ollama import get_agent_status
-
-        status_data = get_agent_status()
-        if not status_data.get("ollama_reachable"):
-            model = status_data.get("model", "qwen2.5-coder:3b")
-            raise HTTPException(
-                status_code=503,
-                detail=f"Ollama is unavailable. Start Ollama, then run: ollama pull {model}",
-            )
-        selected_model = SESSION_AI_MODELS.get(session_id)
-        selected_model_present = bool(selected_model and selected_model in status_data.get("models", []))
-        if not status_data.get("model_present") and not selected_model_present:
-            model = status_data.get("model", "qwen2.5-coder:3b")
-            raise HTTPException(
-                status_code=503,
-                detail=f"Ollama model is unavailable. Run: ollama pull {model}",
-            )
-    return provider
 
 
 def _call_provider_for_session(
@@ -1729,27 +1503,10 @@ async def set_ai_consent(req: AIPermissionRequest) -> dict[str, object]:
 
 @api_router.post("/ai/model")
 async def set_ai_model(req: AIModelRequest) -> dict[str, object]:
-    """Select an already-installed local or remote model for this cookie session only."""
-    raw_provider = os.getenv("SECURELEX_AI_PROVIDER", "auto").strip().lower()
-    active_provider = "groq" if (raw_provider == "groq" or (raw_provider == "auto" and os.getenv("GROQ_API_KEY"))) else raw_provider
-
-    if active_provider == "groq":
-        installed = GroqProvider.list_models()
-        if req.model not in installed and req.model not in {DEFAULT_GROQ_CODE_MODEL, DEFAULT_GROQ_FAST_MODEL}:
-            raise HTTPException(status_code=422, detail={"code": "MODEL_NOT_INSTALLED", "message": "Choose a model available on Groq."})
-        session_id = _session_key(req.session_id)
-        SESSION_AI_MODELS[session_id] = req.model
-        return {"model": req.model, "capabilities": build_capabilities(session_id).model_dump(mode="json")}
-
-    if active_provider in {"openai", "openai-compatible"}:
-        raise HTTPException(status_code=409, detail="Local model selection is only available with Ollama.")
-
-    from apsla.llm.local_ollama import get_agent_status
-
-    status_data = await asyncio.to_thread(get_agent_status)
-    installed = status_data.get("models", [])
-    if req.model not in installed:
-        raise HTTPException(status_code=422, detail={"code": "MODEL_NOT_INSTALLED", "message": "Choose a model reported as installed by Ollama."})
+    """Select a model for this cookie session only."""
+    installed = GroqProvider.list_models()
+    if req.model not in installed and req.model not in {DEFAULT_GROQ_CODE_MODEL, DEFAULT_GROQ_FAST_MODEL}:
+        raise HTTPException(status_code=422, detail={"code": "MODEL_NOT_INSTALLED", "message": "Choose a model available on Groq."})
     session_id = _session_key(req.session_id)
     SESSION_AI_MODELS[session_id] = req.model
     return {"model": req.model, "capabilities": build_capabilities(session_id).model_dump(mode="json")}
@@ -1758,39 +1515,9 @@ async def set_ai_model(req: AIModelRequest) -> dict[str, object]:
 @api_router.post("/ai/test-connection", response_model=AITestConnectionResponse)
 async def test_ai_connection(req: AITestConnectionRequest | None = None) -> AITestConnectionResponse:
     """Test connectivity, model availability, and measure round-trip latency to the AI provider."""
-    raw_provider = (req.provider if req and req.provider else os.getenv("SECURELEX_AI_PROVIDER", "auto")).strip().lower()
-    if raw_provider == "auto":
-        provider_name = "groq" if os.getenv("GROQ_API_KEY") else "ollama"
-    else:
-        provider_name = raw_provider
-
-    if provider_name == "groq":
-        model = req.model if req and req.model else None
-        res = await asyncio.to_thread(GroqProvider.test_connection, model=model)
-        return AITestConnectionResponse(**res)
-    if provider_name == "ollama":
-        from apsla.llm.local_ollama import get_agent_status
-        t0 = time.perf_counter()
-        status_data = await asyncio.to_thread(get_agent_status)
-        latency = round((time.perf_counter() - t0) * 1000, 2)
-        reachable = bool(status_data.get("ollama_reachable"))
-        models = status_data.get("models", [])
-        return AITestConnectionResponse(
-            ok=reachable,
-            provider="ollama",
-            latency_ms=latency,
-            model=status_data.get("model"),
-            available_models=models,
-            error=None if reachable else "Ollama service is unreachable at 127.0.0.1:11434",
-        )
-    return AITestConnectionResponse(
-        ok=False,
-        provider=provider_name,
-        latency_ms=0.0,
-        model=None,
-        available_models=[],
-        error=f"Connection test not implemented for provider '{provider_name}'",
-    )
+    model = req.model if req and req.model else None
+    res = await asyncio.to_thread(GroqProvider.test_connection, model=model)
+    return AITestConnectionResponse(**res)
 
 
 @api_router.get("/agent/events", response_model=list[AgentEventResponse])
@@ -2689,29 +2416,6 @@ async def run_agent_safety(req: SafetyRunRequest) -> dict[str, str]:
         remote_consent = bool(req.config.get("remote_consent", False))
         try:
             provider = _provider_for_session(session_id, remote_consent)
-            if provider.name == "ollama":
-                from apsla.llm.local_ollama import get_agent_status
-
-                readiness = get_agent_status()
-                if not readiness["ollama_reachable"] or not readiness["model_present"]:
-                    reason = readiness["message"] or "Configured Ollama model is unavailable."
-                    result = await asyncio.to_thread(
-                        live_unavailable, req.scenario_id, req.language, reason
-                    )
-                    result["configuration"].update(
-                        {
-                            "provider": provider.name,
-                            "model": provider.model,
-                            "processing_location": provider.processing_location,
-                            "requested_configuration": {
-                                "session_id": session_id,
-                                "remote_consent": remote_consent,
-                            },
-                        }
-                    )
-                    run_id = save_run(result)
-                    _safety_run_owner[run_id] = session_id
-                    return {"run_id": run_id}
             result = await asyncio.wait_for(
                 asyncio.to_thread(execute_live, req.scenario_id, req.language, provider), timeout=45
             )

@@ -136,10 +136,10 @@ describe('F2 AI explain and activity', () => {
   });
 
   it('shows the real request error and exposes retry', async () => {
-    vi.mocked(apiClient.explainAI).mockRejectedValue(new Error('Ollama returned HTTP 404.'));
+    vi.mocked(apiClient.explainAI).mockRejectedValue(new Error('Groq returned HTTP 404.'));
     const handlers = callbacks();
     render(panel({ runId: 1, shouldRun: true, onRetry: handlers.onRetry }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Ollama returned HTTP 404.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Groq returned HTTP 404.');
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(handlers.onRetry).toHaveBeenCalledOnce();
   });
@@ -187,18 +187,17 @@ describe('F2 AI explain and activity', () => {
     await waitFor(() => expect(onConsent).toHaveBeenCalledOnce());
   });
 
-  it('shows an installed-model picker when the configured Ollama model is missing', () => {
+  it('shows an installed-model picker when the configured Groq model is missing', () => {
     const missing = {
       ...caps,
       ai: {
         ...caps.ai,
-        provider: 'ollama',
-        configured: false,
-        model: 'qwen2.5-coder:3b',
-        installed_models: ['qwen2.5-coder:1.5b'],
+        provider: 'groq',
+        configured: true,
+        model: 'llama-3.1-70b-versatile',
+        installed_models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'],
         configured_model_present: false,
-        setup_message:
-          'Configured Ollama model qwen2.5-coder:3b is missing. Choose an installed model in Settings or run: ollama pull qwen2.5-coder:3b',
+        setup_message: null,
       },
     };
     render(
@@ -217,9 +216,8 @@ describe('F2 AI explain and activity', () => {
         onClose={vi.fn()}
       />
     );
-    expect(screen.getByText(missing.ai.setup_message)).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'qwen2.5-coder:3b (not installed)' })).toBeDisabled();
-    expect(screen.getByRole('option', { name: 'qwen2.5-coder:1.5b' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'llama-3.1-70b-versatile (not installed)' })).toBeDisabled();
+    expect(screen.getByRole('option', { name: 'llama-3.3-70b-versatile' })).toBeInTheDocument();
   });
 
   it('shows all session events, filters them, links explained items, and clears them', async () => {
@@ -272,11 +270,11 @@ describe('F2 AI explain and activity', () => {
       ...caps,
       ai: {
         ...caps.ai,
-        provider: 'ollama',
+        provider: 'groq',
         configured: false,
-        model: 'qwen2.5-coder:3b',
+        model: 'llama-3.3-70b-versatile',
         setup_message:
-          'Ollama is unavailable. Start Ollama, then run: ollama pull qwen2.5-coder:3b',
+          'Add GROQ_API_KEY to your .env file and restart',
       },
       features: { ...caps.features, build_with_ai: false },
     };

@@ -406,8 +406,8 @@ SecureLex IDE embeds a modular agent at every stage of the compilation and secur
 7. **Explanation Stage (`ExplainAgent`):** Generates structured plain-English guidance and applies strict token grounding verification against finding facts if LLM rephrasing is enabled.
 8. **Orchestrator (`Orchestrator`):** Coordinates sequential execution, enforces global step/LLM/timeout budgets, maintains immutable audit traces, and provides safe fallback to deterministic outputs.
 
-### Local-Only & Zero-Trust Constraints
-- **Strictly Local:** Powered exclusively by local Ollama instances (e.g., `qwen2.5-coder:3b` at `http://127.0.0.1:11434` or `localhost`). Remote hosts, external cloud APIs, and runtime internet connections are strictly prohibited ("outbound network calls: 0").
+### Security & Zero-Trust Constraints
+- **Controlled Provider:** Cloud AI powered by Groq with explicit user session consent, bounded timeouts, token caps, and zero data leakage. When unconfigured, AI is cleanly disabled and deterministic features operate completely offline.
 - **Deterministic Authority:** Agents never replace compiler and analyzer engines; they only observe analysis state and choose tools from an explicit 14-tool allowlist.
 - **Robust Prompt-Injection Defense:** Untrusted source code is framed as data between fixed delimiters with line and character limits; LLM outputs are restricted to strict JSON schemas; agent planners cannot delete findings or bypass the fix verifier.
 

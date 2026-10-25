@@ -42,10 +42,8 @@ interface TopBarProps {
   onCloseFileById?: (id: string) => void;
   themeResolved?: ResolvedTheme;
   onThemeToggle?: () => void;
-  agentMode?: 'off' | 'rules' | 'local';
-  onChangeAgentMode?: (mode: 'off' | 'rules' | 'local') => void;
-  ollamaReachable?: boolean;
-  ollamaModel?: string;
+  agentMode?: 'off' | 'rules';
+  onChangeAgentMode?: (mode: 'off' | 'rules') => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -74,8 +72,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   onThemeToggle = () => {},
   agentMode = 'off',
   onChangeAgentMode,
-  ollamaReachable = false,
-  ollamaModel = 'qwen2.5-coder:3b',
 }) => {
   return (
     <header data-qa="topbar" style={containerStyle}>
@@ -180,28 +176,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             }}
           >
             Rules
-          </button>
-          <button
-            data-qa="agent-toggle-local"
-            type="button"
-            disabled={!ollamaReachable}
-            title={ollamaReachable ? `Local AI (${ollamaModel})` : 'Ollama not running'}
-            onClick={() => {
-              if (ollamaReachable) onChangeAgentMode?.('local');
-            }}
-            style={{
-              fontSize: 11,
-              padding: '2px 7px',
-              borderRadius: 4,
-              border: 'none',
-              cursor: ollamaReachable ? 'pointer' : 'not-allowed',
-              opacity: ollamaReachable ? 1 : 0.5,
-              backgroundColor: agentMode === 'local' ? 'var(--panel-2)' : 'transparent',
-              color: agentMode === 'local' ? 'var(--text-success)' : 'var(--text-muted)',
-              fontWeight: agentMode === 'local' ? 600 : 400,
-            }}
-          >
-            Local AI
           </button>
         </div>
       </div>

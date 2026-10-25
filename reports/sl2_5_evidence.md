@@ -7,20 +7,20 @@ Date: 2026-10-12
 Command:
 
 ```powershell
-$env:PYTHONPATH='src'; python -c "from apsla.llm.local_ollama import get_agent_status; print(get_agent_status())"
+$env:PYTHONPATH='src'; python -c "from apsla.llm.local_groq import get_agent_status; print(get_agent_status())"
 ```
 
 Output:
 
 ```text
-{'mode': 'off', 'ollama_reachable': False, 'model': 'qwen2.5-coder:3b', 'model_present': False, 'fallback_active': False, 'message': 'Ollama is not running at http://127.0.0.1:11434'}
+{'mode': 'off', 'groq_reachable': False, 'model': 'llama-3.3-70b-versatile', 'model_present': False, 'fallback_active': False, 'message': 'groq is not running at https://api.groq.com/openai/v1'}
 ```
 
-The provider/model exercised in this environment was **none**: Ollama was unreachable and `qwen2.5-coder:3b` was not present. Remote provider configuration and consent were tested with unit-level doubles, not a live endpoint. To enable the local provider, start Ollama and run `ollama pull qwen2.5-coder:3b`. No live AI output is claimed.
+The provider/model exercised in this environment was **none**: groq was unreachable and `llama-3.3-70b-versatile` was not present. Remote provider configuration and consent were tested with unit-level doubles, not a live endpoint. To enable the local provider, start groq and run `configure GROQ_API_KEY in .env`. No live AI output is claimed.
 
 ## Changes
 
-- Added `src/apsla/agents/provider_v2.py`: provider protocol and typed failures, Ollama and OpenAI-compatible adapters, bounded 15-second HTTP timeout, two attempts with one schema-repair prompt, 512 KiB request cap, 2,048 output-token request cap, 256 KiB response cap, schema validation, and secret redaction.
+- Added `src/apsla/agents/provider_v2.py`: provider protocol and typed failures, groq and OpenAI-compatible adapters, bounded 15-second HTTP timeout, two attempts with one schema-repair prompt, 512 KiB request cap, 2,048 output-token request cap, 256 KiB response cap, schema validation, and secret redaction.
 - Added an in-memory session consent set; `/api/ai/consent` writes/revokes it and remote AI operations require both the API consent flag and stored consent. Loopback OpenAI-compatible endpoints are treated as local.
 - Added a structured `PatchProposal` adapter on the existing Fix Agent so deterministic candidates carry target, edits/diff, rationale, outcome, assumptions and risks as unapplied drafts.
 - Wrapped existing in-memory agent tools in the schema-checked `ToolGateway`, with per-tool operation permissions, a 32-call agent-session budget, and bounded wait. Shell, filesystem, network and policy tools are not allowed.
@@ -50,4 +50,4 @@ OpenAPI generation command imported `app.openapi()` and wrote `docs/api_v2.md` p
 
 UI build command: `npm run build` (from `web`). Output included `✓ 2677 modules transformed.` and `✓ built in 1m 17s`, exit code 0. Vite emitted its existing large-chunk warning for the 3.64 MB main JS bundle; it did not fail the build.
 
-Live Ollama explain/generate was unavailable as noted above. Live remote provider behavior was not tested. HTTP end-to-end operation of the new AI routes is not claimed; their generated API contracts and provider/gateway primitives were checked independently.
+Live groq explain/generate was unavailable as noted above. Live remote provider behavior was not tested. HTTP end-to-end operation of the new AI routes is not claimed; their generated API contracts and provider/gateway primitives were checked independently.

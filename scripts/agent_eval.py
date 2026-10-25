@@ -3,7 +3,6 @@
 Evaluates SecureLex IDE across compiler stages in:
   - 'off' mode (deterministic pipeline baseline, Phase 14)
   - 'rules' mode (agentic loop with RulesPlanner)
-  - 'local' mode (agentic loop with LocalLLM / Ollama if available)
 
 Reports real metrics only:
   - Precision / Recall per language
@@ -26,7 +25,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from apsla.llm.local_ollama import get_agent_status  # noqa: E402
 from apsla.pipeline import Analyzer  # noqa: E402
 
 FIXTURES_DIR = ROOT / "tests" / "fixtures"
@@ -246,18 +244,11 @@ def evaluate_file(
 
 def run_evaluation(languages: list[str], modes: list[str]) -> None:
     """Run evaluation across all languages and modes."""
-    status = get_agent_status()
-    ollama_ready = status.get("ollama_reachable", False) and status.get("model_present", False)
-
     print("=" * 80)
-    print("SECURELEX IDE - PHASE 15 AGENTIC EVALUATION REPORT")
+    print("SECURELEX IDE - AGENTIC EVALUATION REPORT")
     print("=" * 80)
-    print(f"Status: Mode={status.get('mode')} | Model={status.get('model')}")
-    print(
-        f"Ollama reachable: {status.get('ollama_reachable')} | Model present: {status.get('model_present')}"
-    )
-    print(f"Loopback URL: {status.get('loopback_url', 'http://127.0.0.1:11434')}")
-    print("Outbound network calls: 0 (local loopback only)")
+    print("Modes evaluated: 'off' (baseline), 'rules' (deterministic)")
+    print("Outbound network calls: 0 (local deterministic analysis)")
     print("-" * 80)
 
     fixtures = load_fixtures(languages)
@@ -265,17 +256,6 @@ def run_evaluation(languages: list[str], modes: list[str]) -> None:
     print(f"Loaded {total_fixture_count} fixtures across languages: {', '.join(languages)}")
 
     effective_modes = [m for m in modes if m in ("off", "rules")]
-    local_available = "local" in modes and ollama_ready
-    if local_available:
-        effective_modes.append("local")
-    else:
-        print("\n[NOTE] local mode: not run (Ollama not available or model not pulled)")
-        print(
-            "To run local AI mode on your machine, execute:\n"
-            "  1. Start Ollama: ollama serve\n"
-            f"  2. Pull model:   ollama pull {status.get('model', 'qwen2.5-coder:3b')}\n"
-            "  3. Run eval:     python scripts/agent_eval.py --modes off rules local\n"
-        )
 
     analyzer = Analyzer()
     results: dict[str, dict[str, ModeLanguageStats]] = {m: {} for m in effective_modes}
@@ -322,8 +302,6 @@ def run_evaluation(languages: list[str], modes: list[str]) -> None:
                 f"{st.total_fixes_verified:<8} | {st.avg_fix_attempts:<8.1f} | "
                 f"{st.avg_steps:<7.1f} | {st.avg_llm_calls:<5.1f} | {st.avg_time_ms:<8.2f}"
             )
-        if not local_available and "local" in modes:
-            print(f"{lang:<12} | {'local':<7} | {'[NOT RUN - Ollama not available]':<54}")
         print("-" * len(header))
 
     # Invariant Verification Summary
@@ -368,9 +346,9 @@ def main() -> int:
     parser.add_argument(
         "--modes",
         nargs="+",
-        default=["off", "rules", "local"],
-        choices=["off", "rules", "local"],
-        help="Agent modes to benchmark (default: off rules local)",
+        default=["off", "rules"],
+        choices=["off", "rules"],
+        help="Agent modes to benchmark (default: off rules)",
     )
 
     args = parser.parse_args()

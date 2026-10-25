@@ -14,7 +14,7 @@ Open AST to navigate parser nodes and inspect their ranges and related evidence.
 
 ## AI and privacy
 
-AI Explain, Build with AI and AI fixes require a configured, reachable provider. Without one, the UI shows setup guidance. Ollama is the local default. Remote OpenAI-compatible providers require the explicit session consent flow; inspect the processing-location badge and consent state before sending source. Provider keys stay in the server environment.
+AI Explain, Build with AI and AI fixes require a configured, reachable provider. Without one, the UI shows setup guidance. groq is the local default. Remote OpenAI-compatible providers require the explicit session consent flow; inspect the processing-location badge and consent state before sending source. Provider keys stay in the server environment.
 
 Generated code opens as a separate candidate and is analyzed by the backend; it is not executed. A fix proposal does not change the source. Review the diff, apply only when intended, read the independent verification's four sections, and use Undo to restore the previous in-memory buffer. Verification applies to reported checks only.
 

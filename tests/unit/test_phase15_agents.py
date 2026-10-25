@@ -2,52 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from apsla.agents.orchestrator import AgentOrchestrator
 from apsla.agents.planner_rules import RulesPlanner
 from apsla.agents.tools import AnalysisSession
 from apsla.agents.trace import TraceLogger
-from apsla.llm.local_ollama import LocalLLM
 from apsla.models import Finding, Label, Range, Severity
-
-
-class FakeGarbageLLM(LocalLLM):
-    """Fake LLM returning non-JSON or random garbage."""
-
-    def __init__(self) -> None:
-        super().__init__(base_url="http://127.0.0.1:11434")
-
-    def chat_json(
-        self,
-        system: str,
-        user: str,
-        schema: dict[str, Any] | None = None,
-    ) -> dict[str, Any] | None:
-        self.call_count += 1
-        return None  # Simulates failed JSON or timeout
-
-
-class FakeCannedLLM(LocalLLM):
-    """Fake LLM returning pre-scripted responses."""
-
-    def __init__(self, responses: list[dict[str, Any]]) -> None:
-        super().__init__(base_url="http://127.0.0.1:11434")
-        self.responses = list(responses)
-        self.idx = 0
-
-    def chat_json(
-        self,
-        system: str,
-        user: str,
-        schema: dict[str, Any] | None = None,
-    ) -> dict[str, Any] | None:
-        self.call_count += 1
-        if self.idx < len(self.responses):
-            res = self.responses[self.idx]
-            self.idx += 1
-            return res
-        return {"reason": "Conclude stage", "action": "finish", "args": {}}
 
 
 def test_invariant_b_mode_off_byte_identical():
@@ -110,22 +69,6 @@ def test_invariant_c_rules_planner_is_deterministic():
     assert [s["action"] for s in trace1] == [s["action"] for s in trace2]
 
 
-def test_invariant_d_garbage_llm_equals_rules_planner_result():
-    """With an LLM returning garbage/None, result equals RulesPlanner result."""
-    source = "import os\nos.system('whoami')"
-
-    rules_orch = AgentOrchestrator(mode="rules")
-    rules_findings, rules_trace, _ = rules_orch.run(source, language="python")
-
-    garbage_llm = FakeGarbageLLM()
-    llm_orch = AgentOrchestrator(mode="local", local_llm=garbage_llm)
-    llm_findings, llm_trace, _ = llm_orch.run(source, language="python")
-
-    # Finding IDs and count must match RulesPlanner
-    assert [f.id for f in llm_findings] == [f.id for f in rules_findings]
-    # Actions taken should match rules planner actions (though decisions marked fallback)
-    assert [s["action"] for s in llm_trace] == [s["action"] for s in rules_trace]
-    assert all(s["decision_source"] == "rules" for s in llm_trace)
 
 
 def test_budget_enforcement():

@@ -32,9 +32,7 @@ interface FindingPanelProps {
   mlInsights: MLInsightsResponse | null;
   isLoadingInsights: boolean;
   mlMode: 'on' | 'off';
-  agentMode?: 'off' | 'rules' | 'local';
-  agentModel?: string;
-  ollamaUrl?: string;
+  agentMode?: 'off' | 'rules';
   onApplyFix: (fix: Fix, finding: Finding) => void;
   onOpenDiff: (fix: Fix, finding: Finding) => void;
   onJumpToStep: (step: TaintPathStep) => void;
@@ -101,8 +99,6 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
   tokenMainFilter = 'All',
   tokenGroups = [],
   agentMode = 'off',
-  agentModel = 'qwen2.5-coder:3b',
-  ollamaUrl = 'http://127.0.0.1:11434',
 }) => {
   return (
     <div data-qa="right-pane" style={containerStyle}>
@@ -266,8 +262,6 @@ export const FindingPanel: React.FC<FindingPanelProps> = ({
             trace={analysis?.trace || []}
             agentMeta={analysis?.agent_meta}
             agentMode={agentMode}
-            agentModel={agentModel}
-            ollamaUrl={ollamaUrl}
           />
         )}
       </div>

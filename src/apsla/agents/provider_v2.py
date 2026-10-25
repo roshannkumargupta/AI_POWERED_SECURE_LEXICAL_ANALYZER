@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ipaddress
 import json
 import os
 import random
@@ -17,7 +16,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
-from urllib.parse import urlparse
 
 import httpx
 
@@ -38,8 +36,7 @@ def _load_env_file() -> None:
                 if k:
                     parsed[k] = v
             for k, v in parsed.items():
-                if k not in os.environ:
-                    os.environ[k] = v
+                os.environ[k] = v
         except Exception:
             pass
 
@@ -121,7 +118,7 @@ def redact_prompt(text: str) -> str:
         r"(?i)(api[_-]?key|token|password|secret)(\s*[:=]\s*)([^\s,;]+)", r"\1\2[REDACTED]", text
     )
     text = re.sub(r"\bgsk_[A-Za-z0-9_-]+\b", "[REDACTED]", text)
-    for key in ("GROQ_API_KEY", "OPENAI_COMPAT_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"):
+    for key in ("GROQ_API_KEY",):
         secret = os.environ.get(key)
         if secret:
             text = text.replace(secret, "[REDACTED]")
@@ -206,126 +203,12 @@ class HttpJsonProvider:
         )
 
 
-class OllamaProvider(HttpJsonProvider):
-    name = "ollama"
-
-    def __init__(
-        self, base_url: str | None = None, model: str | None = None, **kwargs: Any
-    ) -> None:
-        from apsla.llm.local_ollama import get_agent_status
-        url = base_url or os.getenv("OLLAMA_BASE_URL") or os.getenv("APSLA_LOCAL_URL") or "http://127.0.0.1:11434"
-        host = (urlparse(url).hostname or "").lower().removeprefix("[").removesuffix("]")
-        if host not in {"localhost", "127.0.0.1", "::1"}:
-            raise ValueError("Ollama provider must use a loopback address.")
-        configured_model = model or os.getenv("OLLAMA_MODEL") or os.getenv("APSLA_LOCAL_MODEL")
-        status = get_agent_status()
-        installed_models = status.get("models", [])
-        if model:
-            configured_model = model
-        elif configured_model and installed_models and configured_model not in installed_models:
-            if status.get("model") and status.get("model") in installed_models:
-                configured_model = str(status.get("model"))
-            elif installed_models:
-                configured_model = installed_models[0]
-        elif configured_model is None:
-            configured_model = str(status.get("model") or "qwen2.5-coder:3b")
-        # Per-request httpx timeout is half the outer deadline so chat_json
-        # has room for its validation-retry attempt within asyncio.wait_for.
-        outer = float(os.getenv("SECURELEX_AI_TIMEOUT_SECONDS", os.getenv("OLLAMA_TIMEOUT_SECONDS", "90")))
-        super().__init__(
-            url,
-            configured_model,
-            timeout=outer,
-            **kwargs,
-        )
-
-    def _request(self, system: str, user: str, schema: dict[str, Any]) -> str:
-        req_timeout = max(30.0, self.timeout / 2) if self.timeout >= 60.0 else self.timeout
-        with httpx.Client(transport=self.transport, timeout=req_timeout) as client:
-            response = client.post(
-                self.base_url + "/api/chat",
-                json={
-                    "model": self.model,
-                    "messages": [
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": user},
-                    ],
-                    "format": "json",
-                    "stream": False,
-                    "options": {
-                        "num_predict": int(os.getenv("OLLAMA_NUM_PREDICT", "1024")),
-                        "num_ctx": int(os.getenv("OLLAMA_NUM_CTX", "2048")),
-                        "temperature": 0.1,
-                    },
-                    "keep_alive": "10m",
-                },
-            )
-            response.raise_for_status()
-            return str(response.json().get("message", {}).get("content", ""))
-
-
-class OpenAICompatibleProvider(HttpJsonProvider):
-    name = "openai-compatible"
-
-    def __init__(
-        self,
-        base_url: str | None = None,
-        model: str | None = None,
-        api_key: str | None = None,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(
-            base_url or os.getenv("OPENAI_COMPAT_BASE_URL") or "",
-            model or os.getenv("OPENAI_COMPAT_MODEL") or "",
-            api_key=api_key if api_key is not None else os.getenv("OPENAI_COMPAT_API_KEY"),
-            **kwargs,
-        )
-        if not self.base_url or not self.model:
-            raise ProviderFailure(
-                "unavailable",
-                "OpenAI-compatible provider is not configured.",
-                "Set OPENAI_COMPAT_BASE_URL, OPENAI_COMPAT_MODEL and OPENAI_COMPAT_API_KEY.",
-            )
-        host = (urlparse(self.base_url).hostname or "").lower()
-        try:
-            loopback = host == "localhost" or ipaddress.ip_address(host).is_loopback
-        except ValueError:
-            loopback = host == "localhost"
-        self.processing_location = "local" if loopback else "remote"
-        if self.processing_location == "remote" and not self.api_key:
-            raise ProviderFailure(
-                "unavailable",
-                "Remote OpenAI-compatible provider has no API key configured.",
-                "Set OPENAI_COMPAT_API_KEY in the server environment.",
-            )
-
-    def _request(self, system: str, user: str, schema: dict[str, Any]) -> str:
-        headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
-        with httpx.Client(
-            transport=self.transport, timeout=self.timeout, headers=headers
-        ) as client:
-            response = client.post(
-                self.base_url + "/chat/completions",
-                json={
-                    "model": self.model,
-                    "messages": [
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": user},
-                    ],
-                    "response_format": {"type": "json_object"},
-                    "max_tokens": MAX_OUTPUT_TOKENS,
-                },
-                headers=headers,
-            )
-            response.raise_for_status()
-            return str(response.json()["choices"][0]["message"]["content"])
-
-
 DEFAULT_GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-DEFAULT_GROQ_FAST_MODEL = "llama-3.1-8b-instant"
-DEFAULT_GROQ_CODE_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_GROQ_FAST_MODEL = os.getenv("GROQ_MODEL_FAST", "openai/gpt-oss-20b")
+DEFAULT_GROQ_CODE_MODEL = os.getenv("GROQ_MODEL_CODE", "openai/gpt-oss-120b")
 _GROQ_MODELS_CACHE: dict[str, Any] = {"timestamp": 0.0, "models": []}
 _GROQ_SEMAPHORE = threading.Semaphore(int(os.getenv("GROQ_MAX_CONCURRENCY", "2")))
+
 
 
 class GroqProvider(HttpJsonProvider):
@@ -341,12 +224,13 @@ class GroqProvider(HttpJsonProvider):
         timeout: float | None = None,
         **kwargs: Any,
     ) -> None:
-        key = api_key or os.getenv("GROQ_API_KEY")
+        raw_key = api_key or os.getenv("GROQ_API_KEY")
+        key = raw_key.strip().strip("'\"") if raw_key else ""
         if not key:
             raise ProviderFailure(
                 "unavailable",
-                "Groq API key is not configured.",
-                "Set GROQ_API_KEY in .env.",
+                "Add GROQ_API_KEY to your .env file and restart",
+                "Add GROQ_API_KEY to your .env file and restart",
             )
         url = (base_url or os.getenv("GROQ_BASE_URL") or DEFAULT_GROQ_BASE_URL).rstrip("/")
         if model:
@@ -525,16 +409,16 @@ class GroqProvider(HttpJsonProvider):
                         for m in models
                         if not any(
                             x in m.lower()
-                            for x in ["whisper", "guard", "embed", "tts", "distil-whisper"]
+                            for x in ["whisper", "guard", "embed", "tts", "distil-whisper", "qwen"]
                         )
                     ]
                     priority = [
                         DEFAULT_GROQ_CODE_MODEL,
                         DEFAULT_GROQ_FAST_MODEL,
-                        "qwen/qwen3.8-27b",
-                        "openai/gpt-oss-20b",
                         "openai/gpt-oss-120b",
-                        "qwen-2.5-coder-32b",
+                        "openai/gpt-oss-20b",
+                        "llama-3.3-70b-versatile",
+                        "llama-3.1-8b-instant",
                     ]
                     sorted_models = [m for m in priority if m in chat_models] + [
                         m for m in chat_models if m not in priority
@@ -556,7 +440,8 @@ class GroqProvider(HttpJsonProvider):
         transport: httpx.BaseTransport | None = None,
         timeout: float = 10.0,
     ) -> dict[str, Any]:
-        key = api_key or os.getenv("GROQ_API_KEY")
+        raw_key = api_key or os.getenv("GROQ_API_KEY")
+        key = raw_key.strip().strip("'\"") if raw_key else ""
         if not key:
             return {
                 "ok": False,
@@ -564,7 +449,7 @@ class GroqProvider(HttpJsonProvider):
                 "latency_ms": 0.0,
                 "model": None,
                 "available_models": [],
-                "error": "GROQ_API_KEY is not configured in .env",
+                "error": "Add GROQ_API_KEY to your .env file and restart",
             }
         url = (base_url or os.getenv("GROQ_BASE_URL") or DEFAULT_GROQ_BASE_URL).rstrip("/")
         headers = {"Authorization": f"Bearer {key}"}
@@ -602,16 +487,22 @@ class GroqProvider(HttpJsonProvider):
                     for m in models
                     if not any(
                         x in m.lower()
-                        for x in ["whisper", "guard", "embed", "tts", "distil-whisper"]
+                        for x in [
+                            "whisper",
+                            "guard",
+                            "embed",
+                            "tts",
+                            "distil-whisper",
+                            "qwen",
+                        ]
                     )
                 ]
                 priority = [
                     DEFAULT_GROQ_CODE_MODEL,
                     DEFAULT_GROQ_FAST_MODEL,
-                    "qwen/qwen3.8-27b",
-                    "openai/gpt-oss-20b",
-                    "openai/gpt-oss-120b",
-                    "qwen-2.5-coder-32b",
+                    "llama-3.1-70b-versatile",
+                    "llama3-70b-8192",
+                    "llama3-8b-8192",
                 ]
                 sorted_models = [m for m in priority if m in chat_models] + [
                     m for m in chat_models if m not in priority
@@ -648,23 +539,17 @@ class GroqProvider(HttpJsonProvider):
 
 
 def provider_from_environment(task: str | None = None) -> ModelProvider:
-    choice = os.getenv("SECURELEX_AI_PROVIDER", "auto").strip().lower()
-    if choice == "auto":
-        if os.getenv("GROQ_API_KEY"):
-            return GroqProvider(task=task)
-        return OllamaProvider()
-    if choice == "groq":
-        return GroqProvider(task=task)
-    if choice in {"openai", "openai-compatible"}:
-        return OpenAICompatibleProvider(
-            timeout=float(
-                os.getenv(
-                    "SECURELEX_AI_TIMEOUT_SECONDS",
-                    os.getenv("OLLAMA_TIMEOUT_SECONDS", "90"),
-                )
-            )
+    if os.getenv("SECURELEX_ENV") == "test" and os.getenv("SECURELEX_AI_PROVIDER") == "fake":
+        return FakeProvider()
+    choice = os.getenv("SECURELEX_AI_PROVIDER", "groq").strip().lower()
+    if choice != "groq":
+        raise ProviderFailure(
+            "invalid_provider",
+            f"Unsupported AI provider '{choice}'. Only 'groq' is supported.",
+            "Set SECURELEX_AI_PROVIDER=groq in .env.",
         )
-    return OllamaProvider()
+    return GroqProvider(task=task)
+
 
 
 class FakeProvider:

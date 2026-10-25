@@ -29,6 +29,8 @@ coverage.xml
 coverage.json
 .hypothesis/
 .ruff_cache/
+web/test-results/
+web/playwright-report/
 .pytest-*/
 reports/.pytest-*/
 
@@ -107,3 +109,4 @@ desktop.ini
 *.orig
 *.swp
 *~
+*.zip

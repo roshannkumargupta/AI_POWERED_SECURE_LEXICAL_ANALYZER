@@ -774,7 +774,7 @@ export const SL28bWorkspace: React.FC<SL28bWorkspaceProps> = (p) => {
                 <p>
                   {ai.configured
                     ? 'Remote consent is required.'
-                    : 'Provider unavailable. Configure Ollama and run: ollama pull &lt;model&gt;.'}
+                    : 'Add GROQ_API_KEY to your .env file and restart'}
                 </p>
               )}
               <pre style={styles.pre}>{explainText}</pre>

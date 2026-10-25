@@ -2,7 +2,7 @@
 
 STRICT INVARIANTS:
 1. Runs stages strictly in sequence: lexical -> syntax -> semantic -> triage -> fix -> verify -> explain -> finish.
-2. Enforces global budgets: max steps (12), max LLM calls (8), wall-clock timeout (60s).
+2. Enforces global budgets: max steps (12), wall-clock timeout (60s).
 3. Findings are guaranteed to be a SUPERSET-or-equal of deterministic non-agentic findings.
 4. On any agent error or timeout, logs the error and returns deterministic results (never fails).
 5. Mode 'off' returns byte-identical results to Phase 14 analysis.
@@ -18,20 +18,17 @@ from apsla.agents.explain_agent import ExplainAgent
 from apsla.agents.fix_agent import FixAgent
 from apsla.agents.lexer_agent import LexerAgent
 from apsla.agents.parser_agent import ParserAgent
-from apsla.agents.planner_llm import LLMPlanner
 from apsla.agents.planner_rules import RulesPlanner
 from apsla.agents.semantic_agent import SemanticAgent
-from apsla.agents.tools import TOOL_REGISTRY, AnalysisSession
+from apsla.agents.tools import AnalysisSession
 from apsla.agents.trace import TraceLogger
 from apsla.agents.triage_agent import TriageAgent
 from apsla.agents.verifier_agent import VerifierAgent
-from apsla.llm.local_ollama import (
-    DEFAULT_MAX_LLM_CALLS,
-    DEFAULT_MAX_STEPS,
-    DEFAULT_TIMEOUT_S,
-    LocalLLM,
-)
 from apsla.models import Finding
+
+DEFAULT_MAX_STEPS = 12
+DEFAULT_MAX_LLM_CALLS = 0
+DEFAULT_TIMEOUT_S = 60.0
 
 
 class AgentOrchestrator:
@@ -40,29 +37,19 @@ class AgentOrchestrator:
     def __init__(
         self,
         mode: str = "rules",
-        local_llm: LocalLLM | None = None,
         max_steps: int = DEFAULT_MAX_STEPS,
         max_llm_calls: int = DEFAULT_MAX_LLM_CALLS,
         timeout_s: float = DEFAULT_TIMEOUT_S,
+        **_kwargs: Any,
     ) -> None:
         self.mode = mode.lower()
-        if self.mode not in {"off", "rules", "local"}:
+        if self.mode not in {"off", "rules"}:
             self.mode = "off"
 
         self.rules_planner = RulesPlanner()
-        self.local_llm = local_llm or (LocalLLM() if self.mode == "local" else None)
         self.max_steps = max_steps
         self.max_llm_calls = max_llm_calls
         self.timeout_s = timeout_s
-
-        self.llm_planner: LLMPlanner | None = None
-        tool_schemas = {name: tool.parameters_schema for name, tool in TOOL_REGISTRY.items()}
-        if self.mode == "local" and self.local_llm:
-            self.llm_planner = LLMPlanner(
-                local_llm=self.local_llm,
-                rules_planner=self.rules_planner,
-                tool_schemas=tool_schemas,
-            )
 
     def run(
         self,
@@ -87,11 +74,7 @@ class AgentOrchestrator:
             findings=list(initial_findings or []),
         )
 
-        # Initialize active planner based on mode
-
-        active_planner: RulesPlanner | LLMPlanner = (
-            self.llm_planner if (self.mode == "local" and self.llm_planner) else self.rules_planner
-        )
+        active_planner: RulesPlanner = self.rules_planner
 
         stages = [
             LexerAgent(),
@@ -109,14 +92,6 @@ class AgentOrchestrator:
                 elapsed = time.perf_counter() - start_time
                 if elapsed > self.timeout_s or trace.total_steps >= self.max_steps:
                     break
-
-                # If LLM calls budget exhausted, fallback to rules for remaining stages
-                if (
-                    self.mode == "local"
-                    and self.local_llm
-                    and self.local_llm.call_count >= self.max_llm_calls
-                ):
-                    active_planner = self.rules_planner
 
                 # Skip stages when no findings exist to optimize performance
                 if agent.stage in {"triage", "fix", "verify", "explain"} and not session.findings:
@@ -174,7 +149,7 @@ class AgentOrchestrator:
         summary_meta = {
             "mode": self.mode,
             "total_steps": trace.total_steps,
-            "llm_calls": self.local_llm.call_count if self.local_llm else 0,
+            "llm_calls": 0,
             "elapsed_ms": round(elapsed_ms, 2),
             "structure_quality": session.structure_quality,
             "verified_fixes": sum(1 for v in session.verified_fixes.values() if v),

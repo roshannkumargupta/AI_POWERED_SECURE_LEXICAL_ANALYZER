@@ -9,7 +9,7 @@ Welcome to the SecureLex IDE (`apsla`) technical documentation. This directory p
 - **[System Architecture](architecture.md)**: Layered design of lexical analysis, syntactic parsing, semantic AST extraction, taint flow tracking, and ML fusion.
 - **[Threat Model](threat_model.md)**: Security boundary analysis, threat vectors, untrusted input containment, and Trojan Source defenses.
 - **[Rules Catalogue](rules_catalogue.md)**: Complete catalog of deterministic security rules across Python, Java, JavaScript, and C++ with CWE classifications.
-- **[Agentic Compiler Map](agentic_map.md)**: Phase 15 multi-agent compiler orchestration, deterministic tool boundaries, and local Ollama planner integration.
+- **[Agentic Compiler Map](agentic_map.md)**: Phase 15 multi-agent compiler orchestration, deterministic tool boundaries, and local groq planner integration.
 - **[Design Rules](design_rules.md)**: Architectural invariants, zero-external-dependency constraints, and cross-platform guarantees.
 - **[System Limitations](limitations.md)**: Explicit operational boundaries, resource caps, and unsupported edge cases.
 

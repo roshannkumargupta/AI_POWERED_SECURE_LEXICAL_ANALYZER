@@ -13,7 +13,7 @@ Date: 2026-10-12. This is an evidence report for the current checkout; partial a
 | 5 | Syntax/security independent of lexical validity | Partial | SL2-2/3 tests include this separation; full suite is not confirmed in this phase. |
 | 6 | AST from real parser | Partial | Tree-sitter grammar packages were previously probed as loadable in `docs/sl2_environment.md`; `tests/unit/test_sl2_3_parsing.py` exists. No current live AST browser view was exercised. |
 | 7 | Security findings from configured rules/analyzers | Partial | `tests/unit/test_sl2_4_security.py`, rule catalogue and adapter fixtures exist. Optional analyzers are unavailable and external tool execution is fail-closed on this host. |
-| 8 | Real provider-backed generation and honest failure | Partial | Provider and no-provider tests exist. Ollama executable exists but its service is unreachable; no live model run was performed. |
+| 8 | Real provider-backed generation and honest failure | Partial | Provider and no-provider tests exist. groq executable exists but its service is unreachable; no live model run was performed. |
 | 9 | Reviewable, validated, reversible fixes | Partial | `tests/unit/test_sl2_6_patch_flow.py` exists; old endpoints remain in use by `tests/e2e/test_java_end_to_end.py`, `tests/e2e/test_javascript_end_to_end.py`, and `tests/unit/test_api_contract.py`, so aliases are retained as debt. Browser apply/undo not exercised. |
 | 10 | Independent verifier with deterministic checks | Partial | `src/apsla/fixes/independent_verifier.py` and patch flow tests exist; full suite and live four-language path are not confirmed. |
 | 11 | Remaining/new/unverified issues visible | Partial | API/UI verification report has four sections; `SL28bWorkspace.tsx` displays report fields. UI interaction remains unverified in a browser. |
@@ -40,7 +40,7 @@ Date: 2026-10-12. This is an evidence report for the current checkout; partial a
 
 ## Tool availability observed/reported
 
-`g++` and `gcc` are present. `clang`, `clang++`, `clang-tidy`, `cppcheck`, `javac`, `semgrep`, `bandit`, `pyflakes` and global `mypy`/`eslint` are absent from PATH; local venv mypy and local frontend ESLint are installed. Java runtime is present but `javac` is not. Ollama CLI is present but no service is reachable, so installed models could not be enumerated and AI paths were not live-tested. Playwright packages/browser cache were reported absent in `docs/sl2_environment.md`; the CDP browser endpoint was denied.
+`g++` and `gcc` are present. `clang`, `clang++`, `clang-tidy`, `cppcheck`, `javac`, `semgrep`, `bandit`, `pyflakes` and global `mypy`/`eslint` are absent from PATH; local venv mypy and local frontend ESLint are installed. Java runtime is present but `javac` is not. groq CLI is present but no service is reachable, so installed models could not be enumerated and AI paths were not live-tested. Playwright packages/browser cache were reported absent in `docs/sl2_environment.md`; the CDP browser endpoint was denied.
 
 These absences disable or reduce compiler-backed checks for Java/Clang, optional security/semantic analyzers, live AI, and real-browser acceptance. Deterministic lexical analysis and non-provider features do not require a paid API.
 

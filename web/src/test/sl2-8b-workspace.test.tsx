@@ -4,12 +4,12 @@ import { SL28bWorkspace, View } from '../components/SL28bWorkspace';
 
 const capabilities = {
   ai: {
-    provider: 'ollama',
+    provider: 'groq',
     configured: false,
     reachable: false,
-    model: 'test-model',
-    processing_location: 'local',
-    consent_required: false,
+    model: 'llama-3.3-70b-versatile',
+    processing_location: 'remote',
+    consent_required: true,
     remote_consented: false,
   },
   features: { build_with_ai: false, fix_with_ai: false },
@@ -94,7 +94,12 @@ describe('SL2-8b API workspace', () => {
       ...props('explain'),
       capabilities: {
         ...capabilities,
-        ai: { ...capabilities.ai, configured: true, reachable: true },
+        ai: {
+          ...capabilities.ai,
+          configured: true,
+          reachable: true,
+          remote_consented: true,
+        },
       },
     };
     render(<SL28bWorkspace {...p} />);

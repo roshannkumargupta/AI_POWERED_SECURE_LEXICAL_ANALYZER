@@ -38,7 +38,7 @@ def test_groq_provider_missing_key_raises_unavailable(monkeypatch: pytest.Monkey
     with pytest.raises(ProviderFailure) as exc_info:
         GroqProvider(api_key=None)
     assert exc_info.value.kind == "unavailable"
-    assert "not configured" in str(exc_info.value)
+    assert "Add GROQ_API_KEY to your .env file and restart" in str(exc_info.value)
 
 
 def test_groq_provider_success_structured_output() -> None:
@@ -169,19 +169,24 @@ def test_groq_provider_task_model_selection(monkeypatch: pytest.MonkeyPatch) -> 
     assert code_provider.model == DEFAULT_GROQ_CODE_MODEL
 
 
-def test_provider_from_environment_auto_mode(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("SECURELEX_AI_PROVIDER", "auto")
+def test_provider_from_environment_groq_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SECURELEX_AI_PROVIDER", "groq")
     monkeypatch.setenv("GROQ_API_KEY", "mock-key-present")
     prov = provider_from_environment()
     assert isinstance(prov, GroqProvider)
     assert prov.name == "groq"
     assert prov.processing_location == "remote"
 
-    # When key is removed, falls back to Ollama
+    # Unsupported provider raises ProviderFailure
+    monkeypatch.setenv("SECURELEX_AI_PROVIDER", "unsupported")
+    with pytest.raises(ProviderFailure, match="Unsupported AI provider"):
+        provider_from_environment()
+
+    # When key is removed, ProviderFailure is raised
+    monkeypatch.setenv("SECURELEX_AI_PROVIDER", "groq")
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
-    prov_fallback = provider_from_environment()
-    assert prov_fallback.name == "ollama"
-    assert prov_fallback.processing_location == "local"
+    with pytest.raises(ProviderFailure, match=r"Add GROQ_API_KEY to your \.env file and restart"):
+        provider_from_environment()
 
 
 def test_groq_list_models_mock() -> None:
@@ -193,7 +198,7 @@ def test_groq_list_models_mock() -> None:
                     {"id": "whisper-large-v3"},
                     {"id": "llama-3.1-8b-instant"},
                     {"id": "llama-3.3-70b-versatile"},
-                    {"id": "qwen-2.5-coder-32b"},
+                    {"id": "llama-3.2-11b-vision-preview"},
                 ]
             },
         )
@@ -226,19 +231,10 @@ def test_groq_test_connection_mock() -> None:
     assert "llama-3.3-70b-versatile" in result["available_models"]
 
 
-def test_capabilities_groq_remote_does_not_require_ollama(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_capabilities_groq_remote(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("SECURELEX_ENV", raising=False)
     monkeypatch.setenv("SECURELEX_AI_PROVIDER", "groq")
     monkeypatch.setenv("GROQ_API_KEY", "mock-groq-key")
-
-    import apsla.llm.local_ollama as ollama_mod
-
-    # Simulate Ollama completely offline
-    monkeypatch.setattr(
-        ollama_mod,
-        "get_agent_status",
-        lambda: {"ollama_reachable": False, "model_present": False, "model": "none", "models": []},
-    )
 
     caps = build_capabilities(session_id="test-session-groq-1234")
     assert caps.ai["provider"] == "groq"
@@ -249,7 +245,7 @@ def test_capabilities_groq_remote_does_not_require_ollama(monkeypatch: pytest.Mo
     # Before remote consent, build_with_ai is False
     assert caps.features["build_with_ai"] is False
 
-    # After remote consent is granted, build_with_ai and fix_with_ai become True WITHOUT Ollama
+    # After remote consent is granted, build_with_ai and fix_with_ai become True
     REMOTE_CONSENTS.add("test-session-groq-1234")
     try:
         caps_consented = build_capabilities(session_id="test-session-groq-1234")

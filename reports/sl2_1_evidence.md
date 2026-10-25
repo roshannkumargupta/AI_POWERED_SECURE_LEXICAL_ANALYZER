@@ -96,7 +96,7 @@ clang, clang++, clang-tidy, cppcheck, javac: unavailable (not on PATH)
 node: ok, v24.11.1
 ruff: ok, ruff 0.16.8
 pyflakes, mypy, eslint, bandit, semgrep, clang-format, black, prettier, google-java-format: unavailable on PATH
-ai: Ollama configured=false, reachable=false, model=qwen2.5-coder:3b, model_present=false, processing_location=local
+ai: groq configured=false, reachable=false, model=llama-3.3-70b-versatile, model_present=false, processing_location=local
 limits: max_source_bytes=524288, max_tokens=null, analysis timeout=10.0s, concurrency=null
 ```
 

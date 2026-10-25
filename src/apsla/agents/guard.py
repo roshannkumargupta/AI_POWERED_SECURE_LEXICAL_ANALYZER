@@ -15,7 +15,7 @@ from __future__ import annotations
 import html
 from typing import Any
 
-from apsla.llm.local_ollama import validate_schema
+from apsla.agents.schema_validator import validate_schema
 
 DATA_START_MARKER = "=== BEGIN CODE DATA (UNTRUSTED) ==="
 DATA_END_MARKER = "=== END CODE DATA ==="

@@ -44,11 +44,11 @@ The suppression and verifier-bypass operations were denied by the real ToolGatew
 Command and actual output:
 
 ```text
-PYTHONPATH=src .venv\Scripts\python.exe -c "from apsla.llm.local_ollama import get_agent_status; print(get_agent_status())"
-{'mode': 'off', 'ollama_reachable': False, 'model': 'qwen2.5-coder:3b', 'model_present': False, 'fallback_active': False, 'message': 'Ollama is not running at http://127.0.0.1:11434'}
+PYTHONPATH=src .venv\Scripts\python.exe -c "from apsla.llm.local_groq import get_agent_status; print(get_agent_status())"
+{'mode': 'off', 'groq_reachable': False, 'model': 'llama-3.3-70b-versatile', 'model_present': False, 'fallback_active': False, 'message': 'groq is not running at https://api.groq.com/openai/v1'}
 ```
 
-`ollama.exe` is present on PATH, but the Ollama server is unreachable and `qwen2.5-coder:3b` is not present. No live model scenario was run. The LIVE unavailable result has the required text, no assertions, and `outcome: null`; there is no simulated outcome. FakeProvider was used only in the unit test.
+`groq client` is present on PATH, but the configure GROQ_API_KEY in .envr is unreachable and `llama-3.3-70b-versatile` is not present. No live model scenario was run. The LIVE unavailable result has the required text, no assertions, and `outcome: null`; there is no simulated outcome. FakeProvider was used only in the unit test.
 
 ## Tests and static checks
 

@@ -45,4 +45,4 @@ The live script was attempted against `http://127.0.0.1:8010/api`. All four lang
 - The API and in-memory verifier paths import and register successfully, but live HTTP integration is blocked by the socket sandbox.
 - The verifier currently runs the internal deterministic security findings plus available semantic checks. It does not independently invoke each SL2-4 external security adapter, execute user tests, or provide a measured syntax-tree drift/regression fixture result; these remain explicitly unverified rather than successful.
 - There is no user-code execution or project-test sandbox. No submitted source is executed.
-- The local Ollama/model state was unavailable in SL2-5 evidence; the AI proposal route was not exercised with a live provider or FakeProvider through HTTP.
+- The local groq/model state was unavailable in SL2-5 evidence; the AI proposal route was not exercised with a live provider or FakeProvider through HTTP.

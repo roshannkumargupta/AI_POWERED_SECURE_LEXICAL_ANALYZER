@@ -67,8 +67,7 @@ interface AppPanelsProps {
   tokenGroups: string[];
   activeSample: SampleItem | null;
   onDemoStep: (delta: number) => void;
-  agentMode: 'off' | 'rules' | 'local';
-  agentModel: string;
+  agentMode?: 'off' | 'rules';
   samples: SampleItem[];
 }
 
@@ -126,7 +125,6 @@ export const AppPanels: React.FC<AppPanelsProps> = ({
   activeSample,
   onDemoStep,
   agentMode,
-  agentModel,
 }) => {
   return (
     <PanelGroup direction="horizontal" autoSaveId="ui5-editor-split" className="ui5-panels">
@@ -228,7 +226,6 @@ export const AppPanels: React.FC<AppPanelsProps> = ({
           sampleEdited={Boolean(activeSample && source !== activeSample.code)}
           onDemoStep={onDemoStep}
           agentMode={agentMode}
-          agentModel={agentModel}
         />
       </Panel>
     </PanelGroup>

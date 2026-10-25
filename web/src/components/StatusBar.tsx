@@ -14,8 +14,7 @@ interface StatusBarProps {
   onRetry?: () => void;
   analysisFailed?: boolean;
   fileState?: 'not analysed' | 'analysing' | 'analysed' | 'stale' | 'error';
-  agentMode?: 'off' | 'rules' | 'local';
-  agentModel?: string;
+  agentMode?: 'off' | 'rules';
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -31,7 +30,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   analysisFailed = false,
   fileState = 'not analysed',
   agentMode = 'off',
-  agentModel = 'qwen2.5-coder:3b',
 }) => {
   const mlMode = engine?.ml_mode ?? 'on';
   const taintType = engine?.taint ?? 'ast';
@@ -82,10 +80,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   const agentPill = () => {
     let text = 'Agent: off';
     let color = 'var(--text-muted)';
-    if (agentMode === 'local') {
-      text = `Agent: local AI (${agentModel || 'qwen2.5-coder:3b'})`;
-      color = 'var(--text-success)';
-    } else if (agentMode === 'rules') {
+    if (agentMode === 'rules') {
       text = 'Agent: rules';
       color = 'var(--text-accent)';
     }

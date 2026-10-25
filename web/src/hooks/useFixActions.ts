@@ -241,8 +241,7 @@ export function useFixActions({
       dispatch({
         type: 'ADD_TOAST',
         payload: {
-          message:
-            'No LLM provider configured. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY in .env',
+          message: 'Add GROQ_API_KEY to your .env file and restart',
           type: 'info',
         },
       });
@@ -250,22 +249,38 @@ export function useFixActions({
     }
     setIsAskingAI(true);
     try {
-      const res = await api.requestLLMFix({
+      const res = await api.proposeFix({
         source: state.source,
-        finding_id: finding.id,
-        rule_id: finding.rule_id,
-        language: state.language === 'auto' ? undefined : state.language,
-        start_line: finding.range?.start_line,
-        start_col: finding.range?.start_col,
+        source_version: 1,
+        language: state.language === 'auto' ? 'python' : state.language,
+        filename: state.filename,
+        origin: 'ai',
+        target: { kind: 'finding', id: finding.id },
       });
 
-      if (res.fixes && res.fixes.length > 0) {
+      if (res?.proposal) {
+        const candidateFix: Fix = {
+          id: res.proposal.id,
+          finding_id: finding.id,
+          title: `AI Fix for ${finding.rule_id || finding.id}`,
+          description: res.proposal.rationale || 'AI-proposed remediation',
+          edits: res.proposal.edits,
+          confidence: 'review',
+          kind: 'ai',
+          verification: {
+            syntax_ok: true,
+            finding_gone: false,
+            new_findings: [],
+            verified: false,
+            notes: 'Unverified candidate patch',
+          },
+        };
         if (state.analysis) {
           const updatedFindings = state.analysis.findings.map((f) => {
             if (f.id === finding.id) {
               return {
                 ...f,
-                fixes: [...(f.fixes || []), ...res.fixes],
+                fixes: [...(f.fixes || []), candidateFix],
               };
             }
             return f;
@@ -281,14 +296,14 @@ export function useFixActions({
         dispatch({
           type: 'ADD_TOAST',
           payload: {
-            message: `Generated ${res.fixes.length} AI fix candidate(s)`,
+            message: 'Generated 1 AI fix candidate',
             type: 'success',
           },
         });
       } else {
         dispatch({
           type: 'ADD_TOAST',
-          payload: { message: res.notes || 'No new fixes suggested by AI', type: 'info' },
+          payload: { message: 'No new fixes suggested by AI', type: 'info' },
         });
       }
     } catch (err: any) {

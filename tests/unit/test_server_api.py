@@ -496,30 +496,28 @@ def test_ai_explain_timeout_reports_shared_configurable_deadline(client: TestCli
     assert "SECURELEX_AI_TIMEOUT_SECONDS" in response.json()["detail"]["message"]
 
 
-def test_provider_uses_shared_ai_deadline_over_legacy_ollama_timeout(monkeypatch: pytest.MonkeyPatch):
-    from apsla.agents.provider_v2 import OllamaProvider
+def test_provider_uses_shared_ai_deadline(monkeypatch: pytest.MonkeyPatch):
+    from apsla.agents.provider_v2 import GroqProvider
 
     monkeypatch.setenv("SECURELEX_AI_TIMEOUT_SECONDS", "123")
-    monkeypatch.setenv("OLLAMA_TIMEOUT_SECONDS", "60")
-    assert OllamaProvider().timeout == 123
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_testdummysecretvalue1234567890123456")
+    assert GroqProvider().timeout == 123
 
 
 def test_ai_model_selection_is_limited_to_installed_session_model(client: TestClient, monkeypatch: pytest.MonkeyPatch):
-    import apsla.llm.local_ollama as ollama
+    from apsla.agents.provider_v2 import GroqProvider
 
-    monkeypatch.setenv("SECURELEX_AI_PROVIDER", "ollama")
-    monkeypatch.setattr(ollama, "get_agent_status", lambda: {"ollama_reachable": True, "model_present": False, "model": "qwen2.5-coder:3b", "models": ["qwen2.5-coder:1.5b"], "fallback_active": False, "message": ""})
-    missing = client.get("/api/capabilities").json()["ai"]
-    assert missing["model"] == "qwen2.5-coder:3b"
-    assert missing["configured_model_present"] is False
-    assert missing["installed_models"] == ["qwen2.5-coder:1.5b"]
-    assert "Choose an installed model in Settings" in missing["setup_message"]
-    valid = client.post("/api/ai/model", json={"session_id": "test-session-model", "model": "qwen2.5-coder:1.5b"})
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_testdummysecretvalue1234567890123456")
+    monkeypatch.setattr(GroqProvider, "list_models", classmethod(lambda cls: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]))
+    caps = client.get("/api/capabilities").json()["ai"]
+    assert caps["provider"] == "groq"
+    assert caps["installed_models"] == ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+
+    valid = client.post("/api/ai/model", json={"session_id": "test-session-model", "model": "llama-3.1-8b-instant"})
     assert valid.status_code == 200, valid.text
-    assert valid.json()["capabilities"]["ai"]["model"] == "qwen2.5-coder:1.5b"
-    assert valid.json()["capabilities"]["ai"]["configured"] is True
-    assert "qwen2.5-coder:1.5b" in valid.json()["capabilities"]["ai"]["installed_models"]
-    invalid = client.post("/api/ai/model", json={"session_id": "test-session-model", "model": "qwen2.5-coder:3b"})
+    assert valid.json()["capabilities"]["ai"]["model"] == "llama-3.1-8b-instant"
+
+    invalid = client.post("/api/ai/model", json={"session_id": "test-session-model", "model": "non-existent-model"})
     assert invalid.status_code == 422
     assert invalid.json()["detail"]["code"] == "MODEL_NOT_INSTALLED"
 

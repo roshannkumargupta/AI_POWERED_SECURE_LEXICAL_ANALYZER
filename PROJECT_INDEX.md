@@ -11,7 +11,7 @@
   1. **Hybrid Detection Fusion**: Unifies AST/token rules + interprocedural taint flow + machine learning confidence + Unicode trojan defense.
   2. **Path-Level Explainability**: Traces `source -> propagate -> sanitizer_missing -> sink` with Monaco coordinates.
   3. **Verified Automated Fixes**: Fixes are applied to an isolated AST copy and re-analyzed; marked `verified` only if the vulnerability is eliminated without introducing new regressions.
-  4. **Hybrid AI Assistance**: Integrated with local Ollama (`qwen2.5-coder`) and cloud Groq providers with strict prompt injection detection and tool runner harnesses.
+  4. **AI Assistance**: Integrated with Groq AI provider with strict prompt injection detection and tool runner harnesses.
   5. **Rich Offline Web IDE**: React 18, TypeScript, Monaco Editor, dark/light themes, AST tree visualizer, Safety Lab, and Fix Workflow modal.
 
 ## 2. Directory Structure & Component Map
@@ -22,8 +22,7 @@
 | `src/apsla/languages/` | Multi-language lexers, AST parsers, and token normalizers (Python, JS, Java, C++) |
 | `src/apsla/security_v2.py` | 58 internal security rule definitions, registry builder, rule evaluation |
 | `src/apsla/fixes/` | Fix synthesis (`generators.py`), AST patchers, `independent_verifier.py` (verification harness) |
-| `src/apsla/agents/` | Agent planner, hybrid provider (`provider_v2.py`), prompt injection classifier, execution budget |
-| `src/apsla/llm/` | Local Ollama client (`local_ollama.py`), Groq provider, fallback handlers |
+| `src/apsla/agents/` | Agent planner, Groq provider (`provider_v2.py`), prompt injection classifier, execution budget |
 | `src/apsla/ml/` | ML pipeline: token windowing (`windows.py`), feature extraction (`features.py`), inference, training scripts |
 | `src/apsla/ml/artifacts/` | Model metadata (`meta.json`) for trained scikit-learn & gradient boosting models |
 | `web/` | Modern React 18 + TypeScript + Vite frontend IDE |
@@ -60,7 +59,7 @@ graph TD
 - `POST /api/analyze`: Main pipeline. Analyzes code for syntax, lexical tokens, AST nodes, security findings, taint paths, and ML anomalies.
 - `POST /api/fix/propose`: Proposes automated AST/regex fixes for a finding.
 - `POST /api/fix/verify`: Runs candidate patch against the isolated verification harness.
-- `POST /api/ai/explain`: Explains a vulnerability or code segment with local Ollama or Groq.
+- `POST /api/ai/explain`: Explains a vulnerability or code segment with Groq.
 - `POST /api/ai/propose-fix`: AI agent proposes a semantic remediation with diff generation.
 - `POST /api/ai/generate`: AI code generation / completion with safety filters.
 - `POST /api/safety-lab/run`: Evaluates code against known adversarial attacks and injection vectors.

@@ -122,7 +122,7 @@ export const FindingDetailView: React.FC<FindingDetailViewProps> = ({
             title={
               llmConfigured
                 ? `Ask AI (${llmProvider}) for alternative fix`
-                : 'No AI provider configured in .env (set ANTHROPIC_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY)'
+                : 'Add GROQ_API_KEY to your .env file and restart'
             }
             style={{
               ...reviewFixBtnStyle,

@@ -10,7 +10,6 @@ from apsla.agents.schemas import AgentObservation
 from apsla.agents.trace import TraceLogger
 
 if TYPE_CHECKING:
-    from apsla.agents.planner_llm import LLMPlanner
     from apsla.agents.planner_rules import RulesPlanner
     from apsla.agents.tools import AnalysisSession
 
@@ -40,7 +39,7 @@ class BaseAgent(ABC):
     def step(
         self,
         session: AnalysisSession,
-        planner: RulesPlanner | LLMPlanner,
+        planner: RulesPlanner,
         trace: TraceLogger,
     ) -> bool:
         """Perform one observe -> decide -> act step.
@@ -50,20 +49,11 @@ class BaseAgent(ABC):
         """
         obs = self.observe(session)
 
-        # Import here to avoid circular imports
-        from apsla.agents.planner_llm import LLMPlanner
-
         t_start = time.perf_counter()
-        if isinstance(planner, LLMPlanner):
-            action, decision_source, rejection_reason = planner.plan(
-                self.name, self.stage, obs, self.allowed_tools, session
-            )
-            accepted = rejection_reason is None
-        else:
-            action = planner.plan(self.name, self.stage, obs, self.allowed_tools, session)
-            decision_source = "rules"
-            accepted = True
-            rejection_reason = None
+        action = planner.plan(self.name, self.stage, obs, self.allowed_tools, session)
+        decision_source = "rules"
+        accepted = True
+        rejection_reason = None
 
         if action.action == "finish":
             t_delta = (time.perf_counter() - t_start) * 1000
@@ -113,7 +103,7 @@ class BaseAgent(ABC):
     def run(
         self,
         session: AnalysisSession,
-        planner: RulesPlanner | LLMPlanner,
+        planner: RulesPlanner,
         trace: TraceLogger,
     ) -> None:
         """Run the observe -> decide -> act loop up to max_steps."""

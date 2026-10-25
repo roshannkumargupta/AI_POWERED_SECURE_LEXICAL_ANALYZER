@@ -49,7 +49,7 @@
 | `src/apsla/languages/javascript_lang/` | JavaScript resilient lexer, parser, rules, and fixes |
 | `src/apsla/languages/python_lang/` | Python lexer, AST parser, taint, rules, and fixes |
 | `src/apsla/lexing/` | Token definitions and bidirectional UTF-16 offset maps |
-| `src/apsla/llm/` | Guarded local Ollama provider and optional LLM interfaces |
+| `src/apsla/llm/` | Guarded local groq provider and optional LLM interfaces |
 | `src/apsla/ml/` | 45-dim feature extractor, synthetic dataset engine, and models |
 | `src/apsla/ml/artifacts/` | Trained ML model weights, temperature calibration, and schemas |
 | `src/apsla/ml/synth/` | Multi-language synthetic grammar snippet generators |

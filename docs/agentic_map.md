@@ -35,7 +35,7 @@ flowchart TD
     subgraph AgentStepLoop [Single Agent Observe-Decide-Act Loop]
         Observe[Observe Session State] --> Planner{Planner Selection}
         Planner -- Rules Mode / Fallback --> RulesPlanner[RulesPlanner<br/>Deterministic If/Else Policy]
-        Planner -- Local Mode --> LLMPlanner[LLMPlanner<br/>Local Ollama qwen2.5-coder:3b]
+        Planner -- Local Mode --> LLMPlanner[LLMPlanner<br/>Local groq llama-3.3-70b-versatile]
         LLMPlanner --> Guard[Security Guard & Schema Validator]
         Guard -- Valid Action & Args --> ExecTool[Execute Allowed Tool]
         Guard -- Invalid Action / Injection --> FallbackAction[Reject & Fallback to Rules Action]

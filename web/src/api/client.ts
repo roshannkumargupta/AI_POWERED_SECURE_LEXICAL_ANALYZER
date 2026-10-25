@@ -98,8 +98,7 @@ export interface AgentTraceStep {
 }
 
 export interface AgentStatus {
-  mode: 'off' | 'rules' | 'local';
-  ollama_reachable: boolean;
+  mode: 'off' | 'rules';
   model: string;
   model_present: boolean;
   fallback_active: boolean;
@@ -685,11 +684,6 @@ export interface AITestConnectionResponse {
   error: string | null;
 }
 
-export interface LLMStatusResponse {
-  configured: boolean;
-  provider: string;
-}
-
 export interface AICapabilities {
   ai: {
     provider: string;
@@ -739,30 +733,6 @@ export interface CapabilitiesResponse extends AICapabilities {
   }>;
   limits: Record<string, unknown>;
   features: { build_with_ai: boolean; fix_with_ai: boolean; [key: string]: unknown };
-}
-
-export interface LLMFixRequest {
-  source: string;
-  finding_id: string;
-  rule_id: string;
-  language?: string;
-  start_line?: number;
-  start_col?: number;
-}
-
-export interface LLMFixResponse {
-  fixes: Fix[];
-  notes?: string;
-}
-
-export interface LLMExplainRequest {
-  finding_id: string;
-  rule_id: string;
-  message?: string;
-}
-
-export interface LLMExplainResponse {
-  explanation: string;
 }
 
 export const apiClient = {
@@ -920,20 +890,6 @@ export const apiClient = {
       body: JSON.stringify(req),
       signal,
     }),
-  getLLMStatus: (signal?: AbortSignal) => request<LLMStatusResponse>('/llm/status', { signal }),
-  requestLLMFix: (req: LLMFixRequest, signal?: AbortSignal) =>
-    request<LLMFixResponse>('/llm/fix', {
-      method: 'POST',
-      body: JSON.stringify(req),
-      signal,
-    }),
-  requestLLMExplain: (req: LLMExplainRequest, signal?: AbortSignal) =>
-    request<LLMExplainResponse>('/llm/explain', {
-      method: 'POST',
-      body: JSON.stringify(req),
-      signal,
-    }),
-  getAgentStatus: (signal?: AbortSignal) => request<AgentStatus>('/agent/status', { signal }),
 };
 
 export const api = apiClient;

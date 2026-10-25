@@ -73,7 +73,7 @@ All 11 verification gates run cleanly with zero errors, zero warnings, and 100% 
 - **Broken Link Validator (`scripts/check_links.py`):** Audits all relative file links in markdown documentation (verified 56 files, 0 broken links).
 - **Unified CI Gate (`scripts/check_all.py`):** Automated runner executing all 11 gates across Python and TypeScript in one command with clean summary reporting.
 - **Pre-commit Configuration (`.pre-commit-config.yaml`):** Standardized Git hooks for file hygiene, ruff lint/format, rule fixture validation, and link checking.
-- **Environment Configuration (`.env.example`):** Complete runtime settings reference including Phase 15 local Ollama configuration.
+- **Environment Configuration (`.env.example`):** Complete runtime settings reference including Phase 15 local groq configuration.
 
 ---
 

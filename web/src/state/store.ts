@@ -41,7 +41,7 @@ export interface AppState {
   mlInsights: MLInsightsResponse | null;
   isLoadingInsights: boolean;
   activeTab: 'problems' | 'finding' | 'tokens' | 'taint' | 'summary' | 'ml' | 'trace';
-  agentMode: 'off' | 'rules' | 'local';
+  agentMode: 'off' | 'rules';
   agentStatus: AgentStatus | null;
   problemsFilter: 'all' | Severity;
   cursorPosition: { line: number; col: number };
@@ -69,7 +69,7 @@ export type Action =
       type: 'SET_ACTIVE_TAB';
       payload: 'problems' | 'finding' | 'tokens' | 'taint' | 'summary' | 'ml' | 'trace';
     }
-  | { type: 'SET_AGENT_MODE'; payload: 'off' | 'rules' | 'local' }
+  | { type: 'SET_AGENT_MODE'; payload: 'off' | 'rules' }
   | { type: 'SET_AGENT_STATUS'; payload: AgentStatus | null }
   | { type: 'SET_PROBLEMS_FILTER'; payload: 'all' | Severity }
   | { type: 'SET_CURSOR_POSITION'; payload: { line: number; col: number } }

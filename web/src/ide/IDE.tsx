@@ -384,7 +384,7 @@ export function IDE() {
         options: {
           include_tokens: true,
           stages: ['lexical', 'syntax', 'security', 'quality'],
-          agent: capabilities?.ai?.configured && capabilities?.ai?.reachable ? 'local' : 'off',
+          agent: 'off',
         },
       };
       const [lexicalStage, syntaxStage] = await Promise.allSettled([
@@ -671,9 +671,9 @@ export function IDE() {
       try {
         const response = await apiClient.setAIModel(sessionId.current, model);
         setCapabilities(response.capabilities);
-        reportToast(`Local AI model set to ${response.model} for this session.`);
+        reportToast(`AI model set to ${response.model} for this session.`);
       } catch (error) {
-        reportToast(error instanceof Error ? error.message : 'Local model selection failed.', true);
+        reportToast(error instanceof Error ? error.message : 'Model selection failed.', true);
       } finally {
         setConsentBusy(false);
       }

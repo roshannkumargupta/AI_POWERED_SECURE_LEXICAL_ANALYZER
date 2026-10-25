@@ -573,7 +573,7 @@ Never label the application or code "100% secure."
 Implement a configurable model-provider interface.
 
 Where appropriate, support:
-- Local inference through Ollama.
+- Local inference through groq.
 - OpenAI-compatible endpoints.
 - Additional providers through explicit adapters.
 
@@ -1075,7 +1075,7 @@ Create a complete README that explains:
 - Frontend and backend setup.
 - Required and optional language tools.
 - How to install and configure analyzers.
-- How to configure an LLM provider or local Ollama endpoint.
+- How to configure an LLM provider or local groq endpoint.
 - Environment variables.
 - How to launch the website.
 - How to run tests.
@@ -1089,7 +1089,7 @@ Create a complete README that explains:
 
 Provide `.env.example` without real credentials.
 
-Make tool availability discoverable through a capabilities endpoint. Avoid claiming that Clang, Java, Ollama, Semgrep or any other tool is present until the environment confirms it.
+Make tool availability discoverable through a capabilities endpoint. Avoid claiming that Clang, Java, groq, Semgrep or any other tool is present until the environment confirms it.
 
 Where feasible, provide a single documented development startup command or clearly documented frontend/backend startup commands.
 

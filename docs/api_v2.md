@@ -1270,9 +1270,9 @@ Generated from the FastAPI OpenAPI schema. `/api/analyze` defaults to the legacy
             "type": "string",
             "title": "Mode"
           },
-          "ollama_reachable": {
+          "groq_reachable": {
             "type": "boolean",
-            "title": "Ollama Reachable"
+            "title": "groq Reachable"
           },
           "model": {
             "type": "string",
@@ -1295,7 +1295,7 @@ Generated from the FastAPI OpenAPI schema. `/api/analyze` defaults to the legacy
         "type": "object",
         "required": [
           "mode",
-          "ollama_reachable",
+          "groq_reachable",
           "model",
           "model_present",
           "fallback_active"
