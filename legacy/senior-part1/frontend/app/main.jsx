@@ -1,1 +1,0 @@
-<script type="text/babel" src="App.jsx"></script>

@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-python-multipart
-pydantic
-torch
-numpy
-scikit-learn
