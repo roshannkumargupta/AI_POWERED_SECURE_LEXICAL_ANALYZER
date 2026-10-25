@@ -15,7 +15,9 @@ test.describe.serial('G3 3. Failure Paths (10 Failure Cases)', () => {
       await route.fulfill({
         status: 401,
         contentType: 'application/json',
-        body: JSON.stringify({ detail: { code: 'INVALID_API_KEY', message: 'Invalid API key provided.' } }),
+        body: JSON.stringify({
+          detail: { code: 'INVALID_API_KEY', message: 'Invalid API key provided.' },
+        }),
       });
     });
 
@@ -42,7 +44,9 @@ test.describe.serial('G3 3. Failure Paths (10 Failure Cases)', () => {
       await route.fulfill({
         status: 429,
         contentType: 'application/json',
-        body: JSON.stringify({ detail: { code: 'RATE_LIMIT_EXCEEDED', message: 'Rate limit exceeded; retry in 5s.' } }),
+        body: JSON.stringify({
+          detail: { code: 'RATE_LIMIT_EXCEEDED', message: 'Rate limit exceeded; retry in 5s.' },
+        }),
       });
     });
 
@@ -84,7 +88,9 @@ test.describe.serial('G3 3. Failure Paths (10 Failure Cases)', () => {
       await route.fulfill({
         status: 504,
         contentType: 'application/json',
-        body: JSON.stringify({ detail: { code: 'MODEL_TIMEOUT', message: 'Upstream model timed out.' } }),
+        body: JSON.stringify({
+          detail: { code: 'MODEL_TIMEOUT', message: 'Upstream model timed out.' },
+        }),
       });
     });
 
@@ -153,7 +159,9 @@ test.describe.serial('G3 3. Failure Paths (10 Failure Cases)', () => {
     await expect(modal).toBeHidden();
   });
 
-  test('7. Stale source after proposing displays stale state with working Close', async ({ page }) => {
+  test('7. Stale source after proposing displays stale state with working Close', async ({
+    page,
+  }) => {
     await setupDocWithIssue(page);
     await page.route('**/api/fixes/propose', async (route) => {
       await route.fulfill({
@@ -165,7 +173,12 @@ test.describe.serial('G3 3. Failure Paths (10 Failure Cases)', () => {
             origin: 'rule',
             source_version: 999, // Stale: does not match document sourceVersion (1)
             source_hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-            edits: [{ range: { start_line: 1, start_col: 1, end_line: 1, end_col: 1 }, new_text: '# patched\n' }],
+            edits: [
+              {
+                range: { start_line: 1, start_col: 1, end_line: 1, end_col: 1 },
+                new_text: '# patched\n',
+              },
+            ],
             rationale: 'Stale patch proposal',
             expected_outcome: 'Done',
             assumptions: [],
@@ -183,7 +196,9 @@ test.describe.serial('G3 3. Failure Paths (10 Failure Cases)', () => {
     await expect(modal).toBeVisible();
 
     // Verify stale warning is displayed
-    await expect(modal.locator('[role="alert"]').filter({ hasText: /Stale source/i })).toBeVisible({ timeout: 5000 });
+    await expect(modal.locator('[role="alert"]').filter({ hasText: /Stale source/i })).toBeVisible({
+      timeout: 5000,
+    });
 
     const applyBtn = modal.getByRole('button', { name: 'Apply' });
     if (await applyBtn.isVisible()) {
@@ -195,7 +210,9 @@ test.describe.serial('G3 3. Failure Paths (10 Failure Cases)', () => {
     await expect(modal).toBeHidden();
   });
 
-  test('8. Editing while request is running handles safely with working Close', async ({ page }) => {
+  test('8. Editing while request is running handles safely with working Close', async ({
+    page,
+  }) => {
     await setupDocWithIssue(page);
     await page.route('**/api/fixes/propose', async (route) => {
       await new Promise((r) => setTimeout(r, 2000));
@@ -229,10 +246,12 @@ test.describe.serial('G3 3. Failure Paths (10 Failure Cases)', () => {
       const editor = monaco?.editor?.getEditors()?.[0];
       const model = editor?.getModel();
       if (editor && model) {
-        editor.executeEdits('test', [{
-          range: model.getFullModelRange(),
-          text: 'x = "modified-while-running\n',
-        }]);
+        editor.executeEdits('test', [
+          {
+            range: model.getFullModelRange(),
+            text: 'x = "modified-while-running\n',
+          },
+        ]);
       }
     });
 
@@ -242,7 +261,9 @@ test.describe.serial('G3 3. Failure Paths (10 Failure Cases)', () => {
     await expect(modal).toBeHidden();
   });
 
-  test('9. Two quick clicks are debounced without crash and modal closes cleanly', async ({ page }) => {
+  test('9. Two quick clicks are debounced without crash and modal closes cleanly', async ({
+    page,
+  }) => {
     await setupDocWithIssue(page);
     const fixBtn = page.getByRole('button', { name: /Fix/ }).first();
     await expect(fixBtn).toBeEnabled();
@@ -262,21 +283,28 @@ test.describe.serial('G3 3. Failure Paths (10 Failure Cases)', () => {
     await setupDocWithIssue(page);
     await page.route('**/api/fixes/propose', async (route) => {
       await new Promise((r) => setTimeout(r, 4000));
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          proposal: {
-            id: 'prop-late',
-            origin: 'rule',
-            source_version: 0,
-            source_hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-            edits: [{ range: { start_line: 1, start_col: 1, end_line: 1, end_col: 1 }, new_text: '# late\n' }],
-            rationale: 'Late',
-            expected_outcome: 'Done',
-          },
-        }),
-      }).catch(() => {});
+      await route
+        .fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            proposal: {
+              id: 'prop-late',
+              origin: 'rule',
+              source_version: 0,
+              source_hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+              edits: [
+                {
+                  range: { start_line: 1, start_col: 1, end_line: 1, end_col: 1 },
+                  new_text: '# late\n',
+                },
+              ],
+              rationale: 'Late',
+              expected_outcome: 'Done',
+            },
+          }),
+        })
+        .catch(() => {});
     });
 
     const fixBtn = page.getByRole('button', { name: /Fix/ }).first();

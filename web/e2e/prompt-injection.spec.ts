@@ -29,18 +29,27 @@ test.describe.serial('G3 4. Prompt Injection Resistance', () => {
     await page.waitForTimeout(2000);
 
     // Switch to Security panel tab
-    const securityTab = page.locator('.ide-tab, [role="tab"]').filter({ hasText: /Security/i }).first();
+    const securityTab = page
+      .locator('.ide-tab, [role="tab"]')
+      .filter({ hasText: /Security/i })
+      .first();
     await expect(securityTab).toBeVisible();
     await securityTab.click();
 
     // Verify finding is preserved despite prompt injection instruction
-    const finding = page.locator('.ide-security-row, .ide-finding-card, .ide-problem-item').filter({ hasText: /Command Injection|CWE-78|os\.system|APS-PY-SEC/i });
+    const finding = page
+      .locator('.ide-security-row, .ide-finding-card, .ide-problem-item')
+      .filter({ hasText: /Command Injection|CWE-78|os\.system|APS-PY-SEC/i });
     await expect(finding.first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('2. Safety Lab live scenario executes assertions and passes', async ({ page }) => {
     // Open Safety Lab from activity bar
-    const safetyLabBtn = page.locator('button.ide-activity-button[aria-label="Safety Lab"], button.ide-activity-button.safety').first();
+    const safetyLabBtn = page
+      .locator(
+        'button.ide-activity-button[aria-label="Safety Lab"], button.ide-activity-button.safety'
+      )
+      .first();
     await expect(safetyLabBtn).toBeVisible({ timeout: 10_000 });
     await safetyLabBtn.click();
 

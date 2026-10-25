@@ -4,7 +4,9 @@ test.describe.serial('H1 Matrix: Real Groq Browser Verification', () => {
   const latencies: Record<string, number> = {};
 
   async function handleConsent(page: Page) {
-    const scrimBtn = page.locator('.ide-consent-scrim button, .ide-ai-consent button').filter({ hasText: /Allow/i });
+    const scrimBtn = page
+      .locator('.ide-consent-scrim button, .ide-ai-consent button')
+      .filter({ hasText: /Allow/i });
     if (await scrimBtn.isVisible({ timeout: 800 }).catch(() => false)) {
       await scrimBtn.first().click();
       await page.waitForTimeout(500);
@@ -149,7 +151,9 @@ test.describe.serial('H1 Matrix: Real Groq Browser Verification', () => {
     await expect(drawer).toBeVisible();
 
     await drawer.locator('select').selectOption('python');
-    await page.getByPlaceholder('Describe the code candidate you need').fill('def fibonacci(n: int) -> list[int]: return first n fibonacci numbers');
+    await page
+      .getByPlaceholder('Describe the code candidate you need')
+      .fill('def fibonacci(n: int) -> list[int]: return first n fibonacci numbers');
 
     const t0 = Date.now();
     await page.getByRole('button', { name: 'Generate' }).click();
@@ -167,7 +171,9 @@ test.describe.serial('H1 Matrix: Real Groq Browser Verification', () => {
     await expect(drawer).toBeVisible();
 
     await drawer.locator('select').selectOption('java');
-    await page.getByPlaceholder('Describe the code candidate you need').fill('public class MathUtils { public static int square(int x) { return x * x; } }');
+    await page
+      .getByPlaceholder('Describe the code candidate you need')
+      .fill('public class MathUtils { public static int square(int x) { return x * x; } }');
 
     const t0 = Date.now();
     await page.getByRole('button', { name: 'Generate' }).click();
@@ -185,7 +191,9 @@ test.describe.serial('H1 Matrix: Real Groq Browser Verification', () => {
     await expect(drawer).toBeVisible();
 
     await drawer.locator('select').selectOption('javascript');
-    await page.getByPlaceholder('Describe the code candidate you need').fill('function add(a, b) { return a + b; }');
+    await page
+      .getByPlaceholder('Describe the code candidate you need')
+      .fill('function add(a, b) { return a + b; }');
 
     const t0 = Date.now();
     await page.getByRole('button', { name: 'Generate' }).click();
@@ -203,7 +211,9 @@ test.describe.serial('H1 Matrix: Real Groq Browser Verification', () => {
     await expect(drawer).toBeVisible();
 
     await drawer.locator('select').selectOption('cpp');
-    await page.getByPlaceholder('Describe the code candidate you need').fill('int multiply(int a, int b) { return a * b; }');
+    await page
+      .getByPlaceholder('Describe the code candidate you need')
+      .fill('int multiply(int a, int b) { return a * b; }');
 
     const t0 = Date.now();
     await page.getByRole('button', { name: 'Generate' }).click();
@@ -229,7 +239,11 @@ test.describe.serial('H1 Matrix: Real Groq Browser Verification', () => {
   });
 
   test('2b. AI Explain: Java', async ({ page }) => {
-    await setEditorCode(page, 'Java', 'import java.sql.*;\nclass Sql {\n  void run(String input, Statement st) throws Exception {\n    st.executeQuery("SELECT * FROM users WHERE name = \'" + input + "\'");\n  }\n}\n');
+    await setEditorCode(
+      page,
+      'Java',
+      'import java.sql.*;\nclass Sql {\n  void run(String input, Statement st) throws Exception {\n    st.executeQuery("SELECT * FROM users WHERE name = \'" + input + "\'");\n  }\n}\n'
+    );
     await page.getByRole('tab', { name: 'AI Explain' }).click();
     const explainBtn = page.getByRole('button', { name: /Explain.*file/i });
     await expect(explainBtn).toBeEnabled({ timeout: 10_000 });
@@ -242,7 +256,11 @@ test.describe.serial('H1 Matrix: Real Groq Browser Verification', () => {
   });
 
   test('2c. AI Explain: JavaScript', async ({ page }) => {
-    await setEditorCode(page, 'JavaScript', 'const express = require("express");\nconst app = express();\napp.get("/run", (req, res) => {\n  eval(req.query.cmd);\n});\n');
+    await setEditorCode(
+      page,
+      'JavaScript',
+      'const express = require("express");\nconst app = express();\napp.get("/run", (req, res) => {\n  eval(req.query.cmd);\n});\n'
+    );
     await page.getByRole('tab', { name: 'AI Explain' }).click();
     const explainBtn = page.getByRole('button', { name: /Explain.*file/i });
     await expect(explainBtn).toBeEnabled({ timeout: 10_000 });
@@ -255,7 +273,11 @@ test.describe.serial('H1 Matrix: Real Groq Browser Verification', () => {
   });
 
   test('2d. AI Explain: C++', async ({ page }) => {
-    await setEditorCode(page, 'C++', 'void run(char *input) {\n  char buf[8];\n  strcpy(buf, input);\n}\n');
+    await setEditorCode(
+      page,
+      'C++',
+      'void run(char *input) {\n  char buf[8];\n  strcpy(buf, input);\n}\n'
+    );
     await page.getByRole('tab', { name: 'AI Explain' }).click();
     const explainBtn = page.getByRole('button', { name: /Explain.*file/i });
     await expect(explainBtn).toBeEnabled({ timeout: 10_000 });
@@ -333,18 +355,19 @@ test.describe.serial('H1 Matrix: Real Groq Browser Verification', () => {
     await page.goto('/');
     await handleConsent(page);
 
-    const safetyLabBtn = page.getByRole('button', { name: 'Agent Safety Lab' }).first();
-    await expect(safetyLabBtn).toBeVisible({ timeout: 10_000 });
-    await safetyLabBtn.click();
-
     const safetyView = page.locator('.ide-safety-columns');
-    await expect(safetyView).toBeVisible({ timeout: 10_000 });
+    if (!(await safetyView.isVisible().catch(() => false))) {
+      const safetyLabBtn = page.getByRole('button', { name: 'Agent Safety Lab' }).first();
+      await expect(safetyLabBtn).toBeVisible({ timeout: 10_000 });
+      await safetyLabBtn.click();
+    }
+    await expect(safetyView).toBeVisible({ timeout: 15_000 });
 
     const scenarioCard = page
       .locator('.ide-scenario-card')
       .filter({ hasText: /Safe input resembling an attack/i })
       .first();
-    await expect(scenarioCard).toBeVisible({ timeout: 10_000 });
+    await expect(scenarioCard).toBeVisible({ timeout: 25_000 });
     await scenarioCard.click();
 
     // Select language
@@ -370,6 +393,8 @@ test.describe.serial('H1 Matrix: Real Groq Browser Verification', () => {
     const outcome = page.locator('.ide-safety-outcome');
     await expect(outcome).toBeVisible();
     await expect(outcome).toContainText(/Attack resisted|pass/i);
+
+    await page.keyboard.press('Escape');
   }
 
   test('4a. Safety Lab Live: Python', async ({ page }) => {

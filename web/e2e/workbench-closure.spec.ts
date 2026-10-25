@@ -1,14 +1,22 @@
 import { expect, test, type Page } from '@playwright/test';
 
-async function closeBy(page: Page, surface: string, method: 'x' | 'escape' | 'backdrop', xLabel: RegExp, backdrop: string) {
+async function closeBy(
+  page: Page,
+  surface: string,
+  method: 'x' | 'escape' | 'backdrop',
+  xLabel: RegExp,
+  backdrop: string
+) {
   if (method === 'x') await page.getByRole('button', { name: xLabel }).click();
   else if (method === 'escape') await page.keyboard.press('Escape');
   else await page.locator(backdrop).click({ position: { x: 5, y: 5 } });
   await expect(page.locator(surface)).toHaveCount(0);
 }
 
-test('Settings, New File, shortcuts, palette, AI drawer and consent close through all routes', async ({ page }) => {
-  await page.route('**/api/capabilities', async route => {
+test('Settings, New File, shortcuts, palette, AI drawer and consent close through all routes', async ({
+  page,
+}) => {
+  await page.route('**/api/capabilities', async (route) => {
     const response = await route.fetch();
     const data = await response.json();
     data.features.build_with_ai = true;
@@ -35,7 +43,13 @@ test('Settings, New File, shortcuts, palette, AI drawer and consent close throug
 
     await page.keyboard.press('F1');
     await expect(page.getByRole('dialog', { name: 'Keyboard Shortcuts' })).toBeVisible();
-    await closeBy(page, '.ide-modal-overlay', method, /Close Keyboard Shortcuts/, '.ide-modal-overlay');
+    await closeBy(
+      page,
+      '.ide-modal-overlay',
+      method,
+      /Close Keyboard Shortcuts/,
+      '.ide-modal-overlay'
+    );
 
     await page.getByRole('button', { name: 'Open Command Palette (Ctrl+Shift+P)' }).click();
     await expect(page.getByRole('dialog', { name: 'Command Palette' })).toBeVisible();
@@ -46,7 +60,8 @@ test('Settings, New File, shortcuts, palette, AI drawer and consent close throug
     await page.getByLabel('Requirements').fill('Create a small offline test candidate.');
     await page.getByRole('button', { name: 'Generate' }).click();
     await expect(page.getByRole('dialog', { name: 'Remote processing consent' })).toBeVisible();
-    if (method === 'backdrop') await closeBy(page, '.ide-consent-scrim', method, /Close consent/, '.ide-consent-scrim');
+    if (method === 'backdrop')
+      await closeBy(page, '.ide-consent-scrim', method, /Close consent/, '.ide-consent-scrim');
     else await closeBy(page, '.ide-ai-consent', method, /Close consent/, '.ide-consent-scrim');
     await closeBy(page, '.ide-build-drawer', method, /Close drawer/, '.ide-drawer-backdrop');
   }
@@ -66,9 +81,17 @@ test('pending Fix proposal always closes and aborts when dismissed', async ({ pa
   await page.getByRole('button', { name: 'Analyze' }).click();
   const fixToken = page.getByRole('button', { name: /Fix invalid token/ });
   await expect(fixToken).toBeEnabled();
-  await page.route('**/api/fixes/propose', async route => {
-    await new Promise(resolve => setTimeout(resolve, 1800));
-    try { await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ detail: 'Test proposal delay ended.' }) }); } catch { /* Closing the modal aborts this request. */ }
+  await page.route('**/api/fixes/propose', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+    try {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Test proposal delay ended.' }),
+      });
+    } catch {
+      /* Closing the modal aborts this request. */
+    }
   });
 
   for (const method of ['x', 'escape', 'backdrop'] as const) {
@@ -78,7 +101,9 @@ test('pending Fix proposal always closes and aborts when dismissed', async ({ pa
   }
 });
 
-test('panel max-close-reopen, tab actions, sidebar collapse and Safety Lab Escape work without reload', async ({ page }) => {
+test('panel max-close-reopen, tab actions, sidebar collapse and Safety Lab Escape work without reload', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Maximise panel' }).click();
   await expect(page.locator('.ide-panel.maximised')).toBeVisible();

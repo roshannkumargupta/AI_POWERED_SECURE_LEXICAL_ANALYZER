@@ -4,7 +4,9 @@ test.describe.serial('G2 AI Features with Groq', () => {
   const latencies: Record<string, number> = {};
 
   async function handleConsent(page: Page) {
-    const scrimBtn = page.locator('.ide-consent-scrim button, .ide-ai-consent button').filter({ hasText: /Allow/i });
+    const scrimBtn = page
+      .locator('.ide-consent-scrim button, .ide-ai-consent button')
+      .filter({ hasText: /Allow/i });
     if (await scrimBtn.isVisible({ timeout: 800 }).catch(() => false)) {
       await scrimBtn.first().click();
       await page.waitForTimeout(500);
@@ -127,7 +129,9 @@ test.describe.serial('G2 AI Features with Groq', () => {
     await expect(drawer).toBeVisible();
 
     await drawer.locator('select').selectOption('python');
-    await page.getByPlaceholder('Describe the code candidate you need').fill('def fibonacci(n: int) -> list[int]: return first n fibonacci numbers');
+    await page
+      .getByPlaceholder('Describe the code candidate you need')
+      .fill('def fibonacci(n: int) -> list[int]: return first n fibonacci numbers');
 
     const t0 = Date.now();
     await page.getByRole('button', { name: 'Generate' }).click();
@@ -147,7 +151,9 @@ test.describe.serial('G2 AI Features with Groq', () => {
     await expect(drawer).toBeVisible();
 
     await drawer.locator('select').selectOption('java');
-    await page.getByPlaceholder('Describe the code candidate you need').fill('public class MathUtils { public static int square(int x) { return x * x; } }');
+    await page
+      .getByPlaceholder('Describe the code candidate you need')
+      .fill('public class MathUtils { public static int square(int x) { return x * x; } }');
 
     const t0 = Date.now();
     await page.getByRole('button', { name: 'Generate' }).click();
@@ -167,7 +173,9 @@ test.describe.serial('G2 AI Features with Groq', () => {
     await expect(drawer).toBeVisible();
 
     await drawer.locator('select').selectOption('javascript');
-    await page.getByPlaceholder('Describe the code candidate you need').fill('function add(a, b) { return a + b; }');
+    await page
+      .getByPlaceholder('Describe the code candidate you need')
+      .fill('function add(a, b) { return a + b; }');
 
     const t0 = Date.now();
     await page.getByRole('button', { name: 'Generate' }).click();
@@ -187,7 +195,9 @@ test.describe.serial('G2 AI Features with Groq', () => {
     await expect(drawer).toBeVisible();
 
     await drawer.locator('select').selectOption('cpp');
-    await page.getByPlaceholder('Describe the code candidate you need').fill('int multiply(int a, int b) { return a * b; }');
+    await page
+      .getByPlaceholder('Describe the code candidate you need')
+      .fill('int multiply(int a, int b) { return a * b; }');
 
     const t0 = Date.now();
     await page.getByRole('button', { name: 'Generate' }).click();

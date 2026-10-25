@@ -16,7 +16,10 @@ const matrixResults: MatrixRow[] = [];
 
 test.describe('G3 1. Wrong-Code Matrix (32 Cases)', () => {
   async function handleConsent(page: Page) {
-    const allowBtn = page.locator('.ide-consent-scrim button, .ide-ai-consent button, [role="dialog"] button, button').filter({ hasText: /Allow/i }).first();
+    const allowBtn = page
+      .locator('.ide-consent-scrim button, .ide-ai-consent button, [role="dialog"] button, button')
+      .filter({ hasText: /Allow/i })
+      .first();
     if (await allowBtn.isVisible({ timeout: 600 }).catch(() => false)) {
       await allowBtn.click({ force: true });
       await page.waitForTimeout(500);
@@ -48,7 +51,10 @@ test.describe('G3 1. Wrong-Code Matrix (32 Cases)', () => {
     }
     await langBtn.click();
     await page.waitForTimeout(300);
-    const opt = page.locator('.ide-language-menu button[role="option"]').filter({ hasText: langName }).first();
+    const opt = page
+      .locator('.ide-language-menu button[role="option"]')
+      .filter({ hasText: langName })
+      .first();
     await expect(opt).toBeVisible({ timeout: 10_000 });
     await opt.click();
     await page.waitForTimeout(400);
@@ -98,49 +104,243 @@ test.describe('G3 1. Wrong-Code Matrix (32 Cases)', () => {
         `| ${r.language.padEnd(10)} | ${r.caseName.padEnd(10)} | ${r.expected.padEnd(29)} | ${r.fixOrigin.padEnd(10)} | ${r.applied.padEnd(7)} | ${r.reAnalysisResult.padEnd(11)} | ${r.verifierOutcome.padEnd(19)} | ${r.status.padEnd(6)} | ${(r.latencyMs + ' ms').padEnd(8)} |`
       );
     }
-    console.log('===============================================================================\n');
+    console.log(
+      '===============================================================================\n'
+    );
   });
 
   const matrixCases = [
     // Python
-    { lang: 'python', langLabel: 'Python', caseName: 'lexical_1', expected: 'invalid character', code: 'val = $invalid\n' },
-    { lang: 'python', langLabel: 'Python', caseName: 'lexical_2', expected: 'malformed number', code: 'val = 100__000\n' },
-    { lang: 'python', langLabel: 'Python', caseName: 'syntax_1', expected: 'missing delimiter', code: 'print("hello"\n' },
-    { lang: 'python', langLabel: 'Python', caseName: 'syntax_2', expected: 'bad statement', code: 'def calculate(: \n    pass\n' },
-    { lang: 'python', langLabel: 'Python', caseName: 'security_1', expected: 'CWE-78 command injection', code: 'import os\ncmd = input()\nos.system(cmd)\n' },
-    { lang: 'python', langLabel: 'Python', caseName: 'security_2', expected: 'CWE-89 SQL injection', code: 'import sqlite3\ndef search(user_id):\n    conn = sqlite3.connect("db.sqlite")\n    conn.execute(f"SELECT * FROM users WHERE id = \'{user_id}\'")\n' },
-    { lang: 'python', langLabel: 'Python', caseName: 'mixed', expected: 'malformed number + injection', code: 'import os\nval = 100__000\ncmd = input()\nos.system(cmd)\n' },
-    { lang: 'python', langLabel: 'Python', caseName: 'correct', expected: 'clean code', code: 'def add(a: int, b: int) -> int:\n    return a + b\n' },
+    {
+      lang: 'python',
+      langLabel: 'Python',
+      caseName: 'lexical_1',
+      expected: 'invalid character',
+      code: 'val = $invalid\n',
+    },
+    {
+      lang: 'python',
+      langLabel: 'Python',
+      caseName: 'lexical_2',
+      expected: 'malformed number',
+      code: 'val = 100__000\n',
+    },
+    {
+      lang: 'python',
+      langLabel: 'Python',
+      caseName: 'syntax_1',
+      expected: 'missing delimiter',
+      code: 'print("hello"\n',
+    },
+    {
+      lang: 'python',
+      langLabel: 'Python',
+      caseName: 'syntax_2',
+      expected: 'bad statement',
+      code: 'def calculate(: \n    pass\n',
+    },
+    {
+      lang: 'python',
+      langLabel: 'Python',
+      caseName: 'security_1',
+      expected: 'CWE-78 command injection',
+      code: 'import os\ncmd = input()\nos.system(cmd)\n',
+    },
+    {
+      lang: 'python',
+      langLabel: 'Python',
+      caseName: 'security_2',
+      expected: 'CWE-89 SQL injection',
+      code: 'import sqlite3\ndef search(user_id):\n    conn = sqlite3.connect("db.sqlite")\n    conn.execute(f"SELECT * FROM users WHERE id = \'{user_id}\'")\n',
+    },
+    {
+      lang: 'python',
+      langLabel: 'Python',
+      caseName: 'mixed',
+      expected: 'malformed number + injection',
+      code: 'import os\nval = 100__000\ncmd = input()\nos.system(cmd)\n',
+    },
+    {
+      lang: 'python',
+      langLabel: 'Python',
+      caseName: 'correct',
+      expected: 'clean code',
+      code: 'def add(a: int, b: int) -> int:\n    return a + b\n',
+    },
 
     // JavaScript
-    { lang: 'javascript', langLabel: 'JavaScript', caseName: 'lexical_1', expected: 'unterminated string', code: 'const msg = "unterminated string;' },
-    { lang: 'javascript', langLabel: 'JavaScript', caseName: 'lexical_2', expected: 'smart quotes', code: 'const text = \u201csmart quote\u201d;' },
-    { lang: 'javascript', langLabel: 'JavaScript', caseName: 'syntax_1', expected: 'missing delimiter', code: 'if (x > 0 { return 1; }' },
-    { lang: 'javascript', langLabel: 'JavaScript', caseName: 'syntax_2', expected: 'bad statement', code: 'function () { return 1; }' },
-    { lang: 'javascript', langLabel: 'JavaScript', caseName: 'security_1', expected: 'CWE-78 command injection', code: 'const { exec } = require("child_process");\nconst cmd = req.query.cmd;\nexec(cmd);' },
-    { lang: 'javascript', langLabel: 'JavaScript', caseName: 'security_2', expected: 'CWE-95 code eval', code: 'const code = req.query.code;\neval(code);' },
-    { lang: 'javascript', langLabel: 'JavaScript', caseName: 'mixed', expected: 'smart quotes + eval', code: 'const text = \u201csmart\u201d;\nconst code = req.query.code;\neval(code);' },
-    { lang: 'javascript', langLabel: 'JavaScript', caseName: 'correct', expected: 'clean code', code: 'function add(a, b) {\n    return a + b;\n}' },
+    {
+      lang: 'javascript',
+      langLabel: 'JavaScript',
+      caseName: 'lexical_1',
+      expected: 'unterminated string',
+      code: 'const msg = "unterminated string;',
+    },
+    {
+      lang: 'javascript',
+      langLabel: 'JavaScript',
+      caseName: 'lexical_2',
+      expected: 'smart quotes',
+      code: 'const text = \u201csmart quote\u201d;',
+    },
+    {
+      lang: 'javascript',
+      langLabel: 'JavaScript',
+      caseName: 'syntax_1',
+      expected: 'missing delimiter',
+      code: 'if (x > 0 { return 1; }',
+    },
+    {
+      lang: 'javascript',
+      langLabel: 'JavaScript',
+      caseName: 'syntax_2',
+      expected: 'bad statement',
+      code: 'function () { return 1; }',
+    },
+    {
+      lang: 'javascript',
+      langLabel: 'JavaScript',
+      caseName: 'security_1',
+      expected: 'CWE-78 command injection',
+      code: 'const { exec } = require("child_process");\nconst cmd = req.query.cmd;\nexec(cmd);',
+    },
+    {
+      lang: 'javascript',
+      langLabel: 'JavaScript',
+      caseName: 'security_2',
+      expected: 'CWE-95 code eval',
+      code: 'const code = req.query.code;\neval(code);',
+    },
+    {
+      lang: 'javascript',
+      langLabel: 'JavaScript',
+      caseName: 'mixed',
+      expected: 'smart quotes + eval',
+      code: 'const text = \u201csmart\u201d;\nconst code = req.query.code;\neval(code);',
+    },
+    {
+      lang: 'javascript',
+      langLabel: 'JavaScript',
+      caseName: 'correct',
+      expected: 'clean code',
+      code: 'function add(a, b) {\n    return a + b;\n}',
+    },
 
     // Java
-    { lang: 'java', langLabel: 'Java', caseName: 'lexical_1', expected: 'unterminated string', code: 'public class App { String s = "unterminated; }' },
-    { lang: 'java', langLabel: 'Java', caseName: 'lexical_2', expected: 'smart quotes', code: 'public class App { String s = \u201csmart quote\u201d; }' },
-    { lang: 'java', langLabel: 'Java', caseName: 'syntax_1', expected: 'missing semicolon', code: 'public class App { void foo() { int x = 1 } }' },
-    { lang: 'java', langLabel: 'Java', caseName: 'syntax_2', expected: 'bad class statement', code: 'public class { void foo() {} }' },
-    { lang: 'java', langLabel: 'Java', caseName: 'security_1', expected: 'CWE-78 command exec', code: 'package demo;\nimport javax.servlet.http.*;\nclass App {\n  void handle(HttpServletRequest req) throws Exception {\n    String cmd = req.getParameter("cmd");\n    Runtime.getRuntime().exec(cmd);\n  }\n}' },
-    { lang: 'java', langLabel: 'Java', caseName: 'security_2', expected: 'CWE-89 SQL injection', code: 'package demo;\nimport java.sql.*;\nimport javax.servlet.http.*;\nclass App {\n  void handle(HttpServletRequest req, Connection conn) throws Exception {\n    String name = req.getParameter("name");\n    Statement stmt = conn.createStatement();\n    stmt.executeQuery("SELECT * FROM users WHERE name=\'" + name + "\'");\n  }\n}' },
-    { lang: 'java', langLabel: 'Java', caseName: 'mixed', expected: 'smart quote + exec', code: 'package demo;\nimport javax.servlet.http.*;\nclass App {\n  String title = \u201csmart\u201d;\n  void handle(HttpServletRequest req) throws Exception {\n    String cmd = req.getParameter("cmd");\n    Runtime.getRuntime().exec(cmd);\n  }\n}' },
-    { lang: 'java', langLabel: 'Java', caseName: 'correct', expected: 'clean code', code: 'public class App {\n    public static int add(int a, int b) {\n        return a + b;\n    }\n}' },
+    {
+      lang: 'java',
+      langLabel: 'Java',
+      caseName: 'lexical_1',
+      expected: 'unterminated string',
+      code: 'public class App { String s = "unterminated; }',
+    },
+    {
+      lang: 'java',
+      langLabel: 'Java',
+      caseName: 'lexical_2',
+      expected: 'smart quotes',
+      code: 'public class App { String s = \u201csmart quote\u201d; }',
+    },
+    {
+      lang: 'java',
+      langLabel: 'Java',
+      caseName: 'syntax_1',
+      expected: 'missing semicolon',
+      code: 'public class App { void foo() { int x = 1 } }',
+    },
+    {
+      lang: 'java',
+      langLabel: 'Java',
+      caseName: 'syntax_2',
+      expected: 'bad class statement',
+      code: 'public class { void foo() {} }',
+    },
+    {
+      lang: 'java',
+      langLabel: 'Java',
+      caseName: 'security_1',
+      expected: 'CWE-78 command exec',
+      code: 'package demo;\nimport javax.servlet.http.*;\nclass App {\n  void handle(HttpServletRequest req) throws Exception {\n    String cmd = req.getParameter("cmd");\n    Runtime.getRuntime().exec(cmd);\n  }\n}',
+    },
+    {
+      lang: 'java',
+      langLabel: 'Java',
+      caseName: 'security_2',
+      expected: 'CWE-89 SQL injection',
+      code: 'package demo;\nimport java.sql.*;\nimport javax.servlet.http.*;\nclass App {\n  void handle(HttpServletRequest req, Connection conn) throws Exception {\n    String name = req.getParameter("name");\n    Statement stmt = conn.createStatement();\n    stmt.executeQuery("SELECT * FROM users WHERE name=\'" + name + "\'");\n  }\n}',
+    },
+    {
+      lang: 'java',
+      langLabel: 'Java',
+      caseName: 'mixed',
+      expected: 'smart quote + exec',
+      code: 'package demo;\nimport javax.servlet.http.*;\nclass App {\n  String title = \u201csmart\u201d;\n  void handle(HttpServletRequest req) throws Exception {\n    String cmd = req.getParameter("cmd");\n    Runtime.getRuntime().exec(cmd);\n  }\n}',
+    },
+    {
+      lang: 'java',
+      langLabel: 'Java',
+      caseName: 'correct',
+      expected: 'clean code',
+      code: 'public class App {\n    public static int add(int a, int b) {\n        return a + b;\n    }\n}',
+    },
 
     // C++
-    { lang: 'cpp', langLabel: 'C / C++', caseName: 'lexical_1', expected: 'unterminated string', code: '#include <string>\nstd::string s = "unterminated;' },
-    { lang: 'cpp', langLabel: 'C / C++', caseName: 'lexical_2', expected: 'smart quotes', code: '#include <string>\nstd::string s = \u201csmart\u201d;' },
-    { lang: 'cpp', langLabel: 'C / C++', caseName: 'syntax_1', expected: 'missing semicolon', code: 'int main() { int x = 1\n return 0; }' },
-    { lang: 'cpp', langLabel: 'C / C++', caseName: 'syntax_2', expected: 'bad statement', code: 'int main( { return 0; }' },
-    { lang: 'cpp', langLabel: 'C / C++', caseName: 'security_1', expected: 'CWE-78 system call', code: '#include <stdlib.h>\nint main(int argc, char** argv) { system(argv[1]); return 0; }' },
-    { lang: 'cpp', langLabel: 'C / C++', caseName: 'security_2', expected: 'CWE-120 buffer overflow', code: '#include <string.h>\nvoid test(char* input) { char buf[8]; strcpy(buf, input); }' },
-    { lang: 'cpp', langLabel: 'C / C++', caseName: 'mixed', expected: 'smart quote + buffer overflow', code: 'char* s = \u201csmart\u201d;\nvoid test(char* input) { char buf[8]; strcpy(buf, input); }' },
-    { lang: 'cpp', langLabel: 'C / C++', caseName: 'correct', expected: 'clean code', code: 'int add(int a, int b) {\n    return a + b;\n}' },
+    {
+      lang: 'cpp',
+      langLabel: 'C / C++',
+      caseName: 'lexical_1',
+      expected: 'unterminated string',
+      code: '#include <string>\nstd::string s = "unterminated;',
+    },
+    {
+      lang: 'cpp',
+      langLabel: 'C / C++',
+      caseName: 'lexical_2',
+      expected: 'smart quotes',
+      code: '#include <string>\nstd::string s = \u201csmart\u201d;',
+    },
+    {
+      lang: 'cpp',
+      langLabel: 'C / C++',
+      caseName: 'syntax_1',
+      expected: 'missing semicolon',
+      code: 'int main() { int x = 1\n return 0; }',
+    },
+    {
+      lang: 'cpp',
+      langLabel: 'C / C++',
+      caseName: 'syntax_2',
+      expected: 'bad statement',
+      code: 'int main( { return 0; }',
+    },
+    {
+      lang: 'cpp',
+      langLabel: 'C / C++',
+      caseName: 'security_1',
+      expected: 'CWE-78 system call',
+      code: '#include <stdlib.h>\nint main(int argc, char** argv) { system(argv[1]); return 0; }',
+    },
+    {
+      lang: 'cpp',
+      langLabel: 'C / C++',
+      caseName: 'security_2',
+      expected: 'CWE-120 buffer overflow',
+      code: '#include <string.h>\nvoid test(char* input) { char buf[8]; strcpy(buf, input); }',
+    },
+    {
+      lang: 'cpp',
+      langLabel: 'C / C++',
+      caseName: 'mixed',
+      expected: 'smart quote + buffer overflow',
+      code: 'char* s = \u201csmart\u201d;\nvoid test(char* input) { char buf[8]; strcpy(buf, input); }',
+    },
+    {
+      lang: 'cpp',
+      langLabel: 'C / C++',
+      caseName: 'correct',
+      expected: 'clean code',
+      code: 'int add(int a, int b) {\n    return a + b;\n}',
+    },
   ];
 
   for (const tc of matrixCases) {
@@ -156,7 +356,10 @@ test.describe('G3 1. Wrong-Code Matrix (32 Cases)', () => {
 
       if (tc.caseName === 'correct') {
         // Assert clean
-        const problemsTab = page.locator('.ide-tab, [role="tab"]').filter({ hasText: /Problems/i }).first();
+        const problemsTab = page
+          .locator('.ide-tab, [role="tab"]')
+          .filter({ hasText: /Problems/i })
+          .first();
         if (await problemsTab.isVisible()) {
           await problemsTab.click();
         }

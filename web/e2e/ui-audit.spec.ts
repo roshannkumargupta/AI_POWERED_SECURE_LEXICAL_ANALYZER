@@ -14,7 +14,10 @@ test.describe.serial('G3 6. UI Click Audit Across Resolutions & Themes', () => {
         await page.goto('/');
 
         // 1. Theme switch button click
-        const themeBtn = page.locator(`.ide-theme-switch button`).filter({ hasText: new RegExp(theme, 'i') }).first();
+        const themeBtn = page
+          .locator(`.ide-theme-switch button`)
+          .filter({ hasText: new RegExp(theme, 'i') })
+          .first();
         if (await themeBtn.isVisible()) {
           await themeBtn.click();
           await page.waitForTimeout(200);
@@ -64,28 +67,36 @@ test.describe.serial('G3 6. UI Click Audit Across Resolutions & Themes', () => {
         const sampleRow = page.locator('button.ide-sample-row').first();
         if (await sampleRow.isVisible({ timeout: 5000 }).catch(() => false)) {
           await sampleRow.click();
-          await expect.poll(async () => {
-            return await page.evaluate(() => {
-              const monaco = (window as any).monaco;
-              const editors = monaco?.editor?.getEditors?.() || [];
-              for (const ed of editors) {
-                const val = ed.getModel()?.getValue();
-                if (val && val.length > 0) return val;
-              }
-              const models = monaco?.editor?.getModels?.() || [];
-              for (const m of models) {
-                const val = m.getValue();
-                if (val && val.length > 0) return val;
-              }
-              return '';
-            });
-          }, { timeout: 10_000 }).not.toBe('');
+          await expect
+            .poll(
+              async () => {
+                return await page.evaluate(() => {
+                  const monaco = (window as any).monaco;
+                  const editors = monaco?.editor?.getEditors?.() || [];
+                  for (const ed of editors) {
+                    const val = ed.getModel()?.getValue();
+                    if (val && val.length > 0) return val;
+                  }
+                  const models = monaco?.editor?.getModels?.() || [];
+                  for (const m of models) {
+                    const val = m.getValue();
+                    if (val && val.length > 0) return val;
+                  }
+                  return '';
+                });
+              },
+              { timeout: 10_000 }
+            )
+            .not.toBe('');
         }
 
         // 7. Panel Tabs and Panel controls (Maximise, Restore, Close)
         const panelTabs = ['Tokens', 'Security', 'Problems'];
         for (const tabName of panelTabs) {
-          const tab = page.locator('.ide-tab, [role="tab"]').filter({ hasText: new RegExp(tabName, 'i') }).first();
+          const tab = page
+            .locator('.ide-tab, [role="tab"]')
+            .filter({ hasText: new RegExp(tabName, 'i') })
+            .first();
           if (await tab.isVisible()) {
             await tab.click();
             await page.waitForTimeout(150);
@@ -111,7 +122,9 @@ test.describe.serial('G3 6. UI Click Audit Across Resolutions & Themes', () => {
         await expect(buildDrawer).toBeHidden();
 
         // 9. New file action
-        const explorerAct = page.locator('button.ide-activity-button[aria-label="Explorer"]').first();
+        const explorerAct = page
+          .locator('button.ide-activity-button[aria-label="Explorer"]')
+          .first();
         await explorerAct.click();
         const newFileBtn = page.locator('button[aria-label="New file"]').first();
         if (await newFileBtn.isVisible()) {

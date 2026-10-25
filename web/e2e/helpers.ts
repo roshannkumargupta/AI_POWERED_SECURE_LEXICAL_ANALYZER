@@ -1,7 +1,9 @@
 import { expect, type Page } from '@playwright/test';
 
 export async function handleConsent(page: Page) {
-  const scrimBtn = page.locator('.ide-consent-scrim button, .ide-ai-consent button').filter({ hasText: /Allow/i });
+  const scrimBtn = page
+    .locator('.ide-consent-scrim button, .ide-ai-consent button')
+    .filter({ hasText: /Allow/i });
   if (await scrimBtn.isVisible({ timeout: 600 }).catch(() => false)) {
     await scrimBtn.first().click();
     await page.waitForTimeout(400);
