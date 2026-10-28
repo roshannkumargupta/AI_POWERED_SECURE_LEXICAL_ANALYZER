@@ -198,27 +198,37 @@ def _run_capped(
     return returncode, bytes(captured["stdout"]), bytes(captured["stderr"])
 
 
+_DETECT_CACHE: dict[tuple[str, str | None], ToolStatus] = {}
+
+
 def detect_tool(
     name: str, *, path: str | None = None, timeout: float = VERSION_TIMEOUT_SECONDS
 ) -> ToolStatus:
+    cache_key = (name, path)
+    if cache_key in _DETECT_CACHE:
+        return _DETECT_CACHE[cache_key]
     definition = TOOL_REGISTRY.get(name)
     if definition is None:
-        return ToolStatus(
+        res = ToolStatus(
             name=name,
             kind="unknown",
             available=False,
             status="unavailable",
             reason="Executable is not allowlisted.",
         )
+        _DETECT_CACHE[cache_key] = res
+        return res
     executable = shutil.which(definition.executable, path=path)
     if executable is None:
-        return ToolStatus(
+        res = ToolStatus(
             name=name,
             kind=definition.kind,
             available=False,
             status="unavailable",
             reason="Install the tool and make it available on PATH.",
         )
+        _DETECT_CACHE[cache_key] = res
+        return res
     try:
         returncode, stdout, stderr = _run_capped(
             [executable, *definition.version_args],
@@ -229,7 +239,7 @@ def detect_tool(
         output = _bounded(stdout or stderr).strip().splitlines()
         version = output[0][:200] if output else None
         if returncode:
-            return ToolStatus(
+            res = ToolStatus(
                 name=name,
                 kind=definition.kind,
                 available=True,
@@ -237,11 +247,12 @@ def detect_tool(
                 status="failed",
                 reason=f"Version probe exited with status {returncode}; check the executable installation.",
             )
-        return ToolStatus(
-            name=name, kind=definition.kind, available=True, version=version, status="ok"
-        )
+        else:
+            res = ToolStatus(
+                name=name, kind=definition.kind, available=True, version=version, status="ok"
+            )
     except subprocess.TimeoutExpired:
-        return ToolStatus(
+        res = ToolStatus(
             name=name,
             kind=definition.kind,
             available=True,
@@ -249,13 +260,15 @@ def detect_tool(
             reason="Version probe exceeded its time limit.",
         )
     except OSError as exc:
-        return ToolStatus(
+        res = ToolStatus(
             name=name,
             kind=definition.kind,
             available=False,
             status="unavailable",
             reason=f"Executable could not start ({type(exc).__name__}); check runtime libraries and PATH.",
         )
+    _DETECT_CACHE[cache_key] = res
+    return res
 
 
 def detect_all_tools(*, path: str | None = None) -> list[ToolStatus]:

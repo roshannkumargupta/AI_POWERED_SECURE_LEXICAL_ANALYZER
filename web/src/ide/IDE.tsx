@@ -1525,6 +1525,25 @@ export function IDE() {
     }
     applyIdeMonacoTheme(monacoApi, resolved);
     setEditorReady(true);
+    monacoApi.editor.remeasureFonts();
+    if (typeof document !== 'undefined' && 'fonts' in document) {
+      document.fonts.ready.then(() => {
+        monacoApi.editor.remeasureFonts();
+        editor.layout();
+      });
+      document.fonts.addEventListener('loadingdone', () => {
+        monacoApi.editor.remeasureFonts();
+        editor.layout();
+      });
+    }
+    setTimeout(() => {
+      monacoApi.editor.remeasureFonts();
+      editor.layout();
+    }, 150);
+    setTimeout(() => {
+      monacoApi.editor.remeasureFonts();
+      editor.layout();
+    }, 600);
     const pending = pendingNavigation.current;
     if (pending && pending.docId === document?.id) {
       pendingNavigation.current = null;
@@ -2539,22 +2558,63 @@ export function IDE() {
                     options={{
                       readOnly: false,
                       domReadOnly: false,
-                      minimap: { enabled: true },
+                      minimap: { enabled: true, showSlider: 'mouseover' },
                       lineNumbers: 'on',
+                      lineNumbersMinChars: 3,
                       glyphMargin: true,
-                      bracketPairColorization: { enabled: false },
+                      bracketPairColorization: { enabled: true },
+                      matchBrackets: 'always',
+                      guides: {
+                        bracketPairs: true,
+                        bracketPairsHorizontal: true,
+                        highlightActiveBracketPair: true,
+                        indentation: true,
+                        highlightActiveIndentation: true,
+                      },
                       renderControlCharacters: true,
                       renderLineHighlight: 'line',
-                      fontFamily: 'JetBrains Mono, monospace',
+                      renderLineHighlightOnlyWhenFocus: false,
+                      fontFamily: "'JetBrains Mono', Consolas, 'Courier New', monospace",
                       fontSize: 13,
                       lineHeight: 22,
+                      fontLigatures: true,
+                      letterSpacing: 0,
                       scrollBeyondLastLine: false,
                       automaticLayout: true,
                       cursorBlinking: 'smooth',
+                      cursorSmoothCaretAnimation: 'on',
+                      cursorStyle: 'line',
+                      cursorWidth: 2,
+                      cursorSurroundingLines: 2,
                       smoothScrolling: true,
                       tabSize: 4,
                       wordWrap: 'off',
-                      padding: { top: 9 },
+                      padding: { top: 9, bottom: 9 },
+                      autoClosingBrackets: 'always',
+                      autoClosingQuotes: 'always',
+                      autoClosingDelete: 'always',
+                      autoClosingOvertype: 'always',
+                      autoSurround: 'languageDefined',
+                      formatOnPaste: true,
+                      formatOnType: true,
+                      suggestOnTriggerCharacters: true,
+                      acceptSuggestionOnEnter: 'on',
+                      tabCompletion: 'on',
+                      snippetSuggestions: 'inline',
+                      wordBasedSuggestions: 'allDocuments',
+                      quickSuggestions: { other: true, comments: false, strings: false },
+                      parameterHints: { enabled: true, cycle: true },
+                      folding: true,
+                      foldingHighlight: true,
+                      foldingStrategy: 'auto',
+                      showFoldingControls: 'always',
+                      multiCursorModifier: 'alt',
+                      selectionHighlight: true,
+                      occurrencesHighlight: 'singleFile',
+                      roundedSelection: true,
+                      links: true,
+                      contextmenu: true,
+                      dragAndDrop: true,
                     }}
                   />
                 </div>

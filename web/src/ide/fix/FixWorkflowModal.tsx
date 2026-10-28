@@ -411,7 +411,7 @@ export function FixWorkflowModal(props: Props) {
           stage: 'verification-failed',
           message: response.reason || 'Verification failed; source was not changed.',
         });
-      else if (missingTools)
+      else if (!response.applied && missingTools)
         dispatch({
           type: 'failure',
           stage: 'missing-tools',

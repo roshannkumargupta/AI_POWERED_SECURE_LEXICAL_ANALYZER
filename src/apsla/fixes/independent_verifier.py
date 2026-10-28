@@ -84,10 +84,16 @@ def _finding_key(finding: Any) -> tuple[str, str, int, int]:
     )
 
 
+_VERIFICATION_CACHE: dict[tuple[str, str, int], dict[str, Any]] = {}
+
+
 def verify_independently(
     source: str, language: str, filename: str, proposal: PatchProposalV2, source_version: int
 ) -> dict[str, Any]:
     """Run full deterministic checks against separate in-memory source versions."""
+    cache_key = (source_sha256(source), getattr(proposal, "id", ""), source_version)
+    if cache_key in _VERIFICATION_CACHE:
+        return dict(_VERIFICATION_CACHE[cache_key])
     expected_diff = validate_proposal(source, source_version, proposal)
     patched = apply_edits(source, proposal.edits)
     if proposal.diff and expected_diff != proposal.diff:
@@ -143,21 +149,32 @@ def verify_independently(
         )
         if target_diagnostic is not None:
             allowed_region = target_diagnostic.range
-    out_of_scope: list[str] = []
+    allowed_windows: list[tuple[int, int]] = []
     if allowed_region is not None:
+        allowed_windows.append(
+            (max(1, allowed_region.start_line - 15), allowed_region.end_line + 15)
+        )
+    if target_before:
+        for step in getattr(target_before[0], "taint_path", []):
+            s_rng = getattr(step, "range", None)
+            if s_rng:
+                allowed_windows.append(
+                    (max(1, s_rng.start_line - 15), s_rng.end_line + 15)
+                )
+
+    out_of_scope: list[str] = []
+    if allowed_windows:
         for edit in proposal.edits:
             edit_range = edit.range
-            inside_target = bool(
-                (edit_range.start_line, edit_range.start_col)
-                >= (allowed_region.start_line, allowed_region.start_col)
-                and (edit_range.end_line, edit_range.end_col)
-                <= (allowed_region.end_line, allowed_region.end_col)
+            inside_target = any(
+                win_start <= edit_range.start_line and edit_range.end_line <= win_end
+                for win_start, win_end in allowed_windows
             )
             import_declaration = (
                 edit.new_text.lstrip().startswith(
                     ("import ", "from ", "#include", "using ", "package ")
                 )
-                and edit_range.start_line <= 20
+                and edit_range.start_line <= 30
                 and bool(proposal.rationale.strip())
             )
             if not inside_target and not import_declaration:
@@ -260,6 +277,10 @@ def verify_independently(
         "tests_status": "tests unavailable",
         "patched_source": patched,
     }
+    _VERIFICATION_CACHE[cache_key] = report
+    if len(_VERIFICATION_CACHE) > 200:
+        _VERIFICATION_CACHE.pop(next(iter(_VERIFICATION_CACHE)))
+    return report
 
 
 def _diagnostic_signature(item: Any) -> str:

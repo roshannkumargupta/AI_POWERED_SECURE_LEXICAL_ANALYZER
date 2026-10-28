@@ -1013,6 +1013,13 @@
   overflow: hidden;
   background: var(--color-vs-bg);
 }
+.ide-editor-area .monaco-editor,
+.ide-editor-area .monaco-editor .view-line,
+.ide-editor-area .monaco-editor .view-lines,
+.ide-editor-area .monaco-editor .margin {
+  font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace !important;
+  letter-spacing: 0 !important;
+}
 .ide-resizer {
   z-index: 1;
   touch-action: none;

@@ -274,14 +274,17 @@ class GroqProvider(HttpJsonProvider):
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
-        max_tokens = min(int(os.getenv("GROQ_MAX_TOKENS", "1200")), 8192)
+        max_tokens = min(int(os.getenv("GROQ_MAX_TOKENS", "4096")), 8192)
         temperature = float(os.getenv("GROQ_TEMPERATURE", "0.1"))
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
+        if not any("json" in m["content"].lower() for m in messages):
+            messages[0]["content"] += "\nReturn output in valid JSON format."
         payload = {
             "model": self.model,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
+            "messages": messages,
             "response_format": {"type": "json_object"},
             "temperature": temperature,
             "max_tokens": max_tokens,
@@ -306,6 +309,19 @@ class GroqProvider(HttpJsonProvider):
                             f"{self.base_url}/chat/completions",
                             json=payload,
                         )
+                        if response.status_code == 400:
+                            err_data: dict[str, Any] = {}
+                            try:
+                                err_data = response.json().get("error", {})
+                            except Exception:
+                                pass
+                            if err_data.get("code") == "json_validate_failed":
+                                detail = err_data.get("failed_generation") or err_data.get("message") or ""
+                                raise ProviderFailure(
+                                    "bad_output",
+                                    f"Provider JSON generation failed ({detail}).",
+                                    "Increase GROQ_MAX_TOKENS or simplify the request prompt.",
+                                )
                         if response.status_code == 401:
                             raise ProviderFailure(
                                 "invalid_key",
