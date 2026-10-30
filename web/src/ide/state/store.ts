@@ -71,6 +71,7 @@ export const initialIDEState: IDEState = {
 export type IDEAction =
   | { type: 'document/add'; document: IDEDocument }
   | { type: 'document/edit'; id: string; source: string }
+  | { type: 'document/save'; id: string }
   | { type: 'document/rename'; id: string; name: string }
   | { type: 'document/language'; id: string; language: string }
   | { type: 'document/activate'; id: string }
@@ -121,6 +122,19 @@ export function ideReducer(state: IDEState, action: IDEAction): IDEState {
               [action.id]: { ...state.analysis[action.id], status: 'stale', abort: null },
             }
           : state.analysis,
+      };
+    case 'document/save':
+      return {
+        ...state,
+        documents: state.documents.map((doc) =>
+          doc.id === action.id
+            ? {
+                ...doc,
+                savedSource: doc.source,
+                dirty: false,
+              }
+            : doc
+        ),
       };
     case 'document/rename':
       return {

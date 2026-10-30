@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -327,4 +327,39 @@ class AITestConnectionResponse(BaseModel):
     model: str | None = None
     available_models: list[str] = Field(default_factory=list)
     error: str | None = None
+
+
+class AIChatMessage(BaseModel):
+    role: Literal["user", "assistant", "system"]
+    content: str = Field(max_length=64 * 1024)
+
+
+class AIChatContext(BaseModel):
+    file: str | None = None
+    language: str | None = None
+    source_version: int | None = None
+    selected_range: dict[str, int] | None = None
+    stage: str | None = None
+    diagnostic: dict[str, Any] | None = None
+    finding: dict[str, Any] | None = None
+    findings_count: int | None = None
+
+
+class AIChatRequest(BaseModel):
+    session_id: str = Field(min_length=16, max_length=128)
+    remote_consent: bool = False
+    message: str = Field(min_length=1, max_length=16 * 1024)
+    source: str = Field(default="", max_length=512 * 1024)
+    language: str = Field(default="cpp")
+    history: list[AIChatMessage] = Field(default_factory=list, max_length=50)
+    context: AIChatContext | None = None
+
+
+class AIChatResponse(BaseModel):
+    operation_id: str
+    reply: str
+    code_snippets: list[str] = Field(default_factory=list)
+    provider: str
+    model: str
+
 

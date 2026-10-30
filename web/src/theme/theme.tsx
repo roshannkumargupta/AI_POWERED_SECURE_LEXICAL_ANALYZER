@@ -29,6 +29,7 @@ function applyTheme(mode: ThemeMode, resolved: ResolvedTheme) {
   root.dataset.themeMode = mode;
   root.classList.toggle('dark', resolved === 'dark');
   root.classList.toggle('theme-light', resolved === 'light');
+  root.classList.toggle('light-theme', resolved === 'light');
   const meta = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]');
   if (meta) meta.content = resolved;
   requestAnimationFrame(() =>

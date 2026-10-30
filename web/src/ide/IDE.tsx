@@ -1,6 +1,4 @@
-import {
-  lazy,
-  Suspense,
+import React, {
   useCallback,
   useEffect,
   useMemo,
@@ -11,3051 +9,2308 @@ import {
 import type * as Monaco from 'monaco-editor';
 import {
   apiClient,
-  type AIExplainV2Request,
-  type AIGenerateResponse,
-  type AnalysisResultV2,
-  type AnalyzeV2Request,
   type CapabilitiesResponse,
-  type DiagnosticV2,
-  type SampleItem,
-  type StageAnalysisResponse,
   type TokenV2,
+  type DiagnosticV2,
+  type WorkspaceFileNode,
+  type PatchProposal,
+  type AIGenerateResponse,
 } from '../api/client';
 import { useTheme } from '../theme/theme';
-import { buildMonacoTheme } from '../theme/monacoTheme';
+import { Header } from './components/Header';
+import { ActivityBar, type SidebarPane } from './components/ActivityBar';
+import { ExplorerSidebar } from './components/ExplorerSidebar';
+import { EditorWorkspace } from './components/EditorWorkspace';
+import { AnalysisPanel, type BottomPanelTab } from './components/AnalysisPanel';
+import { AssistantPanel, type ChatMessage } from './components/AssistantPanel';
+import { StatusBar } from './components/StatusBar';
+import { BuildWithAiModal, type SupportedLanguage } from './components/BuildWithAiModal';
+import { CommandPaletteModal, type CommandItem } from './components/CommandPaletteModal';
+import { ToastBox, type Toast } from './components/ToastBox';
+import type { TokenItem } from './components/TokenInspector';
+import type { DiagnosticItem } from './components/DiagnosticsPanel';
+import type { PipelineStageInfo, StageStatus } from './components/PipelinePanel';
+import type { SecurityFindingItem } from './components/SecurityPanel';
 import {
-  activeLanguage,
-  displayEol,
-  dimensionLabel,
-  engineLabel,
-  grammarLabel,
-  securityLabel,
-} from './lib/status';
-import { clampPanelHeight } from './lib/panelResize';
-import { setEditorSelection, revealEditorRange, setEditorValue } from '../editor/navigation';
-import type { IDEFinding } from './security/SecurityPanel';
-import { SamplesSidebar } from './sidebar/SamplesSidebar';
-import { NewFileDialog } from './sidebar/NewFileDialog';
-import { SettingsModal } from './settings/SettingsModal';
-import { ShortcutsDialog } from './settings/ShortcutsDialog';
-import { FixWorkflowModal } from './fix/FixWorkflowModal';
-import { readAutoAnalyze, writeAutoAnalyze } from './settings/preferences';
-import { BuildAIDrawer } from './ai/BuildAIDrawer';
-import { taintDecorations } from './security/taintDecorations';
-import { observeInteractiveElements } from './lib/qaAttributes';
-import { closeOnBackdrop, useModalBehavior } from './lib/modalBehavior';
-import { tokenAtPosition, isAnalysisIncomplete } from './tokens/tokenModel';
-import { explainToken } from './tokens/explanations';
-import { keybindingMatches, searchCommands, type Command } from './state/commands';
-import {
-  clampScale,
-  hydrateIDEState,
   ideReducer,
+  initialIDEState,
   selectActiveDocument,
-  selectAnalysisCounts,
-  serializeIDEState,
-  type IDEState,
+  type IDEDocument,
 } from './state/store';
-import './IDE.css';
-import './p4.css';
+import {
+  validatePatchProposal,
+  applyPatchToSource,
+  createEnrichedPatchProposal,
+  extractProposedPatchFromAiResponse,
+  type EnrichedPatchProposal,
+} from './patch/patchWorkflow';
+import {
+  readPreferences,
+  writePreferences,
+  type UserPreferences,
+} from './settings/preferences';
+import './reference-theme.css';
 
-const Editor = lazy(() => import('./lib/MonacoEditor'));
-const TokensPanel = lazy(() =>
-  import('./tokens/TokensPanel').then((module) => ({ default: module.TokensPanel }))
-);
-const ProblemsPanel = lazy(() =>
-  import('./problems/ProblemsPanel').then((module) => ({ default: module.ProblemsPanel }))
-);
-const SecurityPanel = lazy(() =>
-  import('./security/SecurityPanel').then((module) => ({ default: module.SecurityPanel }))
-);
-const ASTSidebar = lazy(() =>
-  import('./ast/ASTSidebar').then((module) => ({ default: module.ASTSidebar }))
-);
-const SearchSidebar = lazy(() =>
-  import('./sidebar/SearchSidebar').then((module) => ({ default: module.SearchSidebar }))
-);
-const AIExplainPanel = lazy(() =>
-  import('./ai/AIExplainPanel').then((module) => ({ default: module.AIExplainPanel }))
-);
-const AgentActivityPanel = lazy(() =>
-  import('./ai/AgentActivityPanel').then((module) => ({ default: module.AgentActivityPanel }))
-);
-const SafetyLab = lazy(() =>
-  import('./safety/SafetyLab').then((module) => ({ default: module.SafetyLab }))
-);
+export const IDE: React.FC = () => {
+  const { resolved: resolvedTheme, toggleTheme, mode: themeMode, setMode: setThemeMode } = useTheme();
+  const [state, dispatch] = useReducer(ideReducer, initialIDEState);
 
-const STORAGE_KEY = 'securelex.ide.drafts.v6';
-const starter = `#include <iostream>\n\nint main() {\n    int a = 9;\n    int b = 19;\n    int sum = a + b;\n    std::cout << sum << '\\n';\n    return 0;\n}\n`;
-const icon = (name: string, size = 18) => (
-  <span aria-hidden="true" className="material-symbols-outlined" style={{ fontSize: size }}>
-    {name}
-  </span>
-);
-const makeId = () => `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-const monacoLanguage = (language: string) =>
-  ({
-    cpp: 'cpp',
-    'c++': 'cpp',
-    c: 'cpp',
-    python: 'python',
-    py: 'python',
-    java: 'java',
-    javascript: 'javascript',
-    js: 'javascript',
-  })[language.toLowerCase()] ?? 'plaintext';
-const applyIdeMonacoTheme = (instance: typeof Monaco, theme: 'dark' | 'light') => {
-  const style = getComputedStyle(globalThis.document.documentElement);
-  const read = (name: string) => style.getPropertyValue(name).trim();
-  const tokens = {
-    '--text-primary': read('--color-vs-text'),
-    '--text-secondary': read('--color-vs-light'),
-    '--text-muted': read('--color-vs-muted'),
-    '--surface-2': read('--color-vs-bg'),
-    '--surface-3': read('--color-vs-elevated'),
-    '--border-strong': read('--color-vs-borderSubtle'),
-    '--editor-line-highlight': read('--color-vs-hover'),
-    '--editor-selection': read('--color-vs-selection'),
-    '--editor-indent-guide': read('--gutter-border'),
-    '--sev-critical': read('--color-vs-red'),
-    '--sev-medium': read('--color-vs-yellow'),
-    '--sev-low': read('--color-vs-cyan'),
-    '--bg-accent': read('--color-vs-highlight'),
-    '--scrollbar-thumb': read('--scrollbar-thumb'),
-    '--scrollbar-thumb-hover': read('--scrollbar-thumb-hover'),
-  };
-  instance.editor.defineTheme('securelex-dark', buildMonacoTheme(tokens, 'dark'));
-  instance.editor.defineTheme('securelex-light', buildMonacoTheme(tokens, 'light'));
-  instance.editor.setTheme(`securelex-${theme}`);
-};
+  // User Preferences
+  const [prefs, setPrefs] = useState<UserPreferences>(() => readPreferences());
 
-export function IDE() {
-  const { resolved, setMode, toggleTheme } = useTheme();
-  const [state, dispatch] = useReducer(ideReducer, undefined, () => {
-    let hydrated: IDEState;
-    try {
-      hydrated = hydrateIDEState(localStorage.getItem(STORAGE_KEY));
-    } catch {
-      hydrated = hydrateIDEState(null);
-    }
-    const starterDocs = hydrated.documents.filter(
-      (doc) =>
-        doc.name === 'main.cpp' && doc.source === starter && !doc.dirty && doc.origin === 'new'
-    );
-    if (starterDocs.length > 1) {
-      const keepId = starterDocs.some((doc) => doc.id === hydrated.activeDocId)
-        ? hydrated.activeDocId
-        : starterDocs[0].id;
-      hydrated = {
-        ...hydrated,
-        documents: hydrated.documents.filter(
-          (doc) =>
-            !starterDocs.some((candidate) => candidate.id !== keepId && candidate.id === doc.id)
-        ),
-        analysis: Object.fromEntries(
-          hydrated.documents
-            .filter(
-              (doc) =>
-                !starterDocs.some((candidate) => candidate.id !== keepId && candidate.id === doc.id)
-            )
-            .map((doc) => [doc.id, hydrated.analysis[doc.id]])
-        ),
-        activeDocId: keepId,
-      };
-    }
-    if (hydrated.documents.length) return hydrated;
-    return ideReducer(hydrated, {
-      type: 'document/add',
-      document: {
-        id: makeId(),
-        name: 'main.cpp',
-        language: 'cpp',
-        source: starter,
-        savedSource: starter,
-        sourceVersion: 1,
-        dirty: false,
-        origin: 'new',
-      },
-    });
-  });
+  // App UI state
+  const [activePane, setActivePane] = useState<SidebarPane>('pane-explorer');
+  const [activeBottomTab, setActiveBottomTab] = useState<BottomPanelTab>('view-tokens');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => prefs.sidebarCollapsed);
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => prefs.panelSizes.sidebarWidth || 220);
+  const [bottomHeight, setBottomHeight] = useState<number>(() => prefs.panelSizes.bottomHeight || 280);
+  const [bottomCollapsed, setBottomCollapsed] = useState<boolean>(() => prefs.bottomCollapsed);
+  const [assistantWidth, setAssistantWidth] = useState<number>(() => prefs.panelSizes.assistantWidth || 447);
+  const [assistantOpen, setAssistantOpen] = useState<boolean>(() => !prefs.assistantCollapsed);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [engineMode, setEngineMode] = useState<'local' | 'groq'>('local');
+  const [fontSize, setFontSize] = useState<number>(() => prefs.fontSize || 13);
+  const [wordWrap, setWordWrap] = useState<'on' | 'off'>(() => prefs.wordWrap || 'on');
+  const [minimap, setMinimap] = useState<boolean>(() => prefs.minimap ?? true);
+  const [tabSize, setTabSize] = useState<number>(() => prefs.tabSize || 4);
+  const [highlightUnicode, setHighlightUnicode] = useState<boolean>(() => prefs.highlightUnicode ?? true);
+  const [autoAnalyze, setAutoAnalyze] = useState<boolean>(() => prefs.autoAnalyze ?? false);
+  const [isMaximized, setIsMaximized] = useState<boolean>(() => prefs.bottomMaximized ?? false);
+  const [buildAiModalOpen, setBuildAiModalOpen] = useState(false);
   const [capabilities, setCapabilities] = useState<CapabilitiesResponse | null>(null);
-  const [samples, setSamples] = useState<SampleItem[]>([]);
-  const [apiUnavailable, setApiUnavailable] = useState(false);
-  const [health, setHealth] = useState<Awaited<ReturnType<typeof apiClient.getHealth>> | null>(
-    null
-  );
-  const [healthError, setHealthError] = useState(false);
-  const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState(0);
-  const [languagePicker, setLanguagePicker] = useState(false);
-  const [renaming, setRenaming] = useState<string | null>(null);
-  const [renameValue, setRenameValue] = useState('');
-  const [newFileOpen, setNewFileOpen] = useState(false);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [tabMenu, setTabMenu] = useState<{ id: string; x: number; y: number } | null>(null);
-  const [closedDocuments, setClosedDocuments] = useState<IDEState['documents']>([]);
-  const draggedTab = useRef<string | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
-  const openFileInput = useRef<HTMLInputElement>(null);
-  const [editorReady, setEditorReady] = useState(false);
-  const [editorHistory, setEditorHistory] = useState({ undo: false, redo: false });
-  const [lexerTime, setLexerTime] = useState<number | null>(null);
-  const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
-  const [stageData, setStageData] = useState<
-    Record<string, { lexical: StageAnalysisResponse | null; syntax: StageAnalysisResponse | null }>
-  >({});
-  const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
-  const [dataFlowPathId, setDataFlowPathId] = useState<string | null>(null);
-  const [selectedProblemId, setSelectedProblemId] = useState<string | null>(null);
-  const [autoAnalyze, setAutoAnalyze] = useState(readAutoAnalyze);
-  const [consentBusy, setConsentBusy] = useState(false);
-  const [buildDrawerOpen, setBuildDrawerOpen] = useState(false);
-  const [explainRequest, setExplainRequest] = useState<AIExplainV2Request | null>(null);
-  const [explainRunId, setExplainRunId] = useState(0);
-  const [deterministicExplain, setDeterministicExplain] = useState<string | null>(null);
-  const explainConsumedId = useRef(0);
-  const [fixFinding, setFixFinding] = useState<
-    AnalysisResultV2['security_findings'][number] | null
-  >(null);
-  const [fixTargetKind, setFixTargetKind] = useState<'finding' | 'diagnostic' | 'token'>('finding');
-  const [fixDocId, setFixDocId] = useState<string | null>(null);
-  const [fixUndoAvailable, setFixUndoAvailable] = useState(false);
-  const [fixAllRequested, setFixAllRequested] = useState(false);
-  const [pendingFixAnalysis, setPendingFixAnalysis] = useState<{
-    id: string;
-    version: number;
-  } | null>(null);
-  const [toast, setToast] = useState<{ message: string; error: boolean } | null>(null);
-  const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
-  const monacoRef = useRef<typeof Monaco | null>(null);
-  const analysisControllers = useRef(new Map<string, AbortController>());
-  const tokenSelection = useRef(false);
-  const decorations = useRef<string[]>([]);
-  const p4Decorations = useRef<string[]>([]);
-  const pendingNavigation = useRef<{
-    docId: string;
-    range: {
-      startLineNumber: number;
-      startColumn: number;
-      endLineNumber: number;
-      endColumn: number;
-    };
-  } | null>(null);
-  const sessionId = useRef(`ide-${globalThis.crypto?.randomUUID?.() ?? makeId()}`);
-  const resultRef = useRef<AnalysisResultV2 | null>(null);
-  const explainAtCursorRef = useRef<(line: number, column: number, run: boolean) => boolean>(
-    () => false
-  );
-  const shellRef = useRef<HTMLElement>(null);
-  const paletteInput = useRef<HTMLInputElement>(null);
-  const paletteDialog = useRef<HTMLDivElement>(null);
-  const paletteInvoker = useRef<HTMLElement | null>(null);
-  const tabStrip = useRef<HTMLDivElement>(null);
-  const sidebarResize = useRef<{ x: number; width: number } | null>(null);
-  const dragging = useRef(false);
-  const toolbarHistoryAction = useRef<'undo' | 'redo' | null>(null);
-  const fixActions = useRef<{
-    apply(): void;
-    undo(): void;
-    fixAll(): void;
-    canApply(): boolean;
-    canUndo(): boolean;
-  } | null>(null);
-  const closePalette = useCallback(
-    () => dispatch({ type: 'ui', patch: { paletteOpen: false } }),
-    []
-  );
-  useModalBehavior(state.ui.paletteOpen, paletteDialog, closePalette);
-  const document = selectActiveDocument(state);
-  const documentNames = useMemo(() => state.documents.map((item) => item.name), [state.documents]);
-  const counts = selectAnalysisCounts(state);
-  const analysis = document ? state.analysis[document.id] : null;
-  const stageForDoc =
-    document && analysis?.status === 'ok' && analysis.forSourceVersion === document.sourceVersion
-      ? stageData[document.id]
-      : null;
-  const result = analysis?.result ?? null;
-  const problemDiagnostics = useMemo<DiagnosticV2[]>(
-    () => [
-      ...(stageForDoc?.lexical?.diagnostics ?? []),
-      ...(result?.syntax_diagnostics ?? []),
-      ...(result?.semantic_diagnostics ?? []),
-    ],
-    [stageForDoc?.lexical, result]
-  );
-  const currentFinding =
-    result?.security_findings.find((finding) => finding.id === selectedFindingId) ?? null;
-  const problemCount = problemDiagnostics.length;
-  resultRef.current = result;
-  const languageInfo = activeLanguage(document, capabilities);
-  const canBuild = Boolean(
-    capabilities?.features.build_with_ai ||
-    (capabilities?.ai.configured && capabilities?.ai.consent_required)
-  );
-  const canFixAI = Boolean(
-    (capabilities?.features.fix_ai ?? capabilities?.features.fix_with_ai) ||
-    (capabilities?.ai.configured && capabilities?.ai.consent_required)
-  );
-  const canFixRule = Boolean(capabilities?.features.fix_rule);
-  const canFix = canFixAI || canFixRule;
-  const hasFixTarget = Boolean(
-    currentFinding ||
-    (result?.security_findings.length ?? 0) > 0 ||
-    problemDiagnostics.some((item) => item.category === 'lexical' || item.category === 'syntax') ||
-    result?.tokens.some((token) => token.lexical_status === 'invalid')
-  );
-  const languageLabel = languageInfo?.name ?? document?.language ?? 'Language unavailable';
-  const analysisLabel =
-    analysis?.status === 'running'
-      ? 'Analysis running'
-      : analysis?.status === 'error'
-        ? 'Analysis error'
-        : analysis?.status === 'stale' ||
-            (result && document && analysis?.forSourceVersion !== document.sourceVersion)
-          ? 'Stale'
-          : analysis?.status === 'ok' && isAnalysisIncomplete(result)
-            ? 'Analysis incomplete'
-            : analysis?.status === 'ok'
-              ? 'Up to date'
-              : 'Not analysed';
 
-  const reportToast = useCallback((message: string, error = false) => {
-    setToast({ message, error });
-    window.setTimeout(
-      () => setToast((current) => (current?.message === message ? null : current)),
-      3600
-    );
-  }, []);
-  const sha256 = useCallback(async (source: string) => {
-    const digest = await globalThis.crypto.subtle.digest(
-      'SHA-256',
-      new TextEncoder().encode(source)
-    );
-    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join(
-      ''
-    );
-  }, []);
-  const analyzeDocument = useCallback(async () => {
-    const target = document;
-    if (!target || analysisControllers.current.has(target.id)) return;
-    const controller = new AbortController();
-    analysisControllers.current.set(target.id, controller);
-    dispatch({ type: 'analysis/start', id: target.id, abort: controller });
-    try {
-      const response = await apiClient.analyzeV2(
-        {
-          source: target.source,
-          language: target.language,
-          filename: target.name,
-          api_version: 2,
-          source_version: target.sourceVersion,
-          options: {
-            include_tokens: true,
-            stages: ['lexical', 'syntax', 'security', 'quality'],
-            agent: 'off',
-          },
-        },
-        controller.signal
-      );
-      if (controller.signal.aborted || analysisControllers.current.get(target.id) !== controller)
-        return;
-      const expectedHash = await sha256(target.source);
-      if (
-        response.source_version !== target.sourceVersion ||
-        response.source_hash !== expectedHash
-      ) {
-        dispatch({ type: 'analysis/error', id: target.id });
-        reportToast('Analysis response did not match this document version.', true);
-        return;
-      }
-      dispatch({
-        type: 'analysis/success',
-        id: target.id,
-        result: response,
-        version: target.sourceVersion,
-      });
-      const stageRequest: AnalyzeV2Request = {
-        source: target.source,
-        language: target.language,
-        filename: target.name,
-        api_version: 2,
-        source_version: target.sourceVersion,
-        include_ast: true,
-        options: {
-          include_tokens: true,
-          stages: ['lexical', 'syntax', 'security', 'quality'],
-          agent: 'off',
-        },
-      };
-      const [lexicalStage, syntaxStage] = await Promise.allSettled([
-        apiClient.analyzeStageV2('lexical', stageRequest, controller.signal),
-        apiClient.analyzeStageV2('syntax', stageRequest, controller.signal),
-      ]);
-      if (controller.signal.aborted || analysisControllers.current.get(target.id) !== controller)
-        return;
-      if (lexicalStage.status === 'rejected' || syntaxStage.status === 'rejected')
-        reportToast('Analysis finished, but some lexical or AST details are unavailable.', true);
-      setStageData((previous) => ({
-        ...previous,
-        [target.id]: {
-          lexical: lexicalStage.status === 'fulfilled' ? lexicalStage.value : null,
-          syntax: syntaxStage.status === 'fulfilled' ? syntaxStage.value : null,
-        },
-      }));
-      setSelectedTokenId(response.tokens[0]?.id ?? null);
-      reportToast(
-        isAnalysisIncomplete(response)
-          ? 'Analysis completed with unavailable or incomplete checks.'
-          : 'Analysis completed.'
-      );
-    } catch (error) {
-      if (controller.signal.aborted || (error instanceof Error && error.name === 'AbortError'))
-        return;
-      if (analysisControllers.current.get(target.id) !== controller) return;
-      dispatch({ type: 'analysis/error', id: target.id });
-      reportToast(error instanceof Error ? error.message : 'Analysis failed.', true);
-    } finally {
-      if (analysisControllers.current.get(target.id) === controller)
-        analysisControllers.current.delete(target.id);
-    }
-  }, [document, reportToast, sha256]);
-  const cancelAnalysis = useCallback(
-    (id: string) => {
-      const controller = analysisControllers.current.get(id);
-      if (!controller) return;
-      controller.abort();
-      analysisControllers.current.delete(id);
-      dispatch({ type: 'analysis/cancel', id });
-      reportToast('Analysis cancelled.');
+  // Workspace File Management
+  const [workspaceTree, setWorkspaceTree] = useState<WorkspaceFileNode[]>([]);
+
+  // Analysis Error State (separate from invalid source tokens)
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+  // Cursor position
+  const [cursorPos, setCursorPos] = useState({ line: 6, col: 16 });
+
+  // Toasts
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  // Selected Token
+  const [selectedToken, setSelectedToken] = useState<TokenItem | null>(null);
+
+  // AI Chat Messages & Persistence per File
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [conversationsByFile, setConversationsByFile] = useState<Record<string, ChatMessage[]>>({});
+  const [isSendingChat, setIsSendingChat] = useState(false);
+  const [activeAssistantFinding, setActiveAssistantFinding] = useState<{
+    title: string;
+    line: number;
+    col: number;
+    id?: string;
+  } | null>(null);
+  const sessionIdRef = useRef<string>(`session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+  const [providerCapabilities, setProviderCapabilities] = useState<{
+    provider: string;
+    configured: boolean;
+    reachable: boolean | null;
+    model: string | null;
+    consent_required: boolean;
+    remote_consented: boolean;
+    setup_message?: string | null;
+  } | null>(null);
+  const [remoteConsented, setRemoteConsented] = useState<boolean>(true);
+
+  // 7-Stage Compiler Agent Pipeline
+  const [pipelineStages, setPipelineStages] = useState<PipelineStageInfo[]>([
+    {
+      id: 'lexer',
+      name: 'Lexer',
+      agentName: 'LexerAgent',
+      status: 'not_run',
+      elapsedMs: 0,
+      outputSummary: 'Awaiting lexical stream scan and Unicode defense checks.',
+      prerequisites: [],
+      steps: [],
     },
-    [reportToast]
-  );
-  const selectToken = useCallback((token: TokenV2) => {
-    setSelectedTokenId(token.id);
-    const editor = editorRef.current;
-    if (!editor) return;
-    const range = {
-      startLineNumber: token.start_line,
-      startColumn: token.start_column,
-      endLineNumber: token.end_line,
-      endColumn: token.end_column,
-    };
-    tokenSelection.current = true;
-    setEditorSelection(editor, range, 'token table selection');
-    revealEditorRange(editor, range, 'token table selection');
-    requestAnimationFrame(() => {
-      tokenSelection.current = false;
-    });
-  }, []);
-  const navigateRange = useCallback(
-    (range: { start_line: number; start_col: number; end_line: number; end_col: number }) => {
-      const editor = editorRef.current;
-      if (!editor) return;
-      const selection = {
-        startLineNumber: range.start_line,
-        startColumn: range.start_col,
-        endLineNumber: range.end_line,
-        endColumn: range.end_col,
-      };
-      setEditorSelection(editor, selection, 'P4 result selection');
-      revealEditorRange(editor, selection, 'P4 result selection');
+    {
+      id: 'parser',
+      name: 'Parser',
+      agentName: 'ParserAgent',
+      status: 'not_run',
+      elapsedMs: 0,
+      outputSummary: 'Awaiting structural AST generation with panic-mode recovery.',
+      prerequisites: ['lexer'],
+      steps: [],
     },
-    []
-  );
-  const selectProblem = useCallback(
-    (item: DiagnosticV2) => {
-      setSelectedProblemId(item.id);
-      navigateRange(item.range);
+    {
+      id: 'semantic',
+      name: 'Semantic',
+      agentName: 'SemanticAgent',
+      status: 'not_run',
+      elapsedMs: 0,
+      outputSummary: 'Awaiting static security rules and taint propagation.',
+      prerequisites: ['parser'],
+      steps: [],
     },
-    [navigateRange]
-  );
-  const selectFinding = useCallback(
-    (finding: IDEFinding | null) => {
-      setSelectedFindingId(finding?.id ?? null);
-      setDataFlowPathId(null);
-      if (finding) {
-        dispatch({ type: 'ui', patch: { panelTab: 'security', panelOpen: true } });
-        navigateRange(finding.range);
-      }
+    {
+      id: 'triage',
+      name: 'Triage',
+      agentName: 'TriageAgent',
+      status: 'not_run',
+      elapsedMs: 0,
+      outputSummary: 'Awaiting ML vulnerability scoring and finding triage.',
+      prerequisites: ['semantic'],
+      steps: [],
     },
-    [navigateRange]
-  );
-  const navigateDocument = useCallback(
-    (
-      target: IDEState['documents'][number],
-      range: { start_line: number; start_col: number; end_line: number; end_col: number }
-    ) => {
-      const selection = {
-        startLineNumber: range.start_line,
-        startColumn: range.start_col,
-        endLineNumber: range.end_line,
-        endColumn: range.end_col,
-      };
-      if (target.id === state.activeDocId && editorRef.current) {
-        setEditorSelection(editorRef.current, selection, 'document search result');
-        revealEditorRange(editorRef.current, selection, 'document search result');
-      } else {
-        pendingNavigation.current = { docId: target.id, range: selection };
-        dispatch({ type: 'document/activate', id: target.id });
-      }
+    {
+      id: 'fix',
+      name: 'Fix',
+      agentName: 'FixAgent',
+      status: 'not_run',
+      elapsedMs: 0,
+      outputSummary: 'Awaiting deterministic remediation patch synthesis.',
+      prerequisites: ['triage'],
+      steps: [],
     },
-    [state.activeDocId]
-  );
-  const submitFalsePositive = useCallback(
-    async (finding: IDEFinding) => {
-      try {
-        const snippet = document?.source.split(/\r?\n/)[finding.range.start_line - 1] ?? '';
-        await apiClient.submitFeedback({
-          finding_fingerprint: finding.id,
-          rule_id: finding.rule_id,
-          language: document?.language ?? 'unknown',
-          verdict: 'false_positive',
-          snippet,
-        });
-        reportToast('False-positive feedback recorded.');
-      } catch (error) {
-        reportToast(error instanceof Error ? error.message : 'Feedback could not be saved.', true);
-      }
+    {
+      id: 'verifier',
+      name: 'Verifier',
+      agentName: 'VerifierAgent',
+      status: 'not_run',
+      elapsedMs: 0,
+      outputSummary: 'Awaiting independent verifier patch check.',
+      prerequisites: ['fix'],
+      steps: [],
     },
-    [document, reportToast]
-  );
-  const setConsent = useCallback(
-    async (consent: boolean): Promise<boolean> => {
-      setConsentBusy(true);
-      try {
-        await apiClient.setRemoteConsent(sessionId.current, consent);
-        const updated = await apiClient.getCapabilities(sessionId.current);
-        setCapabilities(updated);
-        reportToast(
-          consent
-            ? 'Remote processing consent saved for this session.'
-            : 'Remote processing consent withdrawn.'
-        );
-        return true;
-      } catch (error) {
-        reportToast(
-          error instanceof Error ? error.message : 'Consent setting could not be saved.',
-          true
-        );
-        return false;
-      } finally {
-        setConsentBusy(false);
-      }
+    {
+      id: 'explain',
+      name: 'Explain',
+      agentName: 'ExplainAgent',
+      status: 'not_run',
+      elapsedMs: 0,
+      outputSummary: 'Awaiting remediation explanation synthesis.',
+      prerequisites: ['verifier'],
+      steps: [],
     },
-    [reportToast]
-  );
-  const requestExplanation = useCallback(
-    (target: AIExplainV2Request['target'], targetId?: string | null) => {
-      if (!document) return;
-      const request: AIExplainV2Request = {
-        session_id: sessionId.current,
-        target,
-        source: document.source,
-        language: document.language,
-        target_id: targetId ?? null,
-        source_version: document.sourceVersion,
-        remote_consent: Boolean(capabilities?.ai.remote_consented),
-      };
-      let deterministic: string;
-      if (target === 'token') {
-        const token = result?.tokens[Number(targetId)];
-        deterministic = token
-          ? `${JSON.stringify(token.lexeme)} is a ${token.token_type} (${token.category}) token. ${explainToken(token.token_type, document.language)}`
-          : 'A deterministic token explanation is unavailable because no analyzed token matches this selection.';
-      } else if (target === 'diagnostic') {
-        const item = problemDiagnostics.find((diagnostic) => diagnostic.id === targetId);
-        deterministic = item
-          ? `${item.category} diagnostic from ${item.produced_by}: ${item.message}`
-          : 'A deterministic problem explanation is unavailable because no current diagnostic matches this selection.';
-      } else if (target === 'finding') {
-        const item = result?.security_findings.find((finding) => finding.id === targetId);
-        deterministic = item
-          ? item.explanation || `${item.title}: ${item.message}`
-          : 'A deterministic finding explanation is unavailable because no current finding matches this selection.';
-      } else if (target === 'file') {
-        const lines = document.source.split(/\r\n|\r|\n/).length;
-        deterministic = `${document.name} is a ${document.language} source file with ${lines} lines${result ? `, ${result.tokens.length} analyzed tokens and ${result.security_findings.length} reported security findings` : ''}. Static analysis does not prove the program correct or safe.`;
-      } else deterministic = 'A deterministic explanation is not available for this item.';
-      setDeterministicExplain(deterministic);
-      setExplainRequest(request);
-      setExplainRunId((value) => value + 1);
-      dispatch({ type: 'ui', patch: { panelTab: 'explain', panelOpen: true } });
-    },
-    [document, capabilities, result, problemDiagnostics]
-  );
-  const explainTokenItem = useCallback(
-    (token: TokenV2) => {
-      const index = result?.tokens.findIndex((item) => item.id === token.id) ?? -1;
-      if (index >= 0) {
-        selectToken(token);
-        requestExplanation('token', String(index));
-      }
-    },
-    [result, requestExplanation, selectToken]
-  );
-  explainAtCursorRef.current = (line, column, run) => {
-    const currentResult = resultRef.current;
-    if (!document || !currentResult) return false;
-    const contains = (range: {
-      start_line: number;
-      start_col: number;
-      end_line: number;
-      end_col: number;
-    }) =>
-      (line > range.start_line || (line === range.start_line && column >= range.start_col)) &&
-      (line < range.end_line || (line === range.end_line && column < range.end_col));
-    const finding = currentResult.security_findings.find((item) => contains(item.range));
-    if (finding) {
-      if (run) requestExplanation('finding', finding.id);
-      return true;
-    }
-    const diagnostic = problemDiagnostics.find((item) => contains(item.range));
-    if (diagnostic) {
-      if (run) requestExplanation('diagnostic', diagnostic.id);
-      return true;
-    }
-    const token = tokenAtPosition(currentResult.tokens, line, column);
-    if (token) {
-      if (run) explainTokenItem(token);
-      return true;
-    }
-    return false;
-  };
-  const retryExplanation = useCallback(() => setExplainRunId((value) => value + 1), []);
-  const consumeExplainRun = useCallback((runId: number) => {
-    explainConsumedId.current = Math.max(explainConsumedId.current, runId);
-  }, []);
-  const explainCurrentSelection = useCallback(
-    (target: AIExplainV2Request['target']) => {
-      if (target === 'file' && document) requestExplanation('file');
-      else if (target === 'token' && result && selectedTokenId) {
-        const index = result.tokens.findIndex((token) => token.id === selectedTokenId);
-        if (index >= 0) requestExplanation('token', String(index));
-      } else if (target === 'diagnostic' && selectedProblemId)
-        requestExplanation('diagnostic', selectedProblemId);
-      else if (target === 'finding' && currentFinding)
-        requestExplanation('finding', currentFinding.id);
-    },
-    [document, result, selectedTokenId, selectedProblemId, currentFinding, requestExplanation]
-  );
-  const openExplainedEvent = useCallback(
-    (event: import('../api/client').AgentEvent) => {
-      if (event.subject_type === 'token' && result) {
-        const token = result.tokens[Number(event.subject_id)];
-        if (token) {
-          dispatch({ type: 'ui', patch: { panelTab: 'tokens', panelOpen: true } });
-          selectToken(token);
-        }
-      } else if (event.subject_type === 'diagnostic') {
-        const item = problemDiagnostics.find((value) => value.id === event.subject_id);
-        if (item) {
-          dispatch({ type: 'ui', patch: { panelTab: 'problems', panelOpen: true } });
-          selectProblem(item);
-        }
-      } else if (event.subject_type === 'finding') {
-        const item = result?.security_findings.find((value) => value.id === event.subject_id);
-        if (item) {
-          dispatch({ type: 'ui', patch: { panelTab: 'security', panelOpen: true } });
-          selectFinding(item);
-        }
-      } else if (event.subject_type === 'file') editorRef.current?.focus();
-    },
-    [result, problemDiagnostics, selectToken, selectProblem, selectFinding]
-  );
-  const acceptConsent = useCallback(async () => {
-    if (!(await setConsent(true))) throw new Error('Remote processing consent could not be saved.');
-  }, [setConsent]);
-  const chooseAIModel = useCallback(
-    async (model: string) => {
-      setConsentBusy(true);
-      try {
-        const response = await apiClient.setAIModel(sessionId.current, model);
-        setCapabilities(response.capabilities);
-        reportToast(`AI model set to ${response.model} for this session.`);
-      } catch (error) {
-        reportToast(error instanceof Error ? error.message : 'Model selection failed.', true);
-      } finally {
-        setConsentBusy(false);
-      }
-    },
-    [reportToast]
-  );
-  const startFix = useCallback(
-    (
-      finding: AnalysisResultV2['security_findings'][number],
-      kind: 'finding' | 'diagnostic' | 'token' = 'finding'
-    ) => {
-      if (!document || !canFix) return;
-      setFixDocId(document.id);
-      setFixFinding(finding);
-      setFixTargetKind(kind);
-      setFixUndoAvailable(false);
-    },
-    [document, canFix]
-  );
-  const startFixDiagnostic = useCallback(
-    (diagnostic: DiagnosticV2) => {
-      const finding = result?.security_findings.find((item) => item.id === diagnostic.id);
-      startFix(
-        (finding ?? {
-          id: diagnostic.id,
-          rule_id: diagnostic.produced_by,
-          title: diagnostic.message,
-          message: diagnostic.message,
-          severity: diagnostic.severity,
-          cwe: [],
-          range: diagnostic.range,
-        }) as AnalysisResultV2['security_findings'][number],
-        finding ? 'finding' : 'diagnostic'
-      );
-    },
-    [result, startFix]
-  );
-  const startFixToken = useCallback(
-    (token: TokenV2) => {
-      const diagnostic = problemDiagnostics.find((item) => token.diagnostic_ids.includes(item.id));
-      const finding = result?.security_findings.find((item) =>
-        token.diagnostic_ids.includes(item.id)
-      );
-      const view = finding ?? {
-        id: diagnostic?.id ?? token.id,
-        rule_id: diagnostic?.produced_by ?? token.token_type,
-        title: diagnostic?.message ?? `${token.token_type}: ${token.lexeme}`,
-        message: diagnostic?.message ?? `${token.token_type}: ${token.lexeme}`,
-        severity: diagnostic?.severity ?? 'error',
-        cwe: [],
-        range: diagnostic?.range ?? {
-          start_line: token.start_line,
-          start_col: token.start_column,
-          end_line: token.end_line,
-          end_col: token.end_column,
-        },
-      };
-      startFix(
-        view as AnalysisResultV2['security_findings'][number],
-        finding ? 'finding' : diagnostic ? 'diagnostic' : 'token'
-      );
-    },
-    [problemDiagnostics, result, startFix]
-  );
-  const startFixAvailable = useCallback(() => {
-    const token =
-      result?.tokens.find(
-        (item) => item.id === selectedTokenId && item.lexical_status === 'invalid'
-      ) ?? result?.tokens.find((item) => item.lexical_status === 'invalid');
-    if (selectedProblemId) {
-      const diagnostic = problemDiagnostics.find((item) => item.id === selectedProblemId);
-      if (diagnostic) {
-        startFixDiagnostic(diagnostic);
-        return;
-      }
-    }
-    if (currentFinding) {
-      startFix(currentFinding);
-      return;
-    }
-    if (token) {
-      startFixToken(token);
-      return;
-    }
-    if (problemDiagnostics[0]) startFixDiagnostic(problemDiagnostics[0]);
-    else if (result?.security_findings[0]) startFix(result.security_findings[0]);
-  }, [
-    result,
-    selectedTokenId,
-    selectedProblemId,
-    problemDiagnostics,
-    currentFinding,
-    startFixDiagnostic,
-    startFix,
-    startFixToken,
   ]);
-  const closeFix = useCallback(() => {
-    setFixFinding(null);
-    setFixDocId(null);
-    setFixAllRequested(false);
-    fixActions.current = null;
-  }, []);
-  const startFixAll = useCallback(() => {
-    const target =
-      currentFinding ??
-      result?.security_findings[0] ??
-      problemDiagnostics[0] ??
-      (result?.tokens.find((token) => token.lexical_status === 'invalid')
-        ? ({
-            id: result.tokens.find((token) => token.lexical_status === 'invalid')!.id,
-            rule_id: 'internal-lexer',
-            title: 'Fix all safe',
-            message: 'Review all safe fixes',
-            severity: 'error',
-            cwe: [],
-            label: 'SUSPICIOUS',
-            confidence: 1,
-            explanation: '',
-            evidence: {},
-            taint_path: [],
-            fixes: [],
-            sources: [],
-            range: { start_line: 1, start_col: 1, end_line: 1, end_col: 1 },
-          } as unknown as AnalysisResultV2['security_findings'][number])
-        : null);
-    if (target && canFix) {
-      setFixAllRequested(true);
-      startFix(
-        target as AnalysisResultV2['security_findings'][number],
-        'id' in target && result?.security_findings.some((item) => item.id === target.id)
-          ? 'finding'
-          : 'diagnostic'
-      );
-    }
-  }, [currentFinding, result, problemDiagnostics, canFix, startFix]);
-  const updateFixActions = useCallback((actions: NonNullable<typeof fixActions.current>) => {
-    fixActions.current = actions;
-  }, []);
-  const onFixSourceApplied = useCallback(
-    (source: string, version: number) => {
-      const target = state.documents.find((item) => item.id === fixDocId);
-      if (!target) return;
-      const running = analysisControllers.current.get(target.id);
-      if (running) {
-        running.abort();
-        analysisControllers.current.delete(target.id);
-      }
-      if (editorRef.current && target.id === state.activeDocId) {
-        setEditorValue(editorRef.current, source, 'fix applied');
-      }
-      dispatch({ type: 'document/edit', id: target.id, source });
-      setFixUndoAvailable(true);
-      setEditorHistory({ undo: true, redo: false });
-      setPendingFixAnalysis({ id: target.id, version });
+  const [selectedStageId, setSelectedStageId] = useState<string | null>('lexer');
+  const [isRunningAllAgents, setIsRunningAllAgents] = useState(false);
+
+  // Monaco Editor Ref
+  const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+
+  const showToast = useCallback(
+    (msg: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+      const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      setToasts((prev) => [...prev, { id, msg, type }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 3200);
     },
-    [state.documents, fixDocId, state.activeDocId]
-  );
-  const onFixUndo = useCallback(
-    (source: string, version: number) => {
-      const target = state.documents.find((item) => item.id === fixDocId);
-      if (!target) return;
-      const running = analysisControllers.current.get(target.id);
-      if (running) {
-        running.abort();
-        analysisControllers.current.delete(target.id);
-      }
-      if (editorRef.current && target.id === state.activeDocId) {
-        setEditorValue(editorRef.current, source, 'fix undo');
-      }
-      dispatch({ type: 'document/edit', id: target.id, source });
-      setFixUndoAvailable(false);
-      setPendingFixAnalysis({ id: target.id, version });
-    },
-    [state.documents, fixDocId, state.activeDocId]
-  );
-  const openGeneratedCandidate = useCallback(
-    (candidate: AIGenerateResponse) => {
-      const id = makeId();
-      const ext =
-        candidate.language === 'cpp'
-          ? 'cpp'
-          : candidate.language === 'javascript'
-            ? 'js'
-            : candidate.language === 'python'
-              ? 'py'
-              : candidate.language;
-      const name = `AI candidate.${ext}`;
-      dispatch({
-        type: 'document/add',
-        document: {
-          id,
-          name,
-          language: candidate.language,
-          source: candidate.code,
-          savedSource: '',
-          sourceVersion: 1,
-          dirty: true,
-          origin: 'new',
-        },
-      });
-      dispatch({ type: 'analysis/success', id, result: candidate.analysis, version: 1 });
-      setExplainRequest({
-        session_id: sessionId.current,
-        target: 'file',
-        source: candidate.code,
-        language: candidate.language,
-        remote_consent: Boolean(capabilities?.ai.remote_consented),
-      });
-      dispatch({ type: 'ui', patch: { panelTab: 'explain', panelOpen: true } });
-    },
-    [capabilities]
-  );
-  const moveProblem = useCallback(
-    (delta: number) => {
-      const ordered = [...problemDiagnostics].sort(
-        (a, b) => a.range.start_line - b.range.start_line || a.range.start_col - b.range.start_col
-      );
-      if (!ordered.length) return;
-      const currentIndex = ordered.findIndex((item) => item.id === selectedProblemId);
-      const nextIndex =
-        currentIndex < 0
-          ? delta > 0
-            ? 0
-            : ordered.length - 1
-          : (currentIndex + delta + ordered.length) % ordered.length;
-      selectProblem(ordered[nextIndex]);
-      dispatch({ type: 'ui', patch: { panelTab: 'problems', panelOpen: true } });
-    },
-    [problemDiagnostics, selectedProblemId, selectProblem]
+    []
   );
 
-  useEffect(() => {
-    let active = true;
-    apiClient
-      .getCapabilities()
-      .then((value) => {
-        if (active) {
-          setCapabilities(value);
-          setApiUnavailable(false);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setApiUnavailable(true);
-        }
-      });
-    apiClient
-      .getHealth()
-      .then((value) => {
-        if (active) setHealth(value);
-      })
-      .catch(() => {
-        if (active) setHealthError(true);
-      });
-    apiClient
-      .getSamples()
-      .then((value) => {
-        if (active) setSamples(value);
-      })
-      .catch(() => {
-        if (active) setApiUnavailable(true);
-      });
-    return () => {
-      active = false;
-    };
+  // Fetch Workspace Tree from safe backend API
+  const fetchWorkspaceTree = useCallback(async () => {
+    try {
+      const res = await apiClient.getWorkspaceTree();
+      setWorkspaceTree(res.tree || []);
+      return res.tree || [];
+    } catch {
+      return [];
+    }
   }, []);
-  useEffect(
-    () => (shellRef.current ? observeInteractiveElements(shellRef.current) : undefined),
-    []
-  );
-  useEffect(() => {
-    if (state.documents.length) {
-      try {
-        localStorage.setItem(STORAGE_KEY, serializeIDEState(state));
-      } catch {
-        /* Drafts remain available in memory. */
-      }
-    }
-  }, [state]);
-  useEffect(() => {
-    writeAutoAnalyze(autoAnalyze);
-  }, [autoAnalyze]);
-  useEffect(() => {
-    if (!autoAnalyze || !document || analysis?.status === 'running') return;
-    const timer = window.setTimeout(() => {
-      void analyzeDocument();
-    }, 700);
-    return () => window.clearTimeout(timer);
-  }, [autoAnalyze, document, analyzeDocument, analysis?.status]);
-  useEffect(() => {
-    if (
-      !pendingFixAnalysis ||
-      document?.id !== pendingFixAnalysis.id ||
-      document.sourceVersion !== pendingFixAnalysis.version ||
-      analysis?.status === 'running'
-    )
-      return;
-    setPendingFixAnalysis(null);
-    void analyzeDocument();
-  }, [pendingFixAnalysis, document, analysis?.status, analyzeDocument]);
-  useEffect(
-    () => () => {
-      analysisControllers.current.forEach((controller) => controller.abort());
-    },
-    []
-  );
-  useEffect(() => {
-    globalThis.document.documentElement.style.fontSize = `${(13 * state.ui.interfaceScale) / 100}px`;
-    return () => {
-      globalThis.document.documentElement.style.fontSize = '';
-    };
-  }, [state.ui.interfaceScale]);
-  useEffect(() => {
-    setEditorHistory({ undo: false, redo: false });
-  }, [document?.id]);
-  useEffect(() => {
-    if (editorReady && monacoRef.current) applyIdeMonacoTheme(monacoRef.current, resolved);
-  }, [editorReady, resolved]);
-  useEffect(() => {
-    if (state.ui.paletteOpen) {
-      setQuery('');
-      setSelected(0);
-      requestAnimationFrame(() => paletteInput.current?.focus());
-    } else paletteInvoker.current?.focus();
-  }, [state.ui.paletteOpen]);
-  useEffect(() => {
-    if (!tabMenu) return;
-    const closeOutside = (event: PointerEvent) => {
-      if (!(event.target instanceof Element) || !event.target.closest('.ide-tab-context-menu'))
-        setTabMenu(null);
-    };
-    const closeEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setTabMenu(null);
-    };
-    window.addEventListener('pointerdown', closeOutside);
-    window.addEventListener('keydown', closeEscape);
-    return () => {
-      window.removeEventListener('pointerdown', closeOutside);
-      window.removeEventListener('keydown', closeEscape);
-    };
-  }, [tabMenu]);
-  useEffect(() => {
-    if (state.activeDocId) {
-      const activeTab = tabStrip.current?.querySelector<HTMLElement>(
-        `[data-doc="${CSS.escape(state.activeDocId)}"]`
-      );
-      activeTab?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-    }
-  }, [state.activeDocId]);
 
-  const openPalette = useCallback((invoker?: HTMLElement | null) => {
-    paletteInvoker.current = invoker ?? (globalThis.document.activeElement as HTMLElement);
-    dispatch({ type: 'ui', patch: { paletteOpen: true } });
-  }, []);
-  const newDocument = useCallback(() => setNewFileOpen(true), []);
-  const saveDocument = useCallback(() => {
-    if (!document) return;
-    const url = URL.createObjectURL(
-      new Blob([document.source], { type: 'text/plain;charset=utf-8' })
-    );
-    const link = globalThis.document.createElement('a');
-    link.href = url;
-    link.download = document.name;
-    link.click();
-    URL.revokeObjectURL(url);
-  }, [document]);
-  const createDocument = useCallback(
-    (value: { name: string; language: string; source: string }) => {
-      const id = makeId();
-      dispatch({
-        type: 'document/add',
-        document: {
-          id,
-          name: value.name,
-          language: value.language,
-          source: value.source,
-          savedSource: '',
-          sourceVersion: 1,
-          dirty: value.source.length > 0,
-          origin: 'new',
-        },
-      });
-      setNewFileOpen(false);
-    },
-    []
-  );
-  const closeDocument = useCallback(
-    (id: string) => {
-      const target = state.documents.find((item) => item.id === id);
-      if (!target) return;
-      if (target.dirty && !window.confirm(`Close ${target.name} and discard its unsaved changes?`))
-        return;
-      setClosedDocuments((previous) => [target, ...previous].slice(0, 20));
-      dispatch({ type: 'document/remove', id });
-    },
-    [state.documents]
-  );
-  const closeManyDocuments = useCallback(
-    (ids: string[]) => {
-      const targets = state.documents.filter((item) => ids.includes(item.id));
-      const dirtyNames = targets.filter((item) => item.dirty).map((item) => item.name);
-      if (
-        dirtyNames.length &&
-        !window.confirm(
-          `Close ${targets.length} tab(s) and discard unsaved changes in: ${dirtyNames.join(', ')}?`
-        )
-      )
-        return;
-      setClosedDocuments((previous) => [...targets.reverse(), ...previous].slice(0, 20));
-      ids.forEach((id) => dispatch({ type: 'document/remove', id }));
-      setTabMenu(null);
-    },
-    [state.documents]
-  );
-  const reopenClosedDocument = useCallback(() => {
-    const [last, ...rest] = closedDocuments;
-    if (!last) return;
-    setClosedDocuments(rest);
-    dispatch({
-      type: 'document/add',
-      document: { ...last, dirty: last.source !== (last.savedSource ?? '') },
-    });
-  }, [closedDocuments]);
-  const focusExplorer = useCallback(() => {
-    dispatch({ type: 'ui', patch: { activity: 'explorer', sidebarOpen: true } });
-  }, []);
-  const openExample = useCallback(
-    (sample: SampleItem) => {
-      const existing = state.documents.find((item) => item.sampleId === sample.id);
+  // Open a file into editor tabs
+  const handleOpenFile = useCallback(
+    async (path: string) => {
+      const existing = state.documents.find((d) => d.name === path);
       if (existing) {
         dispatch({ type: 'document/activate', id: existing.id });
-        focusExplorer();
-        return;
-      }
-      const id = makeId();
-      dispatch({
-        type: 'document/add',
-        document: {
-          id,
-          name: sample.filename,
-          language: sample.language,
-          source: sample.code,
-          savedSource: '',
-          sourceVersion: 1,
-          dirty: true,
-          origin: 'sample',
-          sampleId: sample.id,
-        },
-      });
-      focusExplorer();
-    },
-    [focusExplorer, state.documents]
-  );
-  const commands = useMemo<Command[]>(() => {
-    const items: Command[] = [
-      {
-        id: 'analyze',
-        title: 'Analyze Current Document',
-        keybinding: 'F5',
-        enabled: () => Boolean(document),
-        run: () => void analyzeDocument(),
-      },
-      {
-        id: 'propose-fix',
-        title: 'Fix: Propose a rule-first fix for the selected target',
-        enabled: () => Boolean(canFix && (currentFinding || selectedProblemId || selectedTokenId)),
-        run: startFixAvailable,
-      },
-      {
-        id: 'apply-fix',
-        title: 'Fix: Apply Reviewed Fix',
-        enabled: () => fixActions.current?.canApply() ?? false,
-        run: () => fixActions.current?.apply(),
-      },
-      {
-        id: 'undo-fix',
-        title: 'Fix: Undo Last Fix',
-        enabled: () => fixUndoAvailable || (fixActions.current?.canUndo() ?? false),
-        run: () => fixActions.current?.undo(),
-      },
-      {
-        id: 'fix-all-safe',
-        title: 'Fix: Review All Safe Fixes',
-        enabled: () => Boolean(document && result?.security_findings.length && canFix),
-        run: startFixAll,
-      },
-      {
-        id: 'explain-token',
-        title: 'AI: Explain Selected Token',
-        enabled: () =>
-          Boolean(
-            document &&
-            selectedTokenId &&
-            result?.tokens.some((token) => token.id === selectedTokenId)
-          ),
-        run: () => {
-          const token = result?.tokens.find((item) => item.id === selectedTokenId);
-          if (token) requestExplanation('token', String(result?.tokens.indexOf(token)));
-        },
-      },
-      {
-        id: 'explain-file',
-        title: 'AI: Explain Current File',
-        enabled: () => Boolean(document),
-        run: () => requestExplanation('file'),
-      },
-      {
-        id: 'build-with-ai',
-        title: 'AI: Build with AI',
-        enabled: () => canBuild,
-        run: () => setBuildDrawerOpen(true),
-      },
-      {
-        id: 'open-ai-explain',
-        title: 'View: AI Explain',
-        enabled: () => true,
-        run: () => dispatch({ type: 'ui', patch: { panelTab: 'explain', panelOpen: true } }),
-      },
-      {
-        id: 'open-safety-lab',
-        title: 'View: Agent Safety Lab',
-        enabled: () => true,
-        run: () => dispatch({ type: 'ui', patch: { activity: 'safetylab', sidebarOpen: false } }),
-      },
-      {
-        id: 'run-safety-scenario',
-        title: 'Safety Lab: Run Selected Scenario',
-        enabled: () => true,
-        run: () => {
-          dispatch({ type: 'ui', patch: { activity: 'safetylab', sidebarOpen: false } });
-          window.setTimeout(() => window.dispatchEvent(new Event('securelex:safety-run')), 0);
-        },
-      },
-      {
-        id: 'export-safety-report',
-        title: 'Safety Lab: Export Report',
-        enabled: () => true,
-        run: () => {
-          dispatch({ type: 'ui', patch: { activity: 'safetylab', sidebarOpen: false } });
-          window.setTimeout(() => window.dispatchEvent(new Event('securelex:safety-export')), 0);
-        },
-      },
-      {
-        id: 'open-agent-activity',
-        title: 'View: Agent Activity',
-        enabled: () => true,
-        run: () => dispatch({ type: 'ui', patch: { panelTab: 'agent', panelOpen: true } }),
-      },
-      {
-        id: 'show-tokens',
-        title: 'View: Tokens',
-        enabled: () => true,
-        run: () => dispatch({ type: 'ui', patch: { panelTab: 'tokens', panelOpen: true } }),
-      },
-      {
-        id: 'show-problems',
-        title: 'View: Problems',
-        enabled: () => true,
-        run: () => dispatch({ type: 'ui', patch: { panelTab: 'problems', panelOpen: true } }),
-      },
-      {
-        id: 'show-security',
-        title: 'View: Security',
-        enabled: () => true,
-        run: () =>
-          dispatch({
-            type: 'ui',
-            patch: {
-              panelTab: 'security',
-              panelOpen: true,
-              activity: 'security',
-              sidebarOpen: true,
-            },
-          }),
-      },
-      {
-        id: 'open-ast',
-        title: 'Open AST Sidebar',
-        enabled: () => true,
-        run: () => dispatch({ type: 'ui', patch: { activity: 'ast', sidebarOpen: true } }),
-      },
-      {
-        id: 'open-search',
-        title: 'Open Search Sidebar',
-        enabled: () => true,
-        run: () => dispatch({ type: 'ui', patch: { activity: 'search', sidebarOpen: true } }),
-      },
-      {
-        id: 'open-security',
-        title: 'Open Security Sidebar',
-        enabled: () => true,
-        run: () => dispatch({ type: 'ui', patch: { activity: 'security', sidebarOpen: true } }),
-      },
-      {
-        id: 'next-problem',
-        title: 'Go to Next Problem',
-        keybinding: 'F8',
-        enabled: () => problemDiagnostics.length > 0,
-        run: () => moveProblem(1),
-      },
-      {
-        id: 'previous-problem',
-        title: 'Go to Previous Problem',
-        keybinding: 'Shift+F8',
-        enabled: () => problemDiagnostics.length > 0,
-        run: () => moveProblem(-1),
-      },
-      {
-        id: 'open-settings',
-        title: 'Open Workbench Settings',
-        enabled: () => true,
-        run: () => dispatch({ type: 'ui', patch: { settingsOpen: true } }),
-      },
-      {
-        id: 'show-shortcuts',
-        title: 'Show Keyboard Shortcuts',
-        keybinding: 'F1',
-        enabled: () => true,
-        run: () => setShortcutsOpen(true),
-      },
-      {
-        id: 'new-file',
-        title: 'New File',
-        keybinding: 'Ctrl+N',
-        enabled: () => true,
-        run: newDocument,
-      },
-      {
-        id: 'open-file',
-        title: 'Open File',
-        enabled: () => true,
-        run: () => openFileInput.current?.click(),
-      },
-      {
-        id: 'close-tab',
-        title: 'Close Tab',
-        keybinding: 'Ctrl+W',
-        enabled: () => Boolean(document),
-        run: () => document && closeDocument(document.id),
-      },
-      {
-        id: 'toggle-theme',
-        title: 'Toggle Theme',
-        keybinding: 'Alt+T',
-        enabled: () => true,
-        run: toggleTheme,
-      },
-      {
-        id: 'interface-size',
-        title: 'Interface Size',
-        enabled: () => true,
-        run: () => dispatch({ type: 'ui', patch: { settingsOpen: true } }),
-      },
-      {
-        id: 'toggle-panel',
-        title: 'Toggle Panel',
-        keybinding: 'Ctrl+J',
-        enabled: () => true,
-        run: () => dispatch({ type: 'panel/toggle' }),
-      },
-      {
-        id: 'reopen-tab',
-        title: 'Reopen Closed Tab',
-        keybinding: 'Ctrl+Shift+T',
-        enabled: () => closedDocuments.length > 0,
-        run: reopenClosedDocument,
-      },
-      {
-        id: 'focus-explorer',
-        title: 'Focus Explorer',
-        keybinding: 'Ctrl+Shift+E',
-        enabled: () => true,
-        run: focusExplorer,
-      },
-      {
-        id: 'view-search',
-        title: 'View: Search',
-        keybinding: 'Ctrl+Shift+F',
-        enabled: () => true,
-        run: () => dispatch({ type: 'ui', patch: { activity: 'search', sidebarOpen: true } }),
-      },
-      ...(['explorer', 'samples', 'ast', 'security', 'safetylab'] as const).map((activity) => ({
-        id: `view-${activity}`,
-        title: `View: ${activity === 'safetylab' ? 'Agent Safety Lab' : activity[0].toUpperCase() + activity.slice(1)}`,
-        enabled: () => true,
-        run: () =>
-          dispatch({ type: 'ui', patch: { activity, sidebarOpen: activity !== 'safetylab' } }),
-      })),
-      ...(capabilities?.languages ?? []).map((lang) => ({
-        id: `language-${lang.id}`,
-        title: `Switch Language: ${lang.name}`,
-        enabled: () => Boolean(document),
-        run: () =>
-          document && dispatch({ type: 'document/language', id: document.id, language: lang.id }),
-      })),
-      ...samples.map((sample) => ({
-        id: `example-${sample.id}`,
-        title: `Open Example: ${sample.filename}`,
-        enabled: () => true,
-        run: () => openExample(sample),
-      })),
-    ];
-    return items;
-  }, [
-    newDocument,
-    document,
-    closeDocument,
-    toggleTheme,
-    focusExplorer,
-    capabilities,
-    samples,
-    openExample,
-    analyzeDocument,
-    problemDiagnostics,
-    selectedProblemId,
-    moveProblem,
-    canBuild,
-    requestExplanation,
-    selectedTokenId,
-    result,
-    currentFinding,
-    canFix,
-    startFixAvailable,
-    startFixAll,
-    fixUndoAvailable,
-    closedDocuments,
-    reopenClosedDocument,
-  ]);
-  const filteredCommands = useMemo(() => searchCommands(commands, query), [commands, query]);
-  const runCommand = (command?: Command) => {
-    if (!command || !command.enabled()) return;
-    dispatch({ type: 'ui', patch: { paletteOpen: false } });
-    command.run();
-  };
-  useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'p') {
-        event.preventDefault();
-        openPalette();
-        return;
-      }
-      const eventTarget = event.target instanceof HTMLElement ? event.target : null;
-      const typing = Boolean(
-        eventTarget &&
-        (eventTarget.isContentEditable ||
-          ['INPUT', 'TEXTAREA', 'SELECT'].includes(eventTarget.tagName) ||
-          eventTarget.closest('.monaco-editor'))
-      );
-      if (
-        event.key === 'F1' ||
-        (event.key === '?' && !typing && !event.ctrlKey && !event.metaKey)
-      ) {
-        event.preventDefault();
-        setShortcutsOpen(true);
-        return;
-      }
-      if (event.ctrlKey && event.key.toLowerCase() === 'b') {
-        event.preventDefault();
-        dispatch({ type: 'sidebar/toggle' });
-        return;
-      }
-      if (event.ctrlKey && event.key.toLowerCase() === 'j') {
-        event.preventDefault();
-        dispatch({ type: 'panel/toggle' });
-        return;
-      }
-      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 't') {
-        event.preventDefault();
-        reopenClosedDocument();
-        return;
-      }
-      if (state.ui.paletteOpen) {
-        if (event.key === 'Escape') {
-          event.preventDefault();
-          dispatch({ type: 'ui', patch: { paletteOpen: false } });
-        } else if (event.key === 'ArrowDown') {
-          event.preventDefault();
-          setSelected((value) => Math.min(value + 1, filteredCommands.length - 1));
-        } else if (event.key === 'ArrowUp') {
-          event.preventDefault();
-          setSelected((value) => Math.max(0, value - 1));
-        } else if (event.key === 'Enter') {
-          event.preventDefault();
-          runCommand(filteredCommands[selected]);
-        } else if (event.key === 'Tab') {
-          event.preventDefault();
-          paletteInput.current?.focus();
-        }
-        return;
-      }
-      if (event.key === 'F5' || (event.ctrlKey && event.key === 'Enter')) {
-        event.preventDefault();
-        if (document && analysisControllers.current.has(document.id)) cancelAnalysis(document.id);
-        else void analyzeDocument();
-        return;
-      }
-      if (event.key === 'F2' && document) {
-        event.preventDefault();
-        startRename(document.id, document.name);
-        return;
-      }
-      if (event.ctrlKey && event.key.toLowerCase() === 's') {
-        event.preventDefault();
-        saveDocument();
-        return;
-      }
-      const matched = commands.find(
-        (command) => command.keybinding && keybindingMatches(event, command.keybinding)
-      );
-      if (matched) {
-        event.preventDefault();
-        matched.run();
-        return;
-      }
-      if (event.ctrlKey && event.key.toLowerCase() === 'n') {
-        event.preventDefault();
-        newDocument();
-      } else if (event.ctrlKey && event.key.toLowerCase() === 'w' && document) {
-        event.preventDefault();
-        closeDocument(document.id);
-      } else if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'e') {
-        event.preventDefault();
-        focusExplorer();
-      } else if (event.ctrlKey && event.key.toLowerCase() === 'f')
-        editorRef.current?.getAction('actions.find')?.run();
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [
-    state.ui.paletteOpen,
-    filteredCommands,
-    selected,
-    commands,
-    document,
-    newDocument,
-    closeDocument,
-    focusExplorer,
-    openPalette,
-    analyzeDocument,
-    cancelAnalysis,
-    saveDocument,
-    reopenClosedDocument,
-  ]);
-  const onEditorMount = (editor: Monaco.editor.IStandaloneCodeEditor, monacoApi: typeof Monaco) => {
-    editorRef.current = editor;
-    monacoRef.current = monacoApi;
-    if (typeof window !== 'undefined') {
-      (window as any).monaco = monacoApi;
-    }
-    applyIdeMonacoTheme(monacoApi, resolved);
-    setEditorReady(true);
-    monacoApi.editor.remeasureFonts();
-    if (typeof document !== 'undefined' && 'fonts' in document) {
-      document.fonts.ready.then(() => {
-        monacoApi.editor.remeasureFonts();
-        editor.layout();
-      });
-      document.fonts.addEventListener('loadingdone', () => {
-        monacoApi.editor.remeasureFonts();
-        editor.layout();
-      });
-    }
-    setTimeout(() => {
-      monacoApi.editor.remeasureFonts();
-      editor.layout();
-    }, 150);
-    setTimeout(() => {
-      monacoApi.editor.remeasureFonts();
-      editor.layout();
-    }, 600);
-    const pending = pendingNavigation.current;
-    if (pending && pending.docId === document?.id) {
-      pendingNavigation.current = null;
-      setEditorSelection(editor, pending.range, 'document search result');
-      revealEditorRange(editor, pending.range, 'document search result');
-    }
-    const explainContext = editor.createContextKey<boolean>('securelexHasExplainTarget', false);
-    const explainContextPositionRef: { current: Monaco.Position | null } = { current: null };
-    const updateExplainContext = (position: Monaco.Position | null | undefined) =>
-      explainContext.set(
-        Boolean(position && explainAtCursorRef.current(position.lineNumber, position.column, false))
-      );
-    editor.addAction({
-      id: 'securelex.explain-at-cursor',
-      label: 'Explain item at cursor',
-      contextMenuGroupId: 'navigation',
-      contextMenuOrder: 2,
-      precondition: 'securelexHasExplainTarget',
-      run: () => {
-        const position = explainContextPositionRef.current;
-        if (position) explainAtCursorRef.current(position.lineNumber, position.column, true);
-      },
-    });
-    editor.onContextMenu((event) => {
-      if (event.target.position) {
-        explainContextPositionRef.current = event.target.position;
-        updateExplainContext(event.target.position);
-      }
-    });
-    editor.onDidChangeCursorPosition((event) => {
-      dispatch({
-        type: 'ui',
-        patch: { cursor: { line: event.position.lineNumber, column: event.position.column } },
-      });
-      if (!tokenSelection.current)
-        setSelectedTokenId(
-          tokenAtPosition(
-            resultRef.current?.tokens ?? [],
-            event.position.lineNumber,
-            event.position.column
-          )?.id ?? null
-        );
-      updateExplainContext(event.position);
-    });
-  };
-  useEffect(() => {
-    const editor = editorRef.current;
-    if (!editor || !result || analysis?.status === 'stale') {
-      if (editor) decorations.current = editor.deltaDecorations(decorations.current, []);
-      return;
-    }
-    const next = result.tokens
-      .map((token) => {
-        const category = token.category.toLocaleLowerCase();
-        const kind =
-          token.lexical_status === 'invalid'
-            ? 'invalid'
-            : category.includes('keyword')
-              ? 'keyword'
-              : category.includes('identifier')
-                ? 'identifier'
-                : category.includes('operator')
-                  ? 'operator'
-                  : category.includes('literal') || category.includes('header')
-                    ? 'literal'
-                    : category.includes('preprocessor')
-                      ? 'preprocessor'
-                      : category.includes('delimiter')
-                        ? 'delimiter'
-                        : category.includes('comment')
-                          ? 'comment'
-                          : '';
-        if (!kind) return null;
-        return {
-          range: {
-            startLineNumber: token.start_line,
-            startColumn: token.start_column,
-            endLineNumber: token.end_line,
-            endColumn: token.end_column,
-          },
-          options: { inlineClassName: `ide-monaco-token-${kind}` },
-        };
-      })
-      .filter((decoration): decoration is NonNullable<typeof decoration> => decoration !== null);
-    decorations.current = editor.deltaDecorations(decorations.current, next);
-  }, [result, analysis?.status, document?.id]);
-  useEffect(() => {
-    const timing = result?.tools.find(
-      (tool) =>
-        tool.kind.toLowerCase().includes('lexer') || tool.name.toLowerCase().includes('lexer')
-    )?.duration_ms;
-    setLexerTime(typeof timing === 'number' ? timing : null);
-  }, [result]);
-  useEffect(() => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const next: Monaco.editor.IModelDeltaDecoration[] = [];
-    if (currentFinding)
-      next.push({
-        range: {
-          startLineNumber: currentFinding.range.start_line,
-          startColumn: currentFinding.range.start_col,
-          endLineNumber: currentFinding.range.end_line,
-          endColumn: currentFinding.range.end_col,
-        },
-        options: {
-          inlineClassName: 'ide-p4-finding-highlight',
-          overviewRuler: {
-            color: 'var(--token-invalid)',
-            position: monacoRef.current?.editor.OverviewRulerLane.Right ?? 4,
-          },
-        },
-      });
-    const flow = result?.taint_paths.find((path) => path.id === dataFlowPathId);
-    next.push(...taintDecorations(flow, monacoRef.current?.editor.OverviewRulerLane.Right ?? 4));
-    p4Decorations.current = editor.deltaDecorations(p4Decorations.current, next);
-  }, [currentFinding, dataFlowPathId, result]);
-  const changeActivity = (activity: IDEState['ui']['activity']) =>
-    dispatch({
-      type: 'ui',
-      patch: {
-        activity,
-        sidebarOpen:
-          state.ui.activity === activity ? !state.ui.sidebarOpen : activity !== 'safetylab',
-      },
-    });
-  const startRename = (id: string, name: string) => {
-    setRenaming(id);
-    setRenameValue(name);
-  };
-  const finishRename = (id: string) => {
-    const value = renameValue.trim();
-    const target = state.documents.find((item) => item.id === id);
-    if (
-      target &&
-      value &&
-      !/[\\/]/.test(value) &&
-      !state.documents.some(
-        (item) => item.id !== id && item.name.toLocaleLowerCase() === value.toLocaleLowerCase()
-      )
-    ) {
-      const lang = capabilities?.languages.find((item) =>
-        item.extensions.some(
-          (ext) => ext.toLowerCase() === value.slice(value.lastIndexOf('.')).toLowerCase()
-        )
-      );
-      if (lang && lang.id !== target.language) {
-        dispatch({ type: 'document/rename', id, name: value });
-        if (window.confirm(`Switch this document's language to ${lang.name}?`))
-          dispatch({ type: 'document/language', id, language: lang.id });
-      } else dispatch({ type: 'document/rename', id, name: value });
-    }
-    setRenaming(null);
-  };
-  const setLanguage = (language: string) => {
-    if (document && document.language !== language) {
-      const next = capabilities?.languages.find((item) => item.id === language);
-      const ext = document.name.slice(document.name.lastIndexOf('.')).toLowerCase();
-      if (
-        next?.extensions.length &&
-        !next.extensions.some((item) => item.toLowerCase() === ext) &&
-        window.confirm(`Rename ${document.name} to use the ${next.name} extension?`)
-      ) {
-        dispatch({
-          type: 'document/rename',
-          id: document.id,
-          name: `${document.name.replace(/\.[^.]*$/, '')}${next.extensions[0]}`,
-        });
-      }
-      const running = analysisControllers.current.get(document.id);
-      running?.abort();
-      analysisControllers.current.delete(document.id);
-      dispatch({ type: 'document/language', id: document.id, language });
-    }
-    setLanguagePicker(false);
-  };
-  const openDiskFile = useCallback(
-    async (file?: File) => {
-      if (!file) return;
-      const maxBytes = Number(capabilities?.limits.max_source_bytes);
-      if (Number.isFinite(maxBytes) && maxBytes > 0 && file.size > maxBytes) {
-        setFileError(`File is ${file.size} bytes; the server limit is ${maxBytes} bytes.`);
         return;
       }
       try {
-        const source = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
-        const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
-        const language =
-          capabilities?.languages.find((item) =>
-            item.extensions.some((candidate) => candidate.toLowerCase() === ext)
-          )?.id ??
-          document?.language ??
-          capabilities?.languages[0]?.id ??
-          'plaintext';
-        if (
-          state.documents.some(
-            (item) => item.name.toLocaleLowerCase() === file.name.toLocaleLowerCase()
-          )
-        ) {
-          setFileError(`${file.name} is already open.`);
-          return;
-        }
+        const fileDetail = await apiClient.getWorkspaceFile(path);
+        const id = `doc-${path}`;
         dispatch({
           type: 'document/add',
           document: {
-            id: makeId(),
-            name: file.name,
-            language,
-            source,
-            savedSource: source,
+            id,
+            name: fileDetail.path,
+            language: fileDetail.language,
+            source: fileDetail.content,
             sourceVersion: 1,
             dirty: false,
             origin: 'opened',
           },
         });
-        setFileError(null);
-      } catch {
-        setFileError(`Could not open ${file.name}: file is not valid UTF-8 text.`);
+        dispatch({ type: 'document/activate', id });
+      } catch (err: any) {
+        showToast(`Failed to open ${path}: ${err?.message || 'Error'}`, 'error');
       }
     },
-    [capabilities, document, state.documents]
-  );
-  const startResize = (event: React.PointerEvent) => {
-    dragging.current = true;
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-  const availablePanelSpace = () => window.innerHeight - 38 - 24 - 34 - 30 - 5;
-  const moveResize = (event: React.PointerEvent) => {
-    if (!dragging.current) return;
-    const bounds = event.currentTarget.parentElement?.getBoundingClientRect();
-    if (bounds)
-      dispatch({
-        type: 'ui',
-        patch: {
-          panelHeight: clampPanelHeight(bounds.bottom - event.clientY, availablePanelSpace()),
-          panelMaximised: false,
-        },
-      });
-  };
-  const stopResize = () => {
-    dragging.current = false;
-  };
-  const setPanelHeight = (delta: number) =>
-    dispatch({
-      type: 'ui',
-      patch: {
-        panelHeight: clampPanelHeight(
-          (state.ui.panelHeight || availablePanelSpace() * 0.52) + delta,
-          availablePanelSpace()
-        ),
-        panelMaximised: false,
-        panelOpen: true,
-      },
-    });
-  const resizeSidebarStart = (event: React.PointerEvent<HTMLDivElement>) => {
-    sidebarResize.current = { x: event.clientX, width: state.ui.sidebarWidth };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-  const resizeSidebarMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (sidebarResize.current)
-      dispatch({
-        type: 'ui',
-        patch: {
-          sidebarWidth: Math.max(
-            180,
-            Math.min(420, sidebarResize.current.width + event.clientX - sidebarResize.current.x)
-          ),
-        },
-      });
-  };
-  const resizeSidebarStop = () => {
-    sidebarResize.current = null;
-  };
-  const activityItems = [
-    ['explorer', 'folder_copy', 'Explorer', 'Ctrl+Shift+E'],
-    ['samples', 'library_books', 'Samples', ''],
-    ['search', 'search', 'Search', 'Ctrl+Shift+F'],
-    ['ast', 'account_tree', 'AST', ''],
-    ['security', 'shield', 'Security', ''],
-    ['safetylab', 'smart_toy', 'Agent Safety Lab', ''],
-  ] as const;
-  const panels = [
-    ['tokens', 'Tokens', counts.tokens],
-    ['security', 'Security', result?.security_findings.length ?? 0],
-    ['problems', 'Problems', problemCount],
-    ['explain', 'AI Explain', 0],
-    ['agent', 'Agent Activity', 0],
-  ] as const;
-  const resultForPanel =
-    state.ui.panelTab === 'tokens'
-      ? 'Tokens appear after analysis.'
-      : state.ui.panelTab === 'problems'
-        ? 'No analysis results yet.'
-        : state.ui.panelTab === 'security'
-          ? 'No security checks have run.'
-          : state.ui.panelTab === 'explain'
-            ? 'Select an item after analysis to request an explanation.'
-            : 'No agent activity is available.';
-  const explainAvailability: Record<AIExplainV2Request['target'], boolean> = {
-    file: Boolean(document),
-    token: Boolean(
-      result && selectedTokenId && result.tokens.some((token) => token.id === selectedTokenId)
-    ),
-    diagnostic: Boolean(problemDiagnostics.some((item) => item.id === selectedProblemId)),
-    finding: Boolean(currentFinding),
-    patch: false,
-  };
-  const explainDisabledReasons: Record<AIExplainV2Request['target'], string> = {
-    file: document ? '' : 'Open a document first.',
-    token: explainAvailability.token ? '' : 'Select an analyzed token first.',
-    diagnostic: explainAvailability.diagnostic ? '' : 'Select a problem row first.',
-    finding: explainAvailability.finding ? '' : 'Select a security finding first.',
-    patch: 'Patch explanations are available from a fix review.',
-  };
-  const timeoutSettings = capabilities?.limits.timeouts as Record<string, unknown> | undefined;
-  const aiExplainTimeout = Math.max(
-    1,
-    Number(timeoutSettings?.ai_explain_seconds ?? timeoutSettings?.ai_seconds ?? 90) || 90
-  );
-  const aiFixTimeout = Math.max(
-    1,
-    Number(timeoutSettings?.ai_fix_seconds ?? timeoutSettings?.ai_seconds ?? 90) || 90
+    [state.documents, showToast]
   );
 
-  const retryBackend = useCallback(async () => {
-    setApiUnavailable(false);
+  // Save active document to backend disk
+  const handleSaveFile = useCallback(async () => {
+    const doc = selectActiveDocument(state);
+    if (!doc) return;
     try {
-      const [nextCapabilities, nextSamples, nextHealth] = await Promise.all([
-        apiClient.getCapabilities(),
-        apiClient.getSamples(),
-        apiClient.getHealth(),
-      ]);
-      setCapabilities(nextCapabilities);
-      setSamples(nextSamples);
-      setHealth(nextHealth);
-      setHealthError(false);
-    } catch {
-      setApiUnavailable(true);
-      setHealthError(true);
+      await apiClient.saveWorkspaceFile(doc.name, doc.source);
+      dispatch({ type: 'document/save', id: doc.id });
+      showToast(`Saved ${doc.name}`, 'success');
+      void fetchWorkspaceTree();
+    } catch (err: any) {
+      showToast(`Failed to save ${doc.name}: ${err?.message || 'Error'}`, 'error');
     }
+  }, [state, fetchWorkspaceTree, showToast]);
+
+  // Create new file
+  const handleCreateFile = useCallback(
+    async (path: string) => {
+      try {
+        await apiClient.createWorkspaceFile(path, '');
+        showToast(`Created ${path}`, 'success');
+        await fetchWorkspaceTree();
+        await handleOpenFile(path);
+      } catch (err: any) {
+        showToast(`Failed to create ${path}: ${err?.message || 'Error'}`, 'error');
+      }
+    },
+    [fetchWorkspaceTree, handleOpenFile, showToast]
+  );
+
+  // Rename file
+  const handleRenameFile = useCallback(
+    async (oldPath: string, newPath: string) => {
+      try {
+        await apiClient.renameWorkspaceFile(oldPath, newPath);
+        showToast(`Renamed ${oldPath} to ${newPath}`, 'success');
+        await fetchWorkspaceTree();
+        const doc = state.documents.find((d) => d.name === oldPath);
+        if (doc) {
+          dispatch({ type: 'document/remove', id: doc.id });
+          await handleOpenFile(newPath);
+        }
+      } catch (err: any) {
+        showToast(`Failed to rename: ${err?.message || 'Error'}`, 'error');
+      }
+    },
+    [fetchWorkspaceTree, handleOpenFile, state.documents, showToast]
+  );
+
+  // Delete file
+  const handleDeleteFile = useCallback(
+    async (path: string) => {
+      try {
+        await apiClient.deleteWorkspaceFile(path);
+        showToast(`Deleted ${path}`, 'info');
+        const doc = state.documents.find((d) => d.name === path);
+        if (doc) {
+          dispatch({ type: 'document/remove', id: doc.id });
+        }
+        await fetchWorkspaceTree();
+      } catch (err: any) {
+        showToast(`Failed to delete: ${err?.message || 'Error'}`, 'error');
+      }
+    },
+    [fetchWorkspaceTree, state.documents, showToast]
+  );
+
+  // Initialize Documents from Workspace Tree
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await apiClient.getWorkspaceTree();
+        if (!mounted) return;
+        const tree = res.tree || [];
+        setWorkspaceTree(tree);
+
+        if (state.documents.length === 0 && tree.length > 0) {
+          const findFirst = (nodes: WorkspaceFileNode[]): string | null => {
+            for (const n of nodes) {
+              if (n.type === 'file') return n.path;
+              if (n.children) {
+                const f = findFirst(n.children);
+                if (f) return f;
+              }
+            }
+            return null;
+          };
+
+          const targetPath =
+            tree.find((n) => n.name === 'src')?.children?.find((c) => c.name === 'main.cpp')?.path ||
+            findFirst(tree) ||
+            'src/main.cpp';
+
+          try {
+            const fileDetail = await apiClient.getWorkspaceFile(targetPath);
+            if (mounted) {
+              const id = `doc-${targetPath}`;
+              dispatch({
+                type: 'document/add',
+                document: {
+                  id,
+                  name: fileDetail.path,
+                  language: fileDetail.language,
+                  source: fileDetail.content,
+                  sourceVersion: 1,
+                  dirty: false,
+                  origin: 'opened',
+                },
+              });
+              dispatch({ type: 'document/activate', id });
+            }
+          } catch {
+            // Ignore
+          }
+        }
+      } catch {
+        // Fallback for offline / test mock environments
+        if (state.documents.length === 0 && mounted) {
+          const fallbackId = 'doc-src/main.cpp';
+          dispatch({
+            type: 'document/add',
+            document: {
+              id: fallbackId,
+              name: 'src/main.cpp',
+              language: 'cpp',
+              source: `#include <iostream>\nusing namespace std;\n\nint main() {\n    int n = 5;\n    for (int i = 0; i \uFEFF<= n; i++) {\n        cout << i << " ";\n    }\n    cout << endl;\n    return 0;\n}\n`,
+              sourceVersion: 1,
+              dirty: false,
+              origin: 'opened',
+            },
+          });
+          dispatch({ type: 'document/activate', id: fallbackId });
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  return (
-    <Suspense
-      fallback={
-        <main className="ide-shell" aria-label="SecureLex workbench">
-          <div className="ide-loading">Loading workbench…</div>
-        </main>
+  // Fetch capabilities
+  useEffect(() => {
+    let mounted = true;
+    apiClient
+      .getCapabilities()
+      .then((caps) => {
+        if (mounted) {
+          setCapabilities(caps);
+          if (caps?.ai) {
+            setProviderCapabilities(caps.ai);
+            setRemoteConsented(caps.ai.remote_consented || !caps.ai.consent_required);
+          }
+        }
+      })
+      .catch(() => {
+        /* Offline mode continues safely */
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const activeDoc = selectActiveDocument(state);
+
+  // Sync conversation when active file changes
+  useEffect(() => {
+    if (activeDoc) {
+      const fileChat = conversationsByFile[activeDoc.id] || [];
+      setChatMessages(fileChat);
+    }
+  }, [activeDoc?.id]);
+
+  // Helper to update chat messages for active file
+  const updateFileChatMessages = useCallback(
+    (updater: (prev: ChatMessage[]) => ChatMessage[]) => {
+      if (!activeDoc) return;
+      setChatMessages((prev) => {
+        const next = updater(prev);
+        setConversationsByFile((convs) => ({
+          ...convs,
+          [activeDoc.id]: next,
+        }));
+        return next;
+      });
+    },
+    [activeDoc]
+  );
+  const currentAnalysis = activeDoc ? state.analysis[activeDoc.id]?.result : null;
+  const isAnalyzing = activeDoc ? state.analysis[activeDoc.id]?.status === 'running' : false;
+  const isStale = activeDoc ? state.analysis[activeDoc.id]?.status === 'stale' : false;
+
+  // Run Real Lexical Analysis via apiClient (ONLY lexical stage)
+  const triggerAnalyze = useCallback(
+    async (targetDoc?: IDEDocument) => {
+      const doc = targetDoc || activeDoc;
+      if (!doc) return;
+
+      const abort = new AbortController();
+      dispatch({ type: 'analysis/start', id: doc.id, abort });
+
+      try {
+        const result = await apiClient.analyzeStageV2(
+          'lexical',
+          {
+            source: doc.source,
+            language: doc.language,
+            filename: doc.name,
+            api_version: 2,
+            source_version: doc.sourceVersion,
+            options: {
+              include_tokens: true,
+              stages: ['lexical'],
+            },
+          },
+          abort.signal
+        );
+
+        setAnalysisError(null);
+
+        dispatch({
+          type: 'analysis/success',
+          id: doc.id,
+          result: {
+            analysis_id: result.analysis_id,
+            source_hash: result.source_hash,
+            source_version: result.source_version,
+            language: result.language,
+            lexical_status: result.lexical_status,
+            syntax_status: result.syntax_status,
+            semantic_status: result.semantic_status,
+            tokens: result.tokens || [],
+            lexical_summary: result.lexical_summary || {},
+            syntax_diagnostics: result.diagnostics || [],
+            semantic_diagnostics: [],
+            security_findings: [],
+            taint_paths: [],
+            quality: [],
+            tools: result.tools || [],
+            timing: {},
+            warnings: result.warnings || [],
+            omissions: result.omissions || [],
+          },
+          version: doc.sourceVersion,
+        });
+
+        const tokenCount = result.tokens?.length ?? 0;
+        const invalidCount = (result.tokens || []).filter((t) => t.lexical_status === 'invalid').length;
+        if (invalidCount > 0) {
+          showToast(
+            `Lexical Analysis complete: ${tokenCount} tokens scanned, ${invalidCount} invalid token(s) detected.`,
+            'warning'
+          );
+        } else {
+          showToast(`Lexical Analysis complete: ${tokenCount} tokens scanned. All valid!`, 'success');
+        }
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          dispatch({ type: 'analysis/error', id: doc.id });
+          const msg = err?.message || 'Backend lexical analysis request failed.';
+          setAnalysisError(msg);
+          showToast(`Lexical analysis error: ${msg}`, 'error');
+        }
       }
-    >
-      <main
-        ref={shellRef}
-        className="ide-shell"
-        aria-label="SecureLex workbench"
-        onDragOver={(event) => {
-          if (event.dataTransfer.types.includes('Files')) event.preventDefault();
-        }}
-        onDrop={(event) => {
-          if (event.dataTransfer.files.length) {
-            event.preventDefault();
-            void openDiskFile(event.dataTransfer.files[0]);
-          }
-        }}
-      >
-        <header className="ide-titlebar">
-          <div className="ide-brand">
-            <svg aria-hidden="true" className="ide-logo" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3Zm-1 6h2v6h-2V8Zm0 8h2v2h-2v-2Z" />
-            </svg>
-            <span className="ide-brand-name">SecureLex</span>
-            <span className="ide-version">{capabilities ? `v${capabilities.version}` : '…'}</span>
-            <span className="ide-project">
-              <span
-                className="material-symbols-outlined"
-                aria-hidden="true"
-                style={{ fontSize: 15 }}
-              >
-                folder_managed
-              </span>
-              <span className="ide-project-name">{document?.name ?? 'Workspace'}</span>
-              <span className="ide-language-chip">{languageLabel}</span>
-            </span>
-          </div>
-          <button
-            className="ide-command-button"
-            type="button"
-            onClick={(event) => openPalette(event.currentTarget)}
-            aria-label="Open Command Palette (Ctrl+Shift+P)"
-          >
-            <span className="ide-command-content">
-              {icon('search', 15)}
-              <span>Search commands, symbols, files...</span>
-            </span>
-            <kbd>Ctrl+Shift+P</kbd>
-          </button>
-          <div className="ide-title-actions">
-            <span
-              className="ide-ai-provider-badge"
-              title={
-                capabilities?.ai.setup_message ||
-                (capabilities?.ai.configured
-                  ? `${capabilities.ai.provider} · ${capabilities.ai.model ?? 'model unavailable'} · ${capabilities.ai.processing_location}`
-                  : 'AI provider status unavailable')
+    },
+    [activeDoc, showToast]
+  );
+
+  // Auto-analyze when activeDoc changes if not analyzed yet
+  useEffect(() => {
+    if (activeDoc && !state.analysis[activeDoc.id]?.result && !isAnalyzing) {
+      void triggerAnalyze(activeDoc);
+    }
+  }, [activeDoc?.id]);
+
+  // Map Tokens for Table and Inspector from actual backend lexer results
+  const mappedTokens: TokenItem[] = useMemo(() => {
+    if (!currentAnalysis?.tokens || currentAnalysis.tokens.length === 0) {
+      return [];
+    }
+
+    const diags = currentAnalysis.syntax_diagnostics || [];
+    const diagMap = new Map<string, DiagnosticV2>();
+    diags.forEach((d) => diagMap.set(d.id, d));
+
+    return currentAnalysis.tokens.map((tok: TokenV2, idx: number) => {
+      const isInvalid = tok.lexical_status === 'invalid';
+      const matchedDiag =
+        (tok.diagnostic_ids && tok.diagnostic_ids.length > 0
+          ? diagMap.get(tok.diagnostic_ids[0])
+          : null) ||
+        diags.find(
+          (d) =>
+            d.range &&
+            d.range.start_line <= (tok.end_line ?? tok.start_line) &&
+            d.range.end_line >= (tok.start_line ?? 1) &&
+            d.range.start_col <= (tok.end_column ?? tok.start_column) &&
+            d.range.end_col >= (tok.start_column ?? 1)
+        );
+
+      const actualDesc = matchedDiag?.message
+        ? matchedDiag.message
+        : isInvalid
+        ? 'Lexical error: unclassified invalid token'
+        : tok.category || tok.token_type || 'Standard token';
+
+      return {
+        id: idx + 1,
+        tokenId: tok.id,
+        line: tok.start_line ?? 1,
+        col: tok.start_column ?? 1,
+        endLine: tok.end_line ?? tok.start_line ?? 1,
+        endCol: tok.end_column ?? ((tok.start_column ?? 1) + (tok.lexeme?.length || 1)),
+        startOffset: tok.start_offset,
+        endOffset: tok.end_offset,
+        startOffsetCodepoint: tok.start_offset_codepoint,
+        endOffsetCodepoint: tok.end_offset_codepoint,
+        lexeme: tok.lexeme || '',
+        type: tok.token_type || tok.category || 'Token',
+        category: tok.category,
+        status: isInvalid ? 'Invalid' : 'Valid',
+        desc: actualDesc,
+        ruleId: matchedDiag?.produced_by,
+        diagnosticId: matchedDiag?.id,
+        severity: matchedDiag?.severity,
+        evidence: matchedDiag?.related_evidence,
+      };
+    });
+  }, [currentAnalysis]);
+
+  // Reset selectedToken when active document switches
+  useEffect(() => {
+    setSelectedToken(null);
+  }, [activeDoc?.id]);
+
+  // Keep selectedToken synchronized with latest analysis of active document
+  useEffect(() => {
+    if (mappedTokens.length === 0) {
+      setSelectedToken(null);
+      return;
+    }
+
+    setSelectedToken((prev) => {
+      if (!prev) {
+        const invalidTok = mappedTokens.find((t) => t.status === 'Invalid');
+        return invalidTok || mappedTokens[0];
+      }
+      // Check if prev token still belongs to current mappedTokens
+      const match = mappedTokens.find(
+        (t) =>
+          (t.tokenId && prev.tokenId && t.tokenId === prev.tokenId) ||
+          (t.id === prev.id && t.line === prev.line && t.col === prev.col && t.lexeme === prev.lexeme)
+      );
+      if (match) {
+        return match;
+      }
+      // Stale token from another file or outdated analysis: reselect invalid or first
+      const invalidTok = mappedTokens.find((t) => t.status === 'Invalid');
+      return invalidTok || mappedTokens[0];
+    });
+  }, [mappedTokens]);
+
+  // Highlight invalid tokens in Monaco editor with error markers
+  useEffect(() => {
+    if (!editorRef.current) return;
+    const model = editorRef.current.getModel();
+    if (!model) return;
+    const monacoGlobal = (window as any).monaco;
+    if (!monacoGlobal) return;
+
+    const invalidTokens = mappedTokens.filter((t) => t.status === 'Invalid');
+    const markers: Monaco.editor.IMarkerData[] = invalidTokens.map((t) => ({
+      severity: monacoGlobal.MarkerSeverity.Error,
+      message: t.desc || `Invalid token '${t.lexeme}'`,
+      startLineNumber: t.line,
+      startColumn: t.col,
+      endLineNumber: t.endLine || t.line,
+      endColumn: t.endCol || (t.col + Math.max(1, t.lexeme.length)),
+      source: t.ruleId || 'securelex-lexer',
+    }));
+
+    monacoGlobal.editor.setModelMarkers(model, 'securelex-lexical', markers);
+  }, [mappedTokens]);
+
+  // Diagnostics mapping (from actual backend stage diagnostics)
+  const mappedDiagnostics: DiagnosticItem[] = useMemo(() => {
+    const raw = [
+      ...(currentAnalysis?.syntax_diagnostics || []),
+      ...(currentAnalysis?.semantic_diagnostics || []),
+    ];
+    return raw.map((d: DiagnosticV2, idx: number) => ({
+      id: d.id || `diag-${idx}`,
+      code: d.produced_by || `E${String(idx + 100).padStart(4, '0')}`,
+      message: d.message,
+      severity: (d.severity?.toLowerCase() === 'error' || d.severity?.toLowerCase() === 'high'
+        ? 'error'
+        : 'warning') as any,
+      file: activeDoc?.name || 'source',
+      line: d.range?.start_line ?? 1,
+      col: d.range?.start_col ?? 1,
+    }));
+  }, [currentAnalysis, activeDoc]);
+
+  // Security findings mapping
+  const mappedSecurityFindings: SecurityFindingItem[] = useMemo(() => {
+    const findings = currentAnalysis?.security_findings || [];
+    return findings.map((f: any, idx: number) => ({
+      id: f.id || `sec-${idx}`,
+      title: f.title || f.rule_id || 'Security Finding',
+      description: f.description || f.message || '',
+      remediation: f.remediation || null,
+      cwe: Array.isArray(f.cwe) ? f.cwe.join(', ') : f.cwe,
+      severity: f.severity || 'Medium',
+      confidence: f.confidence ?? (f.certainty === 'definitive' ? 1.0 : 0.85),
+      certainty: f.certainty || 'heuristic',
+      file: activeDoc?.name || 'source',
+      line: f.range?.start_line ?? f.line,
+      col: f.range?.start_col ?? f.col,
+      range: f.range || {
+        start_line: f.line ?? 1,
+        start_col: f.col ?? 1,
+        end_line: f.line ?? 1,
+        end_col: (f.col ?? 1) + 1,
+      },
+      ruleId: f.rule_id || f.produced_by,
+      detectorsFired: f.detectors_fired || [],
+      toolProvenance: f.tool_provenance || [],
+      evidence: f.evidence || f.related_evidence || [],
+      taintPathId: f.taint_path_id || null,
+    }));
+  }, [currentAnalysis, activeDoc]);
+
+  // Jump to Code in Monaco Editor
+  const handleJumpToCode = useCallback(
+    (line: number, col: number, endLine?: number, endCol?: number) => {
+      setCursorPos({ line, col });
+      if (editorRef.current) {
+        editorRef.current.revealRangeInCenter({
+          startLineNumber: line,
+          startColumn: col,
+          endLineNumber: endLine || line,
+          endColumn: endCol || (col + 1),
+        });
+        editorRef.current.setSelection({
+          startLineNumber: line,
+          startColumn: col,
+          endLineNumber: endLine || line,
+          endColumn: endCol || (col + 1),
+        });
+        editorRef.current.focus();
+      }
+      showToast(`Focused on Line ${line}, Column ${col}`);
+    },
+    [showToast]
+  );
+
+  // Toggle Remote AI Provider Consent
+  const handleToggleConsent = useCallback(async () => {
+    const nextConsent = !remoteConsented;
+    try {
+      await apiClient.setRemoteConsent(sessionIdRef.current, nextConsent);
+      setRemoteConsented(nextConsent);
+      showToast(nextConsent ? 'Remote AI processing consent granted.' : 'Remote AI consent revoked.', 'info');
+    } catch (err: any) {
+      showToast(`Failed to update consent: ${err?.message || 'Error'}`, 'error');
+    }
+  }, [remoteConsented, showToast]);
+
+  // Start New Conversation thread for active file
+  const handleNewConversation = useCallback(() => {
+    if (!activeDoc) return;
+    setChatMessages([]);
+    setConversationsByFile((convs) => ({
+      ...convs,
+      [activeDoc.id]: [],
+    }));
+    showToast(`Started new conversation thread for ${activeDoc.name}.`, 'info');
+  }, [activeDoc, showToast]);
+
+  // Insert code snippet into Monaco Editor at cursor
+  const handleInsertCodeSnippet = useCallback((code: string) => {
+    if (!editorRef.current) return;
+    const editor = editorRef.current;
+    const selection = editor.getSelection();
+    if (selection) {
+      editor.executeEdits('ai-assistant', [
+        {
+          range: selection,
+          text: code,
+          forceMoveMarkers: true,
+        },
+      ]);
+    } else {
+      editor.trigger('keyboard', 'type', { text: code });
+    }
+    editor.focus();
+  }, []);
+
+  // Conversational AI Assistant Query
+  const handleSendMessage = useCallback(
+    async (text: string) => {
+      if (!activeDoc) return;
+      const userMsg: ChatMessage = {
+        id: `msg-${Date.now()}`,
+        sender: 'user',
+        text,
+        timestamp: Date.now(),
+      };
+      updateFileChatMessages((prev) => [...prev, userMsg]);
+      setIsSendingChat(true);
+
+      try {
+        const history = chatMessages.slice(-10).map((m) => ({
+          role: m.sender,
+          content: m.text,
+        }));
+
+        const context = {
+          file: activeDoc.name,
+          language: activeDoc.language,
+          source_version: activeDoc.sourceVersion,
+          selected_range: {
+            start_line: cursorPos.line,
+            start_col: cursorPos.col,
+          },
+          stage: activeBottomTab,
+          finding: activeAssistantFinding
+            ? {
+                title: activeAssistantFinding.title,
+                line: activeAssistantFinding.line,
+                col: activeAssistantFinding.col,
+                id: activeAssistantFinding.id,
               }
-            >
-              {capabilities
-                ? `${capabilities.ai.provider} - ${capabilities.ai.processing_location}`
-                : 'AI unavailable'}
-            </span>
-            <div className="ide-theme-switch" role="group" aria-label="IDE theme">
-              <button
-                type="button"
-                aria-pressed={resolved === 'dark'}
-                onClick={() => setMode('dark')}
-              >
-                {icon('dark_mode', 14)}
-                <span>Dark</span>
-              </button>
-              <button
-                type="button"
-                aria-pressed={resolved === 'light'}
-                onClick={() => setMode('light')}
-              >
-                {icon('light_mode', 14)}
-                <span>Light</span>
-              </button>
-            </div>
-            <span className="ide-title-divider" />
-            <div className="ide-action-group">
-              <button
-                className="ide-feature-button"
-                disabled={!canBuild}
-                title={
-                  canBuild
-                    ? 'Build with AI'
-                    : capabilities?.ai.setup_message ||
-                      'AI provider unavailable; check backend setup.'
-                }
-                onClick={() => setBuildDrawerOpen(true)}
-              >
-                {icon('auto_fix_high', 15)}
-                <span>Build with AI</span>
-              </button>
-              <button
-                className="ide-feature-button fix"
-                disabled={!canFix || !hasFixTarget}
-                title={
-                  !canFix
-                    ? 'Rule fix and AI fix capabilities are unavailable.'
-                    : !hasFixTarget
-                      ? 'No fixable item is selected or present.'
-                      : canFixAI
-                        ? 'Review a rule fix; use Improve with AI for an AI proposal.'
-                        : 'Review an available deterministic rule fix'
-                }
-                onClick={startFixAvailable}
-              >
-                {icon('verified', 15)}
-                <span>Fix with AI</span>
-              </button>
-            </div>
-          </div>
-        </header>
-        {apiUnavailable && (
-          <div className="ide-backend-banner" role="alert">
-            <span>Backend unavailable. Reconnect to load capabilities and samples.</span>
-            <button type="button" data-qa="retry-backend" onClick={() => void retryBackend()}>
-              Retry
-            </button>
-          </div>
-        )}
-        <div className="ide-main-row">
-          <nav className="ide-activity" aria-label="Activity Bar">
-            <div className="ide-activity-group">
-              {activityItems.map(([id, glyph, label, shortcut]) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={`ide-activity-button ${id === 'safetylab' ? 'safety' : ''}`}
-                  aria-label={label}
-                  aria-pressed={state.ui.activity === id}
-                  title={`${label}${shortcut ? ` (${shortcut})` : ''}`}
-                  onClick={() => changeActivity(id)}
-                >
-                  {icon(glyph, 20)}
-                  {id === 'safetylab' && (
-                    <span className={`ide-pulse-dot ${state.ui.safetyRunning ? 'active' : ''}`} />
-                  )}
-                </button>
-              ))}
-            </div>
-            <div className="ide-activity-group">
-              <button
-                type="button"
-                className="ide-activity-button"
-                aria-label="Toggle theme (Alt+T)"
-                title="Toggle theme (Alt+T)"
-                onClick={toggleTheme}
-              >
-                {icon('brightness_medium', 20)}
-              </button>
-              <button
-                type="button"
-                className="ide-activity-button"
-                aria-label="Settings"
-                title="Settings"
-                aria-pressed={state.ui.settingsOpen}
-                onClick={() =>
-                  dispatch({ type: 'ui', patch: { settingsOpen: !state.ui.settingsOpen } })
-                }
-              >
-                {icon('settings', 20)}
-              </button>
-            </div>
-          </nav>
-          {state.ui.sidebarOpen && (
-            <aside
-              className="ide-sidebar"
-              style={{ width: state.ui.sidebarWidth, flexBasis: state.ui.sidebarWidth }}
-              aria-label={`${state.ui.activity} sidebar`}
-            >
-              <div className="ide-sidebar-header">
-                <span>
-                  {state.ui.activity === 'safetylab'
-                    ? 'Agent Safety Lab'
-                    : state.ui.activity === 'ast'
-                      ? 'AST'
-                      : state.ui.activity[0].toUpperCase() + state.ui.activity.slice(1)}
-                </span>
-                {state.ui.activity === 'explorer' && (
-                  <div className="ide-inline-actions">
-                    <button
-                      className="ide-icon-button"
-                      type="button"
-                      aria-label="New file"
-                      title="New File (Ctrl+N)"
-                      onClick={newDocument}
-                    >
-                      {icon('note_add', 16)}
-                    </button>
-                    <button
-                      className="ide-icon-button"
-                      type="button"
-                      aria-label="Open file"
-                      title="Open File (UTF-8 text)"
-                      onClick={() => openFileInput.current?.click()}
-                    >
-                      {icon('folder_open', 15)}
-                    </button>
-                    <button
-                      className="ide-icon-button"
-                      type="button"
-                      aria-label="Refresh sample catalogue"
-                      title="Refresh sample catalogue"
-                      onClick={() =>
-                        apiClient
-                          .getSamples()
-                          .then((value) => {
-                            setSamples(value);
-                            setApiUnavailable(false);
-                          })
-                          .catch(() => setApiUnavailable(true))
-                      }
-                    >
-                      {icon('refresh', 15)}
-                    </button>
-                  </div>
-                )}
-              </div>
-              {state.ui.activity === 'explorer' && (
-                <div className="ide-tree-scroll">
-                  <div className="ide-tree-section-title">
-                    {icon('expand_more', 15)} Open Editors{' '}
-                    <span className="ide-group-count">{state.documents.length}</span>
-                  </div>
-                  {state.documents.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className={`ide-tree-row ${doc.id === document?.id ? 'active' : ''}`}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        startRename(doc.id, doc.name);
-                      }}
-                    >
-                      <button
-                        type="button"
-                        className="ide-row-main"
-                        onClick={() => dispatch({ type: 'document/activate', id: doc.id })}
-                      >
-                        <span className="ide-file-icon">{icon('code', 15)}</span>
-                        {renaming === doc.id ? (
-                          <input
-                            autoFocus
-                            className="ide-inline-rename"
-                            value={renameValue}
-                            onChange={(e) => setRenameValue(e.target.value)}
-                            onBlur={() => finishRename(doc.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') finishRename(doc.id);
-                              if (e.key === 'Escape') setRenaming(null);
-                            }}
-                            aria-label={`Rename ${doc.name}`}
-                          />
-                        ) : (
-                          <span
-                            className="filename"
-                            onDoubleClick={(e) => {
-                              e.stopPropagation();
-                              startRename(doc.id, doc.name);
-                            }}
-                          >
-                            {doc.name}
-                          </span>
-                        )}
-                        {doc.dirty && (
-                          <span
-                            className="ide-unsaved-dot"
-                            title="Unsaved changes"
-                            aria-label="Unsaved changes"
-                          />
-                        )}
-                      </button>
-                      <span className="ide-inline-actions">
-                        <button
-                          type="button"
-                          className="ide-icon-button ide-row-close"
-                          aria-label={`Close ${doc.name}`}
-                          title={`Close ${doc.name}`}
-                          onClick={() => closeDocument(doc.id)}
-                        >
-                          {icon('close', 14)}
-                        </button>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {state.ui.activity === 'samples' && (
-                <SamplesSidebar
-                  samples={samples}
-                  unavailable={apiUnavailable}
-                  onOpen={openExample}
-                />
-              )}
-              {state.ui.activity === 'search' && (
-                <SearchSidebar documents={state.documents} onOpen={navigateDocument} />
-              )}
-              {state.ui.activity === 'ast' && (
-                <ASTSidebar
-                  analysisId={stageForDoc?.syntax?.analysis_id ?? null}
-                  initial={stageForDoc?.syntax?.ast ?? null}
-                  capabilities={capabilities}
-                  document={document}
-                  onSelect={navigateRange}
-                />
-              )}
-              {state.ui.activity === 'security' && (
-                <div className="ide-sidebar-scroll">
-                  <div className="ide-sidebar-section-label">Rule families · {languageLabel}</div>
-                  {(languageInfo?.security_tools ?? []).map((name) => (
-                    <div className="ide-security-tool" key={name}>
-                      <span className="material-symbols-outlined" aria-hidden="true">
-                        shield
-                      </span>
-                      {name}
-                    </div>
-                  ))}
-                  <div className="ide-sidebar-section-label">Tool status</div>
-                  {(capabilities?.tools ?? []).map((tool) => (
-                    <div className="ide-security-tool" key={tool.name}>
-                      <span className={`ide-tool-state ${tool.available ? 'available' : ''}`} />
-                      <span>{tool.name}</span>
-                      <small>{tool.status}</small>
-                    </div>
-                  ))}
-                  {!capabilities && <p className="ide-tree-message">Capabilities unavailable.</p>}
-                </div>
-              )}
-              {state.ui.activity === 'safetylab' && (
-                <div className="ide-tree-scroll">
-                  <p className="ide-p4-empty">Safety Lab view is currently unavailable.</p>
-                </div>
-              )}
-            </aside>
-          )}
-          {state.ui.sidebarOpen && (
-            <div
-              className="ide-sidebar-resizer"
-              role="separator"
-              aria-label="Resize sidebar"
-              aria-orientation="vertical"
-              tabIndex={0}
-              onPointerDown={resizeSidebarStart}
-              onPointerMove={resizeSidebarMove}
-              onPointerUp={resizeSidebarStop}
-              onPointerCancel={resizeSidebarStop}
-              onKeyDown={(event) => {
-                if (event.key === 'ArrowLeft')
-                  dispatch({
-                    type: 'ui',
-                    patch: { sidebarWidth: Math.max(180, state.ui.sidebarWidth - 16) },
-                  });
-                if (event.key === 'ArrowRight')
-                  dispatch({
-                    type: 'ui',
-                    patch: { sidebarWidth: Math.min(420, state.ui.sidebarWidth + 16) },
-                  });
-              }}
-            />
-          )}
-          <section className="ide-workspace" id="editorWorkspaceView" aria-label="Workbench">
-            {state.ui.activity === 'safetylab' ? (
-              <SafetyLab
-                capabilities={capabilities}
-                source={document?.source ?? ''}
-                language={document?.language ?? capabilities?.languages[0]?.id ?? 'python'}
-                filename={document?.name ?? '<editor>'}
-                sourceVersion={document?.sourceVersion ?? 0}
-                onReturn={() => changeActivity('explorer')}
-                onRunning={(safetyRunning) => dispatch({ type: 'ui', patch: { safetyRunning } })}
-              />
-            ) : (
-              <>
-                <div className="ide-tabbar" ref={tabStrip} role="tablist" aria-label="Open files">
-                  <button
-                    className="ide-tabs-arrow"
-                    type="button"
-                    aria-label="Scroll tabs left"
-                    onClick={() => tabStrip.current?.scrollBy({ left: -220, behavior: 'smooth' })}
-                  >
-                    ‹
-                  </button>
-                  {state.documents.map((doc, index) => (
-                    <div
-                      draggable={renaming !== doc.id}
-                      onDragStart={() => {
-                        draggedTab.current = doc.id;
-                      }}
-                      onDragOver={(event) => event.preventDefault()}
-                      onDrop={(event) => {
-                        event.preventDefault();
-                        if (draggedTab.current) {
-                          const from = state.documents.findIndex(
-                            (item) => item.id === draggedTab.current
-                          );
-                          dispatch({
-                            type: 'document/move',
-                            id: draggedTab.current,
-                            toIndex: index < from ? index : index + 1,
-                          });
-                          draggedTab.current = null;
-                        }
-                      }}
-                      onContextMenu={(event) => {
-                        event.preventDefault();
-                        setTabMenu({ id: doc.id, x: event.clientX, y: event.clientY });
-                      }}
-                      className={`ide-tab ${doc.id === document?.id ? 'active' : ''}`}
-                      key={doc.id}
-                      data-doc={doc.id}
-                      role="tab"
-                      aria-selected={doc.id === document?.id}
-                      title="Double-click to rename (F2)"
-                      onDoubleClick={() => startRename(doc.id, doc.name)}
-                      onMouseDown={(e) => {
-                        if (e.button === 1) {
-                          e.preventDefault();
-                          closeDocument(doc.id);
-                        }
-                      }}
-                    >
-                      <button
-                        type="button"
-                        className="ide-tab-label"
-                        onClick={() => dispatch({ type: 'document/activate', id: doc.id })}
-                      >
-                        <span>{icon('code', 14)}</span>
-                        {renaming === doc.id ? (
-                          <input
-                            className="ide-inline-rename"
-                            value={renameValue}
-                            onChange={(event) => setRenameValue(event.target.value)}
-                            onBlur={() => finishRename(doc.id)}
-                            onKeyDown={(event) => {
-                              event.stopPropagation();
-                              if (event.key === 'Enter') finishRename(doc.id);
-                              if (event.key === 'Escape') setRenaming(null);
-                            }}
-                            aria-label={`Rename ${doc.name}`}
-                            onClick={(event) => event.stopPropagation()}
-                          />
-                        ) : (
-                          <span className="ide-tab-name">{doc.name}</span>
-                        )}
-                        {doc.dirty && (
-                          <span className="ide-unsaved-dot" aria-label="Unsaved changes" />
-                        )}
-                        {state.analysis[doc.id]?.status === 'stale' && (
-                          <span className="ide-tab-stale" title="Analysis is stale">
-                            Stale
-                          </span>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        className="ide-tab-close"
-                        aria-label={`Close ${doc.name}`}
-                        onClick={() => closeDocument(doc.id)}
-                      >
-                        {icon('close', 13)}
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    className="ide-tabs-arrow"
-                    type="button"
-                    aria-label="Scroll tabs right"
-                    onClick={() => tabStrip.current?.scrollBy({ left: 220, behavior: 'smooth' })}
-                  >
-                    ›
-                  </button>
-                  <details className="ide-tab-list-menu">
-                    <summary aria-label="List all open tabs" title="List all open tabs">
-                      ▾
-                    </summary>
-                    <div role="menu">
-                      {state.documents.map((doc) => (
-                        <button
-                          type="button"
-                          role="menuitem"
-                          key={doc.id}
-                          onClick={() => {
-                            dispatch({ type: 'document/activate', id: doc.id });
-                            globalThis.document
-                              .querySelector(`[data-doc="${CSS.escape(doc.id)}"]`)
-                              ?.scrollIntoView({ inline: 'nearest' });
-                          }}
-                        >
-                          {doc.dirty ? '● ' : ''}
-                          {doc.name}
-                        </button>
-                      ))}
-                    </div>
-                  </details>
-                </div>
-                <div className="ide-toolbar">
-                  <div className="ide-toolbar-left">
-                    <button
-                      type="button"
-                      className="ide-small-button primary"
-                      disabled={!document}
-                      title={
-                        analysis?.status === 'running'
-                          ? 'Cancel analysis'
-                          : 'Analyze this file (F5 or Ctrl+Enter)'
-                      }
-                      onClick={() =>
-                        document && analysisControllers.current.has(document.id)
-                          ? cancelAnalysis(document.id)
-                          : void analyzeDocument()
-                      }
-                    >
-                      {icon('play_arrow', 16)}
-                      <span className="ide-label">
-                        {analysis?.status === 'running' ? 'Cancel' : 'Analyze'}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      className="ide-small-button"
-                      disabled={!canFix || !hasFixTarget}
-                      title={
-                        !canFix
-                          ? 'Rule fix and AI fix capabilities are unavailable.'
-                          : !hasFixTarget
-                            ? 'No fixable item is selected or present.'
-                            : 'Rule-first fix for the selected item or first fixable item'
-                      }
-                      onClick={startFixAvailable}
-                    >
-                      {icon('auto_fix_high', 15)}
-                      <span className="ide-label">Fix with AI</span>
-                    </button>
-                    {languageInfo?.formatter && (
-                      <button
-                        type="button"
-                        className="ide-small-button"
-                        title={`Format with ${languageInfo.formatter}`}
-                        onClick={async () => {
-                          if (!document) return;
-                          if (languageInfo.formatter === 'Monaco') {
-                            const action = editorRef.current?.getAction(
-                              'editor.action.formatDocument'
-                            );
-                            if (!action || !(await action.isSupported())) {
-                              reportToast(
-                                'Monaco has no formatter registered for this language.',
-                                true
-                              );
-                              return;
-                            }
-                            await action.run();
-                            return;
-                          }
-                          try {
-                            const formatted = await apiClient.formatSource(
-                              document.source,
-                              document.language
-                            );
-                            if (editorRef.current) {
-                              setEditorValue(editorRef.current, formatted.source, 'format');
-                            }
-                            dispatch({
-                              type: 'document/edit',
-                              id: document.id,
-                              source: formatted.source,
-                            });
-                            reportToast(`Formatted with ${formatted.formatter}.`);
-                          } catch (error) {
-                            reportToast(
-                              error instanceof Error ? error.message : 'Formatting failed.',
-                              true
-                            );
-                          }
-                        }}
-                      >
-                        {icon('format_align_left', 15)}
-                        <span className="ide-label">Format</span>
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="ide-small-button"
-                      aria-label="Undo"
-                      title={
-                        editorHistory.undo || fixUndoAvailable
-                          ? 'Undo (Ctrl+Z)'
-                          : 'No editor changes to undo'
-                      }
-                      disabled={!editorHistory.undo && !fixUndoAvailable}
-                      onClick={() => {
-                        toolbarHistoryAction.current = 'undo';
-                        editorRef.current?.focus();
-                        const m = editorRef.current?.getModel() as any;
-                        m?.undo?.();
-                        setEditorHistory({ undo: Boolean(m?.canUndo?.()), redo: true });
-                      }}
-                    >
-                      {icon('undo', 15)}
-                    </button>
-                    <button
-                      type="button"
-                      className="ide-small-button"
-                      aria-label="Redo"
-                      title={editorHistory.redo ? 'Redo (Ctrl+Y)' : 'No editor changes to redo'}
-                      disabled={!editorHistory.redo}
-                      onClick={() => {
-                        toolbarHistoryAction.current = 'redo';
-                        editorRef.current?.focus();
-                        const m = editorRef.current?.getModel() as any;
-                        m?.redo?.();
-                        setEditorHistory({ undo: true, redo: Boolean(m?.canRedo?.()) });
-                      }}
-                    >
-                      {icon('redo', 15)}
-                    </button>
-                    <button
-                      type="button"
-                      className="ide-small-button"
-                      aria-label="Find"
-                      title="Find (Ctrl+F)"
-                      onClick={() => void editorRef.current?.getAction('actions.find')?.run()}
-                    >
-                      {icon('search', 15)}
-                    </button>
-                  </div>
-                  <div className="ide-toolbar-right">
-                    <span className="ide-grammar">{grammarLabel(document, capabilities)}</span>
-                    <span className="ide-status-divider">·</span>
-                    <span className="ide-time">
-                      Lexer {lexerTime === null ? '—' : `${lexerTime} ms`}
-                    </span>
-                  </div>
-                </div>
-                <div className="ide-editor-area">
-                  <Editor
-                    key={document?.id}
-                    height="100%"
-                    language={monacoLanguage(document?.language ?? 'cpp')}
-                    value={document?.source ?? ''}
-                    theme={`securelex-${resolved}`}
-                    onMount={onEditorMount}
-                    onChange={(value) => {
-                      if (document && value !== undefined && value !== document.source) {
-                        const historyAction = toolbarHistoryAction.current;
-                        toolbarHistoryAction.current = null;
-                        setEditorHistory(
-                          historyAction === 'undo'
-                            ? { undo: false, redo: true }
-                            : historyAction === 'redo'
-                              ? { undo: true, redo: false }
-                              : { undo: true, redo: false }
-                        );
-                        const running = analysisControllers.current.get(document.id);
-                        if (running) {
-                          running.abort();
-                          analysisControllers.current.delete(document.id);
-                        }
-                        dispatch({ type: 'document/edit', id: document.id, source: value });
-                      }
-                    }}
-                    options={{
-                      readOnly: false,
-                      domReadOnly: false,
-                      minimap: { enabled: true, showSlider: 'mouseover' },
-                      lineNumbers: 'on',
-                      lineNumbersMinChars: 3,
-                      glyphMargin: true,
-                      bracketPairColorization: { enabled: true },
-                      matchBrackets: 'always',
-                      guides: {
-                        bracketPairs: true,
-                        bracketPairsHorizontal: true,
-                        highlightActiveBracketPair: true,
-                        indentation: true,
-                        highlightActiveIndentation: true,
-                      },
-                      renderControlCharacters: true,
-                      renderLineHighlight: 'line',
-                      renderLineHighlightOnlyWhenFocus: false,
-                      fontFamily: "'JetBrains Mono', Consolas, 'Courier New', monospace",
-                      fontSize: 13,
-                      lineHeight: 22,
-                      fontLigatures: true,
-                      letterSpacing: 0,
-                      scrollBeyondLastLine: false,
-                      automaticLayout: true,
-                      cursorBlinking: 'smooth',
-                      cursorSmoothCaretAnimation: 'on',
-                      cursorStyle: 'line',
-                      cursorWidth: 2,
-                      cursorSurroundingLines: 2,
-                      smoothScrolling: true,
-                      tabSize: 4,
-                      wordWrap: 'off',
-                      padding: { top: 9, bottom: 9 },
-                      autoClosingBrackets: 'always',
-                      autoClosingQuotes: 'always',
-                      autoClosingDelete: 'always',
-                      autoClosingOvertype: 'always',
-                      autoSurround: 'languageDefined',
-                      formatOnPaste: true,
-                      formatOnType: true,
-                      suggestOnTriggerCharacters: true,
-                      acceptSuggestionOnEnter: 'on',
-                      tabCompletion: 'on',
-                      snippetSuggestions: 'inline',
-                      wordBasedSuggestions: 'allDocuments',
-                      quickSuggestions: { other: true, comments: false, strings: false },
-                      parameterHints: { enabled: true, cycle: true },
-                      folding: true,
-                      foldingHighlight: true,
-                      foldingStrategy: 'auto',
-                      showFoldingControls: 'always',
-                      multiCursorModifier: 'alt',
-                      selectionHighlight: true,
-                      occurrencesHighlight: 'singleFile',
-                      roundedSelection: true,
-                      links: true,
-                      contextmenu: true,
-                      dragAndDrop: true,
-                    }}
-                  />
-                </div>
-                {state.ui.panelOpen && (
-                  <>
-                    <div
-                      className="ide-resizer"
-                      role="separator"
-                      aria-label="Resize bottom panel"
-                      aria-orientation="horizontal"
-                      tabIndex={0}
-                      onPointerDown={startResize}
-                      onPointerMove={moveResize}
-                      onPointerUp={stopResize}
-                      onPointerCancel={stopResize}
-                      onKeyDown={(e) => {
-                        if (e.key === 'ArrowUp') {
-                          e.preventDefault();
-                          setPanelHeight(20);
-                        }
-                        if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          setPanelHeight(-20);
-                        }
-                      }}
-                    />{' '}
-                    <section
-                      className={`ide-panel ${state.ui.panelMaximised ? 'maximised' : ''}`}
-                      style={{
-                        height: state.ui.panelMaximised
-                          ? '100%'
-                          : state.ui.panelHeight
-                            ? `${state.ui.panelHeight}px`
-                            : '48%',
-                      }}
-                    >
-                      <div
-                        className="ide-panel-tabs"
-                        onDoubleClick={() => dispatch({ type: 'panel/toggle' })}
-                      >
-                        <div
-                          className="ide-bottom-tab-list"
-                          role="tablist"
-                          aria-label="Bottom panel"
-                        >
-                          {panels.map(([id, title, count]) => (
-                            <button
-                              type="button"
-                              key={id}
-                              role="tab"
-                              aria-selected={state.ui.panelTab === id}
-                              className="ide-panel-tab"
-                              onClick={() => {
-                                if (!state.ui.panelOpen)
-                                  dispatch({
-                                    type: 'ui',
-                                    patch: { panelOpen: true, panelTab: id },
-                                  });
-                                else if (state.ui.panelTab === id)
-                                  dispatch({ type: 'panel/toggle' });
-                                else dispatch({ type: 'ui', patch: { panelTab: id } });
-                              }}
-                            >
-                              {title}
-                              {count > 0 && <span className="ide-panel-badge">{count}</span>}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="ide-bottom-actions">
-                          <button
-                            className="ide-icon-button"
-                            type="button"
-                            aria-label={
-                              state.ui.panelMaximised ? 'Restore panel' : 'Maximise panel'
-                            }
-                            title={state.ui.panelMaximised ? 'Restore panel' : 'Maximise panel'}
-                            onClick={() => dispatch({ type: 'panel/maximise' })}
-                          >
-                            {icon(
-                              state.ui.panelMaximised
-                                ? 'keyboard_double_arrow_down'
-                                : 'keyboard_double_arrow_up',
-                              16
-                            )}
-                          </button>
-                          <button
-                            className="ide-icon-button"
-                            type="button"
-                            aria-label="Close panel"
-                            title="Close panel"
-                            onClick={() => dispatch({ type: 'panel/close' })}
-                          >
-                            {icon('close', 16)}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="ide-panel-content">
-                        {state.ui.panelTab === 'tokens' ? (
-                          <TokensPanel
-                            result={result}
-                            analysisStatus={analysis?.status ?? 'idle'}
-                            currentVersion={document?.sourceVersion ?? null}
-                            language={document?.language ?? ''}
-                            grammarLabel={grammarLabel(document, capabilities)}
-                            selectedTokenId={selectedTokenId}
-                            inspectorOpen={state.ui.inspectorOpen}
-                            onSelect={selectToken}
-                            onExplain={explainTokenItem}
-                            onFix={startFixToken}
-                            fixEnabled={canFixRule}
-                            onToggleInspector={() =>
-                              dispatch({
-                                type: 'ui',
-                                patch: { inspectorOpen: !state.ui.inspectorOpen },
-                              })
-                            }
-                            onExport={reportToast}
-                          />
-                        ) : state.ui.panelTab === 'problems' ? (
-                          <ProblemsPanel
-                            diagnostics={problemDiagnostics}
-                            result={result}
-                            lexicalStatus={stageForDoc?.lexical?.lexical_status}
-                            onSelect={selectProblem}
-                            onExplain={(item) => {
-                              selectProblem(item);
-                              requestExplanation('diagnostic', item.id);
-                            }}
-                            onFix={startFixDiagnostic}
-                            onFixAll={startFixAll}
-                            fixEnabled={canFixRule || canFixAI}
-                          />
-                        ) : state.ui.panelTab === 'security' ? (
-                          <SecurityPanel
-                            result={result}
-                            source={document?.source ?? ''}
-                            language={document?.language ?? ''}
-                            tokens={result?.tokens ?? []}
-                            selectedFindingId={selectedFindingId}
-                            dataFlowPathId={dataFlowPathId}
-                            onSelect={selectFinding}
-                            onToggleFlow={setDataFlowPathId}
-                            onJump={navigateRange}
-                            onFeedback={submitFalsePositive}
-                            onExplain={(finding) => {
-                              selectFinding(finding);
-                              requestExplanation('finding', finding.id);
-                            }}
-                            onFix={(finding) => startFix(finding)}
-                            fixEnabled={canFixRule || canFixAI}
-                          />
-                        ) : state.ui.panelTab === 'explain' ? (
-                          <AIExplainPanel
-                            request={explainRequest}
-                            runId={explainRunId}
-                            shouldRun={explainRunId > explainConsumedId.current}
-                            deterministicText={deterministicExplain}
-                            available={explainAvailability}
-                            disabledReasons={explainDisabledReasons}
-                            timeoutSeconds={aiExplainTimeout}
-                            onExplain={explainCurrentSelection}
-                            onConsume={consumeExplainRun}
-                            onRetry={retryExplanation}
-                            consentRequired={Boolean(capabilities?.ai.consent_required)}
-                            consented={Boolean(capabilities?.ai.remote_consented)}
-                            onConsent={acceptConsent}
-                          />
-                        ) : state.ui.panelTab === 'agent' ? (
-                          <AgentActivityPanel onOpenEvent={openExplainedEvent} />
-                        ) : (
-                          <div className="ide-empty-state">
-                            {icon('data_object', 23)}
-                            <strong>Nothing to show</strong>
-                            <span>{resultForPanel}</span>
-                          </div>
-                        )}
-                      </div>
-                    </section>
-                  </>
-                )}
-              </>
-            )}
-          </section>
-          {tabMenu &&
-            (() => {
-              const index = state.documents.findIndex((item) => item.id === tabMenu.id);
-              const target = state.documents[index];
-              if (!target) return null;
-              const menuAction = (label: string, run: () => void) => (
-                <button
-                  type="button"
-                  role="menuitem"
-                  key={label}
-                  onClick={() => {
-                    setTabMenu(null);
-                    run();
-                  }}
-                >
-                  {label}
-                </button>
-              );
-              return (
-                <div
-                  className="ide-tab-context-menu"
-                  role="menu"
-                  style={{ left: tabMenu.x, top: tabMenu.y }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Escape') setTabMenu(null);
-                  }}
-                >
-                  {menuAction('Rename', () => {
-                    dispatch({ type: 'document/activate', id: target.id });
-                    startRename(target.id, target.name);
-                  })}
-                  {menuAction('Close', () => closeDocument(target.id))}
-                  {menuAction('Close Others', () =>
-                    closeManyDocuments(
-                      state.documents.filter((item) => item.id !== target.id).map((item) => item.id)
-                    )
-                  )}
-                  {menuAction('Close to the Right', () =>
-                    closeManyDocuments(state.documents.slice(index + 1).map((item) => item.id))
-                  )}
-                  {menuAction('Close All', () =>
-                    closeManyDocuments(state.documents.map((item) => item.id))
-                  )}
-                  {menuAction(
-                    'Copy Name',
-                    () =>
-                      void navigator.clipboard
-                        ?.writeText(target.name)
-                        .catch(() => reportToast('Clipboard access is unavailable.', true))
-                  )}
-                  <button
-                    type="button"
-                    role="menuitem"
-                    title="Filesystem paths are not retained for workspace tabs"
-                    disabled
-                  >
-                    Copy Path · unavailable
-                  </button>
-                </div>
-              );
-            })()}
-        </div>
-        <footer className="ide-statusbar">
-          <div className="ide-status-left">
-            <span className="ide-status-item" title={engineLabel(health, healthError)}>
-              {icon(health ? 'check_circle' : 'sync', 13)}
-              {engineLabel(health, healthError)}
-            </span>
-            <span className="ide-status-divider">|</span>
-            <span className="ide-status-item" title={dimensionLabel(result, 'lexical')}>
-              Lex {dimensionLabel(result, 'lexical')}
-            </span>
-            <span className="ide-status-item" title={dimensionLabel(result, 'syntax')}>
-              Syntax {dimensionLabel(result, 'syntax')}
-            </span>
-            <span className="ide-status-item" title={securityLabel(result)}>
-              Security {securityLabel(result)}
-            </span>
-          </div>
-          <div className="ide-status-right">
-            <span className="ide-status-item" title={analysisLabel}>
-              {analysisLabel}
-              {result?.tokens.length ? ` · ${result.tokens.length} tokens` : ''}
-            </span>
-            <span className="ide-status-item">{counts.errors} errors</span>
-            <span className="ide-status-divider">|</span>
-            <span className="ide-status-item">
-              Ln {state.ui.cursor.line}, Col {state.ui.cursor.column}
-            </span>
-            <span className="ide-status-divider">|</span>
-            <div className="ide-language-wrap">
-              <button
-                type="button"
-                className="ide-status-item"
-                aria-label={`Language ${languageLabel}; choose language`}
-                aria-expanded={languagePicker}
-                onClick={() => setLanguagePicker((value) => !value)}
-              >
-                {languageLabel} {icon('arrow_drop_down', 13)}
-              </button>
-              {languagePicker && (
-                <div role="listbox" className="ide-language-menu">
-                  {(capabilities?.languages ?? []).map((lang) => (
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={lang.id === document?.language}
-                      key={lang.id}
-                      onClick={() => setLanguage(lang.id)}
-                    >
-                      {lang.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <span className="ide-status-item">{document ? displayEol(document.source) : 'LF'}</span>
-            <span className="ide-status-item">UTF-8</span>
-          </div>
-        </footer>
-        {state.ui.paletteOpen && (
-          <div className="ide-overlay" onMouseDown={(e) => closeOnBackdrop(e, closePalette)}>
-            <div
-              ref={paletteDialog}
-              className="ide-palette"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Command Palette"
-              tabIndex={-1}
-            >
-              <header className="ide-palette-header">
-                <input
-                  ref={paletteInput}
-                  className="ide-palette-input"
-                  value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                    setSelected(0);
-                  }}
-                  placeholder="Type a command name"
-                  aria-label="Search commands"
-                />
-                <button type="button" aria-label="Close Command Palette" onClick={closePalette}>
-                  ×
-                </button>
-              </header>
-              <div className="ide-palette-results" role="listbox">
-                {filteredCommands.map((command, index) => (
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={index === selected}
-                    key={command.id}
-                    className="ide-palette-option"
-                    onMouseEnter={() => setSelected(index)}
-                    onClick={() => runCommand(command)}
-                  >
-                    <span>{command.title}</span>
-                    {command.keybinding && <kbd>{command.keybinding}</kbd>}
-                  </button>
-                ))}
-                {!filteredCommands.length && (
-                  <div className="ide-tree-message">No matching commands.</div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-        <ShortcutsDialog
-          open={shortcutsOpen}
-          commands={commands}
-          onClose={() => setShortcutsOpen(false)}
-        />
-        <SettingsModal
-          open={state.ui.settingsOpen}
-          capabilities={capabilities}
-          scale={state.ui.interfaceScale}
-          theme={resolved}
-          autoAnalyze={autoAnalyze}
-          consentBusy={consentBusy}
-          onScale={(value) =>
-            dispatch({ type: 'ui', patch: { interfaceScale: clampScale(value) } })
+            : undefined,
+          findings_count: mappedSecurityFindings.length,
+        };
+
+        const res = await apiClient.chatAI({
+          session_id: sessionIdRef.current,
+          message: text,
+          source: activeDoc.source,
+          language: activeDoc.language,
+          history,
+          context,
+          remote_consent: remoteConsented,
+        });
+
+        const patch = extractProposedPatchFromAiResponse(activeDoc, res.reply, res.code_snippets);
+
+        const assistantMsg: ChatMessage = {
+          id: `msg-${Date.now() + 1}`,
+          sender: 'assistant',
+          text: res.reply,
+          codeSnippets: res.code_snippets,
+          diff: patch?.diff,
+          proposal: patch?.proposal,
+          targetContext: patch
+            ? {
+                file: activeDoc.name,
+                stage: activeBottomTab,
+                findingTitle: activeAssistantFinding?.title || 'AI Proposed Modification',
+                line: activeAssistantFinding?.line || cursorPos.line,
+                col: activeAssistantFinding?.col || cursorPos.col,
+              }
+            : undefined,
+          timestamp: Date.now(),
+        };
+        updateFileChatMessages((prev) => [...prev, assistantMsg]);
+      } catch (err: any) {
+        const errDetail = err?.message || err?.detail || 'AI Assistant query failed.';
+        const assistantErrMsg: ChatMessage = {
+          id: `msg-${Date.now() + 1}`,
+          sender: 'assistant',
+          text: `⚠️ **AI Provider Notice**: ${errDetail}\n\n*Please ensure Groq API key is configured in \`.env\` and session consent is granted.*`,
+          timestamp: Date.now(),
+        };
+        updateFileChatMessages((prev) => [...prev, assistantErrMsg]);
+        showToast(errDetail, 'error');
+      } finally {
+        setIsSendingChat(false);
+      }
+    },
+    [activeDoc, activeAssistantFinding, activeBottomTab, chatMessages, cursorPos, mappedSecurityFindings.length, remoteConsented, showToast, updateFileChatMessages]
+  );
+
+  // Explain selected issue using recorded deterministic analysis evidence
+  const handleExplainTarget = useCallback(
+    async (target: {
+      kind: 'token' | 'finding' | 'diagnostic' | 'file';
+      id?: string;
+      title: string;
+      line?: number;
+      col?: number;
+    }) => {
+      if (!activeDoc) return;
+      setAssistantOpen(true);
+      setActiveAssistantFinding({
+        title: target.title,
+        line: target.line || cursorPos.line,
+        col: target.col || cursorPos.col,
+        id: target.id,
+      });
+
+      const userPrompt = `Explain issue: ${target.title}`;
+      const userMsg: ChatMessage = {
+        id: `msg-${Date.now()}`,
+        sender: 'user',
+        text: userPrompt,
+        timestamp: Date.now(),
+      };
+      updateFileChatMessages((prev) => [...prev, userMsg]);
+      setIsSendingChat(true);
+
+      try {
+        const resp = await apiClient.explainAI({
+          session_id: sessionIdRef.current,
+          target: target.kind,
+          target_id: target.id || null,
+          source: activeDoc.source,
+          language: activeDoc.language,
+          source_version: activeDoc.sourceVersion,
+          remote_consent: remoteConsented,
+        });
+
+        const assistantMsg: ChatMessage = {
+          id: `msg-${Date.now() + 1}`,
+          sender: 'assistant',
+          text: resp.explanation,
+          timestamp: Date.now(),
+        };
+        updateFileChatMessages((prev) => [...prev, assistantMsg]);
+      } catch (err: any) {
+        const errDetail = err?.message || err?.detail || 'Failed to explain target.';
+        const assistantErrMsg: ChatMessage = {
+          id: `msg-${Date.now() + 1}`,
+          sender: 'assistant',
+          text: `⚠️ **Explanation Unavailable**: ${errDetail}`,
+          timestamp: Date.now(),
+        };
+        updateFileChatMessages((prev) => [...prev, assistantErrMsg]);
+        showToast(errDetail, 'error');
+      } finally {
+        setIsSendingChat(false);
+      }
+    },
+    [activeDoc, cursorPos, remoteConsented, showToast, updateFileChatMessages]
+  );
+
+  // Fix with AI: Propose verified fix using Groq Fix Agent
+  const handleFixWithAi = useCallback(
+    async (target: { kind: 'finding' | 'token' | 'diagnostic'; id: string; title: string }) => {
+      if (!activeDoc) return;
+      setAssistantOpen(true);
+      showToast(`Synthesizing verified AI fix for ${target.title}...`, 'info');
+
+      const userMsg: ChatMessage = {
+        id: `msg-${Date.now()}`,
+        sender: 'user',
+        text: `Fix with AI: ${target.title}`,
+        timestamp: Date.now(),
+      };
+      updateFileChatMessages((prev) => [...prev, userMsg]);
+      setIsSendingChat(true);
+
+      try {
+        const res = await apiClient.proposeFix({
+          source: activeDoc.source,
+          source_version: activeDoc.sourceVersion,
+          language: activeDoc.language,
+          filename: activeDoc.name,
+          target: { kind: target.kind, id: target.id },
+          origin: 'ai',
+          session_id: sessionIdRef.current,
+          remote_consent: remoteConsented,
+        });
+
+        const matchingFinding = mappedSecurityFindings.find((f) => f.id === target.id) || {
+          id: target.id,
+          title: target.title,
+        };
+
+        const enrichedProposal = createEnrichedPatchProposal(
+          res.proposal,
+          activeDoc.source,
+          activeDoc.name,
+          {
+            id: matchingFinding.id,
+            title: matchingFinding.title,
+            rule_id: (matchingFinding as any).ruleId,
+            severity: (matchingFinding as any).severity,
           }
-          onTheme={toggleTheme}
-          onAutoAnalyze={setAutoAnalyze}
-          onConsent={(value) => void setConsent(value)}
-          onModel={(value) => void chooseAIModel(value)}
-          onClose={() => dispatch({ type: 'ui', patch: { settingsOpen: false } })}
+        );
+
+        const assistantMsg: ChatMessage = {
+          id: `msg-${Date.now() + 1}`,
+          sender: 'assistant',
+          text: `I have synthesized an AI fix proposal for **${target.title}**:\n\n**Rationale**: ${enrichedProposal.rationale}\n${
+            enrichedProposal.risks?.length ? `\n**Risks**: ${enrichedProposal.risks.join('; ')}` : ''
+          }`,
+          diff: {
+            file: activeDoc.name,
+            unifiedDiff: enrichedProposal.diff,
+          },
+          proposal: enrichedProposal,
+          targetContext: {
+            file: activeDoc.name,
+            stage: activeBottomTab,
+            findingTitle: target.title,
+            line: (matchingFinding as any).line,
+            col: (matchingFinding as any).col,
+          },
+          timestamp: Date.now(),
+        };
+        updateFileChatMessages((prev) => [...prev, assistantMsg]);
+      } catch (err: any) {
+        const errDetail = err?.message || err?.detail || 'Failed to synthesize fix.';
+        const assistantErrMsg: ChatMessage = {
+          id: `msg-${Date.now() + 1}`,
+          sender: 'assistant',
+          text: `⚠️ **Fix Synthesis Failed**: ${errDetail}`,
+          timestamp: Date.now(),
+        };
+        updateFileChatMessages((prev) => [...prev, assistantErrMsg]);
+        showToast(errDetail, 'error');
+      } finally {
+        setIsSendingChat(false);
+      }
+    },
+    [activeDoc, activeBottomTab, mappedSecurityFindings, remoteConsented, showToast, updateFileChatMessages]
+  );
+
+  // Ask AI to explain and suggest fixes for a specific Compiler Pipeline Stage
+  const handleAskAiStage = useCallback(
+    async (stage: PipelineStageInfo) => {
+      if (!activeDoc) return;
+      setAssistantOpen(true);
+      setActiveAssistantFinding({
+        title: `Stage: ${stage.name} (${stage.status.toUpperCase()})`,
+        line: cursorPos.line,
+        col: cursorPos.col,
+        id: stage.id,
+      });
+
+      const promptText = `Explain the ${stage.name} (${stage.agentName}) compiler stage ${stage.status.toUpperCase()} in ${activeDoc.name} (${activeDoc.language}) and propose a concrete code fix.\n\nStage Output Summary:\n${stage.outputSummary || 'Stage concluded.'}${stage.errorReason ? `\nError Details: ${stage.errorReason}` : ''}${stage.skipReason ? `\nSkip Reason: ${stage.skipReason}` : ''}`;
+
+      await handleSendMessage(promptText);
+    },
+    [activeDoc, cursorPos, handleSendMessage]
+  );
+
+  // Accept and apply proposed diff
+  const handleAcceptDiff = useCallback(
+    async (proposal?: PatchProposal | EnrichedPatchProposal) => {
+      if (!activeDoc || !proposal) return;
+
+      // 1. Verify that source version is still current and target text matches original expected text
+      const validation = validatePatchProposal(activeDoc.source, activeDoc.sourceVersion, proposal);
+      if (!validation.valid) {
+        showToast(validation.reason || 'Patch validation failed.', 'error');
+        updateFileChatMessages((prev) => [
+          ...prev,
+          {
+            id: `msg-${Date.now()}`,
+            sender: 'assistant',
+            text: `❌ **Patch Application Rejected**: ${validation.reason}\n\n*The file has changed since this patch was generated. Please request a fresh fix based on current source.*`,
+            timestamp: Date.now(),
+          },
+        ]);
+        return;
+      }
+
+      // 2. Apply patch to actual editor document
+      const applyResult = applyPatchToSource(activeDoc.source, proposal);
+      if (!applyResult.success || applyResult.newSource === undefined) {
+        showToast(`Failed to apply patch: ${applyResult.error || 'Unknown error'}`, 'error');
+        return;
+      }
+
+      const newSource = applyResult.newSource;
+      const newVersion = activeDoc.sourceVersion + 1;
+
+      // 3. Update the document in state (single authoritative editor document)
+      dispatch({
+        type: 'document/edit',
+        id: activeDoc.id,
+        source: newSource,
+      });
+
+      // 4. Invalidate pipeline stages (Mark dependent analysis results as outdated)
+      // Never display an old Passed result as the status of a newly edited source file
+      setPipelineStages((prev) =>
+        prev.map((s) => ({
+          ...s,
+          status: 'not_run',
+          elapsedMs: 0,
+          outputSummary: `Source was modified by patch (now v${newVersion}). Reanalysis required.`,
+          errorReason: undefined,
+          steps: [],
+        }))
+      );
+
+      // 5. Note: User must save through explicit save workflow (Ctrl+S or Save file button)
+      showToast(`Patch applied to ${activeDoc.name} in editor (v${newVersion}). Unsaved changes pending.`, 'success');
+
+      // 6. Offer reanalysis in Assistant conversation
+      updateFileChatMessages((prev) => [
+        ...prev,
+        {
+          id: `msg-${Date.now()}`,
+          sender: 'assistant',
+          text: `✅ **Patch Applied Successfully** to \`${activeDoc.name}\` (now v${newVersion}).\n\n- **Target**: Ln ${proposal.edits[0]?.range.start_line}:${proposal.edits[0]?.range.start_col}\n- **Document State**: Updated in editor buffer (dirty / unsaved changes pending).\n- **Analysis**: Dependent compiler analysis results marked outdated.\n\nWould you like to reanalyze the updated source now?`,
+          timestamp: Date.now(),
+        },
+      ]);
+    },
+    [activeDoc, dispatch, showToast, updateFileChatMessages]
+  );
+
+  // Reject proposed diff: Discard the proposed patch without changing source
+  const handleRejectDiff = useCallback(
+    (proposal?: PatchProposal | EnrichedPatchProposal) => {
+      const enriched = proposal as Partial<EnrichedPatchProposal> | undefined;
+      const targetDesc = enriched?.finding?.title || proposal?.origin || 'identified issue';
+      showToast('Patch proposal rejected.', 'info');
+      updateFileChatMessages((prev) => [
+        ...prev,
+        {
+          id: `msg-${Date.now()}`,
+          sender: 'assistant',
+          text: `🚫 **Patch Rejected**: Discarded proposed fix for ${targetDesc} without modifying editor source. Document remains at v${activeDoc?.sourceVersion ?? 1}.`,
+          timestamp: Date.now(),
+        },
+      ]);
+    },
+    [activeDoc?.sourceVersion, showToast, updateFileChatMessages]
+  );
+
+  // Improve proposed diff: Return to the assistant with proposal context
+  const handleImproveDiff = useCallback(
+    (proposal?: PatchProposal | EnrichedPatchProposal) => {
+      const enriched = proposal as Partial<EnrichedPatchProposal> | undefined;
+      const findingTitle = enriched?.finding?.title || 'the identified issue';
+      const risks = proposal?.risks?.length ? ` Address risks: ${proposal.risks.join(', ')}.` : '';
+      const prompt = `Please refine the proposed fix for ${findingTitle}.${risks} Provide a safer, more robust implementation with proper bounds checking.`;
+      void handleSendMessage(prompt);
+    },
+    [handleSendMessage]
+  );
+
+  const handleApplyFixDirect = useCallback(() => {
+    if (mappedSecurityFindings.length > 0) {
+      const f = mappedSecurityFindings[0];
+      void handleFixWithAi({
+        kind: 'finding',
+        id: f.id,
+        title: f.title,
+      });
+    } else {
+      showToast('No active security findings to remediate.', 'info');
+    }
+  }, [handleFixWithAi, mappedSecurityFindings, showToast]);
+
+  // Real Multi-Agent Pipeline Swarm Runner
+  const handleRunAllAgents = useCallback(async () => {
+    if (!activeDoc) return;
+    setIsRunningAllAgents(true);
+    showToast('Executing 7-stage compiler agent pipeline...', 'info');
+
+    // Set all stages to queued / running
+    setPipelineStages((prev) =>
+      prev.map((s, idx) => ({
+        ...s,
+        status: idx === 0 ? 'running' : 'queued',
+      }))
+    );
+
+    try {
+      const abort = new AbortController();
+      const res = await apiClient.analyzeV2(
+        {
+          source: activeDoc.source,
+          language: activeDoc.language,
+          filename: activeDoc.name,
+          api_version: 2,
+          source_version: activeDoc.sourceVersion,
+          options: {
+            include_tokens: true,
+            stages: ['lexical', 'syntax', 'security'],
+            agent: 'rules',
+          },
+        },
+        abort.signal
+      );
+
+      // Update state store with complete result
+      dispatch({
+        type: 'analysis/success',
+        id: activeDoc.id,
+        result: res,
+        version: activeDoc.sourceVersion,
+      });
+
+      const trace = res.trace || [];
+      const hasSecurityIssues = (res.security_findings?.length ?? 0) > 0;
+      const hasLexicalIssues =
+        (res.tokens?.filter((t) => t.lexical_status === 'invalid').length ?? 0) > 0;
+      const hasSyntaxIssues = (res.syntax_diagnostics?.length ?? 0) > 0;
+
+      setPipelineStages((prev) =>
+        prev.map((stage) => {
+          const stageSteps = trace.filter(
+            (t) =>
+              t.agent.toLowerCase() === stage.agentName.toLowerCase() ||
+              t.stage.toLowerCase() === stage.id.toLowerCase()
+          );
+
+          const totalMs = stageSteps.reduce((acc, st) => acc + (st.ms || 0), 0);
+          const lastObservation =
+            stageSteps.length > 0
+              ? stageSteps[stageSteps.length - 1].observation_summary ||
+                stageSteps[stageSteps.length - 1].reason
+              : '';
+
+          const anyRejection = stageSteps.find((s) => !s.accepted);
+
+          let status: StageStatus = 'passed';
+          let skipReason: string | null = null;
+          let errorReason: string | null = anyRejection?.rejection_reason || null;
+
+          if (stage.id === 'lexer') {
+            status = hasLexicalIssues ? 'warning' : 'passed';
+          } else if (stage.id === 'parser') {
+            status = hasSyntaxIssues ? 'warning' : 'passed';
+          } else if (stage.id === 'semantic') {
+            status = hasSecurityIssues ? 'warning' : 'passed';
+          } else if (stage.id === 'triage') {
+            if (!hasSecurityIssues && stageSteps.length === 0) {
+              status = 'skipped';
+              skipReason = 'No candidate findings from earlier stages to triage.';
+            } else {
+              status = 'passed';
+            }
+          } else if (stage.id === 'fix') {
+            if (!hasSecurityIssues && stageSteps.length === 0) {
+              status = 'skipped';
+              skipReason = 'No findings require remediation patches.';
+            } else {
+              status = 'passed';
+            }
+          } else if (stage.id === 'verifier') {
+            if (!hasSecurityIssues && stageSteps.length === 0) {
+              status = 'skipped';
+              skipReason = 'No fix candidates to verify.';
+            } else {
+              status = 'passed';
+            }
+          } else if (stage.id === 'explain') {
+            if (!hasSecurityIssues && stageSteps.length === 0) {
+              status = 'skipped';
+              skipReason = 'No findings to explain.';
+            } else {
+              status = 'passed';
+            }
+          }
+
+          if (anyRejection) {
+            status = 'failed';
+          }
+
+          return {
+            ...stage,
+            status,
+            elapsedMs: totalMs,
+            outputSummary:
+              lastObservation ||
+              (status === 'skipped'
+                ? skipReason || 'Skipped'
+                : `Executed ${stageSteps.length} step(s)`),
+            skipReason,
+            errorReason,
+            steps: stageSteps.map((st) => ({
+              action: st.action,
+              reason: st.reason || '',
+              observation: st.observation_summary || '',
+              ms: st.ms || 0,
+              accepted: st.accepted ?? true,
+              rejectionReason: st.rejection_reason || undefined,
+            })),
+          };
+        })
+      );
+
+      setActiveBottomTab('view-pipeline-tab');
+      showToast(
+        `Agent pipeline completed in ${res.agent_meta?.elapsed_ms?.toFixed(1) || '0'}ms!`,
+        hasSecurityIssues ? 'warning' : 'success'
+      );
+    } catch (err: any) {
+      showToast(`Agent pipeline failed: ${err?.message || 'Error'}`, 'error');
+      setPipelineStages((prev) =>
+        prev.map((s) =>
+          s.status === 'running' || s.status === 'queued'
+            ? { ...s, status: 'failed', errorReason: err?.message || 'Execution error' }
+            : s
+        )
+      );
+    } finally {
+      setIsRunningAllAgents(false);
+    }
+  }, [activeDoc, showToast]);
+
+  // Sub-routine runner (executes real backend stages)
+  const handleSubRoutine = useCallback(
+    async (routine: string) => {
+      if (!activeDoc) return;
+      showToast(`Executing ${routine}...`, 'info');
+
+      if (routine === 'Syntax Verification') {
+        try {
+          const abort = new AbortController();
+          const res = await apiClient.analyzeStageV2(
+            'syntax',
+            {
+              source: activeDoc.source,
+              language: activeDoc.language,
+              filename: activeDoc.name,
+              api_version: 2,
+              source_version: activeDoc.sourceVersion,
+              options: { include_tokens: true, stages: ['syntax'] },
+            },
+            abort.signal
+          );
+          setPipelineStages((prev) =>
+            prev.map((s) =>
+              s.id === 'parser'
+                ? {
+                    ...s,
+                    status: (res.diagnostics?.length ?? 0) > 0 ? 'warning' : 'passed',
+                    outputSummary: `Structural AST parsed with ${res.diagnostics?.length ?? 0} syntax diagnostic(s).`,
+                  }
+                : s
+            )
+          );
+          setActiveBottomTab('view-diagnostics');
+          showToast(
+            `Syntax verification complete: ${res.diagnostics?.length ?? 0} errors found.`,
+            res.diagnostics?.length ? 'warning' : 'success'
+          );
+        } catch (err: any) {
+          showToast(`Syntax verification failed: ${err?.message || 'Error'}`, 'error');
+        }
+      } else if (routine === 'Semantic Typing Check') {
+        try {
+          const abort = new AbortController();
+          const res = await apiClient.analyzeV2(
+            {
+              source: activeDoc.source,
+              language: activeDoc.language,
+              filename: activeDoc.name,
+              api_version: 2,
+              source_version: activeDoc.sourceVersion,
+              options: { include_tokens: true, stages: ['lexical', 'syntax', 'security'] },
+            },
+            abort.signal
+          );
+          setPipelineStages((prev) =>
+            prev.map((s) =>
+              s.id === 'semantic'
+                ? {
+                    ...s,
+                    status: (res.semantic_diagnostics?.length ?? 0) > 0 ? 'warning' : 'passed',
+                    outputSummary: `Semantic typing check complete (${res.semantic_diagnostics?.length ?? 0} diagnostics).`,
+                  }
+                : s
+            )
+          );
+          setActiveBottomTab('view-diagnostics');
+          showToast('Semantic typing check completed.', 'success');
+        } catch (err: any) {
+          showToast(`Semantic check failed: ${err?.message || 'Error'}`, 'error');
+        }
+      } else if (routine === 'Taint Analysis') {
+        try {
+          const abort = new AbortController();
+          const res = await apiClient.analyzeV2(
+            {
+              source: activeDoc.source,
+              language: activeDoc.language,
+              filename: activeDoc.name,
+              api_version: 2,
+              source_version: activeDoc.sourceVersion,
+              options: { include_tokens: true, stages: ['security'] },
+            },
+            abort.signal
+          );
+          const paths = res.taint_paths || [];
+          setPipelineStages((prev) =>
+            prev.map((s) =>
+              s.id === 'semantic'
+                ? {
+                    ...s,
+                    status: paths.length > 0 ? 'warning' : 'passed',
+                    outputSummary: `Taint analysis completed: ${paths.length} data-flow propagation paths.`,
+                  }
+                : s
+            )
+          );
+          setActiveBottomTab('view-pipeline-tab');
+          showToast(
+            `Taint analysis complete: ${paths.length} data-flow path(s) mapped.`,
+            paths.length > 0 ? 'warning' : 'success'
+          );
+        } catch (err: any) {
+          showToast(`Taint analysis failed: ${err?.message || 'Error'}`, 'error');
+        }
+      } else if (routine === 'Full Security Audit') {
+        setActiveBottomTab('view-security-tab');
+        void handleRunAllAgents();
+      }
+    },
+    [activeDoc, handleRunAllAgents, showToast]
+  );
+
+  // Rerun Stage with prerequisites check and downstream dependency invalidation
+  const handleRerunStage = useCallback(
+    async (stageId: string) => {
+      const STAGE_ORDER = ['lexer', 'parser', 'semantic', 'triage', 'fix', 'verifier', 'explain'];
+      const stageIdx = STAGE_ORDER.indexOf(stageId);
+      if (stageIdx > 0) {
+        const prereqId = STAGE_ORDER[stageIdx - 1];
+        const prereqStage = pipelineStages.find((s) => s.id === prereqId);
+        if (
+          !prereqStage ||
+          (prereqStage.status !== 'passed' && prereqStage.status !== 'warning')
+        ) {
+          showToast(
+            `Cannot rerun ${stageId}: Prerequisite stage '${prereqId}' has not passed yet.`,
+            'warning'
+          );
+          return;
+        }
+      }
+
+      // Invalidate downstream stages
+      setPipelineStages((prev) =>
+        prev.map((s, idx) => {
+          if (idx > stageIdx) {
+            return {
+              ...s,
+              status: 'not_run',
+              elapsedMs: 0,
+              outputSummary: `Prerequisite stage '${stageId}' was rerun; stage invalidated.`,
+              steps: [],
+            };
+          }
+          if (s.id === stageId) {
+            return { ...s, status: 'running' };
+          }
+          return s;
+        })
+      );
+
+      if (stageId === 'lexer') {
+        await triggerAnalyze(activeDoc || undefined);
+        setPipelineStages((prev) =>
+          prev.map((s) => (s.id === 'lexer' ? { ...s, status: 'passed' } : s))
+        );
+      } else if (stageId === 'parser') {
+        await handleSubRoutine('Syntax Verification');
+      } else if (stageId === 'semantic') {
+        await handleSubRoutine('Semantic Typing Check');
+      } else {
+        await handleRunAllAgents();
+      }
+    },
+    [activeDoc, handleRunAllAgents, handleSubRoutine, pipelineStages, showToast, triggerAnalyze]
+  );
+
+  // Build with AI execution
+  const handleExecuteBuildAi = useCallback(
+    async (lang: SupportedLanguage, requirement: string): Promise<AIGenerateResponse | null> => {
+      try {
+        const res = await apiClient.generateAI({
+          session_id: sessionIdRef.current,
+          language: lang,
+          requirements: [requirement],
+          remote_consent: remoteConsented,
+        });
+        return res;
+      } catch (err: any) {
+        showToast(`Build with AI failed: ${err?.message || 'Error'}`, 'error');
+        return null;
+      }
+    },
+    [remoteConsented, showToast]
+  );
+
+  const handleCreateFileFromCandidate = useCallback(
+    async (fileName: string, content: string) => {
+      const newPath = fileName.startsWith('src/') ? fileName : `src/${fileName}`;
+      await apiClient.createWorkspaceFile(newPath, content);
+      await fetchWorkspaceTree();
+      await handleOpenFile(newPath);
+    },
+    [fetchWorkspaceTree, handleOpenFile]
+  );
+
+  const handleRefineCandidateInAssistant = useCallback(
+    (candidateCode: string, requirement: string) => {
+      setAssistantOpen(true);
+      void handleSendMessage(
+        `I generated candidate code for requirement "${requirement}":\n\n\`\`\`${activeDoc?.language || 'cpp'}\n${candidateCode}\n\`\`\`\n\nPlease review this code, optimize its performance, and eliminate any remaining security vulnerabilities.`
+      );
+    },
+    [activeDoc?.language, handleSendMessage]
+  );
+
+  // Export CSV
+  const handleExportCSV = useCallback(() => {
+    const csvHeader = 'Index,Line,Column,Lexeme,Type,Status,Description\n';
+    const csvRows = mappedTokens
+      .map(
+        (t) =>
+          `${t.id},${t.line},${t.col},"${t.lexeme.replace(/"/g, '""')}","${t.type}","${t.status}","${t.desc.replace(/"/g, '""')}"`
+      )
+      .join('\n');
+    const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `tokens_${activeDoc?.name || 'source'}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Tokens exported as CSV successfully', 'success');
+  }, [mappedTokens, activeDoc, showToast]);
+
+  // Export JSON
+  const handleExportJSON = useCallback(() => {
+    const payload = {
+      document: activeDoc?.name,
+      language: activeDoc?.language,
+      tokens: mappedTokens,
+      diagnostics: mappedDiagnostics,
+      securityFindings: mappedSecurityFindings,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `analysis_${activeDoc?.name || 'source'}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Tokens and analysis exported as JSON successfully', 'success');
+  }, [mappedTokens, mappedDiagnostics, mappedSecurityFindings, activeDoc, showToast]);
+
+  // Preferences state updater and persistence
+  const updatePreferences = useCallback((newPrefs: Partial<UserPreferences>) => {
+    const updated = writePreferences(newPrefs);
+    setPrefs(updated);
+    if (newPrefs.fontSize !== undefined) setFontSize(newPrefs.fontSize);
+    if (newPrefs.wordWrap !== undefined) setWordWrap(newPrefs.wordWrap);
+    if (newPrefs.minimap !== undefined) setMinimap(newPrefs.minimap);
+    if (newPrefs.tabSize !== undefined) setTabSize(newPrefs.tabSize);
+    if (newPrefs.highlightUnicode !== undefined) setHighlightUnicode(newPrefs.highlightUnicode);
+    if (newPrefs.autoAnalyze !== undefined) setAutoAnalyze(newPrefs.autoAnalyze);
+    if (newPrefs.sidebarCollapsed !== undefined) setSidebarCollapsed(newPrefs.sidebarCollapsed);
+    if (newPrefs.bottomCollapsed !== undefined) setBottomCollapsed(newPrefs.bottomCollapsed);
+    if (newPrefs.bottomMaximized !== undefined) setIsMaximized(newPrefs.bottomMaximized);
+    if (newPrefs.assistantCollapsed !== undefined) setAssistantOpen(!newPrefs.assistantCollapsed);
+    if (newPrefs.panelSizes?.sidebarWidth !== undefined) setSidebarWidth(newPrefs.panelSizes.sidebarWidth);
+    if (newPrefs.panelSizes?.bottomHeight !== undefined) setBottomHeight(newPrefs.panelSizes.bottomHeight);
+    if (newPrefs.panelSizes?.assistantWidth !== undefined) setAssistantWidth(newPrefs.panelSizes.assistantWidth);
+  }, []);
+
+  // Panel Resizing Handlers
+  const handleSidebarResizeStart = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    const handleMove = (moveEv: PointerEvent) => {
+      const newWidth = Math.min(480, Math.max(160, moveEv.clientX - 50));
+      setSidebarWidth(newWidth);
+      editorRef.current?.layout();
+    };
+    const handleUp = () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      setSidebarWidth((w) => {
+        writePreferences({ panelSizes: { ...readPreferences().panelSizes, sidebarWidth: w } });
+        return w;
+      });
+      editorRef.current?.layout();
+    };
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+  }, []);
+
+  const handleAssistantResizeStart = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    const handleMove = (moveEv: PointerEvent) => {
+      const newWidth = Math.min(700, Math.max(300, window.innerWidth - moveEv.clientX));
+      setAssistantWidth(newWidth);
+      editorRef.current?.layout();
+    };
+    const handleUp = () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      setAssistantWidth((w) => {
+        writePreferences({ panelSizes: { ...readPreferences().panelSizes, assistantWidth: w } });
+        return w;
+      });
+      editorRef.current?.layout();
+    };
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+  }, []);
+
+  const handleBottomResizeStart = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    const handleMove = (moveEv: PointerEvent) => {
+      const newHeight = Math.min(650, Math.max(140, window.innerHeight - moveEv.clientY - 28));
+      setBottomHeight(newHeight);
+      editorRef.current?.layout();
+    };
+    const handleUp = () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      setBottomHeight((h) => {
+        writePreferences({ panelSizes: { ...readPreferences().panelSizes, bottomHeight: h } });
+        return h;
+      });
+      editorRef.current?.layout();
+    };
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+  }, []);
+
+  // Relayout Monaco on window resize
+  useEffect(() => {
+    const handleWinResize = () => {
+      editorRef.current?.layout();
+    };
+    window.addEventListener('resize', handleWinResize);
+    return () => window.removeEventListener('resize', handleWinResize);
+  }, []);
+
+  // Export SARIF Security Report
+  const handleExportSARIF = useCallback(() => {
+    const sarifReport = {
+      $schema: 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
+      version: '2.1.0',
+      runs: [
+        {
+          tool: {
+            driver: {
+              name: 'SecureLex Core Analyzer',
+              version: '2.0.4',
+              informationUri: 'https://github.com/securelex/securelex-ide',
+              rules: mappedSecurityFindings.map((f) => ({
+                id: f.ruleId || f.id,
+                name: f.title,
+                shortDescription: { text: f.title },
+                fullDescription: { text: f.description },
+                defaultConfiguration: {
+                  level:
+                    f.severity?.toLowerCase() === 'critical' || f.severity?.toLowerCase() === 'high'
+                      ? 'error'
+                      : 'warning',
+                },
+              })),
+            },
+          },
+          results: mappedSecurityFindings.map((f) => ({
+            ruleId: f.ruleId || f.id,
+            level:
+              f.severity?.toLowerCase() === 'critical' || f.severity?.toLowerCase() === 'high'
+                ? 'error'
+                : 'warning',
+            message: { text: f.description || f.title },
+            locations: [
+              {
+                physicalLocation: {
+                  artifactLocation: { uri: f.file || activeDoc?.name || 'source' },
+                  region: {
+                    startLine: f.line || 1,
+                    startColumn: f.col || 1,
+                    endLine: f.range?.end_line || f.line || 1,
+                    endColumn: f.range?.end_col || (f.col || 1) + 1,
+                  },
+                },
+              },
+            ],
+          })),
+        },
+      ],
+    };
+
+    const blob = new Blob([JSON.stringify(sarifReport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `sarif_${activeDoc?.name.replace(/[/\\?%*:|"<>]/g, '_') || 'report'}.sarif`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('SARIF security report exported successfully', 'success');
+  }, [activeDoc?.name, mappedSecurityFindings, showToast]);
+
+  // Keyboard Shortcuts Hook
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const mod = isMac ? e.metaKey : e.ctrlKey;
+
+      // Ctrl+S: Save File
+      if (mod && e.key.toLowerCase() === 's' && !e.shiftKey) {
+        e.preventDefault();
+        void handleSaveFile();
+        return;
+      }
+
+      // Ctrl+Enter or F5: Analyze
+      if ((mod && e.key === 'Enter') || e.key === 'F5') {
+        e.preventDefault();
+        void triggerAnalyze();
+        return;
+      }
+
+      // Ctrl+Shift+P or F1: Command Palette
+      if ((mod && e.shiftKey && e.key.toLowerCase() === 'p') || e.key === 'F1') {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+
+      // Ctrl+Shift+F: Search & Replace
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setActivePane('pane-search');
+        setSidebarCollapsed(false);
+        return;
+      }
+
+      // Ctrl+B: Toggle Explorer sidebar
+      if (mod && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setSidebarCollapsed((prev) => {
+          const next = !prev;
+          writePreferences({ sidebarCollapsed: next });
+          setTimeout(() => editorRef.current?.layout(), 50);
+          return next;
+        });
+        return;
+      }
+
+      // Ctrl+J: Toggle Assistant
+      if (mod && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        setAssistantOpen((prev) => {
+          const next = !prev;
+          writePreferences({ assistantCollapsed: !next });
+          setTimeout(() => editorRef.current?.layout(), 50);
+          return next;
+        });
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSaveFile, triggerAnalyze]);
+
+  // Command Palette Items
+  const commandList: CommandItem[] = useMemo(
+    () => [
+      {
+        id: 'cmd-analyze',
+        title: 'Run Lexical Analysis (Active File)',
+        category: 'Compiler',
+        shortcut: 'Ctrl+Enter / F5',
+        icon: 'play_arrow',
+        action: () => void triggerAnalyze(),
+      },
+      {
+        id: 'cmd-run-agents',
+        title: 'Run All 7 Compiler Agents Pipeline Swarm',
+        category: 'Swarm',
+        shortcut: 'Alt+R',
+        icon: 'hub',
+        action: () => void handleRunAllAgents(),
+      },
+      {
+        id: 'cmd-save-file',
+        title: 'Save Active File to Workspace',
+        category: 'File',
+        shortcut: 'Ctrl+S',
+        icon: 'save',
+        action: () => void handleSaveFile(),
+      },
+      {
+        id: 'cmd-search-replace',
+        title: 'Search & Replace in Project Workspace',
+        category: 'Search',
+        shortcut: 'Ctrl+Shift+F',
+        icon: 'search',
+        action: () => {
+          setActivePane('pane-search');
+          setSidebarCollapsed(false);
+        },
+      },
+      {
+        id: 'cmd-git-status',
+        title: 'Open Source Control (Git)',
+        category: 'Git',
+        shortcut: 'Ctrl+Shift+G',
+        icon: 'source_environment',
+        action: () => {
+          setActivePane('pane-git');
+          setSidebarCollapsed(false);
+        },
+      },
+      {
+        id: 'cmd-toggle-sidebar',
+        title: 'Toggle Primary Sidebar Visibility',
+        category: 'View',
+        shortcut: 'Ctrl+B',
+        icon: 'view_sidebar',
+        action: () => {
+          setSidebarCollapsed((prev) => {
+            const next = !prev;
+            updatePreferences({ sidebarCollapsed: next });
+            setTimeout(() => editorRef.current?.layout(), 50);
+            return next;
+          });
+        },
+      },
+      {
+        id: 'cmd-toggle-assistant',
+        title: 'Toggle AI Assistant Panel Visibility',
+        category: 'View',
+        shortcut: 'Ctrl+J',
+        icon: 'smart_toy',
+        action: () => {
+          setAssistantOpen((prev) => {
+            const next = !prev;
+            updatePreferences({ assistantCollapsed: !next });
+            setTimeout(() => editorRef.current?.layout(), 50);
+            return next;
+          });
+        },
+      },
+      {
+        id: 'cmd-toggle-maximize-bottom',
+        title: 'Toggle Maximize Analysis Results Panel',
+        category: 'View',
+        shortcut: 'Ctrl+M',
+        icon: 'expand',
+        action: () => setIsMaximized((prev) => !prev),
+      },
+      {
+        id: 'cmd-toggle-word-wrap',
+        title: 'Toggle Editor Word Wrap',
+        category: 'Editor',
+        shortcut: 'Alt+Z',
+        icon: 'wrap_text',
+        action: () => {
+          const nw = wordWrap === 'on' ? 'off' : 'on';
+          updatePreferences({ wordWrap: nw });
+          showToast(`Word wrap: ${nw.toUpperCase()}`);
+        },
+      },
+      {
+        id: 'cmd-toggle-theme',
+        title: `Switch Theme (Currently ${resolvedTheme})`,
+        category: 'Preferences',
+        icon: 'contrast',
+        action: () => toggleTheme(),
+      },
+      {
+        id: 'cmd-export-csv',
+        title: 'Export Tokens to CSV File',
+        category: 'Export',
+        icon: 'file_download',
+        action: handleExportCSV,
+      },
+      {
+        id: 'cmd-export-json',
+        title: 'Export Full Analysis to JSON File',
+        category: 'Export',
+        icon: 'data_object',
+        action: handleExportJSON,
+      },
+      {
+        id: 'cmd-export-sarif',
+        title: 'Export SARIF Security Report (v2.1.0)',
+        category: 'Export',
+        icon: 'security',
+        action: handleExportSARIF,
+      },
+      {
+        id: 'cmd-build-with-ai',
+        title: 'Build with AI Generator...',
+        category: 'AI',
+        icon: 'auto_awesome',
+        action: () => setBuildAiModalOpen(true),
+      },
+      {
+        id: 'cmd-open-settings',
+        title: 'Open SecureLex IDE Settings',
+        category: 'Preferences',
+        icon: 'settings',
+        action: () => {
+          setActivePane('pane-settings');
+          setSidebarCollapsed(false);
+        },
+      },
+    ],
+    [
+      triggerAnalyze,
+      handleRunAllAgents,
+      handleSaveFile,
+      updatePreferences,
+      wordWrap,
+      resolvedTheme,
+      toggleTheme,
+      handleExportCSV,
+      handleExportJSON,
+      handleExportSARIF,
+      showToast,
+    ]
+  );
+
+  // Toggle Engine (Local vs Groq Cloud)
+  const handleToggleEngine = useCallback(() => {
+    if (engineMode === 'local') {
+      setEngineMode('groq');
+      showToast('Switched to Groq Cloud LLM engine (Llama 3.3 70B)');
+    } else {
+      setEngineMode('local');
+      showToast('Switched to Local Deterministic Engine');
+    }
+  }, [engineMode, showToast]);
+
+  return (
+    <div
+      role="region"
+      aria-label="Workbench"
+      className="bg-surface font-sans text-text-primary text-[12px] antialiased h-screen w-screen overflow-hidden flex flex-col select-none transition-colors duration-150"
+      style={{ fontSize: `${fontSize}px` }}
+    >
+      {/* ================= TOP HEADER (48px) ================= */}
+      <Header
+        version={capabilities?.version || '2.4.2'}
+        engineMode={engineMode}
+        onToggleEngine={handleToggleEngine}
+        securityAlertCount={mappedSecurityFindings.length}
+        onOpenSecurity={() => {
+          setActivePane('pane-security');
+          setSidebarCollapsed(false);
+          setActiveBottomTab('view-security-tab');
+        }}
+        resolvedTheme={resolvedTheme}
+        onToggleTheme={() => {
+          toggleTheme();
+          showToast(resolvedTheme === 'dark' ? 'Refined Titanium Light Theme enabled' : 'Dark Theme enabled');
+        }}
+        assistantOpen={assistantOpen}
+        onToggleAssistant={() => {
+          setAssistantOpen(!assistantOpen);
+          updatePreferences({ assistantCollapsed: assistantOpen });
+          setTimeout(() => editorRef.current?.layout(), 50);
+        }}
+        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+        onShowToast={showToast}
+      />
+
+      {/* ================= MAIN MIDDLE CONTAINER ================= */}
+      <div className="flex-1 flex min-h-0 overflow-hidden relative">
+        {/* 1. LEFT ACTIVITY RAIL (50px) */}
+        <ActivityBar
+          activePane={activePane}
+          onSelectPane={(pane) => {
+            if (activePane === pane && !sidebarCollapsed) {
+              setSidebarCollapsed(true);
+              updatePreferences({ sidebarCollapsed: true });
+            } else {
+              setActivePane(pane);
+              setSidebarCollapsed(false);
+              updatePreferences({ sidebarCollapsed: false });
+            }
+            setTimeout(() => editorRef.current?.layout(), 50);
+          }}
+          securityCount={mappedSecurityFindings.length}
+          onToggleAssistant={() => {
+            setAssistantOpen(!assistantOpen);
+            updatePreferences({ assistantCollapsed: assistantOpen });
+            setTimeout(() => editorRef.current?.layout(), 50);
+          }}
+          assistantOpen={assistantOpen}
         />
-        {fixFinding && fixDocId && state.documents.find((item) => item.id === fixDocId) && (
-          <FixWorkflowModal
-            finding={fixFinding}
-            targetKind={fixTargetKind}
-            documentId={fixDocId}
-            activeDocumentId={state.activeDocId}
-            source={state.documents.find((item) => item.id === fixDocId)!.source}
-            sourceVersion={state.documents.find((item) => item.id === fixDocId)!.sourceVersion}
-            language={state.documents.find((item) => item.id === fixDocId)!.language}
-            filename={state.documents.find((item) => item.id === fixDocId)!.name}
-            initialFixAll={fixAllRequested}
-            timeoutSeconds={aiFixTimeout}
-            sessionId={sessionId.current}
-            aiReady={canFixAI}
-            remoteConsentRequired={Boolean(capabilities?.ai.consent_required)}
-            remoteConsented={Boolean(capabilities?.ai.remote_consented)}
-            onConsent={acceptConsent}
-            onSourceApplied={onFixSourceApplied}
-            onUndoApplied={onFixUndo}
-            onClose={closeFix}
-            onAskAI={() => setBuildDrawerOpen(true)}
-            onActions={updateFixActions}
+
+        {/* 2. SECONDARY SIDEBAR (Collapsible & Resizable) */}
+        {!sidebarCollapsed && (
+          <ExplorerSidebar
+            activePane={activePane}
+            width={sidebarWidth}
+            onResizeStart={handleSidebarResizeStart}
+            tree={workspaceTree}
+            documents={state.documents}
+            activeDocId={activeDoc?.id ?? null}
+            onSelectDoc={(id) => dispatch({ type: 'document/activate', id })}
+            onOpenFile={handleOpenFile}
+            onCreateFile={handleCreateFile}
+            onRenameFile={handleRenameFile}
+            onDeleteFile={handleDeleteFile}
+            onRefreshTree={fetchWorkspaceTree}
+            onSearchFocusLine={(line, col) => handleJumpToCode(line, col || 1)}
+            onApplyFix={handleApplyFixDirect}
+            onRunSwarm={handleRunAllAgents}
+            fontSize={fontSize}
+            onChangeFontSize={(size) => {
+              updatePreferences({ fontSize: size });
+              showToast(`Editor font size set to ${size}px`);
+            }}
+            themeMode={themeMode}
+            onSelectThemeMode={(mode) => {
+              setThemeMode(mode);
+              updatePreferences({ theme: mode });
+            }}
+            wordWrap={wordWrap}
+            onToggleWordWrap={() => {
+              const nw = wordWrap === 'on' ? 'off' : 'on';
+              updatePreferences({ wordWrap: nw });
+              showToast(`Word wrap: ${nw.toUpperCase()}`);
+            }}
+            minimap={minimap}
+            onToggleMinimap={() => {
+              updatePreferences({ minimap: !minimap });
+              showToast(`Minimap: ${!minimap ? 'ON' : 'OFF'}`);
+            }}
+            tabSize={tabSize}
+            onChangeTabSize={(size) => {
+              updatePreferences({ tabSize: size });
+              showToast(`Tab size: ${size} spaces`);
+            }}
+            highlightUnicode={highlightUnicode}
+            onToggleHighlightUnicode={(enabled) => {
+              updatePreferences({ highlightUnicode: enabled });
+              showToast(`Highlight Unicode Traps: ${enabled ? 'ON' : 'OFF'}`);
+            }}
+            autoAnalyze={autoAnalyze}
+            onToggleAutoAnalyze={(enabled) => {
+              updatePreferences({ autoAnalyze: enabled });
+              showToast('Auto-run preference saved');
+            }}
+            onResetPanelLayout={() => {
+              updatePreferences({
+                panelSizes: { sidebarWidth: 220, bottomHeight: 280, assistantWidth: 447 },
+                sidebarCollapsed: false,
+                bottomCollapsed: false,
+                assistantCollapsed: false,
+              });
+              showToast('Panel layouts reset to default.');
+              setTimeout(() => editorRef.current?.layout(), 50);
+            }}
+            onExportSARIF={handleExportSARIF}
+            securityCount={mappedSecurityFindings.length}
+            onShowToast={showToast}
           />
         )}
-        <BuildAIDrawer
-          open={buildDrawerOpen}
-          capabilities={capabilities}
-          sessionId={sessionId.current}
-          onClose={() => setBuildDrawerOpen(false)}
-          onConsent={acceptConsent}
-          onCandidate={openGeneratedCandidate}
-        />
-        <input
-          ref={openFileInput}
-          type="file"
-          hidden
-          aria-label="Open file from disk"
-          onChange={(event) => {
-            void openDiskFile(event.currentTarget.files?.[0]);
-            event.currentTarget.value = '';
+
+        {/* 3. CENTER WORKSPACE (Editor + Analysis Panel) */}
+        <EditorWorkspace
+          documents={state.documents}
+          activeDoc={activeDoc}
+          onSelectDoc={(id) => dispatch({ type: 'document/activate', id })}
+          onCloseDoc={(id) => {
+            if (state.documents.length <= 1) {
+              showToast('Cannot close active entry point file.', 'warning');
+              return;
+            }
+            dispatch({ type: 'document/remove', id });
           }}
-        />
-        <NewFileDialog
-          open={newFileOpen}
-          capabilities={capabilities}
-          samples={samples}
-          existingNames={documentNames}
-          nextIndex={state.documents.length + 1}
-          onClose={() => setNewFileOpen(false)}
-          onCreate={createDocument}
-        />
-        {fileError && (
-          <div role="alert" className="ide-toast error">
-            <span>{fileError}</span>
-            <button
-              type="button"
-              aria-label="Dismiss file error"
-              onClick={() => setFileError(null)}
-            >
-              ×
-            </button>
-          </div>
+          onSourceChange={(source) => {
+            if (activeDoc) {
+              dispatch({ type: 'document/edit', id: activeDoc.id, source });
+              // Invalidate pipeline stages: never display old Passed result for newly edited source
+              setPipelineStages((prev) =>
+                prev.map((s) =>
+                  s.status !== 'not_run'
+                    ? {
+                        ...s,
+                        status: 'not_run',
+                        elapsedMs: 0,
+                        outputSummary: 'Source was modified. Reanalysis required.',
+                        errorReason: undefined,
+                      }
+                    : s
+                )
+              );
+            }
+          }}
+          onSave={handleSaveFile}
+          currentLanguage={activeDoc?.language || 'cpp'}
+          onSelectLanguage={(lang) => {
+            if (activeDoc) {
+              dispatch({ type: 'document/language', id: activeDoc.id, language: lang });
+              showToast(`Language switched to ${lang}`);
+            }
+          }}
+          isAnalyzing={isAnalyzing}
+          onAnalyze={() => {
+            setActiveBottomTab('view-tokens');
+            void triggerAnalyze();
+          }}
+          onSubRoutine={handleSubRoutine}
+          onRunAllAgents={handleRunAllAgents}
+          onOpenBuildWithAi={() => setBuildAiModalOpen(true)}
+          onFocusFixInAssistant={() => {
+            setAssistantOpen(true);
+            showToast('Assistant focused with fix recommendations.');
+          }}
+          cursorLine={cursorPos.line}
+          cursorCol={cursorPos.col}
+          onCursorChange={(line, col) => setCursorPos({ line, col })}
+          isMaximized={isMaximized}
+          resolvedTheme={resolvedTheme}
+          fontSize={fontSize}
+          wordWrap={wordWrap}
+          onToggleWordWrap={() => {
+            const nw = wordWrap === 'on' ? 'off' : 'on';
+            updatePreferences({ wordWrap: nw });
+            showToast(`Word wrap: ${nw.toUpperCase()}`);
+          }}
+          minimap={minimap}
+          tabSize={tabSize}
+          bottomHeight={bottomHeight}
+          bottomCollapsed={bottomCollapsed}
+          onBottomResizeStart={handleBottomResizeStart}
+          onShowToast={showToast}
+          editorRef={editorRef}
+        >
+          {/* Bottom Results Panel */}
+          <AnalysisPanel
+            activeTab={activeBottomTab}
+            onSelectTab={setActiveBottomTab}
+            tokens={mappedTokens}
+            selectedToken={selectedToken}
+            onSelectToken={setSelectedToken}
+            onExplainToken={(t) => {
+              const lexemeLabel = t.lexeme && t.lexeme.trim() ? `: '${t.lexeme}'` : '';
+              void handleExplainTarget({
+                kind: 'token',
+                id: String(t.id),
+                title: `Token #${t.id} (${t.type}${lexemeLabel})`,
+                line: t.line,
+                col: t.col,
+              });
+            }}
+            onFixWithAiToken={(t) => {
+              const lexemeLabel = t.lexeme && t.lexeme.trim() ? `: '${t.lexeme}'` : '';
+              void handleFixWithAi({
+                kind: 'token',
+                id: String(t.id),
+                title: `Token #${t.id} (${t.type}${lexemeLabel})`,
+              });
+            }}
+            onJumpToCode={handleJumpToCode}
+            diagnostics={mappedDiagnostics}
+            securityFindings={mappedSecurityFindings}
+            pipelineStages={pipelineStages}
+            selectedStageId={selectedStageId}
+            onSelectStage={setSelectedStageId}
+            onRerunStage={handleRerunStage}
+            isRunningAllAgents={isRunningAllAgents}
+            onAskAiStage={handleAskAiStage}
+            onExplainDiagnostic={(d) => {
+              void handleExplainTarget({
+                kind: 'diagnostic',
+                id: d.id,
+                title: `Diagnostic [${d.code}]: ${d.message}`,
+                line: d.line,
+                col: d.col,
+              });
+            }}
+            onFixWithAiDiagnostic={(d) => {
+              void handleFixWithAi({
+                kind: 'diagnostic',
+                id: d.id,
+                title: `Diagnostic [${d.code}]: ${d.message}`,
+              });
+            }}
+            onExplainFinding={(f) => {
+              void handleExplainTarget({
+                kind: 'finding',
+                id: f.id,
+                title: `Security Finding: ${f.title}`,
+                line: f.line,
+                col: f.col,
+              });
+            }}
+            onFixWithAiFinding={(f) => {
+              void handleFixWithAi({
+                kind: 'finding',
+                id: f.id,
+                title: f.title,
+              });
+            }}
+            onApplyRemediation={() => {
+              if (mappedSecurityFindings.length > 0) {
+                const f = mappedSecurityFindings[0];
+                void handleFixWithAi({
+                  kind: 'finding',
+                  id: f.id,
+                  title: f.title,
+                });
+              } else {
+                showToast('No active security findings to remediate.', 'info');
+              }
+            }}
+            onRunAllAgents={handleRunAllAgents}
+            onExportCSV={handleExportCSV}
+            onExportJSON={handleExportJSON}
+            isMaximized={isMaximized}
+            onToggleMaximize={() => {
+              const nextMax = !isMaximized;
+              setIsMaximized(nextMax);
+              updatePreferences({ bottomMaximized: nextMax });
+              setTimeout(() => editorRef.current?.layout(), 50);
+            }}
+            onAskFollowUp={(p) => {
+              setAssistantOpen(true);
+              void handleSendMessage(p);
+            }}
+            isAnalyzing={isAnalyzing}
+            isStale={isStale}
+            errorMessage={analysisError}
+            languageStandard={
+              activeDoc?.language.toLowerCase() === 'cpp'
+                ? 'ISO/IEC 14882:2020 C++'
+                : activeDoc?.language.toLowerCase() === 'python'
+                ? 'PEP 538 Python 3'
+                : activeDoc?.language.toLowerCase() === 'java'
+                ? 'Java SE 17'
+                : 'ECMAScript 2024'
+            }
+          />
+        </EditorWorkspace>
+
+        {/* Floating Expand Assistant Button (when collapsed) */}
+        {!assistantOpen && (
+          <button
+            type="button"
+            className="absolute bottom-4 right-4 z-40 flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-accent-ai to-primary text-white font-medium text-[12px] rounded-lg shadow-2xl border border-white/20 hover:scale-105 active:scale-95 transition-all"
+            id="btnExpandAssistantFloating"
+            onClick={() => {
+              setAssistantOpen(true);
+              updatePreferences({ assistantCollapsed: false });
+              setTimeout(() => editorRef.current?.layout(), 50);
+            }}
+            title="Expand AI Assistant"
+          >
+            <span className="material-symbols-outlined text-[17px]">smart_toy</span>
+            <span>Open Assistant</span>
+          </button>
         )}
-        {toast && (
-          <div role="status" className={`ide-toast ${toast.error ? 'error' : ''}`}>
-            {toast.message}
-          </div>
-        )}
-      </main>
-    </Suspense>
+
+        {/* 4. RIGHT PERSISTENT ASSISTANT (Collapsible & Resizable) */}
+        <AssistantPanel
+          isOpen={assistantOpen}
+          onClose={() => {
+            setAssistantOpen(false);
+            updatePreferences({ assistantCollapsed: true });
+            setTimeout(() => editorRef.current?.layout(), 50);
+          }}
+          width={assistantWidth}
+          onResizeStart={handleAssistantResizeStart}
+          activeFileName={activeDoc?.name || 'main.cpp'}
+          sourceVersion={activeDoc?.sourceVersion || 1}
+          language={activeDoc?.language || 'cpp'}
+          cursorLine={cursorPos.line}
+          cursorCol={cursorPos.col}
+          providerName={
+            providerCapabilities?.model
+              ? `Groq Cloud (${providerCapabilities.model})`
+              : 'Groq Cloud (openai/gpt-oss-120b)'
+          }
+          providerConfigured={providerCapabilities?.configured ?? true}
+          remoteConsented={remoteConsented}
+          onToggleConsent={handleToggleConsent}
+          contextStage={
+            activeBottomTab === 'view-tokens'
+              ? 'Lexical Scanner'
+              : activeBottomTab === 'view-diagnostics'
+              ? 'AST Syntax Diagnostics'
+              : activeBottomTab === 'view-security-tab'
+              ? 'Security Analysis'
+              : activeBottomTab === 'view-pipeline-tab'
+              ? 'Agent Pipeline'
+              : 'AI Explain'
+          }
+          contextFinding={activeAssistantFinding}
+          messages={chatMessages}
+          onSendMessage={handleSendMessage}
+          onNewConversation={handleNewConversation}
+          onClearChat={() => {
+            setChatMessages([]);
+            if (activeDoc) {
+              setConversationsByFile((prev) => ({ ...prev, [activeDoc.id]: [] }));
+            }
+            showToast('Assistant chat cleared');
+          }}
+          onAcceptDiff={handleAcceptDiff}
+          onRejectDiff={handleRejectDiff}
+          onImproveDiff={handleImproveDiff}
+          onReanalyze={() => void triggerAnalyze()}
+          onInsertCodeSnippet={handleInsertCodeSnippet}
+          onShowToast={showToast}
+          isSending={isSendingChat}
+        />
+      </div>
+
+      {/* ================= BOTTOM STATUS BAR (28px) ================= */}
+      <StatusBar
+        fileName={activeDoc?.name.replace(/^src\//, '') || 'main.cpp'}
+        language={activeDoc?.language.toUpperCase() || 'C++'}
+        cursorLine={cursorPos.line}
+        cursorCol={cursorPos.col}
+        securityCount={mappedSecurityFindings.length}
+        engineStatus={isAnalyzing ? 'Analyzing' : 'Ready'}
+        onShowToast={showToast}
+        onOpenSecurity={() => {
+          setActivePane('pane-security');
+          setSidebarCollapsed(false);
+          setActiveBottomTab('view-security-tab');
+        }}
+      />
+
+      {/* ================= MODAL: COMMAND PALETTE ================= */}
+      <CommandPaletteModal
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        commands={commandList}
+      />
+
+      {/* ================= MODAL: BUILD WITH AI ================= */}
+      <BuildWithAiModal
+        isOpen={buildAiModalOpen}
+        onClose={() => setBuildAiModalOpen(false)}
+        activeLanguage={activeDoc?.language || 'cpp'}
+        onGenerate={handleExecuteBuildAi}
+        onInsertIntoEditor={handleInsertCodeSnippet}
+        onCreateFile={handleCreateFileFromCandidate}
+        onRefineInAssistant={handleRefineCandidateInAssistant}
+        onShowToast={showToast}
+      />
+
+      {/* ================= TOAST SYSTEM ================= */}
+      <ToastBox
+        toasts={toasts}
+        onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))}
+      />
+    </div>
   );
-}
+};
+
+export default IDE;

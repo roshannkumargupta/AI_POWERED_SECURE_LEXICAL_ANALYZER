@@ -316,6 +316,35 @@ class GroqProvider(HttpJsonProvider):
                             except Exception:
                                 pass
                             if err_data.get("code") == "json_validate_failed":
+                                # Fallback: retry without strict response_format so model output is returned
+                                fallback_payload = dict(payload)
+                                fallback_payload.pop("response_format", None)
+                                try:
+                                    fb_resp = client.post(
+                                        f"{self.base_url}/chat/completions",
+                                        json=fallback_payload,
+                                    )
+                                    if fb_resp.status_code == 200:
+                                        fb_data = fb_resp.json()
+                                        fb_choices = fb_data.get("choices", [])
+                                        if fb_choices:
+                                            raw_content = str(fb_choices[0].get("message", {}).get("content", ""))
+                                            # If raw_content is valid JSON, return it
+                                            try:
+                                                json.loads(raw_content)
+                                                return raw_content
+                                            except Exception:
+                                                # Check if JSON is inside a code block ```json ... ```
+                                                json_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", raw_content)
+                                                if json_match:
+                                                    try:
+                                                        json.loads(json_match.group(1))
+                                                        return json_match.group(1)
+                                                    except Exception:
+                                                        pass
+                                                return json.dumps({"reply": raw_content, "code_snippets": []})
+                                except Exception:
+                                    pass
                                 detail = err_data.get("failed_generation") or err_data.get("message") or ""
                                 raise ProviderFailure(
                                     "bad_output",

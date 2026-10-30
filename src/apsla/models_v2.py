@@ -123,6 +123,8 @@ class AnalysisResultV2(BaseModel):
     timing: dict[str, float] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
     omissions: list[str] = Field(default_factory=list)
+    trace: list[dict[str, Any]] = Field(default_factory=list)
+    agent_meta: dict[str, Any] = Field(default_factory=dict)
 
 
 def result_matches_source(
@@ -426,4 +428,6 @@ def adapt_analysis_result(
         timing=timing,
         warnings=[],
         omissions=omissions,
+        trace=result.trace,
+        agent_meta=result.agent_meta,
     )

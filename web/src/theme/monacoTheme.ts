@@ -69,3 +69,56 @@ export function buildMonacoTheme(
     },
   };
 }
+
+export function registerSecureLexThemes(monacoInstance: typeof import('monaco-editor')) {
+  monacoInstance.editor.defineTheme('securelex-theme-dark', {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [
+      { token: 'keyword', foreground: '58A6FF', fontStyle: 'bold' },
+      { token: 'string', foreground: '7EE787' },
+      { token: 'identifier', foreground: 'DCE8F6' },
+      { token: 'type', foreground: '8FA7C1' },
+      { token: 'number', foreground: 'F5A623' },
+      { token: 'comment', foreground: '617B98', fontStyle: 'italic' },
+    ],
+    colors: {
+      'editor.background': '#07111D',
+      'editor.foreground': '#DCE8F6',
+      'editorLineNumber.foreground': '#617B98',
+      'editorLineNumber.activeForeground': '#DCE8F6',
+      'editor.lineHighlightBackground': '#10294340',
+      'editorGutter.background': '#07111D',
+      'editorCursor.foreground': '#1677FF',
+      'editorWhitespace.foreground': '#173149',
+    },
+  });
+
+  monacoInstance.editor.defineTheme('securelex-theme-light', {
+    base: 'vs',
+    inherit: true,
+    rules: [
+      { token: 'keyword', foreground: '0969DA', fontStyle: 'bold' },
+      { token: 'string', foreground: '1A7F37' },
+      { token: 'identifier', foreground: '0F172A' },
+      { token: 'type', foreground: '0E7490', fontStyle: 'bold' },
+      { token: 'number', foreground: '9A6700' },
+      { token: 'comment', foreground: '475569', fontStyle: 'italic' },
+      { token: 'delimiter', foreground: '0F172A' },
+      { token: 'operator', foreground: '0F172A' },
+    ],
+    colors: {
+      'editor.background': '#FAFBFC',
+      'editor.foreground': '#0F172A',
+      'editorLineNumber.foreground': '#475569',
+      'editorLineNumber.activeForeground': '#0F172A',
+      'editor.lineHighlightBackground': '#E8ECF280',
+      'editorGutter.background': '#F1F5F9',
+      'editorCursor.foreground': '#0969DA',
+      'editorWhitespace.foreground': '#CBD5E1',
+      'editorIndentGuide.background': '#E2E8F0',
+      'editorIndentGuide.activeBackground': '#CBD5E1',
+    },
+  });
+}
+

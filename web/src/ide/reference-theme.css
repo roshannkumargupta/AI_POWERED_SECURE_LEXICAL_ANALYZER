@@ -1,0 +1,317 @@
+/* Global Material Symbols Outlined definition */
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'liga';
+}
+
+/* Premium Titanium/Zinc Light Theme Architecture from docs/reference/securelex-reference.html */
+html.light-theme,
+html:not(.dark) {
+    color-scheme: light;
+}
+
+html.light-theme body,
+html:not(.dark) body {
+    background-color: var(--ref-surface) !important;
+    color: var(--ref-text-primary) !important;
+}
+
+/* Core Structural Surfaces */
+html.light-theme .bg-surface,
+html:not(.dark) .bg-surface {
+    background-color: var(--ref-surface) !important;
+}
+
+html.light-theme .bg-surface-deepest,
+html:not(.dark) .bg-surface-deepest {
+    background-color: var(--ref-surface-deepest) !important;
+}
+
+html.light-theme .bg-surface-explorer,
+html:not(.dark) .bg-surface-explorer {
+    background-color: var(--ref-surface-explorer) !important;
+}
+
+html.light-theme .bg-surface-editor,
+html:not(.dark) .bg-surface-editor {
+    background-color: var(--ref-surface-editor) !important;
+}
+
+html.light-theme .bg-surface-elevated,
+html:not(.dark) .bg-surface-elevated {
+    background-color: var(--ref-surface-elevated) !important;
+}
+
+html.light-theme .bg-surface-container,
+html:not(.dark) .bg-surface-container {
+    background-color: var(--ref-surface-container) !important;
+}
+
+html.light-theme .bg-surface-selected,
+html:not(.dark) .bg-surface-selected {
+    background-color: var(--ref-surface-selected) !important;
+}
+
+/* Crisp Precision Borders */
+html.light-theme .border-border-primary,
+html:not(.dark) .border-border-primary {
+    border-color: var(--ref-border-primary) !important;
+}
+
+html.light-theme .border-border-subtle,
+html:not(.dark) .border-border-subtle {
+    border-color: var(--ref-border-subtle) !important;
+}
+
+/* High-Legibility Typography */
+html.light-theme .text-text-primary,
+html:not(.dark) .text-text-primary {
+    color: var(--ref-text-primary) !important;
+}
+
+html.light-theme .text-text-secondary,
+html:not(.dark) .text-text-secondary {
+    color: var(--ref-text-secondary) !important;
+}
+
+html.light-theme .text-text-muted,
+html:not(.dark) .text-text-muted {
+    color: var(--ref-text-muted) !important;
+}
+
+/* Guard against opacity wash-out in light mode */
+html.light-theme [class*="text-text-muted/"],
+html:not(.dark) [class*="text-text-muted/"] {
+    color: var(--ref-text-muted) !important;
+}
+
+html.light-theme [class*="text-text-secondary/"],
+html:not(.dark) [class*="text-text-secondary/"] {
+    color: var(--ref-text-secondary) !important;
+}
+
+/* High contrast table typography in light mode */
+html.light-theme th,
+html:not(.dark) th {
+    color: var(--ref-text-secondary) !important;
+    font-weight: 700 !important;
+}
+
+html.light-theme td,
+html:not(.dark) td {
+    color: var(--ref-text-primary) !important;
+}
+
+/* Breadcrumbs and status bar legibility */
+html.light-theme #breadcrumbFolder,
+html:not(.dark) #breadcrumbFolder,
+html.light-theme #breadcrumbFunc,
+html:not(.dark) #breadcrumbFunc,
+html.light-theme #statusLineCol,
+html:not(.dark) #statusLineCol,
+html.light-theme #statusLang,
+html:not(.dark) #statusLang {
+    color: var(--ref-text-secondary) !important;
+    font-weight: 600 !important;
+}
+
+/* COMPREHENSIVE LIGHT MODE HOVER SYSTEM */
+html.light-theme .bg-surface-hover,
+html:not(.dark) .bg-surface-hover,
+html.light-theme .hover\:bg-surface-hover:hover,
+html:not(.dark) .hover\:bg-surface-hover:hover {
+    background-color: var(--ref-surface-hover) !important;
+    color: var(--ref-text-primary) !important;
+}
+
+html.light-theme .activity-btn:hover,
+html:not(.dark) .activity-btn:hover {
+    background-color: var(--ref-surface-hover) !important;
+    color: var(--ref-text-primary) !important;
+}
+
+html.light-theme .file-item:hover,
+html:not(.dark) .file-item:hover,
+html.light-theme .folder-header:hover,
+html:not(.dark) .folder-header:hover {
+    background-color: var(--ref-surface-hover) !important;
+    color: var(--ref-text-primary) !important;
+}
+
+html.light-theme .token-row:hover,
+html:not(.dark) .token-row:hover {
+    background-color: var(--ref-surface-selected) !important;
+}
+
+html.light-theme #pane-search button:hover,
+html:not(.dark) #pane-search button:hover,
+html.light-theme button.bg-surface-container:hover,
+html:not(.dark) button.bg-surface-container:hover,
+html.light-theme #btnFurtherAnalysis:hover,
+html:not(.dark) #btnFurtherAnalysis:hover {
+    background-color: var(--ref-surface-hover) !important;
+    color: var(--ref-text-primary) !important;
+}
+
+/* Dropdown Menus in Light Theme */
+html.light-theme #furtherMenu button:hover,
+html:not(.dark) #furtherMenu button:hover,
+html.light-theme #langMenu button:hover,
+html:not(.dark) #langMenu button:hover,
+html.light-theme #userDropdown button:hover,
+html:not(.dark) #userDropdown button:hover {
+    background-color: var(--ref-surface-hover) !important;
+    color: var(--ref-text-primary) !important;
+}
+
+/* Editor Code Highlighting (Light Studio) */
+html.light-theme #editorArea,
+html:not(.dark) #editorArea {
+    background-color: var(--ref-surface-editor) !important;
+}
+
+html.light-theme #lineGutter,
+html:not(.dark) #lineGutter {
+    background-color: var(--ref-code-gutter) !important;
+    color: var(--ref-text-muted) !important;
+    border-color: var(--ref-border-subtle) !important;
+}
+
+html.light-theme .code-kw,
+html:not(.dark) .code-kw {
+    color: var(--ref-code-kw) !important;
+    font-weight: 600;
+}
+
+html.light-theme .code-str,
+html:not(.dark) .code-str {
+    color: var(--ref-code-str) !important;
+}
+
+html.light-theme .code-fn,
+html:not(.dark) .code-fn {
+    color: var(--ref-code-fn) !important;
+    font-weight: 600;
+}
+
+html.light-theme .code-var,
+html:not(.dark) .code-var {
+    color: var(--ref-code-var) !important;
+}
+
+html.light-theme .code-num,
+html:not(.dark) .code-num {
+    color: var(--ref-code-num) !important;
+}
+
+html.light-theme .code-pre,
+html:not(.dark) .code-pre {
+    color: var(--ref-code-pre) !important;
+    font-weight: 600;
+}
+
+html.light-theme #codeLineDefect,
+html:not(.dark) #codeLineDefect {
+    background-color: var(--ref-code-defect) !important;
+    border: 1px solid var(--ref-code-defect-border) !important;
+}
+
+html.light-theme #minimapBox,
+html:not(.dark) #minimapBox {
+    background-color: var(--ref-surface-deepest) !important;
+    border-color: var(--ref-border-primary) !important;
+}
+
+/* Chat Assistant in Light Mode */
+html.light-theme .chat-user-bubble,
+html:not(.dark) .chat-user-bubble {
+    background-color: var(--ref-surface-selected) !important;
+    color: var(--ref-text-primary) !important;
+    border-color: var(--ref-border-subtle) !important;
+}
+
+html.light-theme .chat-assistant-card,
+html:not(.dark) .chat-assistant-card {
+    background-color: var(--ref-surface-elevated) !important;
+    border-color: var(--ref-border-primary) !important;
+}
+
+html.light-theme .diff-box,
+html:not(.dark) .diff-box {
+    background-color: var(--ref-surface-deepest) !important;
+    border-color: var(--ref-border-primary) !important;
+}
+
+html.light-theme .diff-del,
+html:not(.dark) .diff-del {
+    background-color: var(--ref-code-defect) !important;
+    color: var(--ref-status-error) !important;
+}
+
+html.light-theme .diff-add,
+html:not(.dark) .diff-add {
+    background-color: var(--diff-add-bg) !important;
+    color: var(--ref-status-success) !important;
+}
+
+/* Inputs in Light Mode */
+html.light-theme input,
+html:not(.dark) input,
+html.light-theme select,
+html:not(.dark) select,
+html.light-theme textarea,
+html:not(.dark) textarea {
+    background-color: var(--ref-surface-elevated) !important;
+    color: var(--ref-text-primary) !important;
+    border-color: var(--ref-border-primary) !important;
+}
+
+html.light-theme input::placeholder,
+html:not(.dark) input::placeholder,
+html.light-theme textarea::placeholder,
+html:not(.dark) textarea::placeholder {
+    color: var(--ref-text-muted) !important;
+}
+
+/* Status Bar and Header Light Accents */
+html.light-theme header,
+html:not(.dark) header,
+html.light-theme footer,
+html:not(.dark) footer {
+    background-color: var(--ref-surface-deepest) !important;
+    border-color: var(--ref-border-primary) !important;
+}
+
+/* Custom high-contrast scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--ref-border-primary);
+    border-radius: 3px;
+}
+
+html.light-theme ::-webkit-scrollbar-thumb,
+html:not(.dark) ::-webkit-scrollbar-thumb {
+    background: var(--ref-border-subtle);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}

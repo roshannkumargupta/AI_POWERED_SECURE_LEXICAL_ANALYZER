@@ -12,6 +12,7 @@ import '@fontsource/material-symbols-outlined';
 
 import './theme/tokens.css';
 import './ide/tailwind.css';
+import './ide/reference-theme.css';
 import { ThemeProvider } from './theme/theme';
 import { AppProvider } from './state/store';
 import { IDE } from './ide/IDE';

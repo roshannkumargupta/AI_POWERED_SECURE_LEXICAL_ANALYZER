@@ -333,6 +333,28 @@ export interface AnalysisResultV2 {
   timing: Record<string, number>;
   warnings: string[];
   omissions: string[];
+  trace?: Array<{
+    step_number?: number;
+    agent: string;
+    stage: string;
+    action: string;
+    args_summary?: string;
+    reason?: string;
+    observation_summary?: string;
+    decision_source?: string;
+    ms?: number;
+    accepted?: boolean;
+    rejection_reason?: string | null;
+  }>;
+  agent_meta?: {
+    mode?: string;
+    total_steps?: number;
+    llm_calls?: number;
+    elapsed_ms?: number;
+    structure_quality?: number;
+    verified_fixes?: number;
+    [key: string]: unknown;
+  };
 }
 export type AnalysisStage = 'lexical' | 'syntax' | 'security' | 'quality';
 export interface AnalyzeV2Request {
@@ -386,6 +408,8 @@ export interface StageAnalysisResponse {
   lexical_status: AnalysisDimensionV2;
   syntax_status: AnalysisDimensionV2;
   semantic_status: AnalysisDimensionV2;
+  tokens?: TokenV2[];
+  lexical_summary?: Record<string, Record<string, number>>;
   ast: ASTNodeResponse | null;
   diagnostics: DiagnosticV2[];
   findings: AnalysisResultV2['security_findings'];
@@ -545,6 +569,7 @@ export interface SafetyRunResult {
     | null;
   limitations: string[];
 }
+
 export interface AIConsentRequest {
   session_id: string;
   consent: boolean;
@@ -610,6 +635,36 @@ export interface AIGenerateResponse {
   processing_location: string;
   limitations: string[];
 }
+
+export interface AIChatContext {
+  file?: string;
+  language?: string;
+  source_version?: number;
+  selected_range?: { start_line: number; start_col: number; end_line?: number; end_col?: number };
+  stage?: string;
+  diagnostic?: Record<string, unknown>;
+  finding?: Record<string, unknown>;
+  findings_count?: number;
+}
+
+export interface AIChatRequest {
+  session_id: string;
+  remote_consent?: boolean;
+  message: string;
+  source?: string;
+  language?: string;
+  history?: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
+  context?: AIChatContext;
+}
+
+export interface AIChatResponse {
+  operation_id: string;
+  reply: string;
+  code_snippets: string[];
+  provider: string;
+  model: string;
+}
+
 
 const API_BASE = '/api';
 
@@ -820,6 +875,12 @@ export const apiClient = {
       body: JSON.stringify(body),
       signal,
     }),
+  chatAI: (body: AIChatRequest, signal?: AbortSignal) =>
+    request<AIChatResponse>('/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      signal,
+    }),
   getCapabilities: (sessionId?: string, signal?: AbortSignal) =>
     request<CapabilitiesResponse>(
       `/capabilities${sessionId ? `?session_id=${encodeURIComponent(sessionId)}` : ''}`,
@@ -890,6 +951,145 @@ export const apiClient = {
       body: JSON.stringify(req),
       signal,
     }),
+  getWorkspaceTree: (signal?: AbortSignal) =>
+    request<WorkspaceTreeResponse>('/workspace/tree', { signal }),
+  getWorkspaceFile: (path: string, signal?: AbortSignal) =>
+    request<WorkspaceFileDetail>(`/workspace/file?path=${encodeURIComponent(path)}`, { signal }),
+  createWorkspaceFile: (path: string, content = '', signal?: AbortSignal) =>
+    request<{ success: boolean; path: string; size: number }>('/workspace/file', {
+      method: 'POST',
+      body: JSON.stringify({ path, content }),
+      signal,
+    }),
+  saveWorkspaceFile: (path: string, content: string, signal?: AbortSignal) =>
+    request<{ success: boolean; path: string; size: number; last_modified: number }>('/workspace/file', {
+      method: 'PUT',
+      body: JSON.stringify({ path, content }),
+      signal,
+    }),
+  deleteWorkspaceFile: (path: string, signal?: AbortSignal) =>
+    request<{ success: boolean; path: string }>(`/workspace/file?path=${encodeURIComponent(path)}`, {
+      method: 'DELETE',
+      signal,
+    }),
+  renameWorkspaceFile: (oldPath: string, newPath: string, signal?: AbortSignal) =>
+    request<{ success: boolean; old_path: string; new_path: string }>('/workspace/rename', {
+      method: 'POST',
+      body: JSON.stringify({ old_path: oldPath, new_path: newPath }),
+      signal,
+    }),
+  searchWorkspace: (
+    query: string,
+    isRegex = false,
+    matchCase = false,
+    matchWholeWord = false,
+    signal?: AbortSignal
+  ) =>
+    request<WorkspaceSearchResponse>(
+      `/workspace/search?query=${encodeURIComponent(query)}&is_regex=${isRegex}&match_case=${matchCase}&match_whole_word=${matchWholeWord}`,
+      { signal }
+    ),
+  replaceWorkspace: (
+    query: string,
+    replace: string,
+    files?: string[],
+    isRegex = false,
+    matchCase = false,
+    signal?: AbortSignal
+  ) =>
+    request<{ success: boolean; updated_files: string[]; replacements: number }>(
+      '/workspace/replace',
+      {
+        method: 'POST',
+        body: JSON.stringify({ query, replace, files, is_regex: isRegex, match_case: matchCase }),
+        signal,
+      }
+    ),
+  getGitStatus: (signal?: AbortSignal) =>
+    request<GitStatusResponse>('/workspace/git/status', { signal }),
+  getGitDiff: (path?: string, signal?: AbortSignal) =>
+    request<GitDiffResponse>(
+      `/workspace/git/diff${path ? `?path=${encodeURIComponent(path)}` : ''}`,
+      { signal }
+    ),
+  gitCommit: (message: string, files?: string[], signal?: AbortSignal) =>
+    request<GitCommitResponse>('/workspace/git/commit', {
+      method: 'POST',
+      body: JSON.stringify({ message, files }),
+      signal,
+    }),
 };
+
+export interface SearchMatchItem {
+  line: number;
+  col: number;
+  length: number;
+  line_text: string;
+  match_text: string;
+}
+
+export interface FileSearchResultItem {
+  file: string;
+  matches: SearchMatchItem[];
+}
+
+export interface WorkspaceSearchResponse {
+  query: string;
+  total_matches: number;
+  file_count: number;
+  results: FileSearchResultItem[];
+}
+
+export interface GitFileStatusItem {
+  path: string;
+  status: string;
+  staged: boolean;
+}
+
+export interface GitStatusResponse {
+  available: boolean;
+  branch: string;
+  clean: boolean;
+  files: GitFileStatusItem[];
+  reason?: string | null;
+}
+
+export interface GitDiffResponse {
+  available: boolean;
+  path: string;
+  diff: string;
+  error?: string;
+}
+
+export interface GitCommitResponse {
+  success: boolean;
+  commit_hash?: string;
+  message?: string;
+  error?: string;
+  output?: string;
+}
+
+export interface WorkspaceFileNode {
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  size?: number | null;
+  language?: string | null;
+  children?: WorkspaceFileNode[] | null;
+}
+
+export interface WorkspaceTreeResponse {
+  root: string;
+  tree: WorkspaceFileNode[];
+}
+
+export interface WorkspaceFileDetail {
+  path: string;
+  name: string;
+  content: string;
+  language: string;
+  size: number;
+  last_modified: number;
+}
 
 export const api = apiClient;

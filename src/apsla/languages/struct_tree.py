@@ -314,6 +314,11 @@ class StructTree:
         return len(self.errors) == 0
 
     @property
+    def error_count(self) -> int:
+        """Total number of syntax/structure errors encountered."""
+        return len(self.errors)
+
+    @property
     def quality_score(self) -> float:
         """Structure quality score in [0.0, 1.0]."""
         if not self.errors:

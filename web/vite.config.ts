@@ -2,7 +2,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-const apiPort = process.env.APSLA_API_PORT ?? '8010';
+const apiPort = process.env.APSLA_API_PORT ?? '8000';
 
 function localMonacoLoader() {
   return {
