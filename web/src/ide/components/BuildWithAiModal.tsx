@@ -54,6 +54,17 @@ export const BuildWithAiModal: React.FC<BuildWithAiModalProps> = ({
     }
   }, [candidate, selectedLang]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isGenerating) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isGenerating, onClose]);
+
   if (!isOpen) return null;
 
   const handleExecuteGenerate = async () => {
@@ -358,6 +369,19 @@ export const BuildWithAiModal: React.FC<BuildWithAiModalProps> = ({
                 <span>Edit Prompt</span>
               </button>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="px-2.5 py-1.5 rounded-md text-[11px] text-status-error bg-status-error/10 hover:bg-status-error/20 border border-status-error/30 transition-colors flex items-center gap-1"
+                  onClick={() => {
+                    setCandidate(null);
+                    onClose();
+                    onShowToast('Generated code candidate rejected.', 'info');
+                  }}
+                  title="Reject and discard candidate code"
+                >
+                  <span className="material-symbols-outlined text-[14px]">cancel</span>
+                  <span>Reject</span>
+                </button>
                 <button
                   type="button"
                   className="px-2.5 py-1.5 rounded-md text-[11px] text-text-primary bg-surface-container hover:bg-surface-hover border border-border-subtle transition-colors flex items-center gap-1"

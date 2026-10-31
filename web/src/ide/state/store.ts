@@ -1,10 +1,36 @@
-import type { AnalysisResultV2 } from '../../api/client';
+import type { AnalysisResultV2, DiagnosticV2, TokenV2, PatchProposal } from '../../api/client';
 
 export type DocumentLanguage = string;
+
+// Canonical 10-State Analysis Status Model
+export type CanonicalAnalysisStatus =
+  | 'not_analyzed'
+  | 'queued'
+  | 'running'
+  | 'passed'
+  | 'failed_source_diagnostics'
+  | 'execution_failed'
+  | 'warning'
+  | 'skipped'
+  | 'cancelled'
+  | 'outdated';
+
 export type AnalysisStatus = 'idle' | 'running' | 'ok' | 'stale' | 'error';
 export type Activity = 'explorer' | 'samples' | 'search' | 'ast' | 'security' | 'safetylab';
 export type PanelTab = 'tokens' | 'problems' | 'security' | 'explain' | 'agent';
 
+// ── 1. Workspace and project files ───────────────────────────────────────────
+export interface WorkspaceFile {
+  id: string;
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  size?: number;
+  language?: string;
+  children?: WorkspaceFile[];
+}
+
+// ── 2. Editor documents ───────────────────────────────────────────────────────
 export interface IDEDocument {
   id: string;
   name: string;
@@ -15,6 +41,158 @@ export interface IDEDocument {
   dirty: boolean;
   origin: 'new' | 'opened' | 'sample';
   sampleId?: string;
+}
+
+// ── 3. Document version and content hash ──────────────────────────────────────
+export interface DocumentVersionInfo {
+  documentId: string;
+  sourceVersion: number;
+  sourceHash?: string;
+  timestamp: number;
+}
+
+// ── 4. Lexical analysis runs ──────────────────────────────────────────────────
+export interface AnalysisRunRecord {
+  runId: string;
+  documentId: string;
+  sourceVersion: number;
+  sourceHash: string;
+  language: string;
+  startedAt: number;
+  completedAt: number;
+  status: CanonicalAnalysisStatus;
+  stagesExecuted: string[];
+}
+
+// ── 5. Tokens ────────────────────────────────────────────────────────────────
+export type TokenModel = TokenV2;
+
+export interface TokenCounts {
+  total: number;
+  valid: number;
+  invalid: number;
+  unknown: number;
+}
+
+export function deriveTokenCounts(tokens: TokenV2[] | null | undefined): TokenCounts {
+  if (!tokens || tokens.length === 0) {
+    return { total: 0, valid: 0, invalid: 0, unknown: 0 };
+  }
+  let valid = 0;
+  let invalid = 0;
+  let unknown = 0;
+  for (const t of tokens) {
+    if (t.lexical_status === 'valid') {
+      valid++;
+    } else if (t.lexical_status === 'invalid') {
+      invalid++;
+    } else {
+      unknown++;
+    }
+  }
+  return {
+    total: tokens.length,
+    valid,
+    invalid,
+    unknown,
+  };
+}
+
+// ── 6. Diagnostics ───────────────────────────────────────────────────────────
+export type DiagnosticModel = DiagnosticV2;
+
+export interface DiagnosticsCounts {
+  total: number;
+  errors: number;
+  warnings: number;
+  info: number;
+}
+
+export function deriveDiagnosticsCounts(
+  syntaxDiags: DiagnosticV2[] | null | undefined,
+  semanticDiags: DiagnosticV2[] | null | undefined
+): DiagnosticsCounts {
+  const all = [...(syntaxDiags || []), ...(semanticDiags || [])];
+  let errors = 0;
+  let warnings = 0;
+  let info = 0;
+  for (const d of all) {
+    const sev = (d.severity || '').toLowerCase();
+    if (sev === 'error' || sev === 'critical' || sev === 'fatal') {
+      errors++;
+    } else if (sev === 'warning' || sev === 'warn') {
+      warnings++;
+    } else {
+      info++;
+    }
+  }
+  return {
+    total: all.length,
+    errors,
+    warnings,
+    info,
+  };
+}
+
+// ── 7. Security findings ─────────────────────────────────────────────────────
+export type SecurityFindingV2 = AnalysisResultV2['security_findings'][number];
+
+// ── 8. Pipeline execution ────────────────────────────────────────────────────
+export interface PipelineExecutionState {
+  status: CanonicalAnalysisStatus;
+  totalDurationMs: number;
+  passedStages: number;
+  totalStages: number;
+  stages: StageExecutionResult[];
+}
+
+// ── 9. Individual agent stage results ────────────────────────────────────────
+export interface StageExecutionResult {
+  stageId: string;
+  name: string;
+  agent: string;
+  status: CanonicalAnalysisStatus;
+  durationMs: number;
+  summary: string;
+  error?: string;
+}
+
+// ── 10. AI conversations ─────────────────────────────────────────────────────
+export interface AIConversationMessage {
+  id: string;
+  sender: 'user' | 'assistant' | 'system';
+  text: string;
+  timestamp: number;
+  codeSnippets?: string[];
+  proposal?: PatchProposal;
+  targetContext?: {
+    file: string;
+    stage?: string;
+    findingTitle?: string;
+    line?: number;
+    col?: number;
+  };
+}
+
+// ── 11. Proposed code changes ────────────────────────────────────────────────
+export interface ProposedCodeChange {
+  proposalId: string;
+  targetFindingId?: string;
+  sourceVersion: number;
+  summary: string;
+  diff: string;
+  patch: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'applied';
+}
+
+// ── 12. Verification results ──────────────────────────────────────────────────
+export interface VerificationResult {
+  verified: boolean;
+  syntaxValid: boolean;
+  diagnosticsCount: number;
+  securityCount: number;
+  regressions: string[];
+  details: string;
 }
 
 export interface DocumentAnalysis {
@@ -362,4 +540,45 @@ export function serializeIDEState(state: IDEState): string {
 
 export function clampScale(scale: number): number {
   return Math.max(90, Math.min(125, Math.round(scale / 5) * 5));
+}
+
+export function deriveCanonicalAnalysisStatus(
+  doc: IDEDocument | null | undefined,
+  analysis: DocumentAnalysis | null | undefined
+): CanonicalAnalysisStatus {
+  if (!doc) return 'not_analyzed';
+  if (!analysis || (analysis.status === 'idle' && !analysis.result)) {
+    return 'not_analyzed';
+  }
+  if (analysis.status === 'running') return 'running';
+  if (analysis.status === 'error') return 'execution_failed';
+  if (analysis.status === 'stale') return 'outdated';
+  if (analysis.result) {
+    if (analysis.forSourceVersion !== null && analysis.forSourceVersion !== doc.sourceVersion) {
+      return 'outdated';
+    }
+    const tokens = analysis.result.tokens || [];
+    const hasInvalidTokens = tokens.some((t) => t.lexical_status === 'invalid');
+    const allDiags = [
+      ...(analysis.result.syntax_diagnostics || []),
+      ...(analysis.result.semantic_diagnostics || []),
+    ];
+    const hasErrors = allDiags.some(
+      (d) => d.severity.toLowerCase() === 'error' || d.severity.toLowerCase() === 'critical'
+    );
+    const hasCriticalSecurity = (analysis.result.security_findings || []).some(
+      (f) => f.severity.toLowerCase() === 'critical' || f.severity.toLowerCase() === 'high'
+    );
+    if (hasInvalidTokens || hasErrors || hasCriticalSecurity) {
+      return 'failed_source_diagnostics';
+    }
+    const hasWarnings =
+      allDiags.some((d) => d.severity.toLowerCase() === 'warning') ||
+      (analysis.result.security_findings || []).length > 0;
+    if (hasWarnings) {
+      return 'warning';
+    }
+    return 'passed';
+  }
+  return 'not_analyzed';
 }

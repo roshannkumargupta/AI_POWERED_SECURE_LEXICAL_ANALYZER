@@ -39,6 +39,7 @@ interface PipelinePanelProps {
   onRunAllAgents: () => void;
   isRunningAll: boolean;
   onAskAiStage?: (stage: PipelineStageInfo) => void;
+  isStale?: boolean;
 }
 
 function getStatusBadge(status: StageStatus) {
@@ -111,6 +112,7 @@ export const PipelinePanel: React.FC<PipelinePanelProps> = ({
   onRunAllAgents,
   isRunningAll,
   onAskAiStage,
+  isStale = false,
 }) => {
   const selectedStage = stages.find((s) => s.id === selectedStageId) || stages[0];
 
@@ -132,6 +134,15 @@ export const PipelinePanel: React.FC<PipelinePanelProps> = ({
           <span className="text-[10px] text-text-muted font-mono bg-surface-container px-2 py-0.5 rounded border border-border-subtle">
             {passedCount}/{stages.length} Completed ({totalTime.toFixed(1)} ms)
           </span>
+          {isStale && (
+            <span
+              className="flex items-center gap-1 text-[10px] text-status-warning bg-status-warning/10 px-1.5 py-0.5 rounded border border-status-warning/30"
+              title="Editor content changed since last analysis"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-status-warning animate-pulse" />
+              <span>Stale</span>
+            </span>
+          )}
         </div>
         <button
           type="button"
@@ -143,11 +154,28 @@ export const PipelinePanel: React.FC<PipelinePanelProps> = ({
           <span
             className={`material-symbols-outlined text-[14px] ${isRunningAll ? 'animate-spin' : ''}`}
           >
-            {isRunningAll ? 'sync' : 'play_arrow'}
+            play_arrow
           </span>
-          <span>{isRunningAll ? 'Running Pipeline...' : 'Run All Agents'}</span>
+          <span>{isRunningAll ? 'Running Agents...' : 'Run All Agents'}</span>
         </button>
       </div>
+
+      {isStale && (
+        <div className="flex items-center justify-between px-3 py-1.5 rounded bg-status-warning/10 border border-status-warning/30 text-status-warning text-[11px] shrink-0">
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-status-warning animate-pulse" />
+            <span>Editor content modified since last pipeline execution.</span>
+          </span>
+          <button
+            type="button"
+            onClick={onRunAllAgents}
+            disabled={isRunningAll}
+            className="px-2 py-0.5 rounded bg-status-warning text-surface-deepest font-semibold text-[10px] hover:bg-status-warning/90 transition-colors disabled:opacity-50"
+          >
+            Rerun Pipeline
+          </button>
+        </div>
+      )}
 
       {/* 7-Stage Horizontal Pipeline Graph */}
       <div className="grid grid-cols-7 gap-2 shrink-0">
@@ -167,7 +195,7 @@ export const PipelinePanel: React.FC<PipelinePanelProps> = ({
             >
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-text-muted font-mono">#{idx + 1}</span>
+                  <span className="text-[10px] text-text-muted font-mono">#{idx + 1}</span>
                   <span
                     className={`material-symbols-outlined text-[15px] ${badge.color} ${
                       stage.status === 'running' ? 'animate-spin' : ''
@@ -179,16 +207,16 @@ export const PipelinePanel: React.FC<PipelinePanelProps> = ({
                 <div className="font-semibold text-[11px] text-text-primary truncate mt-1">
                   {stage.name}
                 </div>
-                <div className="text-[9px] text-text-muted font-mono truncate">{stage.agentName}</div>
+                <div className="text-[10px] text-text-muted font-mono truncate">{stage.agentName}</div>
               </div>
 
               <div className="mt-2 pt-1 border-t border-border-subtle flex items-center justify-between">
                 <span
-                  className={`text-[9px] px-1 py-0.2 rounded font-mono font-medium ${badge.bg} ${badge.color}`}
+                  className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-medium ${badge.bg} ${badge.color}`}
                 >
                   {badge.label}
                 </span>
-                <span className="text-[9px] text-text-muted font-mono">
+                <span className="text-[10px] text-text-muted font-mono">
                   {stage.status !== 'not_run' && stage.status !== 'queued'
                     ? `${stage.elapsedMs.toFixed(1)}ms`
                     : '--'}
@@ -209,13 +237,13 @@ export const PipelinePanel: React.FC<PipelinePanelProps> = ({
                 Stage Detail: {selectedStage.name} ({selectedStage.agentName})
               </span>
               <span
-                className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold ${
+                className={`text-[11px] px-2 py-0.5 rounded font-mono font-bold ${
                   getStatusBadge(selectedStage.status).bg
                 } ${getStatusBadge(selectedStage.status).color}`}
               >
                 {getStatusBadge(selectedStage.status).label}
               </span>
-              <span className="text-[10px] text-text-muted font-mono">
+              <span className="text-[11px] text-text-muted font-mono">
                 Duration: {selectedStage.elapsedMs.toFixed(2)} ms
               </span>
             </div>
@@ -224,7 +252,7 @@ export const PipelinePanel: React.FC<PipelinePanelProps> = ({
               {onAskAiStage && (
                 <button
                   type="button"
-                  className="flex items-center gap-1 px-2.5 py-1 rounded bg-primary/15 hover:bg-primary/25 text-primary border border-primary/40 text-[10px] font-semibold transition-colors"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded bg-primary/15 hover:bg-primary/25 text-primary border border-primary/40 text-[11px] font-semibold transition-colors"
                   onClick={() => onAskAiStage(selectedStage)}
                   title={`Ask AI to explain and suggest fixes for ${selectedStage.name} stage`}
                 >

@@ -21,6 +21,7 @@ export interface ChatMessage {
     line?: number;
     col?: number;
   };
+  retryPrompt?: string;
   timestamp?: number;
 }
 
@@ -47,6 +48,7 @@ interface AssistantPanelProps {
   onAcceptDiff?: (proposal?: PatchProposal | EnrichedPatchProposal) => void;
   onRejectDiff?: (proposal?: PatchProposal | EnrichedPatchProposal) => void;
   onImproveDiff?: (proposal?: PatchProposal | EnrichedPatchProposal) => void;
+  onSwitchProposalOrigin?: (proposal?: any, targetOrigin?: 'rule' | 'ai') => void;
   onReanalyze?: () => void;
   onInsertCodeSnippet?: (code: string) => void;
   onShowToast: (msg: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
@@ -76,6 +78,7 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({
   onAcceptDiff,
   onRejectDiff,
   onImproveDiff,
+  onSwitchProposalOrigin,
   onReanalyze,
   onInsertCodeSnippet,
   onShowToast,
@@ -198,8 +201,17 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({
                   </span>
                 )}
                 {msg.proposal?.origin && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent-ai/10 text-accent-ai font-semibold uppercase tracking-wider">
-                    {msg.proposal.origin}
+                  <span
+                    className={`text-[9px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex items-center gap-1 border ${
+                      msg.proposal.origin === 'rule'
+                        ? 'bg-primary/10 text-primary border-primary/30'
+                        : 'bg-accent-ai/10 text-accent-ai border-accent-ai/30'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[10px]">
+                      {msg.proposal.origin === 'rule' ? 'memory' : 'auto_fix_high'}
+                    </span>
+                    {msg.proposal.origin === 'rule' ? 'Model / Rule Proposal' : 'AI Assistant Proposal'}
                   </span>
                 )}
               </div>
@@ -215,18 +227,18 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({
 
             {/* Target Source Range */}
             {(msg.proposal as any)?.original_range && (
-              <div className="text-[10px] text-text-muted flex items-center gap-2">
+              <div className="text-[11px] text-text-muted flex items-center gap-2">
                 <span><strong>Target Range:</strong> Ln {(msg.proposal as any).original_range.start_line}:{(msg.proposal as any).original_range.start_col} - Ln {(msg.proposal as any).original_range.end_line}:{(msg.proposal as any).original_range.end_col}</span>
               </div>
             )}
 
             {/* Original vs Replacement preview */}
             {(msg.proposal as any)?.original_text !== undefined && (msg.proposal as any)?.original_text !== '' && (
-              <div className="text-[10px] space-y-1">
-                <div className="text-status-error/90 bg-status-error/10 px-2 py-0.5 rounded font-mono truncate">
+              <div className="text-[11px] space-y-1">
+                <div className="text-status-error bg-status-error/15 px-2 py-0.5 rounded font-mono truncate font-medium">
                   - {(msg.proposal as any).original_text}
                 </div>
-                <div className="text-status-success/90 bg-status-success/10 px-2 py-0.5 rounded font-mono truncate">
+                <div className="text-status-success bg-status-success/15 px-2 py-0.5 rounded font-mono truncate font-medium">
                   + {(msg.proposal as any).replacement_text}
                 </div>
               </div>
@@ -234,11 +246,11 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({
 
             {/* Unified diff */}
             {msg.diff?.unifiedDiff ? (
-              <pre className="bg-surface-editor/60 border border-border-subtle rounded p-2 text-[10px] overflow-x-auto leading-relaxed max-h-48">
+              <pre className="bg-surface-editor border border-border-subtle rounded p-2 text-[11px] overflow-x-auto leading-relaxed max-h-48 font-mono">
                 {msg.diff.unifiedDiff.split('\n').map((line, i) => {
                   let cls = 'text-text-secondary';
-                  if (line.startsWith('+') && !line.startsWith('+++')) cls = 'text-status-success font-semibold bg-status-success/10 block px-1 rounded';
-                  else if (line.startsWith('-') && !line.startsWith('---')) cls = 'text-status-error font-semibold bg-status-error/10 block px-1 rounded';
+                  if (line.startsWith('+') && !line.startsWith('+++')) cls = 'text-status-success font-semibold bg-status-success/15 block px-1.5 rounded';
+                  else if (line.startsWith('-') && !line.startsWith('---')) cls = 'text-status-error font-semibold bg-status-error/15 block px-1.5 rounded';
                   else if (line.startsWith('@@')) cls = 'text-accent-ai font-semibold';
                   return (
                     <span key={i} className={cls}>
@@ -282,6 +294,30 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({
                 <span className="material-symbols-outlined text-[13px]">auto_fix_high</span>
                 <span>Improve with AI</span>
               </button>
+              {onSwitchProposalOrigin && msg.proposal?.origin && (
+                <button
+                  type="button"
+                  className="px-2.5 py-1 bg-surface-container hover:bg-surface-hover text-text-primary rounded text-[11px] border border-border-subtle transition-colors flex items-center gap-1"
+                  onClick={() =>
+                    onSwitchProposalOrigin(
+                      msg.proposal,
+                      msg.proposal?.origin === 'rule' ? 'ai' : 'rule'
+                    )
+                  }
+                  title={
+                    msg.proposal.origin === 'rule'
+                      ? 'Request alternative fix from AI Assistant (Groq)'
+                      : 'Request deterministic fix from Compiler & ML Model Rules'
+                  }
+                >
+                  <span className="material-symbols-outlined text-[13px]">
+                    {msg.proposal.origin === 'rule' ? 'auto_fix_high' : 'memory'}
+                  </span>
+                  <span>
+                    {msg.proposal.origin === 'rule' ? 'Try AI Fix' : 'Try Model Fix'}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -296,6 +332,20 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({
             >
               <span className="material-symbols-outlined text-[14px]">refresh</span>
               <span>Reanalyze Now</span>
+            </button>
+          </div>
+        )}
+
+        {/* Retry button for failed messages */}
+        {msg.retryPrompt && (
+          <div className="mt-2 pt-1">
+            <button
+              type="button"
+              className="px-3 py-1.5 bg-status-error/10 text-status-error border border-status-error/30 rounded text-[11px] font-semibold hover:bg-status-error/20 transition-colors flex items-center gap-1.5 shadow-xs"
+              onClick={() => onSendMessage(msg.retryPrompt!)}
+            >
+              <span className="material-symbols-outlined text-[14px]">replay</span>
+              <span>Retry Request</span>
             </button>
           </div>
         )}
@@ -348,7 +398,12 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({
           <button
             type="button"
             className="p-1 hover:text-text-primary hover:bg-surface-hover rounded transition-colors"
-            onClick={onClearChat}
+            onClick={() => {
+              if (messages.length === 0) return;
+              if (window.confirm('Clear all conversation history for this session?')) {
+                onClearChat();
+              }
+            }}
             title="Clear Chat History"
           >
             <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
@@ -454,11 +509,11 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({
         id="chatContainer"
       >
         {messages.length === 0 ? (
-          <div className="text-center text-text-muted text-[11px] py-6 space-y-2">
-            <span className="material-symbols-outlined text-[28px] text-text-muted/60">chat</span>
-            <div>No messages yet for this file.</div>
-            <div className="text-[10px] text-text-muted/80">
-              Ask about lexical tokens, Trojan Source Unicode anomalies, or request an AI fix.
+          <div className="text-center text-text-muted text-[12px] py-10 space-y-2 select-none">
+            <span className="material-symbols-outlined text-[32px] text-text-muted/50">chat</span>
+            <div className="font-semibold text-text-secondary">No conversation history yet</div>
+            <div className="text-[11px] text-text-muted max-w-xs mx-auto leading-relaxed">
+              Ask about lexical tokens, Trojan Source Unicode anomalies, or request an AI fix and explanation.
             </div>
           </div>
         ) : (
@@ -509,7 +564,7 @@ export const AssistantPanel: React.FC<AssistantPanelProps> = ({
           onSubmit={handleSubmit}
         >
           <textarea
-            className="w-full bg-transparent text-text-primary text-[11px] outline-none resize-none placeholder-text-muted leading-relaxed"
+            className="w-full bg-transparent text-text-primary text-[12px] outline-none resize-none placeholder-text-muted leading-relaxed"
             id="chatInput"
             placeholder="Ask anything about this code or prompt an AI fix/improvement..."
             rows={2}

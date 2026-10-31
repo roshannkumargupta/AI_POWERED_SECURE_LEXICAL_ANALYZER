@@ -62,8 +62,8 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
         </div>
-        <div className="h-4 w-[1px] bg-border-primary" />
-        <span className="text-[11px] text-text-secondary hidden md:inline font-medium tracking-tight">
+        <div className="h-4 w-[1px] bg-border-primary hidden xl:block" />
+        <span className="text-[11px] text-text-secondary hidden xl:inline font-medium tracking-tight">
           AI-Powered Secure Lexical Analyzer &amp; AST Engine
         </span>
       </div>

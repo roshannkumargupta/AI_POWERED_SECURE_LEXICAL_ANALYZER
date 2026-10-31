@@ -28,11 +28,16 @@ export interface SecurityFindingItem {
 interface SecurityPanelProps {
   findings: SecurityFindingItem[];
   onApplyRemediation: () => void;
-  onJumpToCode?: (line: number, col: number, endLine?: number, endCol?: number) => void;
+  onJumpToCode?: (line: number, col: number, endLine?: number, endCol?: number, file?: string) => void;
   onFocusLine?: (line: number) => void;
   onExplainFinding?: (f: SecurityFindingItem) => void;
+  onFixWithModelFinding?: (f: SecurityFindingItem) => void;
   onFixWithAiFinding?: (f: SecurityFindingItem) => void;
   isAnalyzing?: boolean;
+  isStale?: boolean;
+  onReanalyze?: () => void;
+  hasAnalyzed?: boolean;
+  errorMessage?: string | null;
 }
 
 function getSeverityBadge(severity: string) {
@@ -55,8 +60,13 @@ export const SecurityPanel: React.FC<SecurityPanelProps> = ({
   onJumpToCode,
   onFocusLine,
   onExplainFinding,
+  onFixWithModelFinding,
   onFixWithAiFinding,
   isAnalyzing = false,
+  isStale = false,
+  onReanalyze,
+  hasAnalyzed = true,
+  errorMessage = null,
 }) => {
   const [expandedEvidence, setExpandedEvidence] = useState<Record<string, boolean>>({});
 
@@ -84,6 +94,15 @@ export const SecurityPanel: React.FC<SecurityPanelProps> = ({
               Auditing...
             </span>
           )}
+          {!isAnalyzing && isStale && (
+            <span
+              className="flex items-center gap-1 text-[10px] text-status-warning bg-status-warning/10 px-1.5 py-0.5 rounded border border-status-warning/30"
+              title="Editor content changed since last analysis"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-status-warning animate-pulse" />
+              <span>Stale</span>
+            </span>
+          )}
         </div>
         {findings.length > 0 && (
           <button
@@ -97,9 +116,49 @@ export const SecurityPanel: React.FC<SecurityPanelProps> = ({
         )}
       </div>
 
+      {isStale && onReanalyze && (
+        <div className="flex items-center justify-between px-3 py-1.5 rounded bg-status-warning/10 border border-status-warning/30 text-status-warning text-[11px] shrink-0">
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-status-warning animate-pulse" />
+            <span>Editor content modified. Security findings may be outdated.</span>
+          </span>
+          <button
+            type="button"
+            onClick={onReanalyze}
+            className="px-2 py-0.5 rounded bg-status-warning text-surface-deepest font-semibold text-[10px] hover:bg-status-warning/90 transition-colors"
+          >
+            Reanalyze
+          </button>
+        </div>
+      )}
+
       {/* Findings List */}
       <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
-        {findings.length === 0 ? (
+        {isAnalyzing ? (
+          <div className="bg-surface-elevated p-4 rounded-lg border border-primary/30 flex items-center gap-3 text-primary shadow-xs">
+            <span className="material-symbols-outlined text-[22px] animate-spin">sync</span>
+            <div>
+              <div className="text-[12px] font-semibold">Running Security Audit</div>
+              <div className="text-[11px] text-text-muted">Scanning for Trojan Source Unicode, CVE patterns, and taint vulnerabilities...</div>
+            </div>
+          </div>
+        ) : errorMessage ? (
+          <div className="bg-status-error/10 p-4 rounded-lg border border-status-error/40 flex items-start gap-3 text-status-error shadow-xs">
+            <span className="material-symbols-outlined text-[22px] shrink-0 mt-0.5">gpp_bad</span>
+            <div>
+              <div className="text-[12px] font-semibold">Security Audit Failed</div>
+              <div className="text-[11px] text-text-secondary mt-0.5 font-mono">{errorMessage}</div>
+            </div>
+          </div>
+        ) : !hasAnalyzed ? (
+          <div className="bg-surface-elevated p-4 rounded-lg border border-border-subtle flex items-center gap-3 text-text-muted shadow-xs">
+            <span className="material-symbols-outlined text-[22px] text-text-muted/60">shield</span>
+            <div>
+              <div className="text-[12px] font-medium text-text-secondary">Security Scan Not Performed</div>
+              <div className="text-[11px] text-text-muted">Execute lexical or further analysis to inspect security findings.</div>
+            </div>
+          </div>
+        ) : findings.length === 0 ? (
           <div className="bg-surface-elevated p-4 rounded-lg border border-status-success/30 space-y-1.5 shadow-xs text-status-success flex items-center gap-2.5">
             <span className="material-symbols-outlined text-[22px]">check_circle</span>
             <div>
@@ -121,7 +180,24 @@ export const SecurityPanel: React.FC<SecurityPanelProps> = ({
             return (
               <div
                 key={f.id}
-                className="bg-surface-elevated p-3 rounded-lg border border-border-subtle space-y-2 shadow-xs transition-colors hover:border-status-warning/40"
+                className="bg-surface-elevated p-3 rounded-lg border border-border-subtle space-y-2 shadow-xs transition-colors hover:border-status-warning/40 cursor-pointer"
+                onClick={() => {
+                  if (f.line !== undefined && f.col !== undefined) {
+                    onJumpToCode?.(
+                      f.line,
+                      f.col,
+                      f.range?.end_line,
+                      f.range?.end_col,
+                      f.file
+                    );
+                  } else if (f.line) {
+                    if (onJumpToCode) {
+                      onJumpToCode(f.line, 1, f.line, 2, f.file);
+                    } else {
+                      onFocusLine?.(f.line);
+                    }
+                  }
+                }}
               >
                 {/* Title and Badges */}
                 <div className="flex justify-between items-start gap-2">
@@ -133,7 +209,7 @@ export const SecurityPanel: React.FC<SecurityPanelProps> = ({
                       <div className="text-[12px] font-semibold text-text-primary truncate">
                         {f.title}
                       </div>
-                      <div className="text-[10px] text-text-muted font-mono flex items-center gap-2 mt-0.5">
+                      <div className="text-[11px] text-text-muted font-mono flex items-center gap-2 mt-0.5">
                         {f.file && <span>{f.file}</span>}
                         {f.line !== undefined && (
                           <span>
@@ -142,7 +218,7 @@ export const SecurityPanel: React.FC<SecurityPanelProps> = ({
                           </span>
                         )}
                         {f.cwe && (
-                          <span className="px-1 py-0.2 rounded bg-surface-deepest border border-border-subtle text-text-secondary">
+                          <span className="px-1.5 py-0.5 rounded bg-surface-deepest border border-border-subtle text-text-secondary text-[10px]">
                             {f.cwe}
                           </span>
                         )}
@@ -151,17 +227,17 @@ export const SecurityPanel: React.FC<SecurityPanelProps> = ({
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {f.certainty && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-surface-deepest text-text-muted font-mono uppercase">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-deepest text-text-muted font-mono uppercase">
                         {f.certainty}
                       </span>
                     )}
                     {f.confidence !== undefined && f.confidence !== null && (
-                      <span className="text-[10px] font-mono text-primary font-bold">
+                      <span className="text-[11px] font-mono text-primary font-bold">
                         {Math.round(f.confidence * 100)}% conf
                       </span>
                     )}
                     <span
-                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${getSeverityBadge(
+                      className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${getSeverityBadge(
                         f.severity
                       )}`}
                     >
@@ -176,7 +252,7 @@ export const SecurityPanel: React.FC<SecurityPanelProps> = ({
                 </p>
 
                 {/* Detection Rule / Agent Provenance */}
-                <div className="pl-6 flex items-center gap-3 text-[10px] text-text-muted font-mono">
+                <div className="pl-6 flex items-center gap-3 text-[11px] text-text-muted font-mono">
                   {f.ruleId && (
                     <span>
                       Rule: <strong className="text-text-secondary">{f.ruleId}</strong>
@@ -241,10 +317,15 @@ export const SecurityPanel: React.FC<SecurityPanelProps> = ({
                           f.line,
                           f.col,
                           f.range?.end_line,
-                          f.range?.end_col
+                          f.range?.end_col,
+                          f.file
                         );
                       } else if (f.line) {
-                        onFocusLine?.(f.line);
+                        if (onJumpToCode) {
+                          onJumpToCode(f.line, 1, f.line, 2, f.file);
+                        } else {
+                          onFocusLine?.(f.line);
+                        }
                       }
                     }}
                   >
@@ -257,18 +338,38 @@ export const SecurityPanel: React.FC<SecurityPanelProps> = ({
                       <button
                         type="button"
                         className="flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container hover:bg-surface-hover text-text-primary text-[10px] font-medium transition-colors border border-border-subtle"
-                        onClick={() => onExplainFinding(f)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onExplainFinding(f);
+                        }}
                         title="Ask AI to explain this security finding"
                       >
                         <span className="material-symbols-outlined text-[13px] text-accent-ai">auto_awesome</span>
                         <span>Ask AI</span>
                       </button>
                     )}
+                    {onFixWithModelFinding && (
+                      <button
+                        type="button"
+                        className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-primary/20 hover:bg-primary/30 text-primary border border-primary/40 text-[10px] font-semibold transition-colors shadow-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onFixWithModelFinding(f);
+                        }}
+                        title="Propose deterministic ML & compiler rule fix"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">memory</span>
+                        <span>Fix with Model</span>
+                      </button>
+                    )}
                     {onFixWithAiFinding && (
                       <button
                         type="button"
                         className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-status-success/20 hover:bg-status-success/30 text-status-success border border-status-success/40 text-[10px] font-semibold transition-colors shadow-xs"
-                        onClick={() => onFixWithAiFinding(f)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onFixWithAiFinding(f);
+                        }}
                         title="Synthesize AI fix for this security finding"
                       >
                         <span className="material-symbols-outlined text-[13px]">auto_fix_high</span>

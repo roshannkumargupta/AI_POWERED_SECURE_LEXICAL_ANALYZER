@@ -18,10 +18,12 @@ interface ExplorerSidebarProps {
   onSelectDoc: (id: string) => void;
   onOpenFile: (path: string) => void;
   onCreateFile: (path: string) => void;
+  onCreateFolder?: (path: string) => void;
   onRenameFile: (oldPath: string, newPath: string) => void;
   onDeleteFile: (path: string) => void;
   onRefreshTree: () => void;
-  onSearchFocusLine: (line: number, col?: number, length?: number) => void;
+  getFileAnalysisInfo?: (path: string) => { status: string; sourceVersion: number } | null;
+  onSearchFocusLine: (line: number, col?: number, length?: number, file?: string) => void;
   onApplyFix: () => void;
   onRunSwarm: () => void;
   fontSize: number;
@@ -87,9 +89,11 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
   activeDocId,
   onOpenFile,
   onCreateFile,
+  onCreateFolder,
   onRenameFile,
   onDeleteFile,
   onRefreshTree,
+  getFileAnalysisInfo,
   onSearchFocusLine,
   onApplyFix,
   onRunSwarm,
@@ -113,10 +117,28 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
   onShowToast,
 }) => {
   // Explorer Folders & Creation state
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => new Set(['src']));
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('securelex_expanded_folders');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return new Set(parsed);
+      }
+    } catch {}
+    return new Set(['src']);
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('securelex_expanded_folders', JSON.stringify([...expandedFolders]));
+    } catch {}
+  }, [expandedFolders]);
+
   const [isCreatingFile, setIsCreatingFile] = useState(false);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [creatingInFolder, setCreatingInFolder] = useState<string>('');
   const [newFileName, setNewFileName] = useState('');
+  const [newFolderName, setNewFolderName] = useState('');
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
   const [renameInput, setRenameInput] = useState('');
 
@@ -142,7 +164,11 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
   const [extensionFilter, setExtensionFilter] = useState('');
 
   const activeDoc = documents.find((d) => d.id === activeDocId);
-  const dirtyPathSet = new Set(documents.filter((d) => d.dirty).map((d) => d.name));
+  const dirtyPathSet = new Set(
+    documents
+      .filter((d) => d.dirty)
+      .flatMap((d) => [d.name, d.name.replace(/^src\//, ''), `src/${d.name}`])
+  );
 
   const toggleFolder = (path: string) => {
     setExpandedFolders((prev) => {
@@ -181,6 +207,19 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
     onCreateFile(fullPath);
     setIsCreatingFile(false);
     setNewFileName('');
+    setCreatingInFolder('');
+  };
+
+  const submitCreateFolder = () => {
+    const trimmed = newFolderName.trim();
+    if (!trimmed) {
+      setIsCreatingFolder(false);
+      return;
+    }
+    const fullPath = creatingInFolder ? `${creatingInFolder}/${trimmed}` : trimmed;
+    onCreateFolder?.(fullPath);
+    setIsCreatingFolder(false);
+    setNewFolderName('');
     setCreatingInFolder('');
   };
 
@@ -226,6 +265,10 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
       onShowToast('Enter a search term to replace', 'warning');
       return;
     }
+    const confirmed = window.confirm(
+      `Are you sure you want to replace all occurrences of "${searchQuery}" with "${replaceQuery}" across the workspace? This will modify project files.`
+    );
+    if (!confirmed) return;
     try {
       const res = await apiClient.replaceWorkspace(searchQuery, replaceQuery, undefined, isRegex, matchCase);
       if (res.success) {
@@ -306,6 +349,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
     const isMainCpp = node.path === 'src/main.cpp' || node.name === 'main.cpp';
 
     if (isDir) {
+      const isRenamingDir = renamingPath === node.path;
       return (
         <div key={node.path} className="flex flex-col">
           <div
@@ -313,16 +357,31 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
             style={{ paddingLeft: `${8 + depth * 12}px` }}
             onClick={() => toggleFolder(node.path)}
           >
-            <div className="flex items-center gap-1.5 truncate">
+            <div className="flex items-center gap-1.5 truncate flex-1 min-w-0">
               <span className="material-symbols-outlined text-[14px]">
                 {isExpanded ? 'expand_more' : 'chevron_right'}
               </span>
               <span className="material-symbols-outlined text-[16px] text-accent-fix">
                 {isExpanded ? 'folder_open' : 'folder'}
               </span>
-              <span className="font-medium text-[11px] truncate">{node.name}</span>
+              {isRenamingDir ? (
+                <input
+                  autoFocus
+                  className="flex-1 bg-surface-deepest border border-primary rounded px-1 py-0.2 text-[11px] font-mono text-text-primary outline-none"
+                  value={renameInput}
+                  onChange={(e) => setRenameInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') submitRename();
+                    if (e.key === 'Escape') setRenamingPath(null);
+                  }}
+                  onBlur={submitRename}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <span className="font-medium text-[11px] truncate">{node.name}</span>
+              )}
             </div>
-            <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1">
+            <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">
               <button
                 type="button"
                 className="hover:text-text-primary text-text-muted p-0.5 rounded"
@@ -330,12 +389,53 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                 onClick={(e) => {
                   e.stopPropagation();
                   setCreatingInFolder(node.path);
+                  setIsCreatingFolder(false);
                   setIsCreatingFile(true);
                   setNewFileName('');
                   setExpandedFolders((prev) => new Set([...prev, node.path]));
                 }}
               >
                 <span className="material-symbols-outlined text-[12px]">note_add</span>
+              </button>
+              <button
+                type="button"
+                className="hover:text-text-primary text-text-muted p-0.5 rounded"
+                title={`New folder in ${node.name}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCreatingInFolder(node.path);
+                  setIsCreatingFile(false);
+                  setIsCreatingFolder(true);
+                  setNewFolderName('');
+                  setExpandedFolders((prev) => new Set([...prev, node.path]));
+                }}
+              >
+                <span className="material-symbols-outlined text-[12px]">create_new_folder</span>
+              </button>
+              <button
+                type="button"
+                className="hover:text-text-primary text-text-muted p-0.5 rounded"
+                title={`Rename ${node.name}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRenamingPath(node.path);
+                  setRenameInput(node.name);
+                }}
+              >
+                <span className="material-symbols-outlined text-[12px]">edit</span>
+              </button>
+              <button
+                type="button"
+                className="hover:text-status-error text-text-muted p-0.5 rounded"
+                title={`Delete ${node.name}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm(`Delete folder '${node.name}' and all its contents?`)) {
+                    onDeleteFile(node.path);
+                  }
+                }}
+              >
+                <span className="material-symbols-outlined text-[12px]">delete</span>
               </button>
             </div>
           </div>
@@ -364,6 +464,28 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                   />
                 </div>
               )}
+              {isCreatingFolder && creatingInFolder === node.path && (
+                <div
+                  className="flex items-center gap-1 px-2 py-0.5"
+                  style={{ paddingLeft: `${20 + depth * 12}px` }}
+                >
+                  <span className="material-symbols-outlined text-[14px] text-accent-fix">
+                    create_new_folder
+                  </span>
+                  <input
+                    autoFocus
+                    className="flex-1 bg-surface-deepest border border-primary rounded px-1.5 py-0.5 text-[11px] font-mono text-text-primary outline-none"
+                    placeholder="foldername"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') submitCreateFolder();
+                      if (e.key === 'Escape') setIsCreatingFolder(false);
+                    }}
+                    onBlur={submitCreateFolder}
+                  />
+                </div>
+              )}
               {node.children && node.children.map((child) => renderTreeNode(child, depth + 1))}
             </div>
           )}
@@ -374,6 +496,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
     // File Node
     const fileIcon = getFileIcon(node.name);
     const isRenamingThis = renamingPath === node.path;
+    const analysisInfo = getFileAnalysisInfo ? getFileAnalysisInfo(node.path) : null;
 
     return (
       <div
@@ -412,9 +535,42 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
+          {analysisInfo && (
+            <span
+              className="flex items-center"
+              title={`Analysis: ${analysisInfo.status} (v${analysisInfo.sourceVersion})`}
+            >
+              {analysisInfo.status === 'passed' && (
+                <span className="material-symbols-outlined text-[13px] text-status-success">
+                  check_circle
+                </span>
+              )}
+              {analysisInfo.status === 'failed_source_diagnostics' && (
+                <span className="material-symbols-outlined text-[13px] text-status-error">
+                  error
+                </span>
+              )}
+              {analysisInfo.status === 'warning' && (
+                <span className="material-symbols-outlined text-[13px] text-status-warning">
+                  warning
+                </span>
+              )}
+              {analysisInfo.status === 'outdated' && (
+                <span className="material-symbols-outlined text-[13px] text-status-warning animate-pulse">
+                  pending
+                </span>
+              )}
+              {analysisInfo.status === 'running' && (
+                <span className="material-symbols-outlined text-[13px] text-primary animate-spin">
+                  sync
+                </span>
+              )}
+            </span>
+          )}
+
           {isDirty && (
             <span
-              className="w-2 h-2 rounded-full bg-primary"
+              className="w-1.5 h-1.5 rounded-full bg-status-warning"
               title="Unsaved changes"
             />
           )}
@@ -440,7 +596,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                   title="Delete file"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (window.confirm(`Delete ${node.name}?`)) {
+                    if (window.confirm(`Delete file '${node.name}'?`)) {
                       onDeleteFile(node.path);
                     }
                   }}
@@ -543,11 +699,25 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                 onClick={() => {
                   setCreatingInFolder('');
                   setIsCreatingFile(true);
+                  setIsCreatingFolder(false);
                   setNewFileName('');
                 }}
                 title="New File"
               >
                 <span className="material-symbols-outlined text-[14px]">note_add</span>
+              </button>
+              <button
+                type="button"
+                className="hover:text-text-primary p-0.5 rounded transition-colors"
+                onClick={() => {
+                  setCreatingInFolder('');
+                  setIsCreatingFolder(true);
+                  setIsCreatingFile(false);
+                  setNewFolderName('');
+                }}
+                title="New Folder"
+              >
+                <span className="material-symbols-outlined text-[14px]">create_new_folder</span>
               </button>
               <button
                 type="button"
@@ -593,6 +763,27 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                     if (e.key === 'Escape') setIsCreatingFile(false);
                   }}
                   onBlur={submitCreateFile}
+                />
+              </div>
+            )}
+
+            {/* Root-level Inline New Folder Input */}
+            {isCreatingFolder && creatingInFolder === '' && (
+              <div className="flex items-center gap-1 px-3 py-1 bg-surface-deepest/60 border-l-2 border-accent-fix">
+                <span className="material-symbols-outlined text-[14px] text-accent-fix">
+                  create_new_folder
+                </span>
+                <input
+                  autoFocus
+                  className="flex-1 bg-surface-deepest border border-primary rounded px-1.5 py-0.5 text-[11px] font-mono text-text-primary outline-none"
+                  placeholder="foldername"
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') submitCreateFolder();
+                    if (e.key === 'Escape') setIsCreatingFolder(false);
+                  }}
+                  onBlur={submitCreateFolder}
                 />
               </div>
             )}
@@ -774,7 +965,7 @@ export const ExplorerSidebar: React.FC<ExplorerSidebarProps> = ({
                               className="px-2.5 py-1.5 hover:bg-surface-hover cursor-pointer transition-colors text-[11px] font-mono"
                               onClick={() => {
                                 onOpenFile(fileRes.file);
-                                onSearchFocusLine(m.line, m.col, m.length);
+                                onSearchFocusLine(m.line, m.col, m.length, fileRes.file);
                               }}
                             >
                               <div className="flex items-center justify-between text-[10px] text-text-muted">

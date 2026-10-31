@@ -35,6 +35,7 @@ import {
   ideReducer,
   initialIDEState,
   selectActiveDocument,
+  deriveCanonicalAnalysisStatus,
   type IDEDocument,
 } from './state/store';
 import {
@@ -277,6 +278,34 @@ export const IDE: React.FC = () => {
     [fetchWorkspaceTree, handleOpenFile, showToast]
   );
 
+  // Create new folder
+  const handleCreateFolder = useCallback(
+    async (path: string) => {
+      try {
+        await apiClient.createWorkspaceFolder(path);
+        showToast(`Created folder ${path}`, 'success');
+        await fetchWorkspaceTree();
+      } catch (err: any) {
+        showToast(`Failed to create folder ${path}: ${err?.message || 'Error'}`, 'error');
+      }
+    },
+    [fetchWorkspaceTree, showToast]
+  );
+
+  // Per-file canonical analysis status & source version
+  const getFileAnalysisInfo = useCallback(
+    (path: string) => {
+      const doc = state.documents.find(
+        (d) => d.name === path || d.name === `src/${path}` || `src/${d.name}` === path
+      );
+      if (!doc) return null;
+      const analysisEntry = state.analysis[doc.id];
+      const status = deriveCanonicalAnalysisStatus(doc, analysisEntry);
+      return { status, sourceVersion: doc.sourceVersion };
+    },
+    [state.documents, state.analysis]
+  );
+
   // Rename file
   const handleRenameFile = useCallback(
     async (oldPath: string, newPath: string) => {
@@ -450,8 +479,7 @@ export const IDE: React.FC = () => {
       dispatch({ type: 'analysis/start', id: doc.id, abort });
 
       try {
-        const result = await apiClient.analyzeStageV2(
-          'lexical',
+        const result = await apiClient.analyzeV2(
           {
             source: doc.source,
             language: doc.language,
@@ -461,6 +489,9 @@ export const IDE: React.FC = () => {
             options: {
               include_tokens: true,
               stages: ['lexical'],
+              fixes: false,
+              ml: false,
+              agent: 'off',
             },
           },
           abort.signal
@@ -471,45 +502,30 @@ export const IDE: React.FC = () => {
         dispatch({
           type: 'analysis/success',
           id: doc.id,
-          result: {
-            analysis_id: result.analysis_id,
-            source_hash: result.source_hash,
-            source_version: result.source_version,
-            language: result.language,
-            lexical_status: result.lexical_status,
-            syntax_status: result.syntax_status,
-            semantic_status: result.semantic_status,
-            tokens: result.tokens || [],
-            lexical_summary: result.lexical_summary || {},
-            syntax_diagnostics: result.diagnostics || [],
-            semantic_diagnostics: [],
-            security_findings: [],
-            taint_paths: [],
-            quality: [],
-            tools: result.tools || [],
-            timing: {},
-            warnings: result.warnings || [],
-            omissions: result.omissions || [],
-          },
+          result,
           version: doc.sourceVersion,
         });
 
         const tokenCount = result.tokens?.length ?? 0;
         const invalidCount = (result.tokens || []).filter((t) => t.lexical_status === 'invalid').length;
-        if (invalidCount > 0) {
-          showToast(
-            `Lexical Analysis complete: ${tokenCount} tokens scanned, ${invalidCount} invalid token(s) detected.`,
-            'warning'
-          );
+        const lexDiagCount = (result.syntax_diagnostics || []).length;
+
+        if (invalidCount > 0 || lexDiagCount > 0) {
+          const parts: string[] = [`${tokenCount} tokens scanned`];
+          if (invalidCount > 0) parts.push(`${invalidCount} invalid`);
+          if (lexDiagCount > 0) parts.push(`${lexDiagCount} lexical diagnostic(s)`);
+          showToast(`Lexical scan complete: ${parts.join(', ')}.`, 'warning');
+        } else if (tokenCount === 0) {
+          showToast('Lexical scan complete: 0 tokens (empty or comment-only source).', 'info');
         } else {
-          showToast(`Lexical Analysis complete: ${tokenCount} tokens scanned. All valid!`, 'success');
+          showToast(`Lexical scan complete: ${tokenCount} tokens scanned. All valid!`, 'success');
         }
       } catch (err: any) {
         if (err?.name !== 'AbortError') {
           dispatch({ type: 'analysis/error', id: doc.id });
-          const msg = err?.message || 'Backend lexical analysis request failed.';
+          const msg = err?.message || 'Backend analysis request failed.';
           setAnalysisError(msg);
-          showToast(`Lexical analysis error: ${msg}`, 'error');
+          showToast(`Analysis error: ${msg}`, 'error');
         }
       }
     },
@@ -529,7 +545,11 @@ export const IDE: React.FC = () => {
       return [];
     }
 
-    const diags = currentAnalysis.syntax_diagnostics || [];
+    const diags = [
+      ...((currentAnalysis as any).diagnostics || []),
+      ...(currentAnalysis.syntax_diagnostics || []),
+      ...(currentAnalysis.semantic_diagnostics || []),
+    ];
     const diagMap = new Map<string, DiagnosticV2>();
     diags.forEach((d) => diagMap.set(d.id, d));
 
@@ -554,6 +574,12 @@ export const IDE: React.FC = () => {
         ? 'Lexical error: unclassified invalid token'
         : tok.category || tok.token_type || 'Standard token';
 
+      const suggestion =
+        (matchedDiag as any)?.remediation ||
+        (matchedDiag?.related_evidence && matchedDiag.related_evidence.length > 0
+          ? matchedDiag.related_evidence.join(', ')
+          : undefined);
+
       return {
         id: idx + 1,
         tokenId: tok.id,
@@ -574,6 +600,7 @@ export const IDE: React.FC = () => {
         diagnosticId: matchedDiag?.id,
         severity: matchedDiag?.severity,
         evidence: matchedDiag?.related_evidence,
+        suggestion,
       };
     });
   }, [currentAnalysis]);
@@ -583,30 +610,38 @@ export const IDE: React.FC = () => {
     setSelectedToken(null);
   }, [activeDoc?.id]);
 
-  // Keep selectedToken synchronized with latest analysis of active document
+  // Synchronously derived selected token that cannot lag behind or hold stale tokens across renders/edits
+  const effectiveSelectedToken = useMemo(() => {
+    if (mappedTokens.length === 0) return null;
+    if (!selectedToken) {
+      return mappedTokens.find((t) => t.status === 'Invalid') || mappedTokens[0];
+    }
+    const match = mappedTokens.find(
+      (t) =>
+        (t.tokenId && selectedToken.tokenId && t.tokenId === selectedToken.tokenId) ||
+        (t.id === selectedToken.id &&
+          t.line === selectedToken.line &&
+          t.col === selectedToken.col &&
+          t.lexeme === selectedToken.lexeme)
+    );
+    if (match) return match;
+    return mappedTokens.find((t) => t.status === 'Invalid') || mappedTokens[0];
+  }, [mappedTokens, selectedToken]);
+
+  // Keep selectedToken state clean when active document or token set changes
   useEffect(() => {
     if (mappedTokens.length === 0) {
       setSelectedToken(null);
       return;
     }
-
     setSelectedToken((prev) => {
-      if (!prev) {
-        const invalidTok = mappedTokens.find((t) => t.status === 'Invalid');
-        return invalidTok || mappedTokens[0];
-      }
-      // Check if prev token still belongs to current mappedTokens
+      if (!prev) return mappedTokens.find((t) => t.status === 'Invalid') || mappedTokens[0];
       const match = mappedTokens.find(
         (t) =>
           (t.tokenId && prev.tokenId && t.tokenId === prev.tokenId) ||
           (t.id === prev.id && t.line === prev.line && t.col === prev.col && t.lexeme === prev.lexeme)
       );
-      if (match) {
-        return match;
-      }
-      // Stale token from another file or outdated analysis: reselect invalid or first
-      const invalidTok = mappedTokens.find((t) => t.status === 'Invalid');
-      return invalidTok || mappedTokens[0];
+      return match || mappedTokens.find((t) => t.status === 'Invalid') || mappedTokens[0];
     });
   }, [mappedTokens]);
 
@@ -648,6 +683,8 @@ export const IDE: React.FC = () => {
       file: activeDoc?.name || 'source',
       line: d.range?.start_line ?? 1,
       col: d.range?.start_col ?? 1,
+      endLine: d.range?.end_line,
+      endCol: d.range?.end_col,
     }));
   }, [currentAnalysis, activeDoc]);
 
@@ -680,28 +717,88 @@ export const IDE: React.FC = () => {
     }));
   }, [currentAnalysis, activeDoc]);
 
+  // Delta decorations for source navigation highlight
+  const navDecorationsRef = useRef<string[]>([]);
+  const navTimeoutRef = useRef<any>(null);
+
   // Jump to Code in Monaco Editor
   const handleJumpToCode = useCallback(
-    (line: number, col: number, endLine?: number, endCol?: number) => {
-      setCursorPos({ line, col });
-      if (editorRef.current) {
-        editorRef.current.revealRangeInCenter({
-          startLineNumber: line,
-          startColumn: col,
-          endLineNumber: endLine || line,
-          endColumn: endCol || (col + 1),
-        });
-        editorRef.current.setSelection({
-          startLineNumber: line,
-          startColumn: col,
-          endLineNumber: endLine || line,
-          endColumn: endCol || (col + 1),
-        });
-        editorRef.current.focus();
+    async (line: number, col: number, endLine?: number, endCol?: number, file?: string) => {
+      let switched = false;
+      if (file) {
+        const matchingDoc = state.documents.find(
+          (d) => d.name === file || d.name === `src/${file}` || file === `src/${d.name}`
+        );
+        if (matchingDoc) {
+          if (activeDoc?.id !== matchingDoc.id) {
+            dispatch({ type: 'document/activate', id: matchingDoc.id });
+            switched = true;
+          }
+        } else {
+          await handleOpenFile(file);
+          switched = true;
+        }
       }
-      showToast(`Focused on Line ${line}, Column ${col}`);
+
+      setCursorPos({ line, col });
+
+      const applyNavigation = () => {
+        if (!editorRef.current) return;
+        const editor = editorRef.current;
+        const targetEndLine = endLine || line;
+        const targetEndCol = endCol || (col + 1);
+
+        editor.revealRangeInCenter({
+          startLineNumber: line,
+          startColumn: col,
+          endLineNumber: targetEndLine,
+          endColumn: targetEndCol,
+        });
+        editor.setSelection({
+          startLineNumber: line,
+          startColumn: col,
+          endLineNumber: targetEndLine,
+          endColumn: targetEndCol,
+        });
+
+        navDecorationsRef.current = editor.deltaDecorations(navDecorationsRef.current, [
+          {
+            range: {
+              startLineNumber: line,
+              startColumn: col,
+              endLineNumber: targetEndLine,
+              endColumn: targetEndCol,
+            },
+            options: {
+              isWholeLine: false,
+              className: 'bg-primary/20 border-b-2 border-primary animate-pulse',
+              inlineClassName: 'bg-primary/30 rounded-xs ring-1 ring-primary/70',
+            },
+          },
+        ]);
+
+        if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
+        navTimeoutRef.current = setTimeout(() => {
+          if (editorRef.current) {
+            navDecorationsRef.current = editorRef.current.deltaDecorations(
+              navDecorationsRef.current,
+              []
+            );
+          }
+        }, 2500);
+
+        editor.focus();
+      };
+
+      if (switched) {
+        setTimeout(applyNavigation, 60);
+      } else {
+        applyNavigation();
+      }
+
+      showToast(`Focused on Line ${line}, Column ${col}${file ? ` in ${file}` : ''}`);
     },
-    [showToast]
+    [state.documents, activeDoc, handleOpenFile, showToast]
   );
 
   // Toggle Remote AI Provider Consent
@@ -765,14 +862,49 @@ export const IDE: React.FC = () => {
           content: m.text,
         }));
 
+        let selectedCode: string | undefined = undefined;
+        let selectedRange = {
+          start_line: cursorPos.line,
+          start_col: cursorPos.col,
+          end_line: cursorPos.line,
+          end_col: cursorPos.col + 1,
+        };
+        if (editorRef.current) {
+          const sel = editorRef.current.getSelection();
+          if (sel && !sel.isEmpty()) {
+            selectedRange = {
+              start_line: sel.startLineNumber,
+              start_col: sel.startColumn,
+              end_line: sel.endLineNumber,
+              end_col: sel.endColumn,
+            };
+            const model = editorRef.current.getModel();
+            if (model) {
+              selectedCode = model.getValueInRange(sel);
+            }
+          }
+        }
+
+        const attachedToken =
+          effectiveSelectedToken
+            ? {
+                id: effectiveSelectedToken.id,
+                lexeme: effectiveSelectedToken.lexeme,
+                type: effectiveSelectedToken.type,
+                status: effectiveSelectedToken.status,
+                line: effectiveSelectedToken.line,
+                col: effectiveSelectedToken.col,
+                desc: effectiveSelectedToken.desc,
+              }
+            : undefined;
+
         const context = {
           file: activeDoc.name,
           language: activeDoc.language,
           source_version: activeDoc.sourceVersion,
-          selected_range: {
-            start_line: cursorPos.line,
-            start_col: cursorPos.col,
-          },
+          selected_range: selectedRange,
+          selected_code: selectedCode,
+          selected_token: attachedToken,
           stage: activeBottomTab,
           finding: activeAssistantFinding
             ? {
@@ -822,6 +954,7 @@ export const IDE: React.FC = () => {
           id: `msg-${Date.now() + 1}`,
           sender: 'assistant',
           text: `⚠️ **AI Provider Notice**: ${errDetail}\n\n*Please ensure Groq API key is configured in \`.env\` and session consent is granted.*`,
+          retryPrompt: text,
           timestamp: Date.now(),
         };
         updateFileChatMessages((prev) => [...prev, assistantErrMsg]);
@@ -830,7 +963,7 @@ export const IDE: React.FC = () => {
         setIsSendingChat(false);
       }
     },
-    [activeDoc, activeAssistantFinding, activeBottomTab, chatMessages, cursorPos, mappedSecurityFindings.length, remoteConsented, showToast, updateFileChatMessages]
+    [activeDoc, activeAssistantFinding, activeBottomTab, chatMessages, cursorPos, effectiveSelectedToken, mappedSecurityFindings.length, mappedTokens, remoteConsented, showToast, updateFileChatMessages]
   );
 
   // Explain selected issue using recorded deterministic analysis evidence
@@ -896,17 +1029,28 @@ export const IDE: React.FC = () => {
     [activeDoc, cursorPos, remoteConsented, showToast, updateFileChatMessages]
   );
 
-  // Fix with AI: Propose verified fix using Groq Fix Agent
+  // Fix with AI or ML/Rules: Propose verified fix using Deterministic Rules/ML or Groq AI
   const handleFixWithAi = useCallback(
-    async (target: { kind: 'finding' | 'token' | 'diagnostic'; id: string; title: string }) => {
+    async (
+      target: { kind: 'finding' | 'token' | 'diagnostic'; id: string; title: string },
+      origin: 'rule' | 'ai' = 'ai'
+    ) => {
       if (!activeDoc) return;
       setAssistantOpen(true);
-      showToast(`Synthesizing verified AI fix for ${target.title}...`, 'info');
+      const isModel = origin === 'rule';
+      showToast(
+        isModel
+          ? `Retrieving deterministic Model & Rule fix for ${target.title}...`
+          : `Synthesizing verified AI fix for ${target.title}...`,
+        'info'
+      );
 
       const userMsg: ChatMessage = {
         id: `msg-${Date.now()}`,
         sender: 'user',
-        text: `Fix with AI: ${target.title}`,
+        text: isModel
+          ? `Fix with Model & Rules: ${target.title}`
+          : `Fix with AI Assistant: ${target.title}`,
         timestamp: Date.now(),
       };
       updateFileChatMessages((prev) => [...prev, userMsg]);
@@ -919,7 +1063,7 @@ export const IDE: React.FC = () => {
           language: activeDoc.language,
           filename: activeDoc.name,
           target: { kind: target.kind, id: target.id },
-          origin: 'ai',
+          origin,
           session_id: sessionIdRef.current,
           remote_consent: remoteConsented,
         });
@@ -941,12 +1085,18 @@ export const IDE: React.FC = () => {
           }
         );
 
+        const introText = isModel
+          ? `🤖 **Model & Rule Suggestion**: I have retrieved the deterministic fix proposal for **${target.title}**:\n\n**Rationale**: ${enrichedProposal.rationale}\n${
+              enrichedProposal.risks?.length ? `\n**Risks**: ${enrichedProposal.risks.join('; ')}` : ''
+            }`
+          : `✨ **AI Assistant Suggestion**: I have synthesized an AI fix proposal for **${target.title}**:\n\n**Rationale**: ${enrichedProposal.rationale}\n${
+              enrichedProposal.risks?.length ? `\n**Risks**: ${enrichedProposal.risks.join('; ')}` : ''
+            }`;
+
         const assistantMsg: ChatMessage = {
           id: `msg-${Date.now() + 1}`,
           sender: 'assistant',
-          text: `I have synthesized an AI fix proposal for **${target.title}**:\n\n**Rationale**: ${enrichedProposal.rationale}\n${
-            enrichedProposal.risks?.length ? `\n**Risks**: ${enrichedProposal.risks.join('; ')}` : ''
-          }`,
+          text: introText,
           diff: {
             file: activeDoc.name,
             unifiedDiff: enrichedProposal.diff,
@@ -967,7 +1117,7 @@ export const IDE: React.FC = () => {
         const assistantErrMsg: ChatMessage = {
           id: `msg-${Date.now() + 1}`,
           sender: 'assistant',
-          text: `⚠️ **Fix Synthesis Failed**: ${errDetail}`,
+          text: `⚠️ **Fix Synthesis Failed (${isModel ? 'Model/Rule' : 'AI'})**: ${errDetail}`,
           timestamp: Date.now(),
         };
         updateFileChatMessages((prev) => [...prev, assistantErrMsg]);
@@ -977,6 +1127,17 @@ export const IDE: React.FC = () => {
       }
     },
     [activeDoc, activeBottomTab, mappedSecurityFindings, remoteConsented, showToast, updateFileChatMessages]
+  );
+
+  const handleSwitchProposalOrigin = useCallback(
+    (proposal?: any, targetOrigin: 'rule' | 'ai' = 'ai') => {
+      if (!proposal) return;
+      const targetId = proposal.target_finding_id || proposal.finding?.id;
+      const targetTitle = proposal.finding?.title || 'Active Target';
+      const kind = proposal.target_kind || 'finding';
+      void handleFixWithAi({ kind, id: targetId, title: targetTitle }, targetOrigin);
+    },
+    [handleFixWithAi]
   );
 
   // Ask AI to explain and suggest fixes for a specific Compiler Pipeline Stage
@@ -1135,7 +1296,7 @@ export const IDE: React.FC = () => {
           source_version: activeDoc.sourceVersion,
           options: {
             include_tokens: true,
-            stages: ['lexical', 'syntax', 'security'],
+            stages: ['lexical', 'syntax', 'semantic', 'security'],
             agent: 'rules',
           },
         },
@@ -1155,6 +1316,9 @@ export const IDE: React.FC = () => {
       const hasLexicalIssues =
         (res.tokens?.filter((t) => t.lexical_status === 'invalid').length ?? 0) > 0;
       const hasSyntaxIssues = (res.syntax_diagnostics?.length ?? 0) > 0;
+      const hasSemanticIssues =
+        (res.semantic_diagnostics?.length ?? 0) > 0 ||
+        res.semantic_status?.status === 'issues';
 
       setPipelineStages((prev) =>
         prev.map((stage) => {
@@ -1165,7 +1329,7 @@ export const IDE: React.FC = () => {
           );
 
           const totalMs = stageSteps.reduce((acc, st) => acc + (st.ms || 0), 0);
-          const lastObservation =
+          let lastObservation =
             stageSteps.length > 0
               ? stageSteps[stageSteps.length - 1].observation_summary ||
                 stageSteps[stageSteps.length - 1].reason
@@ -1182,13 +1346,18 @@ export const IDE: React.FC = () => {
           } else if (stage.id === 'parser') {
             status = hasSyntaxIssues ? 'warning' : 'passed';
           } else if (stage.id === 'semantic') {
-            status = hasSecurityIssues ? 'warning' : 'passed';
+            status = hasSemanticIssues ? 'warning' : 'passed';
+            if (!hasSemanticIssues) {
+              lastObservation =
+                res.semantic_status?.reason ||
+                'Semantic typing & symbol resolution completed; no issues found.';
+            }
           } else if (stage.id === 'triage') {
             if (!hasSecurityIssues && stageSteps.length === 0) {
               status = 'skipped';
               skipReason = 'No candidate findings from earlier stages to triage.';
             } else {
-              status = 'passed';
+              status = hasSecurityIssues ? 'warning' : 'passed';
             }
           } else if (stage.id === 'fix') {
             if (!hasSecurityIssues && stageSteps.length === 0) {
@@ -1263,6 +1432,7 @@ export const IDE: React.FC = () => {
   const handleSubRoutine = useCallback(
     async (routine: string) => {
       if (!activeDoc) return;
+      setBottomCollapsed(false);
       showToast(`Executing ${routine}...`, 'info');
 
       if (routine === 'Syntax Verification') {
@@ -1467,31 +1637,46 @@ export const IDE: React.FC = () => {
 
   // Export CSV
   const handleExportCSV = useCallback(() => {
-    const csvHeader = 'Index,Line,Column,Lexeme,Type,Status,Description\n';
+    if (mappedTokens.length === 0) {
+      showToast('No analyzed tokens available to export. Run lexical analysis first.', 'warning');
+      return;
+    }
+    const csvHeader =
+      'Index,Line,Column,EndLine,EndColumn,StartOffset,EndOffset,Lexeme,Type,Category,Status,Description,RuleId\n';
     const csvRows = mappedTokens
       .map(
         (t) =>
-          `${t.id},${t.line},${t.col},"${t.lexeme.replace(/"/g, '""')}","${t.type}","${t.status}","${t.desc.replace(/"/g, '""')}"`
+          `${t.id},${t.line},${t.col},${t.endLine || t.line},${t.endCol || t.col},${t.startOffset ?? ''},${t.endOffset ?? ''},"${(t.lexeme || '').replace(/"/g, '""')}","${t.type}","${t.category || ''}","${t.status}","${(t.desc || '').replace(/"/g, '""')}","${t.ruleId || ''}"`
       )
       .join('\n');
     const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `tokens_${activeDoc?.name || 'source'}.csv`;
+    link.download = `tokens_${activeDoc?.name?.replace(/[\/\\]/g, '_') || 'source'}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    showToast('Tokens exported as CSV successfully', 'success');
+    showToast(`Exported ${mappedTokens.length} tokens to CSV`, 'success');
   }, [mappedTokens, activeDoc, showToast]);
 
   // Export JSON
   const handleExportJSON = useCallback(() => {
+    if (!currentAnalysis) {
+      showToast('No active analysis results to export. Run lexical analysis first.', 'warning');
+      return;
+    }
     const payload = {
+      analysis_id: currentAnalysis.analysis_id,
+      source_hash: currentAnalysis.source_hash,
+      source_version: activeDoc?.sourceVersion ?? currentAnalysis.source_version,
       document: activeDoc?.name,
       language: activeDoc?.language,
       tokens: mappedTokens,
       diagnostics: mappedDiagnostics,
       securityFindings: mappedSecurityFindings,
+      lexical_summary: currentAnalysis.lexical_summary,
+      lexical_status: currentAnalysis.lexical_status,
+      exported_at: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: 'application/json;charset=utf-8;',
@@ -1499,11 +1684,11 @@ export const IDE: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `analysis_${activeDoc?.name || 'source'}.json`;
+    link.download = `analysis_${activeDoc?.name?.replace(/[\/\\]/g, '_') || 'source'}.json`;
     link.click();
     URL.revokeObjectURL(url);
     showToast('Tokens and analysis exported as JSON successfully', 'success');
-  }, [mappedTokens, mappedDiagnostics, mappedSecurityFindings, activeDoc, showToast]);
+  }, [currentAnalysis, mappedTokens, mappedDiagnostics, mappedSecurityFindings, activeDoc, showToast]);
 
   // Preferences state updater and persistence
   const updatePreferences = useCallback((newPrefs: Partial<UserPreferences>) => {
@@ -1528,7 +1713,8 @@ export const IDE: React.FC = () => {
   const handleSidebarResizeStart = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     const handleMove = (moveEv: PointerEvent) => {
-      const newWidth = Math.min(480, Math.max(160, moveEv.clientX - 50));
+      const maxSidebar = Math.min(480, Math.max(160, window.innerWidth - (assistantOpen ? assistantWidth + 380 : 380)));
+      const newWidth = Math.min(maxSidebar, Math.max(160, moveEv.clientX - 50));
       setSidebarWidth(newWidth);
       editorRef.current?.layout();
     };
@@ -1543,12 +1729,13 @@ export const IDE: React.FC = () => {
     };
     window.addEventListener('pointermove', handleMove);
     window.addEventListener('pointerup', handleUp);
-  }, []);
+  }, [assistantOpen, assistantWidth]);
 
   const handleAssistantResizeStart = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     const handleMove = (moveEv: PointerEvent) => {
-      const newWidth = Math.min(700, Math.max(300, window.innerWidth - moveEv.clientX));
+      const maxAssistant = Math.min(700, Math.max(280, window.innerWidth - (!sidebarCollapsed ? sidebarWidth + 380 : 380)));
+      const newWidth = Math.min(maxAssistant, Math.max(280, window.innerWidth - moveEv.clientX));
       setAssistantWidth(newWidth);
       editorRef.current?.layout();
     };
@@ -1563,12 +1750,13 @@ export const IDE: React.FC = () => {
     };
     window.addEventListener('pointermove', handleMove);
     window.addEventListener('pointerup', handleUp);
-  }, []);
+  }, [sidebarCollapsed, sidebarWidth]);
 
   const handleBottomResizeStart = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     const handleMove = (moveEv: PointerEvent) => {
-      const newHeight = Math.min(650, Math.max(140, window.innerHeight - moveEv.clientY - 28));
+      const maxBottom = Math.min(650, Math.max(140, window.innerHeight - 180));
+      const newHeight = Math.min(maxBottom, Math.max(140, window.innerHeight - moveEv.clientY - 28));
       setBottomHeight(newHeight);
       editorRef.current?.layout();
     };
@@ -1593,6 +1781,19 @@ export const IDE: React.FC = () => {
     window.addEventListener('resize', handleWinResize);
     return () => window.removeEventListener('resize', handleWinResize);
   }, []);
+
+  // Guard against closing tab/browser with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const hasUnsaved = state.documents.some((d) => d.dirty);
+      if (hasUnsaved) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [state.documents]);
 
   // Export SARIF Security Report
   const handleExportSARIF = useCallback(() => {
@@ -1654,6 +1855,62 @@ export const IDE: React.FC = () => {
     URL.revokeObjectURL(url);
     showToast('SARIF security report exported successfully', 'success');
   }, [activeDoc?.name, mappedSecurityFindings, showToast]);
+
+  // Export Markdown Report
+  const handleExportMarkdown = useCallback(async () => {
+    if (!activeDoc) {
+      showToast('No active document available to export.', 'warning');
+      return;
+    }
+    try {
+      showToast('Generating Markdown analysis report...', 'info');
+      const blob = await apiClient.exportReport({
+        kind: 'analysis',
+        format: 'markdown',
+        source: activeDoc.source,
+        language: activeDoc.language,
+        filename: activeDoc.name,
+        source_version: activeDoc.sourceVersion,
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `securelex-report_${activeDoc.name.replace(/[/\\?%*:|"<>]/g, '_')}.md`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast('Exported Markdown analysis report successfully', 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to export Markdown report', 'error');
+    }
+  }, [activeDoc, showToast]);
+
+  // Export HTML Report
+  const handleExportHTML = useCallback(async () => {
+    if (!activeDoc) {
+      showToast('No active document available to export.', 'warning');
+      return;
+    }
+    try {
+      showToast('Generating HTML analysis report...', 'info');
+      const blob = await apiClient.exportReport({
+        kind: 'analysis',
+        format: 'html',
+        source: activeDoc.source,
+        language: activeDoc.language,
+        filename: activeDoc.name,
+        source_version: activeDoc.sourceVersion,
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `securelex-report_${activeDoc.name.replace(/[/\\?%*:|"<>]/g, '_')}.html`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast('Exported HTML analysis report successfully', 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to export HTML report', 'error');
+    }
+  }, [activeDoc, showToast]);
 
   // Keyboard Shortcuts Hook
   useEffect(() => {
@@ -1847,6 +2104,20 @@ export const IDE: React.FC = () => {
         action: handleExportSARIF,
       },
       {
+        id: 'cmd-export-markdown',
+        title: 'Export Full Report to Markdown File',
+        category: 'Export',
+        icon: 'description',
+        action: handleExportMarkdown,
+      },
+      {
+        id: 'cmd-export-html',
+        title: 'Export Full Interactive HTML Report',
+        category: 'Export',
+        icon: 'html',
+        action: handleExportHTML,
+      },
+      {
         id: 'cmd-build-with-ai',
         title: 'Build with AI Generator...',
         category: 'AI',
@@ -1875,6 +2146,8 @@ export const IDE: React.FC = () => {
       handleExportCSV,
       handleExportJSON,
       handleExportSARIF,
+      handleExportMarkdown,
+      handleExportHTML,
       showToast,
     ]
   );
@@ -1907,6 +2180,7 @@ export const IDE: React.FC = () => {
           setActivePane('pane-security');
           setSidebarCollapsed(false);
           setActiveBottomTab('view-security-tab');
+          setBottomCollapsed(false);
         }}
         resolvedTheme={resolvedTheme}
         onToggleTheme={() => {
@@ -1936,6 +2210,13 @@ export const IDE: React.FC = () => {
               setActivePane(pane);
               setSidebarCollapsed(false);
               updatePreferences({ sidebarCollapsed: false });
+              if (pane === 'pane-security') {
+                setActiveBottomTab('view-security-tab');
+                setBottomCollapsed(false);
+              } else if (pane === 'pane-pipeline') {
+                setActiveBottomTab('view-pipeline-tab');
+                setBottomCollapsed(false);
+              }
             }
             setTimeout(() => editorRef.current?.layout(), 50);
           }}
@@ -1960,10 +2241,14 @@ export const IDE: React.FC = () => {
             onSelectDoc={(id) => dispatch({ type: 'document/activate', id })}
             onOpenFile={handleOpenFile}
             onCreateFile={handleCreateFile}
+            onCreateFolder={handleCreateFolder}
             onRenameFile={handleRenameFile}
             onDeleteFile={handleDeleteFile}
             onRefreshTree={fetchWorkspaceTree}
-            onSearchFocusLine={(line, col) => handleJumpToCode(line, col || 1)}
+            getFileAnalysisInfo={getFileAnalysisInfo}
+            onSearchFocusLine={(line, col, _len, file) =>
+              handleJumpToCode(line, col || 1, undefined, undefined, file)
+            }
             onApplyFix={handleApplyFixDirect}
             onRunSwarm={handleRunAllAgents}
             fontSize={fontSize}
@@ -2025,8 +2310,15 @@ export const IDE: React.FC = () => {
           onSelectDoc={(id) => dispatch({ type: 'document/activate', id })}
           onCloseDoc={(id) => {
             if (state.documents.length <= 1) {
-              showToast('Cannot close active entry point file.', 'warning');
+              showToast('Cannot close the only open file.', 'warning');
               return;
+            }
+            const targetDoc = state.documents.find((d) => d.id === id);
+            if (targetDoc?.dirty) {
+              const confirmClose = window.confirm(
+                `File "${targetDoc.name}" has unsaved modifications.\n\nDo you want to discard unsaved changes and close this file?`
+              );
+              if (!confirmClose) return;
             }
             dispatch({ type: 'document/remove', id });
           }}
@@ -2059,11 +2351,16 @@ export const IDE: React.FC = () => {
           }}
           isAnalyzing={isAnalyzing}
           onAnalyze={() => {
+            setBottomCollapsed(false);
             setActiveBottomTab('view-tokens');
             void triggerAnalyze();
           }}
           onSubRoutine={handleSubRoutine}
-          onRunAllAgents={handleRunAllAgents}
+          onRunAllAgents={() => {
+            setBottomCollapsed(false);
+            setActiveBottomTab('view-pipeline-tab');
+            void handleRunAllAgents();
+          }}
           onOpenBuildWithAi={() => setBuildAiModalOpen(true)}
           onFocusFixInAssistant={() => {
             setAssistantOpen(true);
@@ -2094,7 +2391,7 @@ export const IDE: React.FC = () => {
             activeTab={activeBottomTab}
             onSelectTab={setActiveBottomTab}
             tokens={mappedTokens}
-            selectedToken={selectedToken}
+            selectedToken={effectiveSelectedToken}
             onSelectToken={setSelectedToken}
             onExplainToken={(t) => {
               const lexemeLabel = t.lexeme && t.lexeme.trim() ? `: '${t.lexeme}'` : '';
@@ -2106,13 +2403,29 @@ export const IDE: React.FC = () => {
                 col: t.col,
               });
             }}
+            activeSource={activeDoc?.source}
+            activeLanguage={activeDoc?.language}
+            onFixWithModelToken={(t) => {
+              const lexemeLabel = t.lexeme && t.lexeme.trim() ? `: '${t.lexeme}'` : '';
+              void handleFixWithAi(
+                {
+                  kind: 'token',
+                  id: String(t.id),
+                  title: `Token #${t.id} (${t.type}${lexemeLabel})`,
+                },
+                'rule'
+              );
+            }}
             onFixWithAiToken={(t) => {
               const lexemeLabel = t.lexeme && t.lexeme.trim() ? `: '${t.lexeme}'` : '';
-              void handleFixWithAi({
-                kind: 'token',
-                id: String(t.id),
-                title: `Token #${t.id} (${t.type}${lexemeLabel})`,
-              });
+              void handleFixWithAi(
+                {
+                  kind: 'token',
+                  id: String(t.id),
+                  title: `Token #${t.id} (${t.type}${lexemeLabel})`,
+                },
+                'ai'
+              );
             }}
             onJumpToCode={handleJumpToCode}
             diagnostics={mappedDiagnostics}
@@ -2132,12 +2445,25 @@ export const IDE: React.FC = () => {
                 col: d.col,
               });
             }}
+            onFixWithModelDiagnostic={(d) => {
+              void handleFixWithAi(
+                {
+                  kind: 'diagnostic',
+                  id: d.id,
+                  title: `Diagnostic [${d.code}]: ${d.message}`,
+                },
+                'rule'
+              );
+            }}
             onFixWithAiDiagnostic={(d) => {
-              void handleFixWithAi({
-                kind: 'diagnostic',
-                id: d.id,
-                title: `Diagnostic [${d.code}]: ${d.message}`,
-              });
+              void handleFixWithAi(
+                {
+                  kind: 'diagnostic',
+                  id: d.id,
+                  title: `Diagnostic [${d.code}]: ${d.message}`,
+                },
+                'ai'
+              );
             }}
             onExplainFinding={(f) => {
               void handleExplainTarget({
@@ -2148,21 +2474,37 @@ export const IDE: React.FC = () => {
                 col: f.col,
               });
             }}
+            onFixWithModelFinding={(f) => {
+              void handleFixWithAi(
+                {
+                  kind: 'finding',
+                  id: f.id,
+                  title: f.title,
+                },
+                'rule'
+              );
+            }}
             onFixWithAiFinding={(f) => {
-              void handleFixWithAi({
-                kind: 'finding',
-                id: f.id,
-                title: f.title,
-              });
+              void handleFixWithAi(
+                {
+                  kind: 'finding',
+                  id: f.id,
+                  title: f.title,
+                },
+                'ai'
+              );
             }}
             onApplyRemediation={() => {
               if (mappedSecurityFindings.length > 0) {
                 const f = mappedSecurityFindings[0];
-                void handleFixWithAi({
-                  kind: 'finding',
-                  id: f.id,
-                  title: f.title,
-                });
+                void handleFixWithAi(
+                  {
+                    kind: 'finding',
+                    id: f.id,
+                    title: f.title,
+                  },
+                  'rule'
+                );
               } else {
                 showToast('No active security findings to remediate.', 'info');
               }
@@ -2170,6 +2512,8 @@ export const IDE: React.FC = () => {
             onRunAllAgents={handleRunAllAgents}
             onExportCSV={handleExportCSV}
             onExportJSON={handleExportJSON}
+            onExportMarkdown={handleExportMarkdown}
+            onExportHTML={handleExportHTML}
             isMaximized={isMaximized}
             onToggleMaximize={() => {
               const nextMax = !isMaximized;
@@ -2183,6 +2527,8 @@ export const IDE: React.FC = () => {
             }}
             isAnalyzing={isAnalyzing}
             isStale={isStale}
+            hasAnalyzed={Boolean(currentAnalysis)}
+            onReanalyze={() => void triggerAnalyze()}
             errorMessage={analysisError}
             languageStandard={
               activeDoc?.language.toLowerCase() === 'cpp'
@@ -2262,7 +2608,11 @@ export const IDE: React.FC = () => {
           onAcceptDiff={handleAcceptDiff}
           onRejectDiff={handleRejectDiff}
           onImproveDiff={handleImproveDiff}
-          onReanalyze={() => void triggerAnalyze()}
+          onSwitchProposalOrigin={handleSwitchProposalOrigin}
+          onReanalyze={async () => {
+            await triggerAnalyze();
+            await handleRunAllAgents();
+          }}
           onInsertCodeSnippet={handleInsertCodeSnippet}
           onShowToast={showToast}
           isSending={isSendingChat}
@@ -2276,13 +2626,29 @@ export const IDE: React.FC = () => {
         cursorLine={cursorPos.line}
         cursorCol={cursorPos.col}
         securityCount={mappedSecurityFindings.length}
+        diagnosticCount={mappedDiagnostics.length}
+        invalidTokenCount={mappedTokens.filter((t) => t.status === 'Invalid').length}
         engineStatus={isAnalyzing ? 'Analyzing' : 'Ready'}
+        isStale={isStale}
+        lexicalStatus={pipelineStages[0]?.status ?? 'not_run'}
+        syntaxStatus={pipelineStages[1]?.status ?? 'not_run'}
+        semanticStatus={pipelineStages[2]?.status ?? 'not_run'}
         onShowToast={showToast}
         onOpenSecurity={() => {
           setActivePane('pane-security');
           setSidebarCollapsed(false);
           setActiveBottomTab('view-security-tab');
+          setBottomCollapsed(false);
         }}
+        onOpenDiagnostics={() => {
+          setActiveBottomTab('view-diagnostics');
+          setBottomCollapsed(false);
+        }}
+        onOpenTokens={() => {
+          setActiveBottomTab('view-tokens');
+          setBottomCollapsed(false);
+        }}
+        onReanalyze={() => void triggerAnalyze()}
       />
 
       {/* ================= MODAL: COMMAND PALETTE ================= */}

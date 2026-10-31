@@ -155,6 +155,10 @@ class RenameRequest(BaseModel):
     new_path: str = Field(..., min_length=1)
 
 
+class FolderCreateRequest(BaseModel):
+    path: str = Field(..., min_length=1)
+
+
 class FileItemResponse(BaseModel):
     name: str
     path: str
@@ -178,12 +182,28 @@ class FileDetailResponse(BaseModel):
     last_modified: float
 
 
+IGNORED_NAMES = {
+    "__pycache__", "node_modules", ".git", ".idea", ".vscode", "dist", "build", "coverage", ".pytest_cache"
+}
+IGNORED_EXTS = {".pyc", ".pyo", ".pyd", ".tmp", ".swp", ".swo", ".bak"}
+
+
+def is_ignored_item(path: Path | str) -> bool:
+    p = Path(path) if isinstance(path, str) else path
+    name = p.name
+    if name.startswith(".") or name in IGNORED_NAMES:
+        return True
+    if any(name.endswith(ext) for ext in IGNORED_EXTS):
+        return True
+    return False
+
+
 def build_tree_node(item_path: Path) -> FileItemResponse:
     rel_path = item_path.relative_to(WORKSPACE_ROOT).as_posix()
     if item_path.is_dir():
         children: list[FileItemResponse] = []
         for child in sorted(item_path.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower())):
-            if child.name.startswith((".", "__pycache__")):
+            if is_ignored_item(child):
                 continue
             children.append(build_tree_node(child))
         return FileItemResponse(
@@ -209,7 +229,7 @@ async def get_workspace_tree() -> WorkspaceTreeResponse:
     ensure_workspace_initialized()
     items: list[FileItemResponse] = []
     for entry in sorted(WORKSPACE_ROOT.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower())):
-        if entry.name.startswith((".", "__pycache__")):
+        if is_ignored_item(entry):
             continue
         items.append(build_tree_node(entry))
     return WorkspaceTreeResponse(root="SECURELEX-PROJECT", tree=items)
@@ -259,6 +279,18 @@ async def create_workspace_file(req: FileCreateRequest) -> dict[str, Any]:
     stat = target.stat()
     rel_path = target.relative_to(WORKSPACE_ROOT).as_posix()
     return {"success": True, "path": rel_path, "size": stat.st_size}
+
+
+@workspace_router.post("/folder")
+async def create_workspace_folder(req: FolderCreateRequest) -> dict[str, Any]:
+    """Create a new folder in the workspace."""
+    ensure_workspace_initialized()
+    target = resolve_safe_path(req.path)
+    if target.exists():
+        raise HTTPException(status_code=409, detail="Folder already exists.")
+    target.mkdir(parents=True, exist_ok=True)
+    rel_path = target.relative_to(WORKSPACE_ROOT).as_posix()
+    return {"success": True, "path": rel_path}
 
 
 @workspace_router.put("/file")

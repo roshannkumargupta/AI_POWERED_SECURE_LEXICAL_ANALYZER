@@ -21,11 +21,11 @@ export const AIExplainView: React.FC<AIExplainViewProps> = ({
         <span className="material-symbols-outlined text-accent-ai text-[18px]">psychology</span> AI Deep Lexical
         Explanation
       </div>
-      <div className="p-3 bg-surface-elevated rounded-lg border border-border-subtle text-[11px] space-y-2 text-text-secondary leading-relaxed shadow-xs">
+      <div className="p-3.5 bg-surface-elevated rounded-lg border border-border-subtle text-[12px] space-y-2.5 text-text-secondary leading-relaxed shadow-xs">
         <p>{explanationText || defaultText}</p>
         <button
           type="button"
-          className="px-3 py-1 bg-primary text-white rounded-md text-[11px] font-semibold shadow-xs hover:bg-primary/90 transition-colors"
+          className="px-3 py-1 bg-primary text-white rounded-md text-[11px] font-semibold shadow-xs hover:bg-primary/90 transition-colors focus-visible:ring-2 focus-visible:ring-primary"
           onClick={() =>
             onAskFollowUp('Can you explain the Trojan Source attack vector in depth?')
           }

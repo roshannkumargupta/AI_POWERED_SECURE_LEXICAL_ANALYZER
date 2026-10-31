@@ -18,10 +18,13 @@ interface AnalysisPanelProps {
   onSelectTab: (tab: BottomPanelTab) => void;
   tokens: TokenItem[];
   selectedToken: TokenItem | null;
+  activeSource?: string;
+  activeLanguage?: string;
   onSelectToken: (token: TokenItem) => void;
   onExplainToken: (token: TokenItem) => void;
+  onFixWithModelToken?: (token: TokenItem) => void;
   onFixWithAiToken: (token: TokenItem) => void;
-  onJumpToCode: (line: number, col: number, endLine?: number, endCol?: number) => void;
+  onJumpToCode: (line: number, col: number, endLine?: number, endCol?: number, file?: string) => void;
   diagnostics: DiagnosticItem[];
   securityFindings: SecurityFindingItem[];
   pipelineStages: PipelineStageInfo[];
@@ -33,16 +36,22 @@ interface AnalysisPanelProps {
   onRunAllAgents: () => void;
   onAskAiStage?: (stage: PipelineStageInfo) => void;
   onExplainDiagnostic?: (d: DiagnosticItem) => void;
+  onFixWithModelDiagnostic?: (d: DiagnosticItem) => void;
   onFixWithAiDiagnostic?: (d: DiagnosticItem) => void;
   onExplainFinding?: (f: SecurityFindingItem) => void;
+  onFixWithModelFinding?: (f: SecurityFindingItem) => void;
   onFixWithAiFinding?: (f: SecurityFindingItem) => void;
   onExportCSV: () => void;
   onExportJSON: () => void;
+  onExportMarkdown?: () => void;
+  onExportHTML?: () => void;
   isMaximized: boolean;
   onToggleMaximize: () => void;
   onAskFollowUp: (prompt: string) => void;
   isAnalyzing?: boolean;
   isStale?: boolean;
+  hasAnalyzed?: boolean;
+  onReanalyze?: () => void;
   errorMessage?: string | null;
   languageStandard?: string;
 }
@@ -52,8 +61,11 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
   onSelectTab,
   tokens,
   selectedToken,
+  activeSource,
+  activeLanguage,
   onSelectToken,
   onExplainToken,
+  onFixWithModelToken,
   onFixWithAiToken,
   onJumpToCode,
   diagnostics,
@@ -67,16 +79,22 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
   onRunAllAgents,
   onAskAiStage,
   onExplainDiagnostic,
+  onFixWithModelDiagnostic,
   onFixWithAiDiagnostic,
   onExplainFinding,
+  onFixWithModelFinding,
   onFixWithAiFinding,
   onExportCSV,
   onExportJSON,
+  onExportMarkdown,
+  onExportHTML,
   isMaximized,
   onToggleMaximize,
   onAskFollowUp,
   isAnalyzing = false,
   isStale = false,
+  hasAnalyzed = true,
+  onReanalyze,
   errorMessage = null,
   languageStandard,
 }) => {
@@ -194,6 +212,26 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
           >
             <span className="material-symbols-outlined text-[13px]">code</span> JSON
           </button>
+          {onExportMarkdown && (
+            <button
+              type="button"
+              className="px-2 py-0.5 hover:text-text-primary hover:bg-surface-hover rounded text-[11px] font-mono flex items-center gap-1 border border-transparent hover:border-border-subtle transition-colors"
+              onClick={onExportMarkdown}
+              title="Export Full Analysis Report to Markdown"
+            >
+              <span className="material-symbols-outlined text-[13px]">description</span> MD
+            </button>
+          )}
+          {onExportHTML && (
+            <button
+              type="button"
+              className="px-2 py-0.5 hover:text-text-primary hover:bg-surface-hover rounded text-[11px] font-mono flex items-center gap-1 border border-transparent hover:border-border-subtle transition-colors"
+              onClick={onExportHTML}
+              title="Export Interactive HTML Report"
+            >
+              <span className="material-symbols-outlined text-[13px]">html</span> HTML
+            </button>
+          )}
           <div className="h-3 w-[1px] bg-border-primary mx-1" />
           <button
             type="button"
@@ -222,11 +260,15 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
                 languageStandard={languageStandard}
                 isAnalyzing={isAnalyzing}
                 isStale={isStale}
+                hasAnalyzed={hasAnalyzed}
                 errorMessage={errorMessage}
               />
               <TokenInspector
                 token={selectedToken}
+                activeSource={activeSource}
+                activeLanguage={activeLanguage}
                 onExplain={onExplainToken}
+                onFixWithModel={onFixWithModelToken}
                 onFixWithAi={onFixWithAiToken}
                 onJumpToCode={onJumpToCode}
               />
@@ -236,9 +278,15 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
           {activeTab === 'view-diagnostics' && (
             <DiagnosticsPanel
               diagnostics={diagnostics}
-              onSelectDiagnostic={(d) => onJumpToCode(d.line, d.col)}
+              onSelectDiagnostic={(d) => onJumpToCode(d.line, d.col, d.endLine, d.endCol, d.file)}
               onExplain={onExplainDiagnostic}
+              onFixWithModel={onFixWithModelDiagnostic}
               onFixWithAi={onFixWithAiDiagnostic}
+              isStale={isStale}
+              onReanalyze={onReanalyze}
+              isAnalyzing={isAnalyzing}
+              hasAnalyzed={hasAnalyzed}
+              errorMessage={errorMessage}
             />
           )}
 
@@ -251,6 +299,7 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
               onRunAllAgents={onRunAllAgents}
               isRunningAll={isRunningAllAgents}
               onAskAiStage={onAskAiStage}
+              isStale={isStale}
             />
           )}
 
@@ -261,8 +310,13 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
               onJumpToCode={onJumpToCode}
               onFocusLine={(line) => onJumpToCode(line, 1)}
               onExplainFinding={onExplainFinding}
+              onFixWithModelFinding={onFixWithModelFinding}
               onFixWithAiFinding={onFixWithAiFinding}
               isAnalyzing={isAnalyzing}
+              isStale={isStale}
+              onReanalyze={onReanalyze}
+              hasAnalyzed={hasAnalyzed}
+              errorMessage={errorMessage}
             />
           )}
 
@@ -271,109 +325,115 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
           )}
         </div>
 
-        {/* RIGHT SUB-PANEL: Real Compiler Agent Pipeline */}
-        <div className="w-64 bg-surface-explorer flex flex-col justify-between shrink-0 overflow-hidden transition-colors">
-          <div className="h-8 px-3 bg-surface-deepest border-b border-border-primary flex items-center justify-between shrink-0">
-            <span className="font-bold text-[10px] uppercase text-text-secondary tracking-wider">
-              Agent Pipeline
-            </span>
-            <span
-              className={`text-[10px] font-bold font-mono ${
-                hasCriticalSecurity ? 'text-status-warning' : 'text-status-success'
-              }`}
-              id="pipelinePassedBadge"
-            >
-              {passedPipelineCount}/{pipelineStages.length} Passed
-            </span>
-          </div>
+        {/* RIGHT SUB-PANEL: Real Compiler Agent Pipeline (Hidden when Pipeline tab is active to prevent duplication) */}
+        {activeTab !== 'view-pipeline-tab' && (
+          <div className="w-64 bg-surface-explorer hidden xl:flex flex-col justify-between shrink-0 overflow-hidden transition-colors border-l border-border-primary">
+            <div className="h-8 px-3 bg-surface-deepest border-b border-border-primary flex items-center justify-between shrink-0">
+              <span className="font-bold text-[10px] uppercase text-text-secondary tracking-wider">
+                Agent Pipeline
+              </span>
+              <span
+                className={`text-[10px] font-bold font-mono ${
+                  passedPipelineCount === 0
+                    ? 'text-text-muted'
+                    : hasCriticalSecurity
+                    ? 'text-status-warning'
+                    : 'text-status-success'
+                }`}
+                id="pipelinePassedBadge"
+              >
+                {passedPipelineCount}/{pipelineStages.length} Passed
+              </span>
+            </div>
 
-          <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-            {pipelineStages.map((stage, idx) => {
-              const isSelected = stage.id === selectedStageId && activeTab === 'view-pipeline-tab';
-              const icon =
-                stage.status === 'passed'
-                  ? 'check_circle'
-                  : stage.status === 'warning'
-                  ? 'warning'
-                  : stage.status === 'failed'
-                  ? 'cancel'
-                  : stage.status === 'running'
-                  ? 'sync'
-                  : stage.status === 'skipped'
-                  ? 'redo'
-                  : 'radio_button_unchecked';
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+              {pipelineStages.map((stage, idx) => {
+                const isSelected = stage.id === selectedStageId && activeTab === 'view-pipeline-tab';
+                const icon =
+                  stage.status === 'passed'
+                    ? 'check_circle'
+                    : stage.status === 'warning'
+                    ? 'warning'
+                    : stage.status === 'failed'
+                    ? 'cancel'
+                    : stage.status === 'running'
+                    ? 'sync'
+                    : stage.status === 'skipped'
+                    ? 'redo'
+                    : 'radio_button_unchecked';
 
-              const color =
-                stage.status === 'passed'
-                  ? 'text-status-success'
-                  : stage.status === 'warning'
-                  ? 'text-status-warning'
-                  : stage.status === 'failed'
-                  ? 'text-status-error'
-                  : stage.status === 'running'
-                  ? 'text-primary'
-                  : 'text-text-muted';
+                const color =
+                  stage.status === 'passed'
+                    ? 'text-status-success'
+                    : stage.status === 'warning'
+                    ? 'text-status-warning'
+                    : stage.status === 'failed'
+                    ? 'text-status-error'
+                    : stage.status === 'running'
+                    ? 'text-primary'
+                    : 'text-text-muted';
 
-              return (
-                <div
-                  key={stage.id}
-                  className={`flex items-start gap-2 p-2 rounded-md border shadow-xs cursor-pointer transition-all ${
-                    isSelected
-                      ? 'bg-surface-elevated border-primary'
-                      : 'bg-surface-elevated/80 hover:bg-surface-elevated border-border-subtle'
-                  }`}
-                  onClick={() => {
-                    onSelectStage(stage.id);
-                    onSelectTab('view-pipeline-tab');
-                  }}
-                >
-                  <span
-                    className={`material-symbols-outlined text-[15px] mt-0.5 shrink-0 ${color} ${
-                      stage.status === 'running' ? 'animate-spin' : ''
+                return (
+                  <div
+                    key={stage.id}
+                    className={`flex items-start gap-2 p-2 rounded-md border shadow-xs cursor-pointer transition-all ${
+                      isSelected
+                        ? 'bg-surface-elevated border-primary'
+                        : 'bg-surface-elevated/80 hover:bg-surface-elevated border-border-subtle'
                     }`}
+                    onClick={() => {
+                      onSelectStage(stage.id);
+                      onSelectTab('view-pipeline-tab');
+                    }}
                   >
-                    {icon}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[11px] text-text-primary truncate">
-                        {idx + 1}. {stage.name}
-                      </span>
-                      <span className="text-[9px] text-text-muted font-mono shrink-0 ml-1">
-                        {stage.elapsedMs > 0 ? `${stage.elapsedMs.toFixed(1)}ms` : ''}
-                      </span>
-                    </div>
-                    <div className="text-[9px] text-text-muted truncate mt-0.5">
-                      {stage.status === 'skipped'
-                        ? stage.skipReason || 'Skipped'
-                        : stage.status === 'failed'
-                        ? stage.errorReason || 'Failed'
-                        : stage.outputSummary || stage.agentName}
+                    <span
+                      className={`material-symbols-outlined text-[15px] mt-0.5 shrink-0 ${color} ${
+                        stage.status === 'running' ? 'animate-spin' : ''
+                      }`}
+                    >
+                      {icon}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-[11px] text-text-primary truncate">
+                          {idx + 1}. {stage.name}
+                        </span>
+                        <span className="text-[9px] text-text-muted font-mono shrink-0 ml-1">
+                          {stage.elapsedMs > 0 ? `${stage.elapsedMs.toFixed(1)}ms` : ''}
+                        </span>
+                      </div>
+                      <div className="text-[9px] text-text-muted truncate mt-0.5">
+                        {stage.status === 'skipped'
+                          ? stage.skipReason || 'Skipped'
+                          : stage.status === 'failed'
+                          ? stage.errorReason || 'Failed'
+                          : stage.outputSummary || stage.agentName}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          <div className="p-2.5 border-t border-border-primary bg-surface-deepest shrink-0">
-            <button
-              type="button"
-              className="w-full py-1.5 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white rounded-md text-[11px] font-semibold shadow-xs transition-colors flex items-center justify-center gap-1.5"
-              onClick={onRunAllAgents}
-              disabled={isRunningAllAgents}
-            >
-              <span
-                className={`material-symbols-outlined text-[14px] ${
-                  isRunningAllAgents ? 'animate-spin' : ''
-                }`}
+            <div className="p-2.5 border-t border-border-primary bg-surface-deepest shrink-0">
+              <button
+                type="button"
+                className="w-full py-1.5 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white rounded-md text-[11px] font-semibold shadow-xs transition-colors flex items-center justify-center gap-1.5"
+                onClick={onRunAllAgents}
+                disabled={isRunningAllAgents}
               >
-                {isRunningAllAgents ? 'sync' : 'hub'}
-              </span>
-              <span>{isRunningAllAgents ? 'Executing Agents...' : 'Run All Agents (7)'}</span>
-            </button>
+                <span
+                  className={`material-symbols-outlined text-[14px] ${
+                    isRunningAllAgents ? 'animate-spin' : ''
+                  }`}
+                >
+                  {isRunningAllAgents ? 'sync' : 'hub'}
+                </span>
+                <span>{isRunningAllAgents ? 'Executing Agents...' : 'Run All Agents (7)'}</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -339,6 +339,8 @@ class AIChatContext(BaseModel):
     language: str | None = None
     source_version: int | None = None
     selected_range: dict[str, int] | None = None
+    selected_code: str | None = None
+    selected_token: dict[str, Any] | None = None
     stage: str | None = None
     diagnostic: dict[str, Any] | None = None
     finding: dict[str, Any] | None = None

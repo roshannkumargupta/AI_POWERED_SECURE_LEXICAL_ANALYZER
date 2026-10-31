@@ -220,6 +220,8 @@ def fuse_findings(
                 continue
             if tok.kind in ("WHITESPACE", "NEWLINE", "COMMENT"):
                 continue
+            if tok.text in {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "true", "false", "null", "nullptr", ";", "{", "}", "(", ")", "[", "]", ",", ":"} and not any(ord(c) > 127 for c in tok.text):
+                continue
 
             p_safe, p_susp, p_mal = ml_probabilities[i]
             if p_mal >= anomaly_thresh:

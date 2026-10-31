@@ -164,6 +164,14 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
       onCursorChange(e.position.lineNumber, e.position.column);
     });
 
+    // Track active model changes (e.g., when switching document tabs)
+    editor.onDidChangeModel(() => {
+      const pos = editor.getPosition();
+      if (pos) {
+        onCursorChange(pos.lineNumber, pos.column);
+      }
+    });
+
     // Keyboard shortcut for Analyze: Cmd+Enter or Ctrl+Enter
     editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.Enter, () => {
       onAnalyze();
@@ -319,22 +327,42 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
             </button>
           )}
 
-          {/* 2. Further Analysis Dropdown */}
+          {/* 3. Pipeline / Further Analysis Dropdown */}
           <div className="relative" ref={furtherMenuRef}>
             <button
               type="button"
-              className="flex items-center gap-1 px-2.5 py-1 bg-surface-container hover:bg-surface-hover text-text-secondary hover:text-text-primary border border-border-primary rounded-md text-[11px] font-medium transition-colors shadow-xs"
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container hover:bg-surface-hover text-text-secondary hover:text-text-primary border border-border-primary rounded-md text-[11px] font-medium transition-colors shadow-xs"
               id="btnFurtherAnalysis"
               onClick={() => setFurtherMenuOpen(!furtherMenuOpen)}
+              title="Run compiler pipeline stages or individual analysis sub-routines"
             >
-              <span>Further Analysis</span>
+              <span className="material-symbols-outlined text-[14px] text-primary">account_tree</span>
+              <span>Pipeline</span>
               <span className="material-symbols-outlined text-[13px] text-text-muted">expand_more</span>
             </button>
             {furtherMenuOpen && (
               <div
-                className="absolute right-0 top-full mt-1.5 w-48 bg-surface-elevated border border-border-primary rounded-md shadow-2xl z-50 py-1 divide-y divide-border-subtle"
+                className="absolute right-0 top-full mt-1.5 w-56 bg-surface-elevated border border-border-primary rounded-md shadow-2xl z-50 py-1 divide-y divide-border-subtle"
                 id="furtherMenu"
               >
+                <div className="py-0.5">
+                  <button
+                    type="button"
+                    className="w-full text-left px-3 py-1.5 text-[11px] text-text-primary hover:bg-surface-hover flex items-center justify-between transition-colors font-semibold"
+                    onClick={() => {
+                      setFurtherMenuOpen(false);
+                      onRunAllAgents();
+                    }}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary text-[15px]">hub</span>
+                      <span>Run All Agents (7 Stages)</span>
+                    </span>
+                    <span className="text-[9px] px-1 py-0.2 bg-primary/20 text-primary font-mono rounded">
+                      Full
+                    </span>
+                  </button>
+                </div>
                 <div className="py-0.5">
                   <button
                     type="button"
@@ -347,7 +375,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
                     <span className="material-symbols-outlined text-status-success text-[14px]">
                       account_tree
                     </span>
-                    Syntax Verification
+                    <span>Syntax Verification</span>
                   </button>
                   <button
                     type="button"
@@ -358,7 +386,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
                     }}
                   >
                     <span className="material-symbols-outlined text-primary text-[14px]">schema</span>
-                    Semantic Typing Check
+                    <span>Semantic Typing Check</span>
                   </button>
                   <button
                     type="button"
@@ -371,7 +399,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
                     <span className="material-symbols-outlined text-status-warning text-[14px]">
                       security
                     </span>
-                    Taint Analysis
+                    <span>Taint Analysis</span>
                   </button>
                 </div>
                 <div className="py-0.5">
@@ -386,45 +414,22 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
                     <span className="material-symbols-outlined text-accent-ai text-[14px]">
                       verified_user
                     </span>
-                    Full Security Audit
+                    <span>Full Security Audit</span>
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* 3. Run All Agents */}
-          <button
-            type="button"
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container hover:bg-surface-hover text-text-secondary hover:text-text-primary border border-border-primary rounded-md text-[11px] font-medium transition-colors shadow-xs"
-            onClick={onRunAllAgents}
-            title="Execute 4 pipeline agents simultaneously"
-          >
-            <span className="material-symbols-outlined text-[14px] text-primary">hub</span>
-            <span className="hidden lg:inline">Run All Agents</span>
-            <span className="px-1 py-0.2 bg-primary/20 text-primary font-mono text-[9px] rounded font-bold">
-              4
-            </span>
-          </button>
-
           {/* 4. Build with AI */}
           <button
             type="button"
             className="flex items-center gap-1.5 px-2.5 py-1 bg-accent-ai/10 hover:bg-accent-ai/20 text-accent-ai border border-accent-ai/35 rounded-md text-[11px] font-semibold transition-all shadow-xs active:scale-[0.98]"
             onClick={onOpenBuildWithAi}
+            title="Open AI Code Generator modal (C++, Python, Java, JS)"
           >
             <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
             <span className="hidden md:inline">Build with AI</span>
-          </button>
-
-          {/* 5. Fix with AI */}
-          <button
-            type="button"
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-accent-fix/10 hover:bg-accent-fix/20 text-accent-fix border border-accent-fix/35 rounded-md text-[11px] font-semibold transition-all shadow-xs active:scale-[0.98]"
-            onClick={onFocusFixInAssistant}
-          >
-            <span className="material-symbols-outlined text-[14px]">build</span>
-            <span>Fix with AI</span>
           </button>
         </div>
       </div>
@@ -478,38 +483,54 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = ({
           className="flex-1 min-h-[120px] bg-surface-editor flex border-b border-border-primary relative font-mono text-[13px] overflow-hidden transition-colors"
           id="editorArea"
         >
-          <Suspense
-            fallback={
-              <div className="flex-1 flex items-center justify-center text-text-muted text-[12px]">
-                Loading Monaco editor...
+          {documents.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-text-muted gap-2.5 select-none p-6 text-center">
+              <span className="material-symbols-outlined text-[42px] text-text-muted/40">description</span>
+              <div className="text-[14px] font-semibold text-text-primary">No file currently open</div>
+              <div className="text-[12px] text-text-muted max-w-sm">
+                Open a source file from the Explorer sidebar or create a new file to begin lexical analysis.
               </div>
-            }
-          >
-            <MonacoEditor
-              height="100%"
-              language={currentMonacoLang}
-              value={activeDoc?.source ?? ''}
-              onChange={(value) => onSourceChange(value ?? '')}
-              theme={resolvedTheme === 'dark' ? 'securelex-theme-dark' : 'securelex-theme-light'}
-              beforeMount={(monacoInstance) => {
-                (window as any).monaco = monacoInstance;
-                registerSecureLexThemes(monacoInstance);
-              }}
-              onMount={handleEditorDidMount}
-              options={{
-                fontSize,
-                fontFamily: "'JetBrains Mono', monospace",
-                lineNumbers: 'on',
-                lineNumbersMinChars: 3,
-                minimap: { enabled: minimap, maxColumn: 40 },
-                scrollBeyondLastLine: false,
-                renderLineHighlight: 'all',
-                automaticLayout: true,
-                tabSize,
-                wordWrap,
-              }}
-            />
-          </Suspense>
+            </div>
+          ) : (
+            <Suspense
+              fallback={
+                <div className="flex-1 flex items-center justify-center text-text-muted text-[12px]">
+                  Loading Monaco editor...
+                </div>
+              }
+            >
+              <MonacoEditor
+                height="100%"
+                path={activeDoc ? activeDoc.name : undefined}
+                language={currentMonacoLang}
+                value={activeDoc?.source ?? ''}
+                onChange={(value) => onSourceChange(value ?? '')}
+                theme={resolvedTheme === 'dark' ? 'securelex-theme-dark' : 'securelex-theme-light'}
+                beforeMount={(monacoInstance) => {
+                  (window as any).monaco = monacoInstance;
+                  registerSecureLexThemes(monacoInstance);
+                }}
+                onMount={handleEditorDidMount}
+                options={{
+                  fontSize,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  lineNumbers: 'on',
+                  lineNumbersMinChars: 4,
+                  minimap: { enabled: minimap, maxColumn: 40 },
+                  scrollBeyondLastLine: false,
+                  renderLineHighlight: 'all',
+                  automaticLayout: true,
+                  tabSize,
+                  wordWrap,
+                  bracketPairColorization: { enabled: true },
+                  folding: true,
+                  smoothScrolling: true,
+                  cursorBlinking: 'smooth',
+                  cursorSmoothCaretAnimation: 'on',
+                }}
+              />
+            </Suspense>
+          )}
         </div>
       )}
 

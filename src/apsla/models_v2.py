@@ -419,7 +419,7 @@ def adapt_analysis_result(
         ),
         tokens=tokens,
         lexical_summary={"status": statuses, "category": category_counts},
-        syntax_diagnostics=[d for d in diagnostics if d.category == "syntax"],
+        syntax_diagnostics=[d for d in diagnostics if d.category in {"syntax", "lexical"}],
         semantic_diagnostics=[d for d in diagnostics if d.category == "semantic"],
         security_findings=security,
         taint_paths=taint_paths,

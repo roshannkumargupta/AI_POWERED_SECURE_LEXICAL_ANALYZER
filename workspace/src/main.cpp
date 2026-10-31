@@ -1,11 +1,10 @@
 #include <iostream>
-using namespace std;
 
 int main() {
     int n = 5;
-    for (int i = 0; i ﻿<= n; i++) {
-        cout << i << " ";
+    for (int i = 0; i < n; ++i) {
+        std::cout << i << " ";
     }
-    cout << endl;
+    std::cout << std::endl;
     return 0;
 }

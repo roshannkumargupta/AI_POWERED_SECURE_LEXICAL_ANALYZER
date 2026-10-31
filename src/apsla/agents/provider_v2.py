@@ -310,12 +310,22 @@ class GroqProvider(HttpJsonProvider):
                             json=payload,
                         )
                         if response.status_code == 400:
-                            err_data: dict[str, Any] = {}
+                            resp_body: dict[str, Any] = {}
                             try:
-                                err_data = response.json().get("error", {})
+                                resp_body = response.json()
                             except Exception:
                                 pass
-                            if err_data.get("code") == "json_validate_failed":
+                            err_data: dict[str, Any] = resp_body.get("error", {}) if isinstance(resp_body.get("error"), dict) else {}
+                            err_msg = str(err_data.get("message", resp_body.get("message", "")))
+                            err_code = str(err_data.get("code", resp_body.get("code", "")))
+                            fg = resp_body.get("failed_generation") or err_data.get("failed_generation")
+                            is_json_err = (
+                                err_code == "json_validate_failed"
+                                or "failed to validate json" in err_msg.lower()
+                                or "json" in err_msg.lower()
+                                or bool(fg)
+                            )
+                            if is_json_err:
                                 # Fallback: retry without strict response_format so model output is returned
                                 fallback_payload = dict(payload)
                                 fallback_payload.pop("response_format", None)
@@ -342,10 +352,30 @@ class GroqProvider(HttpJsonProvider):
                                                         return json_match.group(1)
                                                     except Exception:
                                                         pass
-                                                return json.dumps({"reply": raw_content, "code_snippets": []})
+                                                # Adapt into expected schema if reply field is requested
+                                                props = schema.get("properties", {})
+                                                if "reply" in props:
+                                                    return json.dumps({"reply": raw_content, "code_snippets": []})
+                                                elif "explanation" in props:
+                                                    return json.dumps({"explanation": raw_content})
+                                                return raw_content
                                 except Exception:
                                     pass
-                                detail = err_data.get("failed_generation") or err_data.get("message") or ""
+                                if fg:
+                                    clean_fg = str(fg).strip()
+                                    json_match = re.search(r"(\{[\s\S]*\})", clean_fg)
+                                    if json_match:
+                                        try:
+                                            json.loads(json_match.group(1))
+                                            return json_match.group(1)
+                                        except Exception:
+                                            pass
+                                    props = schema.get("properties", {})
+                                    if "reply" in props:
+                                        return json.dumps({"reply": clean_fg, "code_snippets": []})
+                                    elif "explanation" in props:
+                                        return json.dumps({"explanation": clean_fg})
+                                detail = fg or err_msg or ""
                                 raise ProviderFailure(
                                     "bad_output",
                                     f"Provider JSON generation failed ({detail}).",

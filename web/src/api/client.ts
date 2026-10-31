@@ -356,7 +356,8 @@ export interface AnalysisResultV2 {
     [key: string]: unknown;
   };
 }
-export type AnalysisStage = 'lexical' | 'syntax' | 'security' | 'quality';
+// Supported stages contract: 'lexical' | 'syntax' | 'security' | 'quality'
+export type AnalysisStage = 'lexical' | 'syntax' | 'security' | 'quality' | 'semantic';
 export interface AnalyzeV2Request {
   source: string;
   language?: string | null;
@@ -641,6 +642,8 @@ export interface AIChatContext {
   language?: string;
   source_version?: number;
   selected_range?: { start_line: number; start_col: number; end_line?: number; end_col?: number };
+  selected_code?: string;
+  selected_token?: Record<string, unknown>;
   stage?: string;
   diagnostic?: Record<string, unknown>;
   finding?: Record<string, unknown>;
@@ -959,6 +962,12 @@ export const apiClient = {
     request<{ success: boolean; path: string; size: number }>('/workspace/file', {
       method: 'POST',
       body: JSON.stringify({ path, content }),
+      signal,
+    }),
+  createWorkspaceFolder: (path: string, signal?: AbortSignal) =>
+    request<{ success: boolean; path: string }>('/workspace/folder', {
+      method: 'POST',
+      body: JSON.stringify({ path }),
       signal,
     }),
   saveWorkspaceFile: (path: string, content: string, signal?: AbortSignal) =>

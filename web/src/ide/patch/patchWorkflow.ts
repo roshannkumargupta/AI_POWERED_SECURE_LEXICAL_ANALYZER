@@ -137,6 +137,22 @@ export function createEnrichedPatchProposal(
   };
 }
 
+export function unescapeHtmlAndCode(raw: string): string {
+  if (!raw) return '';
+  let str = raw
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'");
+
+  if (str.includes('\\n') && !str.includes('\n')) {
+    str = str.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n');
+  }
+  return str;
+}
+
 /**
  * Intelligently extracts a proposed patch from an AI response (text / code blocks)
  * comparing against the active document source.
@@ -154,7 +170,10 @@ export function extractProposedPatchFromAiResponse(
   if (codeSnippets && codeSnippets.length > 0) {
     for (const snip of codeSnippets) {
       if (typeof snip === 'string' && snip.trim()) {
-        candidateBlocks.push(snip.trim());
+        const cleaned = unescapeHtmlAndCode(snip.trim());
+        if (cleaned && !candidateBlocks.includes(cleaned)) {
+          candidateBlocks.push(cleaned);
+        }
       }
     }
   }
@@ -162,7 +181,7 @@ export function extractProposedPatchFromAiResponse(
   const codeFenceRegex = /```(?:[a-zA-Z0-9_\-+]*)\s*\n([\s\S]*?)```/g;
   let match: RegExpExecArray | null;
   while ((match = codeFenceRegex.exec(aiReply)) !== null) {
-    const block = match[1].trim();
+    const block = unescapeHtmlAndCode(match[1].trim());
     if (block && !candidateBlocks.includes(block)) {
       candidateBlocks.push(block);
     }
@@ -173,6 +192,10 @@ export function extractProposedPatchFromAiResponse(
   const currentSource = activeDoc.source;
   const oldLines = currentSource.split('\n');
 
+  // Helper to check whether source contains core constructs (main/def/class/function)
+  const containsCoreConstruct = (s: string) => /\b(main|def|class|function)\b/.test(s);
+  const origHasCore = containsCoreConstruct(currentSource);
+
   // Find the candidate block that represents a valid modification of the current file
   for (const candidate of candidateBlocks) {
     if (candidate === currentSource.trim()) {
@@ -180,15 +203,14 @@ export function extractProposedPatchFromAiResponse(
     }
 
     const newLines = candidate.split('\n');
+    const candHasCore = containsCoreConstruct(candidate);
 
-    // Scenario A: Candidate is a full file (or substantial replacement)
+    // Scenario A: Candidate is truly a full file replacement
+    // It must cover at least 60% of the original lines AND if the original had core constructs (like main),
+    // the replacement MUST also contain them. NEVER treat a 1 or 2 line snippet as a full file.
     const isLikelyFullFile =
-      newLines.length >= Math.max(3, Math.floor(oldLines.length * 0.4)) ||
-      candidate.includes('#include') ||
-      candidate.includes('int main') ||
-      candidate.includes('class ') ||
-      candidate.includes('def ') ||
-      candidate.includes('import ');
+      newLines.length >= Math.max(4, Math.floor(oldLines.length * 0.6)) &&
+      (!origHasCore || candHasCore);
 
     if (isLikelyFullFile) {
       // Find top mismatch
@@ -297,75 +319,120 @@ export function extractProposedPatchFromAiResponse(
       }
     }
 
-    // Scenario B: Candidate is a snippet that can replace a matching substring in source
-    const trimmedCandidate = candidate.trim();
-    const candidateBase = trimmedCandidate.replace(/[;\s]+$/, '');
-    const matchedLineIndex = oldLines.findIndex(
-      (line) =>
-        line.trim().length > 0 &&
-        (line.trim() === candidateBase ||
-          line.trim().replace(/[;\s]+$/, '') === candidateBase)
-    );
+    // Scenario B: Candidate is a snippet (single or multi-line) replacing a targeted portion of source
+    if (newLines.length <= oldLines.length) {
+      const normalizeLine = (s: string) =>
+        s.replace(/[^\x20-\x7E]/g, '').trim().replace(/[;\s]+$/, '');
+      const candNorm = newLines.map(normalizeLine);
 
-    if (matchedLineIndex !== -1 && oldLines[matchedLineIndex].trim() !== trimmedCandidate) {
-      const origLine = oldLines[matchedLineIndex];
-      const indentMatch = origLine.match(/^(\s*)/);
-      const indent = indentMatch ? indentMatch[1] : '';
-      const fixedLine = `${indent}${trimmedCandidate}`;
+      // 1. Sliding window search across oldLines for multi-line or single-line match
+      let matchIdx = -1;
+      for (let i = 0; i <= oldLines.length - newLines.length; i++) {
+        let allMatch = true;
+        for (let j = 0; j < newLines.length; j++) {
+          if (normalizeLine(oldLines[i + j]) !== candNorm[j]) {
+            allMatch = false;
+            break;
+          }
+        }
+        if (allMatch) {
+          const origSlice = oldLines.slice(i, i + newLines.length).join('\n');
+          if (origSlice !== candidate) {
+            matchIdx = i;
+            break;
+          }
+        }
+      }
 
-      const editRange: Range = {
-        start_line: matchedLineIndex + 1,
-        start_col: 1,
-        end_line: matchedLineIndex + 1,
-        end_col: origLine.length + 1,
-      };
+      // 2. If single line and not matched yet, match by key tokens
+      if (matchIdx === -1 && newLines.length === 1) {
+        const candTokens = candidate.trim().split(/\s+/).filter((t) => t.length > 2);
+        let bestScore = 0;
+        let bestIdx = -1;
+        for (let i = 0; i < oldLines.length; i++) {
+          const oldLine = oldLines[i].trim();
+          if (!oldLine) continue;
+          let score = 0;
+          for (const token of candTokens) {
+            if (oldLine.includes(token)) score++;
+          }
+          if (score > bestScore && score >= Math.min(2, candTokens.length)) {
+            bestScore = score;
+            bestIdx = i;
+          }
+        }
+        if (bestIdx !== -1 && oldLines[bestIdx].trim() !== candidate.trim()) {
+          matchIdx = bestIdx;
+        }
+      }
 
-      const newSourceLines = [...oldLines];
-      newSourceLines[matchedLineIndex] = fixedLine;
-      const newSource = newSourceLines.join('\n');
-      const unifiedDiff = generateUnifiedDiff(currentSource, newSource, activeDoc.name);
+      if (matchIdx !== -1) {
+        const origSlice = oldLines.slice(matchIdx, matchIdx + newLines.length).join('\n');
+        const startLine = matchIdx + 1;
+        const endLine = matchIdx + newLines.length;
+        const endCol = (oldLines[endLine - 1] || '').length + 1;
 
-      const baseProposal: PatchProposal = {
-        id: `prop-${Date.now()}`,
-        source_version: activeDoc.sourceVersion,
-        source_hash: activeDoc.sourceHash || '',
-        target_finding_id: `ai-fix-${Date.now()}`,
-        target_kind: 'finding',
-        origin: 'ai',
-        diff: unifiedDiff,
-        rationale: 'Applied AI suggested line replacement.',
-        expected_outcome: 'Resolves detected syntax/token issue',
-        assumptions: [],
-        risks: [],
-        created_at: new Date().toISOString(),
-        edits: [
-          {
-            range: editRange,
-            new_text: fixedLine,
+        // Preserve indentation from original code
+        const indentMatch = oldLines[matchIdx].match(/^(\s*)/);
+        const indent = indentMatch ? indentMatch[1] : '';
+        const indentedReplacement = newLines
+          .map((l, idx) => (idx === 0 && !l.startsWith(indent) ? `${indent}${l.trimStart()}` : l))
+          .join('\n');
+
+        const editRange: Range = {
+          start_line: startLine,
+          start_col: 1,
+          end_line: endLine,
+          end_col: endCol,
+        };
+
+        const newSourceLines = [...oldLines];
+        newSourceLines.splice(matchIdx, newLines.length, indentedReplacement);
+        const newSource = newSourceLines.join('\n');
+        const unifiedDiff = generateUnifiedDiff(currentSource, newSource, activeDoc.name);
+
+        const baseProposal: PatchProposal = {
+          id: `prop-${Date.now()}`,
+          source_version: activeDoc.sourceVersion,
+          source_hash: activeDoc.sourceHash || '',
+          target_finding_id: `ai-fix-${Date.now()}`,
+          target_kind: 'finding',
+          origin: 'ai',
+          diff: unifiedDiff,
+          rationale: 'Applied AI suggested line replacement.',
+          expected_outcome: 'Resolves detected syntax/token issue',
+          assumptions: [],
+          risks: [],
+          created_at: new Date().toISOString(),
+          edits: [
+            {
+              range: editRange,
+              new_text: indentedReplacement,
+            },
+          ],
+        };
+
+        const enriched: EnrichedPatchProposal = {
+          ...baseProposal,
+          target_file: activeDoc.name,
+          original_range: editRange,
+          original_text: origSlice,
+          replacement_text: indentedReplacement,
+          finding: {
+            id: `ai-fix-${Date.now()}`,
+            title: 'AI Proposed Modification',
           },
-        ],
-      };
+          explanation: 'AI proposed replacement for matching line.',
+        };
 
-      const enriched: EnrichedPatchProposal = {
-        ...baseProposal,
-        target_file: activeDoc.name,
-        original_range: editRange,
-        original_text: origLine,
-        replacement_text: fixedLine,
-        finding: {
-          id: `ai-fix-${Date.now()}`,
-          title: 'AI Proposed Modification',
-        },
-        explanation: 'AI proposed replacement for matching line.',
-      };
-
-      return {
-        proposal: enriched,
-        diff: {
-          file: activeDoc.name,
-          unifiedDiff,
-        },
-      };
+        return {
+          proposal: enriched,
+          diff: {
+            file: activeDoc.name,
+            unifiedDiff,
+          },
+        };
+      }
     }
   }
 
